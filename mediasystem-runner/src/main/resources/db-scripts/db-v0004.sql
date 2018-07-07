@@ -1,0 +1,1 @@
+ALTER TABLE streamdata ALTER COLUMN size ${DropNotNull};

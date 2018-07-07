@@ -1,0 +1,119 @@
+@import "../../../runner/properties.less";
+
+#video-overlay {
+  -fx-background-color: linear-gradient(from 0% 75% to 0% 100%, rgba(0, 0, 0, 0), black 50%);
+}
+
+#video-overlay .video-title {
+  -fx-font-size: 64px;
+  -fx-font-weight: bold;
+  -fx-text-fill: white;
+}
+
+#video-overlay .video-subtitle {
+  -fx-font-size: 24px;
+  -fx-font-weight: bold;
+  -fx-text-fill: white;
+  -fx-padding: 0 0 20 0;
+}
+
+#video-overlay {
+  -fx-font-size: 24px;
+  -fx-text-fill: -c-base;
+}
+
+#video-overlay_info_bar {
+  -fx-spacing: 20;
+  -fx-alignment: CENTER;
+}
+
+
+
+
+.label {
+  .bold;
+  -fx-font-size: 18px; 
+}
+
+.time.label, .position.label {
+  -fx-text-fill: -c-text-dark-unobtrusive;
+}
+
+.time.label, .position.label, .osd {
+  -fx-padding: 2 5 2 5;
+  
+  -fx-background-radius: 5;
+  -fx-background-color: rgba(0, 0, 0, 0.3);
+}
+
+.osd {
+  -fx-spacing: 7;
+}
+
+
+
+
+
+.slider {
+  -fx-show-tick-labels: true;
+  -fx-show-tick-marks: true;
+}
+
+.slider .axis {
+  -fx-tick-label-fill: -c-base;
+  -fx-tick-label-font: 16px "Arial";
+}
+
+.slider .thumb {
+  -fx-background-color: rgb(0, 0, 0, 0.5), rgb(64, 64, 64), linear-gradient(to bottom, yellow, white, orange);
+  -fx-background-insets: 0, 1, 2;
+  -fx-background-radius: 0.3em, 0.25em, 0.2em;
+
+  -fx-padding: 0.75em 0.3em 0.75em 0.3em;
+}
+
+.slider .track {
+  -fx-background-color: -c-shadow-highlight, derive(-c-base, -22%), linear-gradient(to bottom, derive(-c-base,-15.5%), derive(-c-base,34%) 30%, derive(-c-base,68%));
+  -fx-background-insets: 1 0 -1 0, 0, 1;
+  -fx-background-radius: 0.2em, 0.2em, 0.1em;
+  
+  -fx-padding: 0.208333em;
+}
+
+.axis:top {
+  -fx-border-color: transparent transparent #aaaaaa transparent;
+}
+.axis:right {
+  -fx-border-color: transparent transparent transparent #aaaaaa;
+}
+.axis:bottom {
+  -fx-border-color: #aaaaaa transparent transparent transparent;
+}
+.axis:left {
+  -fx-border-color: transparent #aaaaaa transparent transparent;
+}
+
+.axis-tick-mark {
+  -fx-stroke: #aaaaaa;
+}
+
+.item {
+  -fx-font-size: 22px;
+}
+
+.content-box {
+  -fx-background-color: -c-tinted-glass-black;
+  -fx-background-radius: 20;
+  -fx-padding: 30;
+  -fx-hgap: 20;  
+}
+
+.pause-shape {
+  -fx-background-color: -c-base;
+  -fx-shape: "M 3 3 L 1 3 L 1 -3 L 3 -3 Z M -3 3 L -1 3 L -1 -3 L -3 -3 Z M -4 -4 L 4 4";
+}
+
+.mute-shape {
+  -fx-background-color: -c-base;
+  -fx-shape: "M -16 -6 L -16 6 L -8 6 L 0 15 L 0 -15 L -8 -6 Z M 5 6 L 8 9 L 14 3 L 20 9 L 23 6 L 17 0 L 23 -6 L 20 -9 L 14 -3 L 8 -9 L 5 -6 L 11 0 Z";
+}

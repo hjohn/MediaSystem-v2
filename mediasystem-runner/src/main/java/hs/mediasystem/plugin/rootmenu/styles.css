@@ -1,0 +1,26 @@
+.menu-scroll-box {
+  -fx-alignment: center;
+  -fx-spacing: 50;
+}
+
+.menu-scroll-box .label {
+  -fx-font-weight: bold;
+  -fx-font-size: 30px;
+}
+
+.menu-scroll-box .button {
+  -fx-content-display: top;
+  -fx-text-fill: -c-text;
+  -fx-font-weight: bold;
+  -fx-font-size: 20px;
+  -fx-background-color: transparent;
+}
+
+.menu-scroll-box .button.focused {
+  -fx-background-color: radial-gradient(radius 150%, -c-glass, derive(-c-glass, -50%), -c-glass);
+  -fx-text-fill: white;
+}
+
+.menu-scroll-box-overlay {
+  -fx-background-color: linear-gradient(from 0% 0% to 100% 0%, black 0%, transparent 50%, black 100%);
+}

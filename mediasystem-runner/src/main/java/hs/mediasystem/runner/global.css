@@ -1,0 +1,200 @@
+@import "media-look.less";
+@import "properties.less";
+
+.root {
+  -c-theme-primary: @theme-primary;
+  -c-base: tint(@theme-primary, 50%);
+  
+  -c-glass: fade(@theme-primary, 20%);
+  
+  -c-dark-glass-highlight: rgba(255, 255, 255, 0.6);
+  -c-dark-glass-medium: rgba(128, 128, 128, 0.6);
+  -c-dark-glass: rgba(0, 0, 0, 0.6);
+  
+  -c-tinted-glass: @tinted-glass;
+  -c-tinted-glass-dark: darken(@tinted-glass, 50%, relative);
+  -c-tinted-glass-black: darken(@tinted-glass, 90%, relative);
+  
+  -c-shadow: derive(-c-base, -75%);    
+  -c-shadow-highlight: derive(-c-base, -50%);
+  
+  -c-highlight: rgb(255, 222, 0);
+  -c-highlight-50: rgb(255, 222, 0, 0.5);
+  -c-highlight-75: rgb(255, 222, 0, 0.75);
+
+  /* normal text colors */
+    
+  -c-text: @text-primary;
+  -c-text-highlight: tint(@text-primary, 50%);
+  -c-text-focused: tint(@text-primary, 50%);
+  -c-text-unobtrusive: shade(@text-primary, 33%);
+  
+  /* dark text colors */
+  
+  -c-text-dark: shade(@text-primary, 25%);
+  -c-text-dark-highlight: -c-base;
+  -c-text-dark-unobtrusive: shade(@text-primary, 50%);
+  
+  /* special text colors */
+  
+  -c-text-watermark: rgba(173, 216, 230, 0.1);
+}
+
+/* Change some JavaFX defaults globally */
+
+.root {  
+  -fx-background-color: transparent;
+  
+  .text-style-base;
+  
+  -fx-text-fill: -c-text;
+  
+  -fx-focus-color: rgb(255, 255, 0);
+  -fx-accent: -fx-focus-color;
+}
+
+.label {
+  -fx-text-fill: -c-text;
+}
+
+
+
+
+/*
+ * ========================================================================================================================
+ * Media Look
+ * ========================================================================================================================
+ */
+ 
+/*
+ * ListCell, TreeCell and OptionCell: show focused cell 
+ */
+ 
+.list-cell:focused, .tree-cell:focused, .option-cell:focused {
+  -fx-background-color: rgba(173, 216, 230, 0.3);
+}
+
+.list-cell:focused .label, .tree-cell:focused .label, .option-cell.focused .label {
+  -fx-text-fill: -c-text-focused;
+}
+
+/*
+ * ListCell, TreeCell and TableCell: remove odd/even styling
+ */
+ 
+.list-cell:even, .tree-cell:even, .table-cell:even, .list-cell:odd, .tree-cell:odd, .table-cell:odd {
+  -fx-background-color: transparent;
+}
+
+/*
+ * ListCell and TreeCell: hide empty cells
+ */
+
+.list-cell:empty, .tree-cell:empty {  
+  -fx-border-color: transparent;
+  -fx-border-width: 1;
+  -fx-border-insets: 1;
+}
+ 
+/*
+ * Styles for .main-list
+ */
+ 
+.main-list .list-cell, .main-list .tree-cell, .main-list .option-cell {
+  -fx-background-color: transparent;
+
+  -fx-padding: 1px;
+  -fx-border-color: linear-gradient(to right, transparent, color-blue-20 15%, color-blue-20 85%, transparent);
+  -fx-border-width: 1;
+  -fx-border-insets: 1;
+}
+
+.main-list .list-cell:focused, .main-list .tree-cell:focused, .main-list .option-cell.focused {
+  -fx-background-insets: 1, 1, 1;
+  -fx-background-color: radial-gradient(center 25% 0%, radius 25%, color-blue 0%, transparent),
+                        radial-gradient(center 75% 100%, radius 25%, color-blue 0%, transparent),
+                        linear-gradient(to right, transparent, color-blue-20 15%, color-blue-20 85%, transparent);
+  
+  -fx-border-width: 1, 1, 1;
+  -fx-border-color: radial-gradient(center 25% 0%, radius 25%, color-blue 0%, transparent),
+                    radial-gradient(center 75% 100%, radius 25%, color-blue 0%, transparent),
+                    linear-gradient(to right, transparent, color-blue-50 15%, color-blue-50 85%, transparent);                 
+}
+
+/*
+ * Styles for .list
+ */
+
+.list .list-view {
+  -fx-border-width: 2;
+  -fx-border-color: color-blue-20;
+  -fx-border-radius: 10;
+}
+
+.list .header {
+  -fx-alignment: center;
+}
+
+.list .header .label {
+  -fx-background-color: color-blue-20;
+  -fx-background-radius: 8 8 0 0;
+  -fx-label-padding: 5 20 5 20;
+}
+
+
+/*
+ * Keyboard shortcut styling
+ */
+ 
+.label.shortcut {
+  -base: rgb(255, 245, 230);
+  -fx-border-width: 1;
+  -fx-border-radius: 3;
+  -fx-border-insets: -1 1 1 1;
+  -fx-border-color: linear-gradient(from 100% 100% to 0% 0%, -base, derive(-base, -30%));
+  -fx-background-radius: 5, 0;
+  -fx-background-insets: -2 0 -2 0, 0 2 2 2;
+  -fx-background-color: linear-gradient(from 100% 0% to 0% 100%, derive(-base, -25%), derive(-base, -50%)), linear-gradient(from 0% 0% to 0% 100%, derive(-base, -15%), derive(-base, -25%));
+  -fx-font-family: "Arial";
+  -fx-font-size: 10px;
+  -fx-font-weight: bold;
+  -fx-text-fill: black;
+  -fx-label-padding: 0 3 2 3;
+  -fx-alignment: top-left;
+}
+
+.label.remote-shortcut {
+  -base: white;
+  -fx-border-width: 1;
+  -fx-border-radius: 10;
+  -fx-border-insets: -1 1 1 1;
+  -fx-border-color: linear-gradient(from 100% 100% to 0% 0%, -base, derive(-base, -30%));
+  -fx-background-radius: 12, 7;
+  -fx-background-insets: -2 0 -2 0, 0 2 2 2;
+  -fx-background-color: linear-gradient(from 100% 0% to 0% 100%, derive(-base, -25%), derive(-base, -50%)), linear-gradient(from 0% 0% to 0% 100%, derive(-base, -15%), derive(-base, -25%));
+  -fx-font-family: "Arial";
+  -fx-font-size: 10px;
+  -fx-font-weight: bold;
+  -fx-text-fill: black;
+  -fx-label-padding: 0 3 2 3;
+  -fx-alignment: top-left;
+
+  -fx-min-width: 18px;
+  -fx-max-width: 18px;
+}
+
+.label.remote-shortcut.red {
+  -base: red;
+}
+
+.label.remote-shortcut.green {
+  -base: green;
+}
+
+.label.remote-shortcut.yellow {
+  -base: yellow;
+}
+
+.label.remote-shortcut.blue {
+  -base: blue;
+}
