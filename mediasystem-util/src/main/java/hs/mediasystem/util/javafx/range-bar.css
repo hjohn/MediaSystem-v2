@@ -1,0 +1,55 @@
+.range-bar {
+  -c-range-bar: rgb(173, 216, 230);
+  -c-range-secondary: yellow;
+  
+  -c-range-bar-highlight: derive(-c-range-bar, +90%);
+  -c-range-bar-shadow: derive(-c-range-bar, -90%);
+  -c-range-bar-dark: derive(-c-range-bar, -40%);
+}
+
+.range-bar {
+  -fx-border-color: linear-gradient(to bottom, derive(-c-range-bar-highlight, -20%), -c-range-bar-shadow); 
+  -fx-border-radius: 1.0em;
+  -fx-border-width: 1;
+  -fx-padding: 1;
+  
+  -fx-background-color: linear-gradient(to bottom, derive(-c-range-bar, -20%) 0%, derive(-c-range-bar-dark, -20%) 50%, -c-range-bar-shadow 51%, derive(-c-range-bar-dark, -20%));
+  -fx-background-radius: 1.0em;
+}
+
+.range-bar .track {
+  -fx-padding: 8px;
+  
+  -fx-background-color: 
+    linear-gradient(to bottom, -c-range-bar-shadow, -c-range-bar),
+    linear-gradient(to bottom, -c-range-bar-shadow, derive(-c-range-bar-dark, -25%))
+  ;
+  -fx-background-insets: 4, 5;
+  -fx-background-radius: 1.0em;
+}
+
+.range-bar .range {
+  -fx-background-color: linear-gradient(to bottom, derive(-c-range-secondary, -15%), -c-range-secondary 25%, derive(-c-range-secondary, -15%));
+  -fx-background-insets: 6;
+  -fx-background-radius: 1.0em;
+}
+
+.range-bar .thumb {
+  -fx-border-color: 
+    linear-gradient(to bottom, -c-range-bar-dark, -c-range-bar-shadow), 
+    linear-gradient(to bottom, -c-range-bar-highlight, -c-range-bar-dark), 
+    linear-gradient(to bottom, -c-range-bar, -c-range-bar-highlight),
+    linear-gradient(to bottom, -c-range-bar-shadow, -c-range-bar-dark)
+  ;
+  -fx-border-insets: 0, 1, 3, 4;
+  -fx-border-radius: 10.0em;
+  -fx-border-width: 2, 3, 2, 1;
+  
+  -fx-background-color:  linear-gradient(to bottom, yellow, -c-range-bar-highlight);
+  -fx-background-insets: 4;
+  -fx-background-radius: 10.0em;
+}
+
+.label {
+  -fx-font-weight: bold;
+}

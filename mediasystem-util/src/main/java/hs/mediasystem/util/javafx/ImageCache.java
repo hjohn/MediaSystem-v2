@@ -1,0 +1,275 @@
+package hs.mediasystem.util.javafx;
+
+import hs.mediasystem.util.ImageHandle;
+
+import java.awt.Dimension;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
+
+import javafx.scene.image.Image;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+
+public class ImageCache {
+  private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
+  private static final SortedMap<String, WeakReference<?>> CACHE = new TreeMap<>();
+
+  public static Image loadImage(ImageHandle handle) {
+    cleanReferenceQueue();
+
+    return loadImage(handle.getKey(), () -> new Image(new ByteArrayInputStream(handle.getImageData())));
+  }
+
+  public static Image getImageUptoMaxSize(ImageHandle handle, int w, int h) {
+    String key = createKey(handle.getKey(), w, h, true);
+
+    synchronized(CACHE) {
+      WeakReference<?> ref = CACHE.get(key);
+
+      if(ref == null) {
+        return null;
+      }
+
+      Object content = ref.get();
+
+      if(content instanceof Image) {
+        return (Image)content;
+      }
+
+      return null;
+    }
+  }
+
+  public static Image loadImageUptoMaxSize(ImageHandle handle, int w, int h) {
+    cleanReferenceQueue();
+
+    String key = createKey(handle.getKey(), w, h, true);
+
+    return loadImage(key, () -> {
+      Image image = null;
+      byte[] data = handle.getImageData();
+
+      if(data != null) {
+        Dimension size = determineSize(data);
+
+        if(size != null) {
+          if(size.width <= w && size.height <= h) {
+            image = new Image(new ByteArrayInputStream(data));
+          }
+          else {
+            image = new Image(new ByteArrayInputStream(data), w, h, true, true);
+          }
+        }
+      }
+
+      return image;
+    });
+  }
+
+  /**
+   * Loads the image matching the given key, optionally using the Image supplier if no previous
+   * load was in progress.  If another load for the same image is in progress this function
+   * waits for it to be completed and then returns the image.
+   *
+   * @param key an image key
+   * @param imageSupplier an Image supplier, which will be called if needed
+   * @return the image matching the given key
+   */
+  private static Image loadImage(String key, Supplier<Image> imageSupplier) {
+    CompletableFuture<Image> futureImage;
+    boolean needsCompletion = false;
+
+    /*
+     * Obtain an existing Future for the Image to be loaded or create a new one:
+     */
+
+    synchronized(CACHE) {
+      WeakReference<?> ref = CACHE.get(key);
+
+      if(ref != null) {
+        Object content = ref.get();
+
+        if(content instanceof Image) {
+          return (Image)content;  // The cache had an Image, return it
+        }
+      }
+
+      // Normal flow, create future if needed:
+      WeakReference<CompletableFuture<Image>> futureImageRef = (WeakReference<CompletableFuture<Image>>)ref;
+
+      futureImage = futureImageRef != null ? futureImageRef.get() : null;
+
+      if(futureImage == null) {
+        futureImage = new CompletableFuture<>();
+        store(key, futureImage);
+        needsCompletion = true;
+      }
+    }
+
+    /*
+     * Optionally trigger an image load and use it to complete the Future.  This must happen
+     * outside the synchronized block as the lock would otherwise be held for the duration
+     * of the image loading.
+     */
+
+    if(needsCompletion) {
+      Image image = null;
+
+      try {
+        image = imageSupplier.get();
+
+        futureImage.complete(image);
+      }
+      catch(Exception e) {
+        futureImage.completeExceptionally(e);
+      }
+
+      if(image == null) {
+        synchronized(CACHE) {
+          CACHE.remove(key);
+        }
+      }
+    }
+
+    /*
+     * Get the final image result and return it:
+     */
+
+    try {
+      Image image = futureImage.get();
+
+      synchronized(CACHE) {
+        CACHE.put(key, new ImageWeakReference(key, image, REFERENCE_QUEUE));  // Put Image directly in cache
+      }
+
+      return image;
+    }
+    catch(InterruptedException | ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static Dimension determineSize(byte[] data) {
+    try(ImageInputStream is = ImageIO.createImageInputStream(new ByteArrayInputStream(data))) {
+      Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(is);
+
+      if(imageReaders.hasNext()) {
+        ImageReader imageReader = imageReaders.next();
+
+        imageReader.setInput(is);
+
+        int w = imageReader.getWidth(imageReader.getMinIndex());
+        int h = imageReader.getHeight(imageReader.getMinIndex());
+
+        imageReader.dispose();
+
+        return new Dimension(w, h);
+      }
+
+      return null;
+    }
+    catch(IOException e) {
+      return null;
+    }
+  }
+
+  private static void store(String key, CompletableFuture<Image> imageFuture) {
+    ImageFutureWeakReference imageRef = new ImageFutureWeakReference(key, imageFuture, REFERENCE_QUEUE);
+
+    synchronized(CACHE) {
+      CACHE.put(key, imageRef);
+    }
+  }
+
+  private static void cleanReferenceQueue() {
+    int size;
+    int counter = 0;
+
+    synchronized(CACHE) {
+      size = CACHE.size();
+
+      for(;;) {
+        KeyedReference ref = (KeyedReference)REFERENCE_QUEUE.poll();
+
+        if(ref == null) {
+          break;
+        }
+
+        CACHE.remove(ref.getKey());
+
+        counter++;
+      }
+    }
+
+    if(counter > 0) {
+      System.out.println("[FINE] ImageCache.cleanReferenceQueue() - Removed " + counter + "/" + size + " images.");
+    }
+  }
+
+  private static String createKey(String baseKey, double w, double h, boolean keepAspect) {
+    return baseKey + "#" + w + "x" + h + "-" + (keepAspect ? "T" : "F");
+  }
+
+  public static void expunge(ImageHandle handle) {
+    if(handle != null) {
+      String keyToRemove = handle.getKey();
+
+      synchronized(CACHE) {
+        for(Iterator<Map.Entry<String, WeakReference<?>>> iterator = CACHE.tailMap(keyToRemove).entrySet().iterator(); iterator.hasNext();) {
+          Map.Entry<String, WeakReference<?>> entry = iterator.next();
+
+          if(!entry.getKey().startsWith(keyToRemove)) {
+            break;
+          }
+
+          iterator.remove();
+        }
+      }
+    }
+  }
+
+  private interface KeyedReference {
+    String getKey();
+  }
+
+  private static class ImageFutureWeakReference extends WeakReference<CompletableFuture<Image>> implements KeyedReference {
+    private final String key;
+
+    public ImageFutureWeakReference(String key, CompletableFuture<Image> referent, ReferenceQueue<Object> q) {
+      super(referent, q);
+
+      this.key = key;
+    }
+
+    @Override
+    public String getKey() {
+      return key;
+    }
+  }
+
+  private static class ImageWeakReference extends WeakReference<Image> implements KeyedReference {
+    private final String key;
+
+    public ImageWeakReference(String key, Image referent, ReferenceQueue<Object> q) {
+      super(referent, q);
+
+      this.key = key;
+    }
+
+    @Override
+    public String getKey() {
+      return key;
+    }
+  }
+}

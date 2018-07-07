@@ -1,0 +1,38 @@
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>hs.mediasystem</groupId>
+  <artifactId>mediasystem-parent</artifactId>
+  <version>2.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  
+  <modules>
+    <module>mediasystem-runner</module>
+    <module>mediasystem-domain</module>
+    <module>mediasystem-util</module>
+    <module>mediasystem-mediamanager</module>
+    <module>mediasystem-db</module>
+	<module>mediasystem-ext-basic-media-types</module>
+	<module>mediasystem-package</module>
+  </modules>
+  
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/java</directory>
+        <includes>
+          <include>**/*.properties</include>
+          <include>**/*.jpg</include>
+          <include>**/*.png</include>
+          <include>**/*.css</include>
+		  <include>**/*.less</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>   
+  </build>
+</project>
