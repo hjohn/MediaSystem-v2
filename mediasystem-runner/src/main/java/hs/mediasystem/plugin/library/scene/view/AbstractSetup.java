@@ -1,12 +1,8 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.db.StreamStateProvider;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.ContextLayout;
-import hs.mediasystem.plugin.library.scene.EntityLayout.Area;
-import hs.mediasystem.plugin.library.scene.EntityPresentation;
-import hs.mediasystem.plugin.library.scene.Layout;
-import hs.mediasystem.plugin.library.scene.LibraryLocation;
+import hs.mediasystem.plugin.library.scene.LibraryNodeFactory.Area;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.MediaStatus;
@@ -15,11 +11,9 @@ import hs.mediasystem.plugin.library.scene.SlideInTransition;
 import hs.mediasystem.plugin.library.scene.SlideOutTransition;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
-import hs.mediasystem.plugin.library.scene.view.x.Fragment;
+import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.runner.ResourceManager;
-import hs.mediasystem.runner.SceneNavigator;
-import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.javafx.AreaPane2;
 import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.Containers;
@@ -55,19 +49,18 @@ import javafx.util.Duration;
 
 import javax.inject.Inject;
 
-public abstract class AbstractSetup<T> implements Layout<EntityPresentation, GridViewPresentation> {
+public abstract class AbstractSetup<T, P extends GridViewPresentation> implements NodeFactory<P> {
   private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
 
   @Inject private ContextLayout contextLayout;
-  @Inject private SceneNavigator sceneNavigator;
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private StreamStateProvider streamStateProvider;
 
-  public void configurePanes(LibraryLocation location, AreaPane2<Area> areaPane, GridViewPresentation presentation) {
+  public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
     MediaGridView<MediaItem<?>> listView = new MediaGridView<>();
 
     listView.getStyleClass().add("glass-pane");
-    listView.onItemSelected.set(e -> onItemSelected(e, location));
+    listView.onItemSelected.set(e -> onItemSelected(e, presentation));
     listView.getSelectionModel().selectedItemProperty().addListener((ov, old, current) -> {
       if(current != null) {
         Node context = contextLayout.create(current);
@@ -80,19 +73,6 @@ public abstract class AbstractSetup<T> implements Layout<EntityPresentation, Gri
 
     configureGridView(listView);
 
-    ImageURI parentBackdropURI = null;
-
-    if(location.getItem() instanceof MediaItem && ((MediaItem<?>)location.getItem()).getProduction() != null) {
-      parentBackdropURI = ((MediaItem<?>)location.getItem()).getProduction().getBackdrop();
-    }
-
-    presentation.getEntityPresentation().backdrop.bind(
-      Binds.monadic(listView.getSelectionModel().selectedItemProperty())
-        .map(MediaItem::getProduction)
-        .map(Production::getBackdrop)
-        .orElse(parentBackdropURI)
-        .map(imageHandleFactory::fromURI)
-    );
     //view.defaultInputFocus.set(listView);
 
     areaPane.add(Area.CENTER, listView);
@@ -101,35 +81,31 @@ public abstract class AbstractSetup<T> implements Layout<EntityPresentation, Gri
 
     configureCellFactory(cellFactory);
 
-    Node contextPanel = createContextPanel(location);
+    Node contextPanel = createContextPanel(presentation);
 
     if(contextPanel != null) {
       areaPane.add(Area.CONTEXT_PANEL, contextPanel);
     }
 
-    ObservableList<MediaItem<?>> items = getItems(location);
+    ObservableList<MediaItem<?>> items = getItems(presentation);
 
     FilteredList<MediaItem<?>> filteredList = setupFiltering(presentation, items, listView);
     SortedList<MediaItem<?>> sortedList = setupSorting(presentation, filteredList);
 
-    Integer index = location.getStatus("selected");
+    //Integer index = location.getStatus("selected");
 
     listView.setItems(sortedList);
     listView.setCellFactory(cellFactory);
-    listView.getSelectionModel().select(index == null ? 0 : index);  // Do this after sorting so correct item gets selected
-    listView.getSelectionModel().selectedIndexProperty().addListener((obs, old, current) -> location.putStatus("selected", current));
+   // listView.getSelectionModel().select(index == null ? 0 : index);  // Do this after sorting so correct item gets selected
+   // listView.getSelectionModel().selectedIndexProperty().addListener((obs, old, current) -> location.putStatus("selected", current));
     listView.requestFocus();
 
     setupStatusBar(areaPane, presentation, sortedList, items);
 
     presentation.selectedItem.bind(listView.getSelectionModel().selectedItemProperty());
-
-    sceneNavigator.associatePresentation(areaPane, presentation);
   }
 
-  @Override
-  public Fragment<GridViewPresentation> createView(EntityPresentation entityPresentation) {
-    GridViewPresentation presentation = new GridViewPresentation(streamStateProvider, entityPresentation);
+  public Node createView(P presentation) {
 
     AreaPane2<Area> areaPane = new AreaPane2<>() {
       StackPane leftOverlayPanel = new StackPane();
@@ -233,20 +209,11 @@ public abstract class AbstractSetup<T> implements Layout<EntityPresentation, Gri
       }
     };
 
-    presentation.location.addListener((obs, o, n) -> locationChanged(n, areaPane, presentation));
-    presentation.location.bind(Binds.monadic(entityPresentation.location).filter(loc -> getLocationClass().isInstance(loc)).orElse(null));
-
     areaPane.setMinSize(1, 1);
 
-    return new Fragment<>(areaPane, presentation);
-  }
+    configurePanes(areaPane, presentation);
 
-  private void locationChanged(LibraryLocation location, AreaPane2<Area> areaPane, GridViewPresentation presentation) {
-    if(location == null) {
-      return;
-    }
-
-    configurePanes(location, areaPane, presentation);
+    return areaPane;
   }
 
   private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation presentation, ObservableList<MediaItem<?>> filteredItems, ObservableList<MediaItem<?>> originalItems) {
@@ -269,7 +236,7 @@ public abstract class AbstractSetup<T> implements Layout<EntityPresentation, Gri
     }
   }
 
-  private FilteredList<MediaItem<?>> setupFiltering(GridViewPresentation presentation, ObservableList<MediaItem<?>> items, MediaGridView<MediaItem<?>> listView) {
+  private FilteredList<MediaItem<?>> setupFiltering(P presentation, ObservableList<MediaItem<?>> items, MediaGridView<MediaItem<?>> listView) {
     FilteredList<MediaItem<?>> filteredList = new FilteredList<>(items);
 
     InvalidationListener listener = obs -> {
@@ -301,7 +268,7 @@ public abstract class AbstractSetup<T> implements Layout<EntityPresentation, Gri
     return filteredList;
   }
 
-  private SortedList<MediaItem<?>> setupSorting(GridViewPresentation presentation, FilteredList<MediaItem<?>> filteredList) {
+  private SortedList<MediaItem<?>> setupSorting(P presentation, FilteredList<MediaItem<?>> filteredList) {
     SortedList<MediaItem<?>> sortedList = new SortedList<>(filteredList);
 
     presentation.sortOrder.addListener((obs, old, current) -> sortedList.setComparator((Comparator<MediaItem<?>>)(Comparator<?>)current.comparator));
@@ -312,9 +279,9 @@ public abstract class AbstractSetup<T> implements Layout<EntityPresentation, Gri
     return sortedList;
   }
 
-  protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, LibraryLocation location);
+  protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, P presentation);
   protected abstract void configureCellFactory(MediaGridViewCellFactory cellFactory);
-  protected abstract ObservableList<MediaItem<?>> getItems(LibraryLocation location);
+  protected abstract ObservableList<MediaItem<?>> getItems(P presentationn);
   protected abstract List<SortOrder<T>> getAvailableSortOrders();
   protected abstract List<Filter<T>> getAvailableFilters();
   protected abstract boolean showViewed();
@@ -322,7 +289,7 @@ public abstract class AbstractSetup<T> implements Layout<EntityPresentation, Gri
   protected void configureGridView(MediaGridView<MediaItem<?>> gridView) {
   }
 
-  protected Node createContextPanel(LibraryLocation location) {
+  protected Node createContextPanel(P presentation) {
     return null;
   }
 }

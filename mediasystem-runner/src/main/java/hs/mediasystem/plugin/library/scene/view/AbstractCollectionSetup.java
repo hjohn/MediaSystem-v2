@@ -9,7 +9,6 @@ import hs.mediasystem.ext.basicmediatypes.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.Type;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.mediamanager.LocalMediaManager;
-import hs.mediasystem.plugin.library.scene.LibraryLocation;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
@@ -29,8 +28,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 
-public abstract class AbstractCollectionSetup<T> extends AbstractSetup<T> {
+public abstract class AbstractCollectionSetup<T, P extends GridViewPresentation> extends AbstractSetup<T, P> {
   private final Type type;
 
   @Inject private LocalMediaManager localMediaManager;
@@ -43,13 +43,13 @@ public abstract class AbstractCollectionSetup<T> extends AbstractSetup<T> {
   }
 
   @Override
-  public ObservableList<MediaItem<?>> getItems(LibraryLocation location) {
+  public ObservableList<MediaItem<?>> getItems(GridViewPresentation presentation) {
     Collection<MediaStream<MediaDescriptor>> mediaStreams = localMediaManager.findAllByType(type);
 
     return (ObservableList<MediaItem<?>>)(ObservableList<?>)createProductionItems(mediaStreams, this::extractDescriptor);
   }
 
-  protected abstract <T extends MediaDescriptor> T extractDescriptor(MediaStream<T> mediaStream);
+  protected abstract <M extends MediaDescriptor> M extractDescriptor(MediaStream<M> mediaStream);
 
   @Override
   protected void configureCellFactory(MediaGridViewCellFactory cellFactory) {
@@ -58,7 +58,7 @@ public abstract class AbstractCollectionSetup<T> extends AbstractSetup<T> {
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
   }
 
-  private <T extends MediaDescriptor> int countWatchedStreams(MediaStream<T> stream) {
+  private <D extends MediaDescriptor> int countWatchedStreams(MediaStream<D> stream) {
     if((boolean)streamStateProvider.get(stream.getStreamPrint()).getOrDefault("watched", false)) {
       return 1;
     }
@@ -66,7 +66,7 @@ public abstract class AbstractCollectionSetup<T> extends AbstractSetup<T> {
     return 0;
   }
 
-  private <T extends MediaDescriptor> ObservableList<MediaItem<T>> createProductionItems(Collection<MediaStream<T>> streams, Function<MediaStream<T>, T> mapper) {
+  private <D extends MediaDescriptor> ObservableList<MediaItem<D>> createProductionItems(Collection<MediaStream<D>> streams, Function<MediaStream<D>, D> mapper) {
     return FXCollections.observableArrayList(streams.stream().map(s -> new MediaItem<>(
       mapper.apply(s),
       Set.of(s),
@@ -75,9 +75,9 @@ public abstract class AbstractCollectionSetup<T> extends AbstractSetup<T> {
     )).collect(Collectors.toList()));
   }
 
-  protected <T extends MediaDescriptor> T extractDescriptor(MediaStream<T> mediaStream, DataSource dataSource) {
+  protected <D extends MediaDescriptor> D extractDescriptor(MediaStream<D> mediaStream, DataSource dataSource) {
     for(Identifier identifier : mediaStream.getMediaRecords().keySet()) {
-      MediaRecord<T> record = mediaStream.getMediaRecords().get(identifier);
+      MediaRecord<D> record = mediaStream.getMediaRecords().get(identifier);
 
       if(identifier.getDataSource() == dataSource) {
         return record.getMediaDescriptor();
@@ -87,9 +87,11 @@ public abstract class AbstractCollectionSetup<T> extends AbstractSetup<T> {
     return null;
   }
 
+  @Inject private Provider<ProductionDetailPresentation> detailPresentationProvider;
+
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, LibraryLocation location) {
-    navigator.go(new DetailLocation(event.getItem()));
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, P presentation) {
+    navigator.navigateTo(detailPresentationProvider.get().set(event.getItem()));
     event.consume();
   }
 

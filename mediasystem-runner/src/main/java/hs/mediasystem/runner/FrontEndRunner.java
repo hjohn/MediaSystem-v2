@@ -2,6 +2,7 @@ package hs.mediasystem.runner;
 
 import hs.ddif.core.Injector;
 import hs.ddif.plugins.PluginManager;
+import hs.mediasystem.plugin.rootmenu.MenuPresentation;
 import hs.mediasystem.plugin.rootmenu.StartupLocationSetting;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
@@ -11,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,6 +48,8 @@ public class FrontEndRunner extends Application {
   public void start(Stage primaryStage) throws Exception {
     Injector injector = MediaSystemConfigurer.start();
 
+    injector.registerInstance(injector);  // Register injector with itself
+
     Ini ini = injector.getInstance(Ini.class);
     Section generalSection = ini.getSection("general");
     int screenNumber = generalSection == null ? 0 : Integer.parseInt(generalSection.getDefault("screen", "0"));
@@ -60,22 +62,10 @@ public class FrontEndRunner extends Application {
 
     SceneNavigator navigator = injector.getInstance(SceneNavigator.class);
 
-    //@Inject @Named("primary") private
-
     StartupLocationSetting startupLocationSetting = injector.getInstance(StartupLocationSetting.class);
-//    Supplier<Object> startupLocationSupplier = injector.getInstance(new TypeReference<Supplier<Object>>() {}.getType(), AnnotationDescriptor.describe(Named.class, new Value("value", "primary")));
 
-    navigator.setHistory(Arrays.asList(startupLocationSetting.get()));
-
-//    loadPlugins(injector);
-//
-//    ObjectProperty<PlayerFactory> selectedPlayerFactory = configurePlayers(injector, ini);
-//
-//    configureSettings(injector, selectedPlayerFactory);
-//
-//    ProgramController controller = injector.getInstance(ProgramController.class);
-//
-//    controller.showMainScreen();
+//    navigator.setHistory(Arrays.asList(startupLocationSetting.get()));
+    navigator.navigateTo(new MenuPresentation());
   }
 
   private static void loadPlugins(final Injector injector) throws IOException {

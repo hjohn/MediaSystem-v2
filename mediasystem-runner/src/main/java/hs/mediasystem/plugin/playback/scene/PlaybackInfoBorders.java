@@ -172,7 +172,7 @@ public class PlaybackInfoBorders extends StackPane {
     }));
   }
 
-  private Timeline createOSDTimeLine(Node node) {
+  private static Timeline createOSDTimeLine(Node node) {
     return new Timeline(
       new KeyFrame(Duration.seconds(0.5), new KeyValue(node.opacityProperty(), 1.0)),
       new KeyFrame(Duration.seconds(2), new KeyValue(node.opacityProperty(), 1.0)),
@@ -180,7 +180,7 @@ public class PlaybackInfoBorders extends StackPane {
     );
   }
 
-  private void showOSD(OSD osd) {
+  private static void showOSD(OSD osd) {
     ((Timeline)osd.location.getUserData()).playFromStart();
 
     if(osd.location.getChildren().isEmpty() || !osd.location.getChildren().get(0).getId().equals(osd.title)) {

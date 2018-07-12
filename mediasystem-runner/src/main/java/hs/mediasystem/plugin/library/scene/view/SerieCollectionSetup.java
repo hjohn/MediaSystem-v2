@@ -16,10 +16,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import javafx.scene.Node;
+
 import javax.inject.Singleton;
 
 @Singleton
-public class SerieCollectionSetup extends AbstractCollectionSetup<Serie> {
+public class SerieCollectionSetup extends AbstractCollectionSetup<Serie, SerieCollectionPresentation> {
   private static final Type SERIE = Type.of("SERIE");
 
   public SerieCollectionSetup() {
@@ -27,16 +29,12 @@ public class SerieCollectionSetup extends AbstractCollectionSetup<Serie> {
   }
 
   @Override
-  public Class<?> getLocationClass() {
-    return SerieCollectionLocation.class;
-  }
-
-  @Override
   protected <T extends MediaDescriptor> T extractDescriptor(MediaStream<T> mediaStream) {
     return Optional.ofNullable(extractDescriptor(mediaStream, DataSource.instance(SERIE, "TMDB"))).orElseGet(() -> createSerieDescriptor(mediaStream));
   }
 
-  private <T extends MediaDescriptor> T createSerieDescriptor(MediaStream<T> mediaStream) {
+  @SuppressWarnings("unchecked")
+  private static <T extends MediaDescriptor> T createSerieDescriptor(MediaStream<T> mediaStream) {
     return (T)new Serie(
       new Production(
         new ProductionIdentifier(DataSource.instance(SERIE, "LOCAL"), mediaStream.getStreamPrint().getIdentifier()),
@@ -60,5 +58,10 @@ public class SerieCollectionSetup extends AbstractCollectionSetup<Serie> {
       new SortOrder<Serie>("alpha", Comparator.comparing(mediaItem -> mediaItem.getProduction().getName())),
       new SortOrder<Serie>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed()))
     );
+  }
+
+  @Override
+  public Node create(SerieCollectionPresentation presentation) {
+    return createView(presentation);
   }
 }

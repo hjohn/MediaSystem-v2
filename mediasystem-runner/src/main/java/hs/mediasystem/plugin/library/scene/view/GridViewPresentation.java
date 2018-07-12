@@ -3,10 +3,8 @@ package hs.mediasystem.plugin.library.scene.view;
 import hs.mediasystem.db.StreamStateProvider;
 import hs.mediasystem.ext.basicmediatypes.StreamPrint;
 import hs.mediasystem.framework.actions.Expose;
-import hs.mediasystem.plugin.library.scene.EntityPresentation;
-import hs.mediasystem.plugin.library.scene.LibraryLocation;
 import hs.mediasystem.plugin.library.scene.MediaItem;
-import hs.mediasystem.runner.LocationPresentation;
+import hs.mediasystem.presentation.Presentation;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -19,7 +17,10 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-public class GridViewPresentation extends LocationPresentation<LibraryLocation> {
+import javax.inject.Inject;
+
+public class GridViewPresentation implements Presentation {
+  @Inject private StreamStateProvider streamStateProvider;
 
   @Expose(values = "availableSortOrders")
   public final ObjectProperty<SortOrder<?>> sortOrder = new SimpleObjectProperty<>();
@@ -33,18 +34,6 @@ public class GridViewPresentation extends LocationPresentation<LibraryLocation> 
   public final BooleanProperty includeViewed = new SimpleBooleanProperty(true);
 
   public final ObjectProperty<MediaItem<?>> selectedItem = new SimpleObjectProperty<>();
-
-  private final StreamStateProvider streamStateProvider;
-  private final EntityPresentation entityPresentation;
-
-  public GridViewPresentation(StreamStateProvider streamStateProvider, EntityPresentation entityPresentation) {
-    this.streamStateProvider = streamStateProvider;
-    this.entityPresentation = entityPresentation;
-  }
-
-  public EntityPresentation getEntityPresentation() {
-    return entityPresentation;
-  }
 
   @Expose
   public void toggleWatchedState() {

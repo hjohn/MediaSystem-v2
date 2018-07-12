@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.rootmenu;
 
+import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.PluginBase;
-import hs.mediasystem.runner.ScenePlugin;
 import hs.mediasystem.util.FocusEvent;
 
 import java.util.Comparator;
@@ -25,7 +25,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Singleton
-public class RootMenuScenePlugin implements ScenePlugin<HomeLocation, Object> {
+public class RootMenuScenePlugin implements NodeFactory<MenuPresentation> {
   public interface MenuPlugin extends PluginBase {
     Node getNode();
   }
@@ -33,17 +33,7 @@ public class RootMenuScenePlugin implements ScenePlugin<HomeLocation, Object> {
   @Inject private Provider<List<MenuPlugin>> pluginsProvider;
 
   @Override
-  public Class<HomeLocation> getLocationClass() {
-    return HomeLocation.class;
-  }
-
-  @Override
-  public Object createPresentation() {
-    return null;
-  }
-
-  @Override
-  public Node createNode(Object presentation) {
+  public Node create(MenuPresentation presentation) {
     List<Node> nodes = pluginsProvider.get().stream()
       .sorted(Comparator.comparing(p -> p.getDouble("order")))
       .map(this::toBar)
@@ -103,8 +93,5 @@ public class RootMenuScenePlugin implements ScenePlugin<HomeLocation, Object> {
     });
 
     return vbox;
-//    return new Button(plugin.getText("title"), new ImageView(plugin.getImage("image"))) {{
-//      setBackground(new Background(new BackgroundFill(Color.RED, CornerRadii.EMPTY, Insets.EMPTY)));
-//    }};
   }
 }

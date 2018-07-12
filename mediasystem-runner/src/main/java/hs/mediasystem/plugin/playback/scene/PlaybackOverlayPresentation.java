@@ -2,8 +2,11 @@ package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.framework.actions.Expose;
-import hs.mediasystem.runner.LocationPresentation;
+import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
+
+import java.net.URI;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -13,7 +16,14 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 
-public class PlaybackOverlayPresentation extends LocationPresentation<PlaybackLocation> implements Navigable {
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+public class PlaybackOverlayPresentation implements Navigable, Presentation {
+  public final ObjectProperty<MediaItem<?>> mediaItem = new SimpleObjectProperty<>();
+  public final ObjectProperty<URI> uri = new SimpleObjectProperty<>();
+
+  @Inject private PlayerSetting playerSetting;
 
   @Expose(name = "player")
   public final ObjectProperty<PlayerPresentation> playerPresentation = new SimpleObjectProperty<>();
@@ -21,16 +31,24 @@ public class PlaybackOverlayPresentation extends LocationPresentation<PlaybackLo
   @Expose
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
 
+  public PlaybackOverlayPresentation set(MediaItem<?> mediaItem, URI uri) {
+    this.mediaItem.set(mediaItem);
+    this.uri.set(uri);
+
+    return this;
+  }
+
   // TODO this binding is ugly, but it prevents a permanent reference to Player...
   //private final LongBinding position = Bindings.selectLong(player, "position");
 
 //  @Inject private Set<SubtitleProvider> subtitleProviders;
 //  @Inject private Set<SubtitleCriteriaProvider> subtitleCriteriaProviders;
 
-  public PlaybackOverlayPresentation(PlayerPresentation playerPresentation) {
-    this.playerPresentation.set(playerPresentation);
+  @PostConstruct
+  private void postConstruct() {
+    this.playerPresentation.set(playerSetting.get());
 
-    playerPresentation.positionProperty().addListener(new ChangeListener<Number>() {
+    this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
       private long totalTimeViewed;
       private long timeViewedSinceLastSkip;
 

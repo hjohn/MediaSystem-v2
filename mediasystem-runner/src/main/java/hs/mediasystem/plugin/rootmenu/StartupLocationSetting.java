@@ -11,6 +11,6 @@ public class StartupLocationSetting implements Supplier<Object> {
 
   @Override
   public Object get() {
-    return new HomeLocation();  // TODO needs to be configurable
+    return new MenuPresentation();  // TODO needs to be configurable
   }
 }

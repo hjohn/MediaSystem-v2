@@ -46,15 +46,15 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 public class PlaybackOverlayPane extends StackPane {
-  public final ObjectProperty<PlaybackLocation> location = new SimpleObjectProperty<>();
   public final ObjectProperty<PlayerPresentation> player = new SimpleObjectProperty<>();
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
 
+  private final ObjectProperty<PlaybackOverlayPresentation> presentation = new SimpleObjectProperty<>();
   private final PlayerBindings playerBindings = new PlayerBindings(player);
 
   private final GridPane detailsOverlay = GridPaneUtil.create(new double[] {5, 20, 5, 65, 5}, new double[] {45, 50, 5});
 
-  private final ObjectBinding<ImageHandle> posterHandle = MapBindings.get(location).then("mediaItem").then("production").then("image").asObjectBinding();
+  private final ObjectBinding<ImageHandle> posterHandle = MapBindings.get(presentation).then("mediaItem").then("production").then("image").asObjectBinding();
   private final AsyncImageProperty poster = new AsyncImageProperty();
 
   private final PlaybackInfoBorders borders = new PlaybackInfoBorders(playerBindings);
@@ -77,7 +77,11 @@ public class PlaybackOverlayPane extends StackPane {
     new KeyFrame(Duration.seconds(9), new KeyValue(detailsOverlay.opacityProperty(), 0.0))
   );
 
-  public PlaybackOverlayPane() {
+  public PlaybackOverlayPane(PlaybackOverlayPresentation presentation) {
+    this.presentation.set(presentation);
+    this.player.bind(presentation.playerPresentation);
+    this.overlayVisible.bind(presentation.overlayVisible);
+
     getStylesheets().add(LessLoader.compile(getClass().getResource("styles.css")).toExternalForm());
 
     setId("playback-overlay");
@@ -100,7 +104,7 @@ public class PlaybackOverlayPane extends StackPane {
 
     setFocusTraversable(true);
 
-    borders.mediaProperty().bind(Binds.monadic(location).map(PlaybackLocation::getMediaItem));
+    borders.mediaProperty().bind(Binds.monadic(this.presentation).map(p -> p.mediaItem.get()));
 
     detailsOverlay.setId("video-overlay");
     detailsOverlay.add(new ScaledImageView() {{
@@ -119,9 +123,9 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          final StringBinding serieName = MapBindings.get(location).then("mediaItem").then("production").thenOrDefault("serie", null).then("name").asStringBinding();
-          final StringBinding title = MapBindings.get(location).then("mediaItem").then("production").then("name").asStringBinding();
-          final StringBinding subtitle = MapBindings.get(location).then("mediaItem").then("production").then("name").asStringBinding();  // "subtitle" TODO
+          final StringBinding serieName = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").thenOrDefault("serie", null).then("name").asStringBinding();
+          final StringBinding title = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("name").asStringBinding();
+          final StringBinding subtitle = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("name").asStringBinding();  // "subtitle" TODO
 
           HBox.setHgrow(this, Priority.ALWAYS);
           getChildren().add(new Label() {{
@@ -253,7 +257,7 @@ public class PlaybackOverlayPane extends StackPane {
     group.setId(node.getId());
     stackPane.setScaleY(0.0);
 
-    final EventHandler<ActionEvent> shrinkFinished = new EventHandler<ActionEvent>() {
+    final EventHandler<ActionEvent> shrinkFinished = new EventHandler<>() {
       @Override
       public void handle(ActionEvent event) {
         playbackStateOverlay.getChildren().remove(group);
@@ -264,7 +268,7 @@ public class PlaybackOverlayPane extends StackPane {
       new KeyFrame(Duration.seconds(0.25), shrinkFinished, new KeyValue(stackPane.scaleYProperty(), 0))
     );
 
-    final EventHandler<ActionEvent> fadeInOutFinished = new EventHandler<ActionEvent>() {
+    final EventHandler<ActionEvent> fadeInOutFinished = new EventHandler<>() {
       @Override
       public void handle(ActionEvent event) {
         group.setId(null);
@@ -279,7 +283,7 @@ public class PlaybackOverlayPane extends StackPane {
     );
 
 
-    EventHandler<ActionEvent> expansionFinished = new EventHandler<ActionEvent>() {
+    EventHandler<ActionEvent> expansionFinished = new EventHandler<>() {
       @Override
       public void handle(ActionEvent event) {
         fadeInOutTimeline.play();

@@ -121,11 +121,13 @@ public class MediaSystemConfigurer {
   }
 
   private static void configureDatabase(Injector injector, Section databaseIniSection) {
-    try {
-      Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-    }
-    catch(ClassNotFoundException e) {
-      throw new IllegalStateException(e);
+    if(databaseIniSection == null) {
+      try {
+        Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+      }
+      catch(ClassNotFoundException e) {
+        throw new IllegalStateException(e);
+      }
     }
 
     ConnectionPoolDataSource dataSource = databaseIniSection == null ? new SimpleConnectionPoolDataSource("jdbc:derby:db;create=true") : configureDataSource(databaseIniSection);

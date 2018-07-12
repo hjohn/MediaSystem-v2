@@ -49,7 +49,7 @@ public class BackgroundPane extends StackPane {
     setZoom(true);
   }};
 
-  private final EventHandler<ActionEvent> beforeBackgroundChange = new EventHandler<ActionEvent>() {
+  private final EventHandler<ActionEvent> beforeBackgroundChange = new EventHandler<>() {
     @Override
     public void handle(ActionEvent event) {
 
@@ -72,7 +72,7 @@ public class BackgroundPane extends StackPane {
     }
   };
 
-  private final EventHandler<ActionEvent> quickBackgroundChange = new EventHandler<ActionEvent>() {
+  private final EventHandler<ActionEvent> quickBackgroundChange = new EventHandler<>() {
     @Override
     public void handle(ActionEvent event) {
 
@@ -110,7 +110,6 @@ public class BackgroundPane extends StackPane {
   );
 
   public BackgroundPane() {
-    System.err.println("============= NEW BACKGROUND PANE ============");
     timeline.setOnFinished(new EventHandler<ActionEvent>() {
       @Override
       public void handle(ActionEvent event) {

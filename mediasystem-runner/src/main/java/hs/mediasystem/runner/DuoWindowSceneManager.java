@@ -27,7 +27,7 @@ public class DuoWindowSceneManager implements SceneManager {
   private final Stage mainStage;  // WORKAROUND: Two stages because a transparent mainstage performs so poorly; only using a transparent stage when media is playing; refactor this
   private final Stage transparentStage;
 
-  private final ChangeListener<Paint> fillChangeListener = new ChangeListener<Paint>() {
+  private final ChangeListener<Paint> fillChangeListener = new ChangeListener<>() {
     @Override
     public void changed(ObservableValue<? extends Paint> observable, Paint oldValue, Paint newValue) {
       display();
@@ -159,7 +159,7 @@ public class DuoWindowSceneManager implements SceneManager {
     return screenDevices.length <= screenNumber ? ge.getDefaultScreenDevice() : screenDevices[screenNumber];
   }
 
-  private void setupStageLocation(Stage stage, Screen screen) {
+  private static void setupStageLocation(Stage stage, Screen screen) {
     Rectangle2D bounds = screen.getBounds();
 
     boolean primary = screen.equals(Screen.getPrimary());    // WORKAROUND: this doesn't work nice in combination with full screen, so this hack is used to prevent going fullscreen when screen is not primary

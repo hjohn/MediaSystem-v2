@@ -1,19 +1,18 @@
 package hs.mediasystem.runner;
 
+import hs.ddif.core.Injector;
+import hs.mediasystem.plugin.basictheme.BasicTheme;
+import hs.mediasystem.presentation.ParentPresentation;
+import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.InputActionHandler.Action;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.WeakHashMap;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-import javafx.beans.value.ObservableValue;
-import javafx.event.Event;
-import javafx.event.EventTarget;
 import javafx.geometry.Insets;
-import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
@@ -28,19 +27,24 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Singleton
-public class SceneNavigator implements Navigable {
+public class SceneNavigator {
   private static final Logger LOGGER = Logger.getLogger(SceneNavigator.class.getName());
 
   @Inject private SceneManager sceneManager;
-  @Inject private Provider<List<ScenePlugin<?, ?>>> pluginsProvider;
   @Inject private InputActionHandler inputActionHandler;
+  @Inject private Provider<BasicTheme> themeProvider;
+  @Inject private RootNodeFactory rootNodeFactory;
+  @Inject private Injector injector;
 
-  private final NavigableProperty<SceneLocation> location = new NavigableProperty<>();
-  private final StackPane sceneLayoutPane = new StackPane();
+  private final RootPresentation rootPresentation = new RootPresentation();
+
+  private StackPane sceneLayoutPane;
+  private BasicTheme theme;
 
   @PostConstruct
   private void postConstruct() {
-    location.addListener(this::locationChanged);
+    theme = themeProvider.get();
+    sceneLayoutPane = (StackPane)rootNodeFactory.create(rootPresentation);
 
     sceneLayoutPane.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, CornerRadii.EMPTY, Insets.EMPTY)));  // TODO probably not needed
 
@@ -48,11 +52,7 @@ public class SceneNavigator implements Navigable {
 
     sceneLayoutPane.setOnKeyPressed(this::onKeyPressed);
     sceneLayoutPane.setOnKeyReleased(this::onKeyReleased);
-
-    associatePresentation(sceneLayoutPane, this);
   }
-
-  private final Map<Node, Object> presentations = new WeakHashMap<>();
 
   private KeyCode keyPressedCode;
   private long keyPressedStartTime;
@@ -112,131 +112,64 @@ public class SceneNavigator implements Navigable {
       return;
     }
 
-    EventTarget currentEventChainNode = event.getTarget();
+    ArrayDeque<Presentation> presentations = new ArrayDeque<>();
 
-    while(currentEventChainNode != null) {
-      Object presentation = presentations.get(currentEventChainNode);
+    presentations.add(rootPresentation);
 
-      if(presentation != null) {
-        inputActionHandler.keyPressed(event, presentation, actions);
+    while(presentations.getFirst() instanceof ParentPresentation && ((ParentPresentation)presentations.getFirst()).childPresentationProperty().get() != null) {
+      presentations.addFirst(((ParentPresentation)presentations.getFirst()).childPresentationProperty().get());
+    }
 
-        if(event.isConsumed()) {
-          return;
-        }
+    for(Presentation presentation : presentations) {
+      System.out.println(">>> Attempting " + presentation + " for actions " + actions);
+      inputActionHandler.keyPressed(event, presentation, actions);
+
+      if(event.isConsumed()) {
+        return;
+      }
+    }
+  }
+
+  public void navigateTo(Presentation presentation) {
+    if(presentation == null || presentation instanceof RootPresentation) {
+      throw new IllegalStateException();
+    }
+
+    // Build a list of presentations:
+    List<Presentation> presentations = new ArrayList<>();
+
+    for(Presentation p = presentation;;) {
+      presentations.add(p);
+
+      Class<? extends Presentation> parent = theme.findParent(p.getClass());
+
+      if(parent == null) {
+        throw new IllegalStateException(theme + " does not define parent for " + p.getClass());
+      }
+      if(parent.equals(RootPresentation.class)) {
+        break;
       }
 
-      currentEventChainNode = currentEventChainNode instanceof Node ? ((Node)currentEventChainNode).getParent() : null;
-    }
-  }
+      ParentPresentation instance = (ParentPresentation)injector.getInstance(parent);
 
-  public void associatePresentation(Node node, Object presentation) {
-    presentations.put(node, presentation);
-  }
-
-  public void setHistory(List<Object> values) {
-    location.setHistory(values.stream().map(this::toSceneLocation).collect(Collectors.toList()));
-  }
-
-  public void update(Object location) {
-
-  }
-
-  public void go(Object newLocation) {
-    location.set(toSceneLocation(newLocation));
-  }
-
-  private SceneLocation toSceneLocation(Object current) {
-    @SuppressWarnings("unchecked")
-    ScenePlugin<Object, Object> compatibleScenePlugin = (ScenePlugin<Object, Object>)pluginsProvider.get().stream()
-      .filter(plugin -> plugin.getLocationClass().isAssignableFrom(current.getClass()))
-      .findFirst()
-      .orElseThrow(() -> new IllegalStateException("No matching ScenePlugin for location: " + current + "; available: " + pluginsProvider.get()));
-
-    CachedScene cachedScene = location.getHistory().stream()
-      .filter(Objects::nonNull)
-      .map(sceneLocation -> sceneLocation.cachedScene)
-      .filter(cs -> cs.plugin.equals(compatibleScenePlugin))
-      .findFirst()
-      .orElse(null);
-
-    if(cachedScene != null) {
-      return new SceneLocation(current, cachedScene);
+      instance.childPresentationProperty().set(presentation);
+      p = instance;
     }
 
-    Object presentation = compatibleScenePlugin.createPresentation();
-    Node rootNode = compatibleScenePlugin.createNode(presentation);
+    Collections.reverse(presentations);
 
-    if(presentation != null) {
-//      rootNode.setOnKeyPressed(e -> inputActionHandler.keyPressed(e, presentation));
-      associatePresentation(rootNode, presentation);
-    }
+    // Find common parent in root presentation, and replace the stack at that level:
+    ParentPresentation parent = rootPresentation;
 
-    return new SceneLocation(current, new CachedScene(compatibleScenePlugin, presentation, rootNode));
-  }
+    for(Presentation p : presentations) {
+      Presentation child = parent.childPresentationProperty().get();
 
-  private void locationChanged(ObservableValue<? extends SceneLocation> ov, SceneLocation old, SceneLocation current) {
-    Node rootNode = current.cachedScene.node;
+      if(child == null || !child.getClass().equals(p.getClass())) {
+        parent.childPresentationProperty().set(p);
+        break;
+      }
 
-    LOGGER.info("Navigating to " + current + " from " + old);
-
-    if(current.cachedScene.presentation instanceof LocationPresentation) {
-      @SuppressWarnings("unchecked")
-      LocationPresentation<Object> locationPresentation = (LocationPresentation<Object>)current.cachedScene.presentation;
-
-      locationPresentation.location.set(current.location);
-    }
-
-    sceneLayoutPane.getChildren().setAll(rootNode);
-
-    /*
-     * Special functionality for a background node:
-     */
-
-    Object backgroundNode = rootNode.getProperties().get("background");
-
-    if(backgroundNode != null) {
-      sceneManager.setPlayerRoot(backgroundNode);
-      sceneManager.fillProperty().set(Color.TRANSPARENT);
-    }
-    else {
-      sceneManager.disposePlayerRoot();
-      sceneManager.fillProperty().set(Color.BLACK);
-    }
-  }
-
-  @Override
-  public void navigateBack(Event e) {
-    LOGGER.fine("navigateBack(" + e + ") -- history = " + location.getHistory());
-
-    if(location.back()) {
-      e.consume();
-    }
-  }
-
-  private static class SceneLocation {
-    public final Object location;
-    public final CachedScene cachedScene;
-
-    public SceneLocation(Object location, CachedScene cachedScene) {
-      this.location = location;
-      this.cachedScene = cachedScene;
-    }
-
-    @Override
-    public String toString() {
-      return "SceneLocation[loc=" + location + "]";
-    }
-  }
-
-  private static class CachedScene {
-    public final ScenePlugin<?, ?> plugin;
-    public final Object presentation;
-    public final Node node;
-
-    public CachedScene(ScenePlugin<?, ?> plugin, Object presentation, Node node) {
-      this.plugin = plugin;
-      this.presentation = presentation;
-      this.node = node;
+      parent = (ParentPresentation)child;
     }
   }
 }

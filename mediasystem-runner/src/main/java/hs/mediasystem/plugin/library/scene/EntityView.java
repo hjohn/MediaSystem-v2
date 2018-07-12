@@ -1,11 +1,11 @@
 package hs.mediasystem.plugin.library.scene;
 
+import hs.mediasystem.presentation.ViewPortFactory;
 import hs.mediasystem.util.javafx.GridPaneUtil;
 
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -25,20 +25,14 @@ import javafx.scene.layout.StackPane;
  * - a method for selecting a node by id
  */
 public class EntityView extends StackPane {
-
-  /**
-   * Triggered when a MediaNode is selected.
-   */
-  public final ObjectProperty<EventHandler<MediaNodeEvent>> onSelect = new SimpleObjectProperty<>();
-
   public final BackgroundPane backgroundPane = new BackgroundPane();
-
   public final ObjectProperty<Node> defaultInputFocus = new SimpleObjectProperty<>();
 
   private final GridPane content = GridPaneUtil.create(new double[] {20, 30, 30, 20}, new double[] {20, 30, 41, 9});
-  private final StackPane center = new StackPane();
 
-  public EntityView() {
+  private StackPane center;
+
+  public EntityView(ViewPortFactory viewPortFactory, LibraryPresentation entityPresentation) {
     GridPane stage = GridPaneUtil.create(new double[] {100}, new double[] {90, 10});
 
     stage.add(backgroundPane, 0, 0);
@@ -46,6 +40,7 @@ public class EntityView extends StackPane {
       getStyleClass().add("stage");
     }}, 0, 1);
 
+    center = viewPortFactory.create(entityPresentation);
 
     getChildren().addAll(stage, content, center);
   }
