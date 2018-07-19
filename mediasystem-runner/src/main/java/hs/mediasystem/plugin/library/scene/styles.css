@@ -274,7 +274,7 @@
 
 .media-grid-view
 {
-  -fx-padding: 8 24 8 24;
+  -fx-padding: 24;
 }
 
 .media-grid-view .list-cell

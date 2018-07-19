@@ -4,6 +4,8 @@ import hs.mediasystem.util.javafx.Events;
 import hs.mediasystem.util.javafx.GridListViewSkin;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
+import java.util.List;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -24,6 +26,7 @@ public class MediaGridView<T> extends ListView<T> {
   public final ObjectProperty<EventHandler<ItemSelectedEvent<T>>> onItemSelected = new SimpleObjectProperty<>();
   public final IntegerProperty visibleColumns = new SimpleIntegerProperty(4);
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
+  public final ObjectProperty<List<Integer>> jumpPoints = new SimpleObjectProperty<>();
 
   public MediaGridView() {
     GridListViewSkin skin = new GridListViewSkin(this);
@@ -32,6 +35,7 @@ public class MediaGridView<T> extends ListView<T> {
 
     skin.visibleColumns.bindBidirectional(visibleColumns);
     skin.visibleRows.bindBidirectional(visibleRows);
+    skin.jumpPoints.bindBidirectional(jumpPoints);
 
     this.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
       @Override

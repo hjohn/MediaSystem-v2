@@ -2,6 +2,7 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
@@ -30,7 +31,7 @@ public class PersonRoles {
 
       roles.add(new PersonRole(
         new Person(new PersonIdentifier(DataSources.TMDB_PERSON, cast.get("id").asText()), cast.get("name").asText(), imageURI),
-        Role.asCast(cast.get("character").asText()),
+        Role.asCast(new Identifier(DataSources.TMDB_CREDIT, cast.get("credit_id").asText()), cast.get("character").asText()),
         cast.get("order").asDouble()
       ));
     }
@@ -40,7 +41,7 @@ public class PersonRoles {
 
       roles.add(new PersonRole(
         new Person(new PersonIdentifier(DataSources.TMDB_PERSON, guestStar.get("id").asText()), guestStar.get("name").asText(), imageURI),
-        Role.asGuestStar(guestStar.get("character").asText()),
+        Role.asGuestStar(new Identifier(DataSources.TMDB_CREDIT, guestStar.get("credit_id").asText()), guestStar.get("character").asText()),
         guestStar.get("order").asDouble() + GUEST_STAR_MINIMUM_VALUE
       ));
     }
@@ -52,7 +53,7 @@ public class PersonRoles {
 
       roles.add(new PersonRole(
         new Person(new PersonIdentifier(DataSources.TMDB_PERSON, crew.get("id").asText()), crew.get("name").asText(), imageURI),
-        Role.asCrew(crew.get("department").asText(), crew.get("job").asText()),
+        Role.asCrew(new Identifier(DataSources.TMDB_CREDIT, crew.get("credit_id").asText()), crew.get("department").asText(), crew.get("job").asText()),
         CREW_MINIMUM_VALUE + crewCount++
       ));
     }

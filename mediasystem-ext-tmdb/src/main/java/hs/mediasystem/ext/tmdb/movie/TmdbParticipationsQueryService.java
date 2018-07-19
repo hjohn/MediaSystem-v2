@@ -3,6 +3,7 @@ package hs.mediasystem.ext.tmdb.movie;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.Type;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
@@ -11,6 +12,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.services.ParticipationsQueryService;
+import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.Genres;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.util.ImageURI;
@@ -74,8 +76,10 @@ public class TmdbParticipationsQueryService implements ParticipationsQueryServic
       genres
     );
 
-    Role role = isCast ? Role.asCast(node.path("character").textValue())
-                       : Role.asCrew(node.path("department").textValue(), node.path("job").textValue());
+    Identifier identifier = new Identifier(DataSources.TMDB_CREDIT, node.get("credit_id").asText());
+
+    Role role = isCast ? Role.asCast(identifier, node.path("character").textValue())
+                       : Role.asCrew(identifier, node.path("department").textValue(), node.path("job").textValue());
 
     return new ProductionRole(production, role, node.has("episode_count") ? node.get("episode_count").asInt() : null, node.get("popularity").asDouble());
   }

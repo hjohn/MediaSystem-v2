@@ -10,7 +10,7 @@ import java.util.List;
 public class Serie extends AbstractProductionDescriptor {
   private final List<Season> seasons;
 
-  public Serie(Production production,List<Season> seasons) {
+  public Serie(Production production, List<Season> seasons) {
     super(production);
 
     this.seasons = new ArrayList<>(Collections.unmodifiableList(seasons));

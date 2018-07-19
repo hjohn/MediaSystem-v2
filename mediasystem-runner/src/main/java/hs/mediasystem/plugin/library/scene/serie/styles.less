@@ -1,0 +1,101 @@
+@import "../../../../runner/properties.less";
+
+.main-panel
+{
+  -fx-border-width: 3;
+  -fx-border-color: @glass-color;
+
+  .title-panel
+  {
+    -fx-background-color: lighten(@glass-color, 20%, relative);
+    -fx-padding: 16;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-color: lighten(@glass-color, 25%, relative);
+    
+    .label.title
+    {
+      .style-heading1;
+      .text-fill-highlight;
+      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+    }
+    
+    .label.release-year
+    {
+      .style-heading2;
+      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+    }
+    
+    .label.genres
+    {
+      .style-p2;
+      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+    }
+  }
+  
+  .dynamic-panel
+  {
+    -fx-background-color: -c-dark-glass;
+    -fx-padding: 16;
+    
+    .label.title
+    {
+      .style-heading3;
+      .text-fill-highlight;
+      -fx-wrap-text: true;
+    }
+  }
+    
+  .label.description
+  {
+    .style-p2;
+    -fx-wrap-text: true;
+  }
+  
+  .season-bar
+  {
+    -fx-spacing: 15;
+    
+    .label
+    {
+      .style-heading2;
+      -fx-text-fill: darken(@text-accent, 20%, relative);
+      -fx-padding: 5;
+    }
+    
+    .label.focused
+    {
+      -fx-text-fill: lighten(@text-accent, 20%, relative);
+      -fx-scale-x: 1.1;
+      -fx-scale-y: 1.1;
+    }
+  }
+    
+  .star {
+    -c-star: yellow;
+    -fx-fill: linear-gradient(from 0% 0% to 0% 100%, derive(-c-star, -25%) 0%, derive(-c-star, 75%) 33%, derive(-c-star, -25%) 100%);
+    -fx-stroke: rgba(255, 255, 0, 0.5);
+    -fx-stroke-width: 1;
+  }
+  
+  .background .star {
+    -fx-fill: linear-gradient(from 0% 0% to 0% 100%, derive(gray, -25%) 0%, derive(gray, 75%) 33%, derive(gray, -25%) 100%);
+    -fx-stroke: gray;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+  }
+  
+  .episode-panel
+  {
+    -fx-spacing: 15;
+  
+    .image-view
+    {
+      -fx-background-color: @glass-color;
+      -fx-padding: 4;
+    }
+  }
+  
+  .navigation-area
+  {
+    -fx-padding: 15 0 0 0
+  }
+}

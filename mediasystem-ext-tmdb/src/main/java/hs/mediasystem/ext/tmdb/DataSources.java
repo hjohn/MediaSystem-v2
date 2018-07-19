@@ -14,4 +14,5 @@ public class DataSources {
   public static final DataSource IMDB_EPISODE = DataSource.instance(Type.of("EPISODE"), "IMDB");
 
   public static final DataSource TMDB_PERSON = DataSource.instance(Type.of("PERSON"), "TMDB");
+  public static final DataSource TMDB_CREDIT = DataSource.instance(Type.of("CREDIT"), "TMDB");
 }

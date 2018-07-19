@@ -35,6 +35,7 @@ public class MediaItem<T> {
 
   private final T wrappedObject;
   private final Set<MediaStream<?>> streams;
+  private final String id;
 
   public MediaItem(T wrappedObject, Set<MediaStream<?>> streams, int watchedCount, int availableCount) {
     if(wrappedObject == null) {
@@ -71,6 +72,35 @@ public class MediaItem<T> {
     if(person != null) {
       personName.set(person.getName());
     }
+
+    this.id = createId();
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  private String createId() {
+    if(streams.isEmpty()) {
+      String id = wrappedObject.getClass().getSimpleName() + ":";
+      Production production = getProduction();
+      Role role = getRole();
+      Person person = getPerson();
+
+      if(production != null) {
+        id += "Production:" + production.getIdentifier();
+      }
+      if(role != null) {
+        id += "Role:" + role.getIdentifier();
+      }
+      if(person != null) {
+        id += "Person:" + person.getIdentifier();
+      }
+
+      return id;
+    }
+
+    return "StreamPrint:" + streams.iterator().next().getStreamPrint().getIdentifier();
   }
 
   public Set<MediaStream<?>> getStreams() {

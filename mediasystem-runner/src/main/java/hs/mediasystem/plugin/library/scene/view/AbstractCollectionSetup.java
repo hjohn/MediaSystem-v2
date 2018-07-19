@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
+import hs.mediasystem.db.SettingsStore;
 import hs.mediasystem.db.StreamStateProvider;
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
@@ -9,8 +10,10 @@ import hs.mediasystem.ext.basicmediatypes.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.Type;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.mediamanager.LocalMediaManager;
+import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.runner.SceneNavigator;
@@ -31,12 +34,17 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 public abstract class AbstractCollectionSetup<T, P extends GridViewPresentation> extends AbstractSetup<T, P> {
+  private static final String SYSTEM = "MediaSystem:Library:Collection";
+
   private final Type type;
 
   @Inject private LocalMediaManager localMediaManager;
   @Inject private SceneNavigator navigator;
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private StreamStateProvider streamStateProvider;
+  @Inject private Provider<ProductionDetailPresentation> detailPresentationProvider;
+  @Inject private Provider<ProductionPresentation> productionPresentationProvider;
+  @Inject private SettingsStore settingsStore;
 
   public AbstractCollectionSetup(Type type) {
     this.type = type;
@@ -87,11 +95,24 @@ public abstract class AbstractCollectionSetup<T, P extends GridViewPresentation>
     return null;
   }
 
-  @Inject private Provider<ProductionDetailPresentation> detailPresentationProvider;
+  @Override
+  protected String getSelectedId(P presentation) {
+    String id = settingsStore.getSetting(SYSTEM, "last-selected:" + type);
+
+    return id == null ? super.getSelectedId(presentation) : id;
+  }
+
+  @Override
+  protected void configureGridView(MediaGridView<MediaItem<?>> gridView) {
+    super.configureGridView(gridView);
+
+    gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> settingsStore.storeSetting(SYSTEM, "last-selected:" + type, current.getId()));
+  }
 
   @Override
   protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, P presentation) {
-    navigator.navigateTo(detailPresentationProvider.get().set(event.getItem()));
+    //navigator.navigateTo(detailPresentationProvider.get().set(event.getItem()));
+    navigator.navigateTo(productionPresentationProvider.get().set(event.getItem()));
     event.consume();
   }
 

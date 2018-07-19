@@ -11,6 +11,7 @@ import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.plugin.library.scene.ContextLayout;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.runner.ImageHandleFactory;
@@ -41,6 +42,7 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private StreamStateProvider streamStateProvider;
   @Inject private Provider<ProductionDetailPresentation> detailPresentationProvider;
+  @Inject private Provider<ProductionPresentation> productionPresentationProvider;
 
   @Override
   public ObservableList<MediaItem<?>> getItems(PersonParticipationsPresentation presentation) {
@@ -85,7 +87,7 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
 
   @Override
   protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, PersonParticipationsPresentation presentation) {
-    navigator.navigateTo(detailPresentationProvider.get().set(event.getItem()));
+    navigator.navigateTo(productionPresentationProvider.get().set(event.getItem()));
     event.consume();
   }
 

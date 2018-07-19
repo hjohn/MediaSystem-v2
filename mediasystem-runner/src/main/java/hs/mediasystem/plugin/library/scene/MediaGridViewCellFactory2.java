@@ -1,9 +1,10 @@
 package hs.mediasystem.plugin.library.scene;
 
+import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.MediaStatus;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty2;
+import hs.mediasystem.util.javafx.BiasedImageView;
 import hs.mediasystem.util.javafx.Labels;
-import hs.mediasystem.util.javafx.ScaledImageView;
 
 import java.util.function.Function;
 
@@ -14,25 +15,19 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
-public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>, ListCell<MediaItem<?>>> {
-  public enum MediaStatus {
-    UNAVAILABLE,
-    AVAILABLE,
-    WATCHED
-  }
-
+public class MediaGridViewCellFactory2<T> implements Callback<ListView<MediaItem<T>>, ListCell<MediaItem<T>>> {
   private Function<MediaItem<?>, ObservableValue<? extends String>> titleBindProvider;
   private Function<MediaItem<?>, ImageHandle> imageHandleExtractor;
   private Function<MediaItem<?>, String> detailExtractor;
@@ -60,9 +55,9 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
   }
 
   @Override
-  public ListCell<MediaItem<?>> call(ListView<MediaItem<?>> param) {
+  public ListCell<MediaItem<T>> call(ListView<MediaItem<T>> param) {
     return new ListCell<>() {
-      private final ScaledImageView imageView = new ScaledImageView(Labels.create("?", "media-grid-view-image-place-holder"));
+      private final BiasedImageView imageView = new BiasedImageView(Labels.create("?", "media-grid-view-image-place-holder"));
       private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2();
       private final Label name = Labels.create("name");
       private final Label detail = Labels.create("detail");
@@ -80,7 +75,8 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
         getChildren().add(detail);
 
         setAlignment(Pos.CENTER);
-        VBox.setVgrow(imageView, Priority.ALWAYS);
+        imageView.setOrientation(Orientation.HORIZONTAL);
+        //VBox.setVgrow(imageView, Priority.ALWAYS);
       }};
 
       private final ChangeListener<? super MediaStatus> updateIndicatorListener = (obs, old, current) -> {
@@ -117,10 +113,10 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
 
         setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);  // Indicate to cell that it can become as big as possible
 
-        focusedProperty().addListener((obs, old, focused) -> {
+        focusedProperty().addListener((obs, old, current) -> {
           new Timeline(
             new KeyFrame(Duration.ZERO, new KeyValue(scaleXProperty(), getScaleX()), new KeyValue(scaleYProperty(), getScaleY())),
-            new KeyFrame(Duration.seconds(0.5), new KeyValue(scaleXProperty(), focused ? 1.1 : 1.0), new KeyValue(scaleYProperty(), focused ? 1.1 : 1.0))
+            new KeyFrame(Duration.seconds(0.5), new KeyValue(scaleXProperty(), current ? 1.1 : 1.0), new KeyValue(scaleYProperty(), current ? 1.1 : 1.0))
           ).play();
         });
 
@@ -141,7 +137,7 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
       };
 
       @Override
-      protected void updateItem(MediaItem<?> item, boolean empty) {
+      protected void updateItem(MediaItem<T> item, boolean empty) {
         super.updateItem(item, empty);
 
 //        binder.unbindAll();

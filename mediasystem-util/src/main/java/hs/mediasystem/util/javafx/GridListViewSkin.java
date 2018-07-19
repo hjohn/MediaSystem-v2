@@ -1,16 +1,21 @@
 package hs.mediasystem.util.javafx;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.List;
 
 import javafx.animation.AnimationTimer;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.ListCell;
@@ -26,6 +31,7 @@ import javafx.scene.shape.Rectangle;
 public class GridListViewSkin implements Skin<ListView<?>> {
   public final IntegerProperty visibleColumns = new SimpleIntegerProperty(4);
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
+  public final ObjectProperty<List<Integer>> jumpPoints = new SimpleObjectProperty<>();
 
   private final DoubleProperty scrollPosition = new SimpleDoubleProperty();  // In rows
   private final ArrayDeque<ListCell<?>> cells = new ArrayDeque<>();
@@ -38,6 +44,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
   private ScrollBar scrollBar = new ScrollBar();
   private BorderPane skin;
+  private Region content;
 
   public GridListViewSkin(ListView<?> skinnable) {
     this.skinnable = skinnable;
@@ -47,7 +54,17 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
     skinnable.getSelectionModel().selectedItemProperty().addListener(obs -> skin.requestLayout());   // Calls layout when focused cell changes (to make sure it is at the top)
 
-    Region content = new Region() {
+    this.content = new Region() {
+      @Override
+      protected double computeMinWidth(double height) {
+        return 200;
+      }
+
+      @Override
+      protected double computeMinHeight(double width) {
+        return 200;
+      }
+
       @Override
       protected double computePrefWidth(double height) {
         return 400;
@@ -70,7 +87,89 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
       @Override
       protected void layoutChildren() {
-        int firstIndex = (int)(scrollPosition.get()) * visibleColumns.get();
+        boolean vertical = getSkinnable().getOrientation() == Orientation.VERTICAL;
+        int lines = vertical ? visibleColumns.get() : visibleRows.get();
+        int firstIndex = (int)(scrollPosition.get()) * lines;
+
+        manageCells(firstIndex);
+
+        Insets insets = getSkinnable().getInsets();
+
+        double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
+        double h = getSkinnable().getHeight() - insets.getTop() - insets.getBottom();
+
+        int cellWidth = (int)(w / visibleColumns.get());
+        int cellHeight = (int)(h / visibleRows.get());
+        ListCell<?> focusedCell = null;
+
+        getChildren().clear();
+
+        int index = firstIndexInDeque;
+        setClip(new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight()));  // Needed to clip off cells while scrolling
+
+        if(vertical) {
+          double y = (-scrollPosition.get() * cellHeight - cellHeight) % cellHeight + insets.getTop();
+
+          for(ListCell<?> cell : cells) {
+            if(index >= firstIndex) {
+              int column = index % visibleColumns.get();
+
+              if(cell.isFocused()) {
+                focusedCell = cell;
+              }
+              else {
+                getChildren().add(cell);
+              }
+
+              layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
+
+              if(column == visibleColumns.get() - 1) {
+                y += cellHeight;
+
+                if(y >= h) {
+                  break;
+                }
+              }
+            }
+
+            index++;
+          }
+        }
+        else {
+          double x = (-scrollPosition.get() * cellWidth - cellWidth) % cellWidth + insets.getLeft();
+
+          for(ListCell<?> cell : cells) {
+            if(index >= firstIndex) {
+              int row = index % visibleRows.get();
+
+              if(cell.isFocused()) {
+                focusedCell = cell;
+              }
+              else {
+                getChildren().add(cell);
+              }
+
+              layoutInArea(cell, x, row * cellHeight + insets.getTop(), cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
+
+              if(row == visibleRows.get() - 1) {
+                x += cellWidth;
+
+                if(x >= w) {
+                  break;
+                }
+              }
+            }
+
+            index++;
+          }
+        }
+
+        if(focusedCell != null) {
+          getChildren().add(focusedCell);
+        }
+      }
+
+      private void manageCells(int firstIndex) {
         int cellsPerPage = visibleColumns.get() * visibleRows.get();
         int firstIndexToCache = firstIndex - pagesToCache * cellsPerPage;
         int requiredFirstIndexInDeque = Math.max(0, firstIndexToCache);
@@ -104,52 +203,6 @@ public class GridListViewSkin implements Skin<ListView<?>> {
         while(firstIndexInDeque + cells.size() > requiredLastIndexInDeque && !cells.isEmpty()) {
           cells.removeLast().updateIndex(-1);
         }
-
-        Insets insets = getSkinnable().getInsets();
-
-        double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
-        double h = getSkinnable().getHeight() - insets.getTop() - insets.getBottom();
-
-        int cellWidth = (int)(w / visibleColumns.get());
-        int cellHeight = (int)(h / visibleRows.get());
-
-        double y = (-scrollPosition.get() * cellHeight - cellHeight) % cellHeight + insets.getTop();
-
-        getChildren().clear();
-
-        int index = firstIndexInDeque;
-        setClip(new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight()));  // Needed to clip off cells while scrolling
-
-        ListCell<?> focusedCell = null;
-
-        for(ListCell<?> cell : cells) {
-          if(index >= firstIndex) {
-            int column = index % visibleColumns.get();
-
-            if(cell.isFocused()) {
-              focusedCell = cell;
-            }
-            else {
-              getChildren().add(cell);
-            }
-
-            layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
-
-            if(column == visibleColumns.get() - 1) {
-              y += cellHeight;
-
-              if(y >= h) {
-                break;
-              }
-            }
-          }
-
-          index++;
-        }
-
-        if(focusedCell != null) {
-          getChildren().add(focusedCell);
-        }
       }
 
       private ListCell<?> createCell() {
@@ -163,7 +216,8 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       }
     };
 
-    scrollBar.setOrientation(skinnable.getOrientation());
+    scrollBar.orientationProperty().bind(skinnable.orientationProperty());
+    getSkinnable().orientationProperty().addListener(obs -> relayout());
 
     visibleRows.addListener(obs -> content.requestLayout());
     visibleColumns.addListener(obs -> content.requestLayout());
@@ -186,18 +240,47 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
     skin = new BorderPane();
 
+    relayout();
+  }
+
+  private void relayout() {
+    if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
+      skin.setBottom(null);
+      skin.setRight(scrollBar);
+    }
+    else {
+      skin.setRight(null);
+      skin.setBottom(scrollBar);
+    }
+
     skin.setCenter(content);
-    skin.setRight(scrollBar);
+
+    content.requestLayout();
   }
 
   private void updateScrollBar(@SuppressWarnings("unused") Observable obs) {
-    int rowCount = getRowCount();
-    int max = Math.max(0, rowCount - visibleRows.get());
+    if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
+      int rowCount = getRowCount();
+      int max = Math.max(0, rowCount - visibleRows.get());
 
-    scrollBar.setMin(0);
-    scrollBar.setMax(max);
-    scrollBar.setValue(scrollPosition.get());
-    scrollBar.setVisibleAmount((double)visibleRows.get() / rowCount * max);
+      scrollBar.setMin(0);
+      scrollBar.setMax(max);
+      scrollBar.setValue(scrollPosition.get());
+      scrollBar.setVisibleAmount((double)visibleRows.get() / rowCount * max);
+    }
+    else {
+      int columnCount = getColumnCount();
+      int max = Math.max(0, columnCount - visibleColumns.get());
+
+      scrollBar.setMin(0);
+      scrollBar.setMax(max);
+      scrollBar.setValue(scrollPosition.get());
+      scrollBar.setVisibleAmount((double)visibleColumns.get() / columnCount * max);
+    }
+  }
+
+  private int getColumnCount() {
+    return (getSkinnable().getItems().size() + visibleRows.get() - 1) / visibleRows.get();
   }
 
   private int getRowCount() {
@@ -212,7 +295,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     public void handle(long now) {
       if(lastUpdate != 0) {
         double pos = scrollPosition.get();
-        double targetPos = firstVisibleIndex / visibleColumns.get();
+        double targetPos = firstVisibleIndex / (getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get());
         long dt = now - lastUpdate;
 
         if(pos != targetPos) {
@@ -228,7 +311,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
           delta = Math.min(Math.max(delta, 1.0 / 50), distance);
 
-          System.out.println("pos = " + pos + ", firstVisibleIndex = " + firstVisibleIndex + ", target = " + targetPos + ", delta = " + delta + ", distance = " + distance + ", fraction = " + scrollFraction + ", dt = " + dt);
+//          System.out.println("pos = " + pos + ", firstVisibleIndex = " + firstVisibleIndex + ", target = " + targetPos + ", delta = " + delta + ", distance = " + distance + ", fraction = " + scrollFraction + ", dt = " + dt);
 
           scrollPosition.set(pos + delta * sign);
         }
@@ -262,15 +345,48 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
   private void animateWhenSelectedChanges(@SuppressWarnings("unused") Observable obs) {
     int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
+    int visibleItems = visibleColumns.get() * visibleRows.get();
 
-    if(selectedIndex >= firstVisibleIndex + visibleColumns.get() * visibleRows.get() || selectedIndex < firstVisibleIndex) {
-      int maxVisibleIndex = Math.max(getSkinnable().getItems().size(), (getRowCount() - visibleRows.get()) * visibleColumns.get());  // ensures a full page will be visible at bottom of list
+    if(selectedIndex >= firstVisibleIndex + visibleItems || selectedIndex < firstVisibleIndex) {
+      if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
+        int maxVisibleIndex = Math.max(getSkinnable().getItems().size(), (getRowCount() - visibleRows.get()) * visibleColumns.get());  // ensures a full page will be visible at bottom of list
 
-      if(selectedIndex < firstVisibleIndex) {
-        firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleColumns.get()));
+        if(selectedIndex < firstVisibleIndex) {
+          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleColumns.get()));
+        }
+        else {
+          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleColumns.get()) - visibleColumns.get() * (visibleRows.get() - 1));
+        }
       }
       else {
-        firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleColumns.get()) - visibleColumns.get() * (visibleRows.get() - 1));
+        int maxVisibleIndex = Math.max(getSkinnable().getItems().size(), (getColumnCount() - visibleColumns.get()) * visibleRows.get());  // ensures a full page will be visible at bottom of list
+
+        if(selectedIndex < firstVisibleIndex) {
+          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleRows.get()));
+        }
+        else {
+          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleRows.get()) - visibleRows.get() * (visibleColumns.get() - 1));
+        }
+      }
+
+      // Adjust firstVisibleIndex so a jump point is not visible:
+      if(jumpPoints.get() != null) {
+        int index = Collections.binarySearch(jumpPoints.get(), firstVisibleIndex);
+
+        if(index < 0) {
+          index = -index - 1;
+        }
+
+        if(index < jumpPoints.get().size()) {
+          int jumpPoint = jumpPoints.get().get(index);
+
+          if(selectedIndex < jumpPoint) {
+            firstVisibleIndex = Math.min(firstVisibleIndex, jumpPoint - visibleItems);
+          }
+          else {
+            firstVisibleIndex = Math.max(firstVisibleIndex, jumpPoint);
+          }
+        }
       }
 
       animationTimer.start();
@@ -291,17 +407,20 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
 
     if(e.getCode().isNavigationKey()) {
+      int rowSize = getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : 1;
+      int columnSize = getSkinnable().getOrientation() == Orientation.VERTICAL ? 1 : visibleRows.get();
+
       if(KeyCode.LEFT == e.getCode()) {
-        selectedIndex--;
+        selectedIndex -= columnSize;
       }
       else if(KeyCode.RIGHT == e.getCode()) {
-        selectedIndex++;
+        selectedIndex += columnSize;
       }
       else if(KeyCode.UP == e.getCode()) {
-        selectedIndex -= visibleColumns.get();
+        selectedIndex -= rowSize;
       }
       else if(KeyCode.DOWN == e.getCode()) {
-        selectedIndex += visibleColumns.get();
+        selectedIndex += rowSize;
       }
       else if(KeyCode.HOME == e.getCode()) {
         selectedIndex = 0;
@@ -310,10 +429,43 @@ public class GridListViewSkin implements Skin<ListView<?>> {
         selectedIndex = getSkinnable().getItems().size() - 1;
       }
       else if(KeyCode.PAGE_UP == e.getCode()) {
-        selectedIndex -= visibleColumns.get() * visibleRows.get();
+        if(jumpPoints.get() != null) {
+          int index = Collections.binarySearch(jumpPoints.get(), selectedIndex);
+
+          if(index < 0) {
+            index = -index - 1;
+          }
+
+          index--;
+
+          if(index < 0) {
+            index = 0;
+          }
+
+          selectedIndex = jumpPoints.get().get(index);
+        }
+        else {
+          selectedIndex -= visibleColumns.get() * visibleRows.get();
+        }
       }
       else if(KeyCode.PAGE_DOWN == e.getCode()) {
-        selectedIndex += visibleColumns.get() * visibleRows.get();
+        if(jumpPoints.get() != null) {
+          int index = Collections.binarySearch(jumpPoints.get(), selectedIndex);
+
+          if(index < 0) {
+            index = -index - 1;
+          }
+          else {
+            index++;
+          }
+
+          if(index < jumpPoints.get().size()) {
+            selectedIndex = jumpPoints.get().get(index);
+          }
+        }
+        else {
+          selectedIndex += visibleColumns.get() * visibleRows.get();
+        }
       }
 
       if(selectedIndex < 0) {

@@ -1,8 +1,11 @@
 @theme-primary: rgb(173, 216, 230);
+@theme-accent: rgb(222, 200, 33);
 
 @tinted-glass: fade(@theme-primary, 60%);
-
+@glass-color: rgba(0, 0, 0, 0.6);
 @text-primary: lighten(@theme-primary, 5%, relative);
+@text-primary-highlight: lighten(@theme-primary, 15%, relative);
+@text-accent: @theme-accent;
 
 
 
@@ -15,6 +18,33 @@
 .bold {
   -fx-font-family: "Segoe UI Bold";
   -fx-font-weight: bold;
+}
+
+.style-heading1 {
+  .bold;
+  -fx-font-size: 36;
+}
+
+.style-heading2 {
+  .bold;
+  -fx-font-size: 28;
+}
+
+.style-heading3 {
+  .bold;
+  -fx-font-size: 24;
+}
+
+.style-p1 {
+  -fx-font-size: 22;
+}
+
+.style-p2 {
+  -fx-font-size: 18;
+}
+
+.text-fill-highlight {
+  -fx-text-fill: @text-primary-highlight;
 }
 
 .black {

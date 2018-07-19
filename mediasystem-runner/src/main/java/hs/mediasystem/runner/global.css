@@ -9,7 +9,7 @@
   
   -c-dark-glass-highlight: rgba(255, 255, 255, 0.6);
   -c-dark-glass-medium: rgba(128, 128, 128, 0.6);
-  -c-dark-glass: rgba(0, 0, 0, 0.6);
+  -c-dark-glass: @glass-color;
   
   -c-tinted-glass: @tinted-glass;
   -c-tinted-glass-dark: darken(@tinted-glass, 50%, relative);

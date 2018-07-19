@@ -6,7 +6,6 @@ import hs.mediasystem.plugin.library.scene.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewPresentation;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewSetup;
-import hs.mediasystem.plugin.library.scene.view.SerieCollectionSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.util.javafx.Binds;
@@ -15,7 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-@PlacerQualifier(parent = LibraryNodeFactory.class, child = SerieCollectionSetup.class)
+@PlacerQualifier(parent = LibraryNodeFactory.class, child = CastAndCrewSetup.class)
 public class CastAndCrewPlacer extends AbstractPlacer<LibraryPresentation, CastAndCrewPresentation, CastAndCrewSetup> {
   @Inject private ImageHandleFactory imageHandleFactory;
 

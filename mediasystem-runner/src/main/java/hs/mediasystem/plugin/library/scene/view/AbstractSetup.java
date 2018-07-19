@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.StreamStateProvider;
 import hs.mediasystem.plugin.library.scene.ContextLayout;
 import hs.mediasystem.plugin.library.scene.LibraryNodeFactory.Area;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
@@ -12,7 +11,6 @@ import hs.mediasystem.plugin.library.scene.SlideOutTransition;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.runner.ResourceManager;
 import hs.mediasystem.util.javafx.AreaPane2;
 import hs.mediasystem.util.javafx.Binds;
@@ -53,8 +51,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
   private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
 
   @Inject private ContextLayout contextLayout;
-  @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private StreamStateProvider streamStateProvider;
 
   public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
     MediaGridView<MediaItem<?>> listView = new MediaGridView<>();
@@ -73,8 +69,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
 
     configureGridView(listView);
 
-    //view.defaultInputFocus.set(listView);
-
     areaPane.add(Area.CENTER, listView);
 
     MediaGridViewCellFactory cellFactory = new MediaGridViewCellFactory();
@@ -92,21 +86,31 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
     FilteredList<MediaItem<?>> filteredList = setupFiltering(presentation, items, listView);
     SortedList<MediaItem<?>> sortedList = setupSorting(presentation, filteredList);
 
-    //Integer index = location.getStatus("selected");
-
     listView.setItems(sortedList);
     listView.setCellFactory(cellFactory);
-   // listView.getSelectionModel().select(index == null ? 0 : index);  // Do this after sorting so correct item gets selected
-   // listView.getSelectionModel().selectedIndexProperty().addListener((obs, old, current) -> location.putStatus("selected", current));
     listView.requestFocus();
 
     setupStatusBar(areaPane, presentation, sortedList, items);
 
+    String selectedId = getSelectedId(presentation);
+
+    listView.getSelectionModel().select(0);
+
+    if(selectedId != null) {
+      listView.getItems().stream()
+        .filter(mi -> mi.getId().equals(selectedId))
+        .findFirst()
+        .ifPresent(mi -> listView.getSelectionModel().select(mi));
+    }
+
     presentation.selectedItem.bind(listView.getSelectionModel().selectedItemProperty());
   }
 
-  public Node createView(P presentation) {
+  protected String getSelectedId(P presentation) {
+    return presentation.selectedItem.get() != null ? presentation.selectedItem.get().getId() : null;
+  }
 
+  public Node createView(P presentation) {
     AreaPane2<Area> areaPane = new AreaPane2<>() {
       StackPane leftOverlayPanel = new StackPane();
       StackPane rightOverlayPanel = new StackPane();

@@ -32,4 +32,6 @@ public class VideoDatabase {
   public List<VideoLink> queryVideoLinks(ProductionIdentifier identifier) {
     return videoLinksQueryServices.get(0).query(identifier);
   }
+
+  // TODO Something that converts a ProductionRole into a full Production
 }

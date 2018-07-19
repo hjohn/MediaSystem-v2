@@ -6,6 +6,8 @@ import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Value;
 import hs.mediasystem.plugin.library.scene.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.LibraryPresentation;
+import hs.mediasystem.plugin.library.scene.serie.ProductionOverviewNodeFactory;
+import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewPresentation;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewSetup;
 import hs.mediasystem.plugin.library.scene.view.MovieCollectionSetup;
@@ -62,8 +64,11 @@ public class BasicTheme implements Theme {
     if(cls == SerieEpisodesPresentation.class) {
       return LibraryPresentation.class;
     }
-    if(cls == SerieSeasonsPresentation.class) {
+    if(cls == ProductionPresentation.class) {
       return LibraryPresentation.class;
+    }
+    if(cls == PlaybackOverlayPresentation.class) {
+      return RootPresentation.class;
     }
     if(cls == LibraryPresentation.class) {
       return RootPresentation.class;
@@ -106,6 +111,9 @@ public class BasicTheme implements Theme {
     }
     if(cls == SerieSeasonsPresentation.class) {
       return (Class<T>)SerieSeasonsSetup.class;
+    }
+    if(cls == ProductionPresentation.class) {
+      return (Class<T>)ProductionOverviewNodeFactory.class;
     }
     if(cls == PlaybackOverlayPresentation.class) {
       return (Class<T>)PlaybackLayout.class;
