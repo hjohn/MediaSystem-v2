@@ -3,9 +3,9 @@ package hs.mediasystem.runner;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ViewPort;
 import hs.mediasystem.presentation.ViewPortFactory;
-import hs.mediasystem.util.javafx.Containers;
-import hs.mediasystem.util.javafx.Labels;
 import hs.mediasystem.util.javafx.SpecialEffects;
+import hs.mediasystem.util.javafx.control.Containers;
+import hs.mediasystem.util.javafx.control.Labels;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;

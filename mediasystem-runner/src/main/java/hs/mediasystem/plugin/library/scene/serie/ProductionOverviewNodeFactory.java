@@ -18,12 +18,12 @@ import hs.mediasystem.runner.LessLoader;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.AsyncImageProperty2;
-import hs.mediasystem.util.javafx.AutoVerticalScrollPane;
-import hs.mediasystem.util.javafx.BiasedImageView;
-import hs.mediasystem.util.javafx.Buttons;
-import hs.mediasystem.util.javafx.Containers;
-import hs.mediasystem.util.javafx.Labels;
-import hs.mediasystem.util.javafx.StarRating;
+import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
+import hs.mediasystem.util.javafx.control.BiasedImageView;
+import hs.mediasystem.util.javafx.control.Buttons;
+import hs.mediasystem.util.javafx.control.Containers;
+import hs.mediasystem.util.javafx.control.Labels;
+import hs.mediasystem.util.javafx.control.StarRating;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javafx.beans.value.ChangeListener;
-import javafx.collections.ObservableList;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -63,13 +63,15 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
   @Override
   public Node create(ProductionPresentation presentation) {
-    System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> CREATING PRODUCTION OVERVIEW NODE");
     return new MainPanel(presentation);
   }
 
   private class MainPanel extends HBox {
+    private final ProductionPresentation.Model model;
+
     public MainPanel(ProductionPresentation presentation) {
       presentation.update();
+      this.model = presentation.createModel();
 
       MediaItem<?> mediaItem = presentation.rootItem;
       AsyncImageProperty2 imageProperty = new AsyncImageProperty2();
@@ -136,7 +138,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         dynamicBoxContainer
       );
 
-      presentation.state.addListener(obs -> dynamicBoxContainer.add(createDynamicBox(presentation)));
+      model.state.addListener(obs -> dynamicBoxContainer.add(createDynamicBox(presentation)));
 
       getChildren().addAll(poster, descriptionBox);
 
@@ -149,7 +151,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     VBox createDynamicBox(ProductionPresentation presentation) {
       VBox box = Containers.vbox("dynamic-panel");
 
-      State state = presentation.state.get();
+      State state = model.state.get();
       MediaItem<?> productionItem = presentation.rootItem;
 
       box.getChildren().clear();
@@ -204,7 +206,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         cellFactory.setMinRatio(4.0 / 3.0);
 
         gridView.setCellFactory(cellFactory);
-        gridView.setItems(presentation.episodesPresentation.episodeItems);
+        gridView.setItems(FXCollections.observableList(model.episodeItems));
 
         VBox.setVgrow(gridView, Priority.ALWAYS);
 
@@ -262,8 +264,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         box.getChildren().add(seasonsBox);
         box.getChildren().add(gridView);
 
-        gridView.getSelectionModel().select(presentation.episodesPresentation.episodeItem.get());
-        presentation.episodesPresentation.episodeItem.bind(gridView.getSelectionModel().selectedItemProperty());
+        gridView.getSelectionModel().select(model.episodeItem.get());
+        model.episodeItem.bind(gridView.getSelectionModel().selectedItemProperty());
         break;
       case EPISODE:
         buildEpisodeDynamicUI(presentation, box);
@@ -274,9 +276,9 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private void buildEpisodeDynamicUI(ProductionPresentation presentation, VBox box) {
-      presentation.episodesPresentation.episodeItem.unbind();
+      model.episodeItem.unbind();
 
-      ObservableList<MediaItem<Episode>> episodes = presentation.episodesPresentation.episodeItems;
+      List<MediaItem<Episode>> episodes = model.episodeItems;
       TransitionPane transitionPane = new TransitionPane(new TransitionPane.Scroll(), buildEpisodeUI(presentation));
       BorderPane borderPane = new BorderPane();
 
@@ -289,11 +291,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         }
       };
 
-      presentation.episodesPresentation.episodeItem.addListener(listener);
+      model.episodeItem.addListener(listener);
 
       box.sceneProperty().addListener((ov, old, current) -> {
         if(current == null) {
-          presentation.episodesPresentation.episodeItem.removeListener(listener);
+          model.episodeItem.removeListener(listener);
         }
       });
 
@@ -305,13 +307,13 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       VBox.setVgrow(borderPane, Priority.ALWAYS);
 
-      borderPane.getProperties().put("presentation2", new EpisodePresentation(presentation.episodesPresentation));
+      borderPane.getProperties().put("presentation2", new EpisodePresentation(model));
 
       box.getChildren().add(borderPane);
     }
 
     private HBox buildEpisodeUI(ProductionPresentation presentation) {
-      MediaItem<Episode> mediaItem = presentation.episodesPresentation.episodeItem.get();
+      MediaItem<Episode> mediaItem = model.episodeItem.get();
       AsyncImageProperty2 imageProperty = new AsyncImageProperty2();
 
       imageProperty.imageHandleProperty().set(Optional.ofNullable(mediaItem.getProduction().getImage()).map(imageHandleFactory::fromURI).orElse(null));
@@ -322,7 +324,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       poster.imageProperty().bind(imageProperty);
 
       AutoVerticalScrollPane descriptionScrollPane = new AutoVerticalScrollPane(
-        Labels.create(presentation.episodesPresentation.episodeItem.get().getProduction().getDescription(), "description"),
+        Labels.create(model.episodeItem.get().getProduction().getDescription(), "description"),
         12000,
         8
       );
@@ -339,7 +341,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       }
 
       VBox titleBox = Containers.vbox(
-        Labels.create("title", presentation.episodesPresentation.episodeItem.get().productionTitle),
+        Labels.create("title", model.episodeItem.get().productionTitle),
         Labels.create(createSeasonEpisodeText(mediaItem), "subtitle")
       );
 
@@ -359,22 +361,20 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private void updateButtons(HBox hbox, ProductionPresentation presentation) {
-      if(presentation.state.get() != State.LIST) {
-        MediaItem<?> mediaItem = presentation.episodeOrMovieItem.getValue() == null ? presentation.rootItem : presentation.episodeOrMovieItem.getValue();
-
+      if(model.state.get() != State.LIST) {
         hbox.getChildren().clear();
 
-        switch(presentation.buttonState.get()) {
+        switch(model.buttonState.get()) {
         case MAIN:
           hbox.getChildren().addAll(
-            presentation.rootItem.getData() instanceof Serie && presentation.state.get() == State.OVERVIEW ?
+            presentation.rootItem.getData() instanceof Serie && model.state.get() == State.OVERVIEW ?
               Buttons.create("Episodes", e -> presentation.toListState()) :
                 presentation.resume.enabledProperty().getValue() ?
                   Buttons.create("Play", e -> presentation.toPlayResumeButtonState()) :
                   Buttons.create(presentation.play),
-            presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
+            model.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
               Buttons.create("Related", e -> presentation.toRelatedButtonState()) :
-              Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, mediaItem)),
+              Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, model.episodeItem.get())),
             Buttons.create(presentation.playTrailer)
           );
           break;
@@ -399,15 +399,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       ChangeListener<Object> listener = (ov, old, current) -> updateButtons(hbox, presentation);
 
-      System.out.println("&&& Adding listener: " + listener);
-      presentation.buttonState.addListener(listener);
-      presentation.episodeOrMovieItem.addListener(listener);
+      model.buttonState.addListener(listener);
 
       hbox.sceneProperty().addListener((ov, old, current) -> {
         if(current == null) {
-          System.out.println("&&& Removing listener: " + listener);
-          presentation.buttonState.removeListener(listener);
-          presentation.episodeOrMovieItem.removeListener(listener);
+          model.buttonState.removeListener(listener);
         }
       });
 

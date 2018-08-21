@@ -1,7 +1,10 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.control;
+
+import hs.mediasystem.util.javafx.Binds;
 
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -9,7 +12,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.VPos;
@@ -19,9 +21,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
-public class ScaledImageView2 extends Region {
+public class ScaledImageView extends Region {
   private final ImageView imageView = new ImageView();
   private final StackPane effectRegion = new StackPane();
+  private final StackPane overlayRegion = new StackPane();
 
   private final BooleanProperty zoom = new SimpleBooleanProperty(false);  // true = scale to cover whole area when preserveRatio is true
   public BooleanProperty zoomProperty() { return zoom; }
@@ -38,9 +41,16 @@ public class ScaledImageView2 extends Region {
   public final boolean isPreserveRatio() { return this.preserveRatio.get(); }
   public final void setPreserveRatio(boolean preserveRatio) { this.preserveRatio.set(preserveRatio); }
 
-  public ScaledImageView2(Node placeHolder) {
-    //getChildren().add(effectRegion);  // effect region before image view so a background color won't overlay over the image
+  private final ObjectBinding<Boolean> backgroundLoadingBinding = Binds.monadic(imageView.imageProperty()).map(Image::isBackgroundLoading);
+  private final BooleanBinding imagePresent = imageView.imageProperty().isNotNull();
+  private final Node placeHolder;
+
+  public ScaledImageView(Node placeHolder) {
+    this.placeHolder = placeHolder;
+
+    getChildren().add(effectRegion);  // effect region before image view so a background color won't overlay over the image
     getChildren().add(imageView);
+    getChildren().add(overlayRegion);
 
     /*
      * Ratios are preserved by this Region instead of having ImageView do it, because ImageView will sometimes size a pixel smaller than expected depending on whether
@@ -57,17 +67,43 @@ public class ScaledImageView2 extends Region {
     getStyleClass().add("scaled-image-view");
 
     effectRegion.getStyleClass().add("image-view");
+    overlayRegion.getStyleClass().add("image-view-overlay");
 
-    effectRegion.visibleProperty().bind(Bindings.createBooleanBinding(() -> placeHolder != null || imageView.getImage() != null, imageView.imageProperty()));  // prevents effect region from being visible if there is no image and no placeholder
+    imagePresent.addListener(obs -> {
+      Platform.runLater(() -> requestLayout());  // Request layout when image presence changes; layout makes image visible or not, to prevent flashing the image at the wrong size
+    });
+
+  //  imageView.visibleProperty().bind(imagePresent);
+
+  //  effectRegion.visibleProperty().bind(Bindings.createBooleanBinding(() -> placeHolder != null || imageView.getImage() != null, imageView.imageProperty()));  // prevents effect region from being visible if there is no image and no placeholder
 
     if(placeHolder != null) {
       effectRegion.getChildren().add(placeHolder);
       placeHolder.getStyleClass().add("place-holder");
       placeHolder.visibleProperty().bind(imageView.imageProperty().isNull());
     }
+
+//    backgroundLoadingBinding.addListener((ov, old, isLoading) -> {
+//      System.out.println("isLoading = " + isLoading + " for " + getImage());
+//      if(isLoading != null && !isLoading) {
+//        if(getOpacity() == 0) {
+//          new Timeline(
+//            new KeyFrame(Duration.ZERO, new KeyValue(opacityProperty(), 0)),
+//            new KeyFrame(Duration.seconds(1), new KeyValue(opacityProperty(), 1))
+//          ).play();
+//        }
+//      }
+//      else {
+//        setOpacity(0);
+//      }
+//    });
   }
 
-  public ScaledImageView2() {
+  public StackPane getOverlayRegion() {
+    return overlayRegion;
+  }
+
+  public ScaledImageView() {
     this(null);
   }
 
@@ -75,9 +111,6 @@ public class ScaledImageView2 extends Region {
   public String getTypeSelector() {
     return "ScaledImageView";  // To prevent anonymous inner classes messing this up
   }
-
-  double pfw, pfh;
-  double pw, ph;
 
   @Override
   protected void layoutChildren() {
@@ -93,6 +126,9 @@ public class ScaledImageView2 extends Region {
     double fitHeight = areaHeight;
 
     Image image = imageView.getImage();
+
+    imageView.setVisible(image != null);
+    effectRegion.setVisible(image != null || placeHolder != null);
 
     if(image != null && isPreserveRatio()) {
       double imageWidth = image.getWidth();
@@ -145,15 +181,6 @@ public class ScaledImageView2 extends Region {
       imageView.setViewport(null);
       imageView.setFitWidth(fitWidth);
       imageView.setFitHeight(fitHeight);
-
-      if(pfw != fitWidth || pfh != fitHeight) {
-        Platform.runLater(() -> getParent().requestLayout());
-      }
-
-      pfw = fitWidth;
-      pfh = fitHeight;
-      pw = fitWidth;
-      ph = fitHeight;
     }
 
     Bounds bounds = imageView.getLayoutBounds();
@@ -165,9 +192,16 @@ public class ScaledImageView2 extends Region {
     effectRegion.setMaxWidth(effectRegion.getMinWidth());
     effectRegion.setMaxHeight(effectRegion.getMinHeight());
 
-   // layoutInArea(effectRegion, 0, 0, getWidth(), getHeight(), 0, alignment.get().getHpos(), alignment.get().getVpos());
+    layoutInArea(effectRegion, 0, 0, getWidth(), getHeight(), 0, alignment.get().getHpos(), alignment.get().getVpos());
 
-    System.out.println(">>> LayoutChildren: w/h = " + getWidth() + "/" + getHeight() + ", fw/fh = " + fitWidth + "/" + fitHeight + ", layoutInArea = " + insets.getLeft() + "," + insets.getRight() + "," + (getWidth() - insetsWidth) + "," + (getHeight() - insetsHeight) + ": result: " + effectRegion.getWidth());
+    overlayRegion.setMinWidth(Math.round(bounds.getWidth()) + insetsWidth);
+    overlayRegion.setMinHeight(Math.round(bounds.getHeight()) + insetsHeight);
+    overlayRegion.setMaxWidth(overlayRegion.getMinWidth());
+    overlayRegion.setMaxHeight(overlayRegion.getMinHeight());
+
+    layoutInArea(overlayRegion, 0, 0, getWidth(), getHeight(), 0, alignment.get().getHpos(), alignment.get().getVpos());
+
+    // System.out.println(">>> LayoutChildren: " + this.hashCode() + " image = " + image + "; ; fw/fh = " + fitWidth + "/" + fitHeight + "; w/h = " + getWidth() + "/" + getHeight() + ", layoutInArea = " + insets.getLeft() + "," + insets.getRight() + "," + (getWidth() - insetsWidth) + "," + (getHeight() - insetsHeight) + ": result: " + effectRegion.getWidth());
   }
 
   private double imageWidth;
@@ -188,20 +222,18 @@ public class ScaledImageView2 extends Region {
 
   @Override
   protected double computePrefWidth(double height) {
-  System.err.println("computePrefWidth called with : " + height + " : w/h = " + getWidth() + " - " + getHeight());
-    return pw;
+    return 10;
   }
 
   @Override
   protected double computePrefHeight(double width) {
-  System.err.println("computePrefHeight called with : " + width + " : w/h = " + getWidth() + " - " + getHeight());
-    return ph;
+    return 10;
   }
 
-  @Override
-  public Orientation getContentBias() {
-    return null;//Orientation.HORIZONTAL;
-  }
+//  @Override
+//  public Orientation getContentBias() {
+//    return Orientation.HORIZONTAL;
+//  }
 
 //  @Override
 //  protected double computePrefWidth(double height) {
@@ -225,24 +257,24 @@ public class ScaledImageView2 extends Region {
 //
 //    return 30;
 //  }
-
-  @Override
-  protected double computeMaxWidth(double height) {
-    System.err.println("--- computeMaxWidth called with : " + height + " : w/h = " + getWidth() + " - " + getHeight());
+//
+//  @Override
+//  protected double computeMaxWidth(double height) {
+//    System.err.println("computeMaxWidth called with : " + height + " : w/h = " + getWidth() + " - " + getHeight());
 //    if(height > 0) {
 //      return computePrefWidth(height);
 //    }
-    return pw == 0 ? Double.MAX_VALUE : pw;
-  }
-
-  @Override
-  protected double computeMaxHeight(double width) {
-    System.err.println("--- computeMaxHeight called with : " + width + " : w/h = " + getWidth() + " - " + getHeight());
+//    return Double.MAX_VALUE;
+//  }
+//
+//  @Override
+//  protected double computeMaxHeight(double width) {
+//    System.err.println("computeMaxHeight called with : " + width + " : w/h = " + getWidth() + " - " + getHeight());
 //    if(width > 0) {
 //      return computePrefHeight(width);
 //    }
-    return ph == 0 ? Double.MAX_VALUE : ph;
-  }
+//    return Double.MAX_VALUE;
+//  }
 
   public final ObjectProperty<Image> imageProperty() { return imageView.imageProperty(); }
   public final Image getImage() { return imageView.getImage(); }

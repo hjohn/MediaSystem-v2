@@ -9,11 +9,11 @@ import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
-import hs.mediasystem.util.javafx.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.Binds;
-import hs.mediasystem.util.javafx.Containers;
-import hs.mediasystem.util.javafx.Labels;
-import hs.mediasystem.util.javafx.ScaledImageView;
+import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
+import hs.mediasystem.util.javafx.control.Containers;
+import hs.mediasystem.util.javafx.control.Labels;
+import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import java.util.stream.Collectors;
 

@@ -8,11 +8,11 @@ import hs.mediasystem.runner.LessLoader;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.Binds;
-import hs.mediasystem.util.javafx.GridPaneUtil;
 import hs.mediasystem.util.javafx.MapBindings;
-import hs.mediasystem.util.javafx.ScaledImageView;
 import hs.mediasystem.util.javafx.SpecialEffects;
 import hs.mediasystem.util.javafx.StringBinding;
+import hs.mediasystem.util.javafx.control.GridPaneUtil;
+import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import javafx.animation.Animation.Status;
 import javafx.animation.KeyFrame;

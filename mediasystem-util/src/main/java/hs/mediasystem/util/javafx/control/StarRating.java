@@ -1,4 +1,4 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.control;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.DoubleProperty;

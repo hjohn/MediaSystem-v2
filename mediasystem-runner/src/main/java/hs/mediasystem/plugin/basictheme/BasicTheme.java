@@ -13,16 +13,10 @@ import hs.mediasystem.plugin.library.scene.view.CastAndCrewSetup;
 import hs.mediasystem.plugin.library.scene.view.MovieCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsSetup;
-import hs.mediasystem.plugin.library.scene.view.ProductionDetailPresentation;
-import hs.mediasystem.plugin.library.scene.view.ProductionDetailSetup;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsSetup;
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionSetup;
-import hs.mediasystem.plugin.library.scene.view.SerieEpisodesPresentation;
-import hs.mediasystem.plugin.library.scene.view.SerieEpisodesSetup;
-import hs.mediasystem.plugin.library.scene.view.SerieSeasonsPresentation;
-import hs.mediasystem.plugin.library.scene.view.SerieSeasonsSetup;
 import hs.mediasystem.plugin.movies.videolibbaroption.MovieCollectionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackLayout;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
@@ -54,16 +48,10 @@ public class BasicTheme implements Theme {
     if(cls == SerieCollectionPresentation.class) {
       return LibraryPresentation.class;
     }
-    if(cls == ProductionDetailPresentation.class) {
-      return LibraryPresentation.class;
-    }
     if(cls == PersonParticipationsPresentation.class) {
       return LibraryPresentation.class;
     }
     if(cls == CastAndCrewPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == SerieEpisodesPresentation.class) {
       return LibraryPresentation.class;
     }
     if(cls == ProductionPresentation.class) {
@@ -102,20 +90,11 @@ public class BasicTheme implements Theme {
     if(cls == MenuPresentation.class) {
       return (Class<T>)RootMenuScenePlugin.class;
     }
-    if(cls == ProductionDetailPresentation.class) {
-      return (Class<T>)ProductionDetailSetup.class;
-    }
     if(cls == PersonParticipationsPresentation.class) {
       return (Class<T>)PersonParticipationsSetup.class;
     }
     if(cls == CastAndCrewPresentation.class) {
       return (Class<T>)CastAndCrewSetup.class;
-    }
-    if(cls == SerieEpisodesPresentation.class) {
-      return (Class<T>)SerieEpisodesSetup.class;
-    }
-    if(cls == SerieSeasonsPresentation.class) {
-      return (Class<T>)SerieSeasonsSetup.class;
     }
     if(cls == ProductionPresentation.class) {
       return (Class<T>)ProductionOverviewNodeFactory.class;

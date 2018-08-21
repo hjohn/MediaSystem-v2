@@ -2,8 +2,8 @@ package hs.mediasystem.runner;
 
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.util.Exceptional;
-import hs.mediasystem.util.javafx.Buttons;
-import hs.mediasystem.util.javafx.Labels;
+import hs.mediasystem.util.javafx.control.Buttons;
+import hs.mediasystem.util.javafx.control.Labels;
 
 import java.util.Map;
 import java.util.Optional;

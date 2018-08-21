@@ -1,6 +1,6 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.util.javafx.Unbinder;
+import hs.mediasystem.util.javafx.property.Unbinder;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleBooleanProperty;

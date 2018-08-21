@@ -13,13 +13,13 @@ import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.LessLoader;
 import hs.mediasystem.runner.ResourceManager;
-import hs.mediasystem.util.javafx.AreaPane2;
 import hs.mediasystem.util.javafx.Binds;
-import hs.mediasystem.util.javafx.Containers;
-import hs.mediasystem.util.javafx.GridPane;
-import hs.mediasystem.util.javafx.GridPaneUtil;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
-import hs.mediasystem.util.javafx.Labels;
+import hs.mediasystem.util.javafx.control.AreaPane2;
+import hs.mediasystem.util.javafx.control.Containers;
+import hs.mediasystem.util.javafx.control.GridPane;
+import hs.mediasystem.util.javafx.control.GridPaneUtil;
+import hs.mediasystem.util.javafx.control.Labels;
 
 import java.util.Comparator;
 import java.util.List;

@@ -1,4 +1,4 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.control;
 
 import java.util.ArrayDeque;
 import java.util.Collections;

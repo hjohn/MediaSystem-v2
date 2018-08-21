@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.library.scene.serie;
+package hs.mediasystem.util.javafx;
 
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;

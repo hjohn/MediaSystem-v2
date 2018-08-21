@@ -1,4 +1,4 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.property;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,6 +1,7 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.util.javafx.Unbindable;
+import hs.mediasystem.plugin.library.scene.view.TransitionPane;
+import hs.mediasystem.util.javafx.property.Unbindable;
 
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
@@ -10,14 +11,14 @@ import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 
-public class ViewPort extends StackPane {
+public class ViewPort extends TransitionPane {
   private final ParentPresentation parentPresentation;
   private final Consumer<Node> nodeAdjuster;
 
   public ViewPort(Theme theme, ParentPresentation parentPresentation, Consumer<Node> nodeAdjuster) {
-//    super(new TransitionPane.FadeIn(), null);
+    super(new TransitionPane.FadeIn(), null);
 
     this.parentPresentation = parentPresentation;
     this.nodeAdjuster = nodeAdjuster;
@@ -25,16 +26,6 @@ public class ViewPort extends StackPane {
     ChangeListener<? super Presentation> listener = (obs, old, current) -> updateChildNode(theme, current);
 
     parentPresentation.childPresentation.addListener(listener);
-
-//    sceneProperty().addListener(new ChangeListener<Scene>() {
-//      @Override
-//      public void changed(ObservableValue<? extends Scene> obs, Scene old, Scene current) {
-//        if(current == null) {
-//          parentPresentation.childPresentation.removeListener(listener);
-//          obs.removeListener(this);
-//        }
-//      }
-//    });
 
     updateChildNode(theme, parentPresentation.childPresentation.get());
   }
@@ -71,8 +62,8 @@ public class ViewPort extends StackPane {
       //unbindBidirectional((Presentation)oldNode.getProperties().get("presentation1"), (Presentation)oldNode.getProperties().get("presentation2"));
     }
 
-//    add((Pane)node);
-    getChildren().setAll(node);
+    add((Pane)node);
+//    getChildren().setAll(node);
 
     if(nodeAdjuster != null) {
       nodeAdjuster.accept(node);

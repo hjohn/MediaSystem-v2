@@ -1,4 +1,4 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.control;
 
 import javafx.scene.Node;
 import javafx.scene.layout.GridPane;

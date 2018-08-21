@@ -1,7 +1,7 @@
 package hs.mediasystem.presentation;
 
 import hs.mediasystem.runner.DebugFX;
-import hs.mediasystem.util.javafx.Unbinder;
+import hs.mediasystem.util.javafx.property.Unbinder;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;

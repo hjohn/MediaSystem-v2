@@ -1,4 +1,7 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.action;
+
+import hs.mediasystem.util.javafx.Binds;
+import hs.mediasystem.util.javafx.Val;
 
 import java.util.function.Consumer;
 

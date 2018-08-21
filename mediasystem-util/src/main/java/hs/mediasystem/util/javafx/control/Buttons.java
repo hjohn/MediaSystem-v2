@@ -1,4 +1,6 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.control;
+
+import hs.mediasystem.util.javafx.action.Action;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

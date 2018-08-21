@@ -3,8 +3,8 @@ package hs.mediasystem.plugin.library.scene;
 import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty2;
-import hs.mediasystem.util.javafx.BiasedImageView;
-import hs.mediasystem.util.javafx.Labels;
+import hs.mediasystem.util.javafx.control.BiasedImageView;
+import hs.mediasystem.util.javafx.control.Labels;
 
 import java.util.function.Function;
 

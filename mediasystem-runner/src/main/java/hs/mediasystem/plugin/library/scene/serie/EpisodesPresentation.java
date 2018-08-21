@@ -10,17 +10,17 @@ import hs.mediasystem.mediamanager.LocalMediaManager;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.presentation.AbstractPresentation;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import javafx.beans.property.ObjectProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 import javax.inject.Inject;
 
@@ -31,7 +31,9 @@ public class EpisodesPresentation extends AbstractPresentation {
   @Inject private StreamStateService streamStateService;
   @Inject private SettingsStore settingsStore;
 
-  public final ObservableList<MediaItem<Episode>> episodeItems = FXCollections.observableArrayList();
+  private final List<MediaItem<Episode>> internalEpisodeItems = new ArrayList<>();
+
+  public final List<MediaItem<Episode>> episodeItems = Collections.unmodifiableList(internalEpisodeItems);
   public final ObjectProperty<MediaItem<Episode>> episodeItem = objectProperty();
 
   public EpisodesPresentation set(MediaItem<Serie> serieItem) {
@@ -43,7 +45,7 @@ public class EpisodesPresentation extends AbstractPresentation {
       .sorted((s1, s2) -> Integer.compare(s1.getNumber() == 0 ? Integer.MAX_VALUE : s1.getNumber(), s2.getNumber() == 0 ? Integer.MAX_VALUE : s2.getNumber()))
       .flatMap(s -> s.getEpisodes().stream())
       .map(e -> wrap(serieItem, e, serieIndex))
-      .forEachOrdered(episodeItems::add);
+      .forEachOrdered(internalEpisodeItems::add);
 
     String settingKey = "last-selected:" + serieItem.getId();
 

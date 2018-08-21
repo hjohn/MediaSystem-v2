@@ -6,9 +6,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.NavigateEvent;
-import hs.mediasystem.util.javafx.Action;
 import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.Val;
+import hs.mediasystem.util.javafx.action.Action;
 
 import java.util.Objects;
 

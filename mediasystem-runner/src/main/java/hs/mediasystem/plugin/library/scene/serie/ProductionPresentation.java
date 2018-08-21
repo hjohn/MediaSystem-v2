@@ -2,6 +2,7 @@ package hs.mediasystem.plugin.library.scene.serie;
 
 import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.ext.basicmediatypes.VideoLink;
+import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
 import hs.mediasystem.framework.actions.Expose;
@@ -13,12 +14,14 @@ import hs.mediasystem.runner.Dialogs;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.util.StringURI;
-import hs.mediasystem.util.javafx.Action;
 import hs.mediasystem.util.javafx.Binds;
-import hs.mediasystem.util.javafx.SimpleAction;
 import hs.mediasystem.util.javafx.Val;
+import hs.mediasystem.util.javafx.action.Action;
+import hs.mediasystem.util.javafx.action.SimpleAction;
+import hs.mediasystem.util.javafx.property.SimpleReadOnlyObjectProperty;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -68,22 +71,16 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   private final VideoDatabase videoDatabase;
   private final StreamStateService streamStateService;
 
-  private final ObjectProperty<State> internalState = new SimpleObjectProperty<>(State.OVERVIEW);
-  private final ObjectProperty<ButtonState> internalButtonState = new SimpleObjectProperty<>(ButtonState.MAIN);
-
   private final ObjectProperty<VideoLink> trailerVideoLink = new SimpleObjectProperty<>();
-
-  public final ReadOnlyObjectProperty<State> state = objectValue(internalState);
-  public final ReadOnlyObjectProperty<ButtonState> buttonState = objectValue(internalButtonState);
-  public final Val<MediaItem<?>> episodeOrMovieItem;
 
   public final MediaItem<?> rootItem;
 
+  // TODO actions, can still keep references to UI elements if bound or listened to
   public final PlayAction play;
   public final ResumeAction resume;
   public final Action playTrailer = new SimpleAction("Trailer", trailerVideoLink.isNotNull(), this::playTrailer);
 
-  public final EpisodesPresentation episodesPresentation;
+  private final Model model;
 
   private ProductionPresentation(
     Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider,
@@ -92,39 +89,72 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     Provider<EpisodesPresentation> episodesPresentationProvider,
     PlayAction.Factory playActionFactory,
     ResumeAction.Factory resumeActionFactory,
-    MediaItem<?> mediaItem
+    MediaItem<?> rootItem
   ) {
     this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
     this.videoDatabase = videoDatabase;
     this.streamStateService = streamStateService;
-    this.rootItem = mediaItem;
-    this.episodesPresentation = mediaItem.getData() instanceof Serie ? episodesPresentationProvider.get().set((MediaItem<Serie>)mediaItem) : null;
-    this.episodeOrMovieItem = episodesPresentation == null ? Binds.monadic(rootItem) : (Val<MediaItem<?>>)(Val<?>)Binds.monadic(episodesPresentation.episodeItem);
-    this.play = playActionFactory.create(episodeOrMovieItem);
-    this.resume = resumeActionFactory.create(episodeOrMovieItem);
+    this.rootItem = rootItem;
+
+    EpisodesPresentation episodesPresentation = rootItem.getData() instanceof Serie ? episodesPresentationProvider.get().set((MediaItem<Serie>)rootItem) : null;
+
+    this.model = new Model(rootItem, episodesPresentation == null ? null : episodesPresentation.episodeItems);
+    this.play = playActionFactory.create(model.episodeOrMovieItem);
+    this.resume = resumeActionFactory.create(model.episodeOrMovieItem);
+
+    if(episodesPresentation != null) {
+      this.model.episodeItem.bindBidirectional(episodesPresentation.episodeItem);
+    }
   }
 
-  public EpisodesPresentation getEpisodesPresentation() {
-    return episodesPresentation;
+  public static class Model {
+    private final ObjectProperty<State> internalState = new SimpleObjectProperty<>(State.OVERVIEW);
+    private final ObjectProperty<ButtonState> internalButtonState = new SimpleObjectProperty<>(ButtonState.MAIN);
+
+    public final ReadOnlyObjectProperty<State> state = new SimpleReadOnlyObjectProperty<>(internalState);
+    public final ReadOnlyObjectProperty<ButtonState> buttonState = new SimpleReadOnlyObjectProperty<>(internalButtonState);
+
+    public final List<MediaItem<Episode>> episodeItems;
+    public final ObjectProperty<MediaItem<Episode>> episodeItem = new SimpleObjectProperty<>();
+
+    public final Val<MediaItem<?>> episodeOrMovieItem;
+
+    public Model(MediaItem<?> rootItem, List<MediaItem<Episode>> episodeItems) {
+      this.episodeItems = episodeItems;
+      this.episodeOrMovieItem = episodeItems == null ? Binds.monadic(rootItem) : (Val<MediaItem<?>>)(Val<?>)Binds.monadic(episodeItem);
+    }
+  }
+
+  public Model createModel() {
+    Model m = new Model(rootItem, model.episodeItems);
+
+    bindModel(m);
+
+    return m;
+  }
+
+  private void bindModel(Model other) {
+    other.internalState.bindBidirectional(model.internalState);
+    other.internalButtonState.bindBidirectional(model.internalButtonState);
+    other.episodeItem.bindBidirectional(model.episodeItem);
   }
 
   @Override
   public void navigateBack(Event e) {
-    switch(buttonState.get()) {
+    switch(model.buttonState.get()) {
     case PLAY_RESUME:
     case RELATED:
-      internalButtonState.set(ButtonState.MAIN);
+      model.internalButtonState.set(ButtonState.MAIN);
       break;
     case MAIN:
-      switch(state.get()) {
+      switch(model.state.get()) {
       case OVERVIEW:
         return;
       case LIST:
-        episodesPresentation.episodeItem.unbind();
-        internalState.set(State.OVERVIEW);
+        model.internalState.set(State.OVERVIEW);
         break;
       case EPISODE:
-        internalState.set(State.LIST);
+        model.internalState.set(State.LIST);
         break;
       }
     }
@@ -133,31 +163,35 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   public void toEpisodeState() {
-    if(this.episodesPresentation.episodeItem.get() == null) {
+    if(this.model.episodeItem.get() == null) {
       throw new IllegalStateException("Cannot go to Episode state without an episode set");
     }
 
     update();
 
-    this.internalState.set(State.EPISODE);
+    this.model.internalState.set(State.EPISODE);
   }
 
   public void toListState() {
-    this.internalState.set(State.LIST);
+    if(model.episodeItems == null) {
+      throw new IllegalStateException("Cannot go to List state if root item is not a Serie");
+    }
+
+    this.model.internalState.set(State.LIST);
   }
 
   public void toPlayResumeButtonState() {
-    this.internalButtonState.set(ButtonState.PLAY_RESUME);
+    this.model.internalButtonState.set(ButtonState.PLAY_RESUME);
   }
 
   public void toRelatedButtonState() {
-    this.internalButtonState.set(ButtonState.RELATED);
+    this.model.internalButtonState.set(ButtonState.RELATED);
   }
 
   @Expose
   public void toggleWatchedState() {
-    if(internalState.get() == State.LIST) {
-      MediaItem<?> mediaItem = episodesPresentation.episodeItem.get();
+    if(model.internalState.get() == State.LIST) {
+      MediaItem<?> mediaItem = model.episodeItem.get();
 
       if(mediaItem != null && !mediaItem.getStreams().isEmpty()) {
         StreamPrint streamPrint = mediaItem.getStreams().iterator().next().getStreamPrint();
@@ -179,7 +213,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   @Expose
   public void showContextMenu(Event event) {
-    if(internalState.get() == State.LIST) {
+    if(model.internalState.get() == State.LIST) {
       // Note: map is sorted according to order of Option enum declaration
       Map<Option, String> map = new EnumMap<>(Option.class);
 
@@ -208,7 +242,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   private Boolean isWatched() {
-    MediaItem<?> mediaItem = episodesPresentation.episodeItem.get();
+    MediaItem<?> mediaItem = model.episodeItem.get();
 
     if(mediaItem != null && !mediaItem.getStreams().isEmpty()) {
       StreamPrint streamPrint = mediaItem.getStreams().iterator().next().getStreamPrint();
@@ -242,6 +276,6 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   private MediaItem<?> getPlayableMediaItem() {
-    return rootItem.getData() instanceof Serie ? episodesPresentation.episodeItem.get() : rootItem;
+    return rootItem.getData() instanceof Serie ? model.episodeItem.get() : rootItem;
   }
 }

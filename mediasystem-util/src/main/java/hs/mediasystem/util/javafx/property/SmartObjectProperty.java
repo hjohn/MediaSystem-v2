@@ -1,4 +1,6 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.property;
+
+import hs.mediasystem.util.javafx.Val;
 
 import javafx.beans.property.SimpleObjectProperty;
 

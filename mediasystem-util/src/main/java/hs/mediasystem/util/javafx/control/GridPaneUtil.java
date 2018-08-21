@@ -1,6 +1,6 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util.javafx.control;
 
-import hs.mediasystem.util.javafx.GridPane;
+import hs.mediasystem.util.javafx.control.GridPane;
 
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;

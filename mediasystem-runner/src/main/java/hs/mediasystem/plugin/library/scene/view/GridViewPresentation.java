@@ -71,8 +71,6 @@ public class GridViewPresentation extends AbstractPresentation {
   public void reidentify() {
     MediaItem<?> mediaItem = selectedItem.get();
 
-    System.out.println(">>>> REIDENTIFYING " + mediaItem);
-
     if(mediaItem != null && !mediaItem.getStreams().isEmpty()) {
       localMediaManager.reidentify(mediaItem.getStreams().iterator().next());
     }

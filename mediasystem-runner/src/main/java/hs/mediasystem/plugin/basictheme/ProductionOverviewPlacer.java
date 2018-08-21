@@ -9,8 +9,8 @@ import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.util.javafx.Binds;
-import hs.mediasystem.util.javafx.GridPane;
-import hs.mediasystem.util.javafx.GridPaneUtil;
+import hs.mediasystem.util.javafx.control.GridPane;
+import hs.mediasystem.util.javafx.control.GridPaneUtil;
 
 import javafx.scene.Node;
 import javafx.scene.layout.Pane;
@@ -21,7 +21,7 @@ import javax.inject.Singleton;
 
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = ProductionOverviewNodeFactory.class)
-public class SeriePlacer extends AbstractPlacer<LibraryPresentation, ProductionPresentation, ProductionOverviewNodeFactory> {
+public class ProductionOverviewPlacer extends AbstractPlacer<LibraryPresentation, ProductionPresentation, ProductionOverviewNodeFactory> {
   @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override

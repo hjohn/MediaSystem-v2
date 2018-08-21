@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.presentation.ViewPortFactory;
-import hs.mediasystem.util.javafx.GridPaneUtil;
+import hs.mediasystem.util.javafx.control.GridPaneUtil;
 
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;

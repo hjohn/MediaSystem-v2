@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
-import hs.mediasystem.util.javafx.ScaledImageView;
+import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;

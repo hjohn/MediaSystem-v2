@@ -2,8 +2,8 @@ package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.runner.DebugFX;
 import hs.mediasystem.util.javafx.Events;
-import hs.mediasystem.util.javafx.GridListViewSkin;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.control.GridListViewSkin;
 
 import java.util.List;
 

@@ -44,7 +44,6 @@ public class PresentationLoader {
   }
 
   public <T extends Presentation> void loadAndNavigate(Event event, Supplier<T> supplier) {
-
     Exceptional<T> result = Dialogs.showProgressDialog(event, new Task<T>() {
       @Override
       protected T call() throws Exception {
@@ -56,8 +55,6 @@ public class PresentationLoader {
 
     result.ifPresent(p -> Event.fireEvent(event.getTarget(), NavigateEvent.to(p)));
 
-//    T p = supplier.get();
-//    Event.fireEvent(event.getTarget(), NavigateEvent.to(p));
     event.consume();
   }
 }

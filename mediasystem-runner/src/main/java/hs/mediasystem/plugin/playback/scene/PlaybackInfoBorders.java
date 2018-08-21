@@ -3,9 +3,9 @@ package hs.mediasystem.plugin.playback.scene;
 import hs.mediasystem.domain.AudioTrack;
 import hs.mediasystem.domain.Subtitle;
 import hs.mediasystem.plugin.library.scene.MediaItem;
-import hs.mediasystem.util.javafx.GridPaneUtil;
-import hs.mediasystem.util.javafx.RangeBar;
 import hs.mediasystem.util.javafx.StringBinding;
+import hs.mediasystem.util.javafx.control.GridPaneUtil;
+import hs.mediasystem.util.javafx.control.RangeBar;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
