@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import javafx.event.Event;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -42,13 +43,9 @@ public class InputActionHandler {
     return list == null ? Collections.emptyList() : list;
   }
 
-  public void keyPressed(KeyEvent event, Object root, List<Action> actions) {
-    LOGGER.fine("Key pressed: " + event + " with matching actions: " + actions);
-
+  public void keyPressed(Event event, Object root, List<Action> actions) {
     for(Action action : actions) {
       ActionTarget actionTarget = action.getActionTarget();
-
-      LOGGER.fine("Action found: " + action.getAction() + " --> " + actionTarget.getActionClass() + " :: " + actionTarget.getPath() + " :: " + actionTarget.getMemberName());
 
       if(actionTarget.getActionClass().isAssignableFrom(root.getClass())) {
         actionTarget.doAction(action.getAction(), root, event);

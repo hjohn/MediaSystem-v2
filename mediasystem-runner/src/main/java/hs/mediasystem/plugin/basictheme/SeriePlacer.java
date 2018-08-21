@@ -26,13 +26,13 @@ public class SeriePlacer extends AbstractPlacer<LibraryPresentation, ProductionP
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, ProductionPresentation presentation) {
-    parentPresentation.backdrop.bind(Binds.monadic(presentation.productionItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
+    parentPresentation.backdrop.bind(Binds.monadic(presentation.rootItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
   }
 
   @Override
   public Node place(LibraryPresentation parentPresentation, ProductionPresentation presentation) {
     Node node = super.place(parentPresentation, presentation);
-
+System.out.println("$$$$ Placing ProductionPresentation");
     ((Pane)node).setMaxSize(10000, 10000);
 
     GridPane gridPane = GridPaneUtil.create(new double[] {10, 80, 10}, new double[] {25, 50, 25});

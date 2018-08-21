@@ -1,9 +1,10 @@
 package hs.mediasystem.plugin.library.scene;
 
+import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty2;
+import hs.mediasystem.util.javafx.BiasedImageView;
 import hs.mediasystem.util.javafx.Labels;
-import hs.mediasystem.util.javafx.ScaledImageView;
 
 import java.util.function.Function;
 
@@ -14,56 +15,78 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.CacheHint;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
-public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>, ListCell<MediaItem<?>>> {
-  public enum MediaStatus {
-    UNAVAILABLE,
-    AVAILABLE,
-    WATCHED
-  }
+public class MediaGridViewCellFactory<T> implements Callback<ListView<MediaItem<T>>, ListCell<MediaItem<T>>> {
+  private Function<MediaItem<T>, ObservableValue<? extends String>> titleBindProvider;
+  private Function<MediaItem<T>, ImageHandle> imageHandleExtractor;
+  private Function<MediaItem<T>, String> detailExtractor;
+  private Function<MediaItem<T>, ObservableValue<? extends MediaStatus>> mediaStatusBindProvider;
+  private Function<MediaItem<T>, String> sequenceNumberExtractor;
 
-  private Function<MediaItem<?>, ObservableValue<? extends String>> titleBindProvider;
-  private Function<MediaItem<?>, ImageHandle> imageHandleExtractor;
-  private Function<MediaItem<?>, String> detailExtractor;
-  private Function<MediaItem<?>, ObservableValue<? extends MediaStatus>> mediaStatusBindProvider;
-  private Function<MediaItem<?>, String> sequenceNumberExtractor;
+  private Orientation orientation = Orientation.HORIZONTAL;
+  private double aspectRatio = 1.5;
 
-  public void setTitleBindProvider(Function<MediaItem<?>, ObservableValue<? extends String>> bindProvider) {
+  public void setTitleBindProvider(Function<MediaItem<T>, ObservableValue<? extends String>> bindProvider) {
     this.titleBindProvider = bindProvider;
   }
 
-  public void setImageExtractor(Function<MediaItem<?>, ImageHandle> extractor) {
+  public void setImageExtractor(Function<MediaItem<T>, ImageHandle> extractor) {
     this.imageHandleExtractor = extractor;
   }
 
-  public void setDetailExtractor(Function<MediaItem<?>, String> extractor) {
+  public void setDetailExtractor(Function<MediaItem<T>, String> extractor) {
     this.detailExtractor = extractor;
   }
 
-  public void setMediaStatusBindProvider(Function<MediaItem<?>, ObservableValue<? extends MediaStatus>> bindProvider) {
+  public void setMediaStatusBindProvider(Function<MediaItem<T>, ObservableValue<? extends MediaStatus>> bindProvider) {
     this.mediaStatusBindProvider = bindProvider;
   }
 
-  public void setSequenceNumberExtractor(Function<MediaItem<?>, String> extractor) {
+  public void setSequenceNumberExtractor(Function<MediaItem<T>, String> extractor) {
     this.sequenceNumberExtractor = extractor;
   }
 
+  public void setContentBias(Orientation orientation) {
+    this.orientation = orientation;
+  }
+
+  public void setPlaceHolderAspectRatio(double aspectRatio) {
+    this.aspectRatio = aspectRatio;
+  }
+
+  private double maxRatio = Double.MAX_VALUE;
+  private double minRatio = 0;
+
+  public void setMinRatio(double minRatio) {
+    this.minRatio = minRatio;
+  }
+
+  public void setMaxRatio(double maxRatio) {
+    this.maxRatio = maxRatio;
+  }
+
   @Override
-  public ListCell<MediaItem<?>> call(ListView<MediaItem<?>> param) {
+  public ListCell<MediaItem<T>> call(ListView<MediaItem<T>> param) {
     return new ListCell<>() {
-      private final ScaledImageView imageView = new ScaledImageView(Labels.create("?", "media-grid-view-image-place-holder"));
-      private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2();
+      private final Label placeHolderLabel = new AspectCorrectLabel("?", aspectRatio, orientation);
+      private final BiasedImageView imageView = new BiasedImageView(placeHolderLabel);
+      private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2(400, 400);
       private final Label name = Labels.create("name");
       private final Label detail = Labels.create("detail");
       private final Label indicator = Labels.create("indicator");
@@ -72,15 +95,28 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
       private final Label sequenceNumber = Labels.create("sequence-number");
       private final StackPane sequenceNumberPane = new StackPane(sequenceNumber);
       private final ObjectProperty<MediaStatus> mediaStatusProperty = new SimpleObjectProperty<>();
-//      private final WeakBinder binder = new WeakBinder();
+      private final DropShadow dropShadow = new DropShadow(BlurType.GAUSSIAN, new Color(1, 1, 1, 0.8), 0, 0.0, 0, 0);
 
       private final VBox vbox = new VBox() {{
         getChildren().add(imageView);
         getChildren().add(name);
         getChildren().add(detail);
 
+        getStyleClass().add("inner-box");
+
         setAlignment(Pos.CENTER);
-        VBox.setVgrow(imageView, Priority.ALWAYS);
+        imageView.setOrientation(orientation);
+        imageView.setMinRatio(minRatio);
+        imageView.setMaxRatio(maxRatio);
+
+        name.setMinHeight(Region.USE_PREF_SIZE);  // Always fit entire (reflowed) text
+
+        if(orientation == Orientation.VERTICAL) {
+          VBox.setVgrow(imageView, Priority.ALWAYS);
+        }
+        else {
+          this.setMaxHeight(1);
+        }
       }};
 
       private final ChangeListener<? super MediaStatus> updateIndicatorListener = (obs, old, current) -> {
@@ -88,14 +124,17 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
         case WATCHED:
           getStyleClass().add("watched");
           getStyleClass().remove("available");
+          getStyleClass().remove("unavailable");
           break;
         case AVAILABLE:
           getStyleClass().add("available");
           getStyleClass().remove("watched");
+          getStyleClass().remove("unavailable");
           break;
         case UNAVAILABLE:
           getStyleClass().remove("available");
           getStyleClass().remove("watched");
+          getStyleClass().add("unavailable");
           break;
         }
       };
@@ -107,6 +146,9 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
         imageView.getOverlayRegion().getChildren().add(indicatorPane);
         imageView.getOverlayRegion().getChildren().add(sequenceNumberPane);
 
+        placeHolderLabel.getStyleClass().add("media-grid-view-image-place-holder");
+        placeHolderLabel.setAlignment(Pos.CENTER);
+
         sequenceNumberPane.setAlignment(Pos.BOTTOM_LEFT);
         sequenceNumberPane.getStyleClass().add("sequence-number-pane");
         indicatorPane.setAlignment(Pos.BOTTOM_RIGHT);
@@ -115,17 +157,19 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
         detail.managedProperty().bind(detail.textProperty().isNotEqualTo(""));
         sequenceNumber.managedProperty().bind(sequenceNumber.textProperty().isNotEqualTo(""));
 
+        setAlignment(Pos.CENTER);
+        setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);  // Indicate to cell that it can become as big as possible
 
-        focusedProperty().addListener((obs, old, focused) -> {
+        imageView.setEffect(dropShadow);
+
+        focusedProperty().addListener((obs, old, current) -> {
           new Timeline(
-            new KeyFrame(Duration.ZERO, new KeyValue(scaleXProperty(), getScaleX()), new KeyValue(scaleYProperty(), getScaleY())),
-            new KeyFrame(Duration.seconds(0.5), new KeyValue(scaleXProperty(), focused ? 1.1 : 1.0), new KeyValue(scaleYProperty(), focused ? 1.1 : 1.0))
+            new KeyFrame(Duration.ZERO, new KeyValue(dropShadow.radiusProperty(), dropShadow.getRadius())),
+            new KeyFrame(Duration.seconds(0.2), new KeyValue(dropShadow.radiusProperty(), current ? 25.0 : 0))
           ).play();
         });
 
-        this.setCache(true);
-        this.setCacheHint(CacheHint.SCALE);
         this.mediaStatusProperty.addListener(updateIndicatorListener);
       }
 
@@ -141,17 +185,14 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
       };
 
       @Override
-      protected void updateItem(MediaItem<?> item, boolean empty) {
+      protected void updateItem(MediaItem<T> item, boolean empty) {
         super.updateItem(item, empty);
 
-//        binder.unbindAll();
         asyncImageProperty.removeListener(imageChangeListener);
 
         if(!empty) {
           setGraphic(vbox);
 
-//          binder.bind(name.textProperty(), titleExtractor.apply(item));
-//          binder.bind(asyncImageProperty.imageHandleProperty(), imageHandleExtractor.apply(item));
           name.textProperty().bind(titleBindProvider.apply(item));
           asyncImageProperty.imageHandleProperty().set(imageHandleExtractor.apply(item));
 
@@ -160,7 +201,6 @@ public class MediaGridViewCellFactory implements Callback<ListView<MediaItem<?>>
           }
 
           if(detailExtractor != null) {
-//            binder.bind(detail.textProperty(), detailExtractor.apply(item));
             detail.setText(detailExtractor.apply(item));
           }
 

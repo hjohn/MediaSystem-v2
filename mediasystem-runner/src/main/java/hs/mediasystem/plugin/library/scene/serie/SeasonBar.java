@@ -17,6 +17,7 @@ public class SeasonBar extends HBox {
     setClip(new Rectangle(0, 0, getWidth(), getHeight()));
 
     ObservableList<Node> children = getChildren();
+
     for(int i = 0; i < children.size(); i++) {
       Label label = (Label)children.get(i);
 

@@ -9,7 +9,6 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.runner.ImageHandleFactory;
-import hs.mediasystem.runner.SceneNavigator;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.util.Collections;
@@ -22,28 +21,26 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Singleton
 public class CastAndCrewSetup extends AbstractSetup<PersonRole, CastAndCrewPresentation> {
   @Inject private VideoDatabase database;
   @Inject private ContextLayout contextLayout;
-  @Inject private SceneNavigator navigator;
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private Provider<PersonParticipationsPresentation> personParticipationsPresentationProvider;
+  @Inject private PresentationLoader presentationLoader;
 
   @Override
-  public ObservableList<MediaItem<?>> getItems(CastAndCrewPresentation presentation) {
+  public ObservableList<MediaItem<PersonRole>> getItems(CastAndCrewPresentation presentation) {
     MediaItem<?> mediaItem = presentation.mediaItem.get();
 
-    List<MediaItem<?>> participants = database.queryRoles(mediaItem.getProduction().getIdentifier()).stream().map(this::wrap).collect(Collectors.toList());
+    List<MediaItem<PersonRole>> participants = database.queryRoles(mediaItem.getProduction().getIdentifier()).stream().map(this::wrap).collect(Collectors.toList());
 
     return FXCollections.observableList(participants);
   }
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<PersonRole> cellFactory) {
     cellFactory.setTitleBindProvider(m -> m.personName);
     cellFactory.setImageExtractor(m -> m.getPerson().getImage() == null ? null : imageHandleFactory.fromURI(m.getPerson().getImage()));
     cellFactory.setDetailExtractor(m -> m.getRole().getCharacter() != null && !m.getRole().getCharacter().isEmpty() ? "as " + m.getRole().getCharacter() :
@@ -54,17 +51,18 @@ public class CastAndCrewSetup extends AbstractSetup<PersonRole, CastAndCrewPrese
   protected Node createContextPanel(CastAndCrewPresentation presentation) {
     MediaItem<?> mediaItem = presentation.mediaItem.get();
 
-    return contextLayout.create(mediaItem.getProduction());
+    return contextLayout.create(mediaItem);
   }
 
   private MediaItem<PersonRole> wrap(PersonRole data) {
-    return new MediaItem<>(data, Collections.emptySet(), 0, 0);
+    return new MediaItem<>(data, null, Collections.emptySet(), 0, 0);
   }
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, CastAndCrewPresentation presentation) {
-    navigator.navigateTo(personParticipationsPresentationProvider.get().set(event.getItem().getPerson()));
-    event.consume();
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<PersonRole>> event, CastAndCrewPresentation presentation) {
+//    Event.fireEvent(event.getTarget(), NavigateEvent.to(personParticipationsPresentationProvider.get().set(event.getItem().getPerson())));
+//    event.consume();
+    presentationLoader.loadAndNavigate(event, PersonParticipationsPresentation.createSetupTask(event.getItem().getPerson()));
   }
 
   @Override

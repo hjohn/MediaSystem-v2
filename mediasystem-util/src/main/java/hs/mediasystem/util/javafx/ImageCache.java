@@ -9,7 +9,9 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.SortedMap;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -23,7 +25,7 @@ import javax.imageio.stream.ImageInputStream;
 
 public class ImageCache {
   private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
-  private static final SortedMap<String, WeakReference<?>> CACHE = new TreeMap<>();
+  private static final NavigableMap<String, WeakReference<?>> CACHE = new TreeMap<>();
 
   public static Image loadImage(ImageHandle handle) {
     cleanReferenceQueue();
@@ -36,6 +38,34 @@ public class ImageCache {
 
     synchronized(CACHE) {
       WeakReference<?> ref = CACHE.get(key);
+
+      if(ref == null) {
+        return null;
+      }
+
+      Object content = ref.get();
+
+      if(content instanceof Image) {
+        return (Image)content;
+      }
+
+      return null;
+    }
+  }
+
+
+  public static Image getClosestImage(ImageHandle handle, int w, int h) {
+    String key = createKey(handle.getKey(), w, h, true);
+
+    synchronized(CACHE) {
+      NavigableMap<String, WeakReference<?>> subMap = CACHE.subMap(handle.getKey(), true, handle.getKey() + "$", false);
+      Entry<String, WeakReference<?>> entry = Optional.ofNullable(subMap.ceilingEntry(key)).orElseGet(() -> subMap.floorEntry(key));
+
+      if(entry == null) {
+        return null;
+      }
+
+      WeakReference<?> ref = entry.getValue();
 
       if(ref == null) {
         return null;
@@ -218,7 +248,12 @@ public class ImageCache {
   }
 
   private static String createKey(String baseKey, double w, double h, boolean keepAspect) {
-    return baseKey + "#" + w + "x" + h + "-" + (keepAspect ? "T" : "F");
+    if(w >= 100000 || h >= 100000) {
+      throw new IllegalStateException("Unsupported size for image: " + w + "x" + h);
+    }
+
+    // Key will sort in such way that same images with keepAspect true will sort in order of small to large size
+    return String.format("%s#%s#%09.2fx%09.2f", baseKey, keepAspect ? "T" : "F", w, h);
   }
 
   public static void expunge(ImageHandle handle) {

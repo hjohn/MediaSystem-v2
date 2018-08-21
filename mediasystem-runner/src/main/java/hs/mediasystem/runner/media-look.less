@@ -1,3 +1,5 @@
+@import "properties.less";
+
 .scroll-bar
 {
   -fx-skin: "hs.mediasystem.util.javafx.MinimalScrollBarSkin";
@@ -25,4 +27,95 @@
 .scroll-pane > .viewport
 {
   -fx-background-color: transparent;
+}
+ 
+.dialog {
+  -fx-spacing: 5;
+  -fx-padding: 20;
+  
+  -c-border: @theme-primary;
+  -c-bg: fade(@theme-primary, 20%);
+  
+  -c-b1: derive(-c-border, 25%);
+  -c-b2: derive(-c-border, -30%);
+  -c-b3: derive(-c-border, -50%);
+  -c-b4: derive(-c-border, -70%);
+  -c-b5: derive(-c-border, -80%);
+
+  -c-bg1: derive(-c-bg, 5%);
+  -c-bg2: derive(-c-bg, -100%);
+  -c-bg3: derive(-c-bg, -160%);
+  
+  -fx-border-color: 
+    linear-gradient(to right, -c-b1, -c-b2 2%, -c-b3) 
+    linear-gradient(to bottom, -c-b3, -c-b3 25%, -c-b2 50%, -c-b4 98%, -c-b5) 
+    linear-gradient(to right, -c-b3, -c-b4 98%, -c-b5) 
+    linear-gradient(to bottom, -c-b1, -c-b3 2%, -c-b2 50%, -c-b3 98%, -c-b3),
+    rgba(0, 0, 0, 0.5),
+    rgba(0, 0, 0, 0.5);
+
+  -fx-border-radius: 25, 25, 24;
+  -fx-border-width: 3.5, 1, 1;
+  -fx-border-insets: 0, 0, 3;
+
+  -fx-background-color: linear-gradient(from 25% 0% to 75% 100%, -c-bg3, -c-bg1 28%, -c-bg2 68%, -c-bg3), linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 1.0));
+  -fx-background-radius: 23, 23;
+  -fx-background-insets: 1, 1;
+} 
+
+.media-look,
+.dialog {
+  @control-focus: rgb(255, 255, 0);
+  @control-border: darken(@theme-primary, 50%, relative);
+  @control-bg: fade(darken(@theme-primary, 75%, relative), 40%);
+  
+  .button {
+    -fx-background-color: @control-bg;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+  
+    -fx-text-fill: @text-primary-highlight;
+  
+    -fx-border-color: transparent, @control-border;
+    -fx-border-width: 3, 1;
+    -fx-border-insets: 0, 5.4;
+    -fx-border-radius: 5.4, 0;
+  }
+ 
+  .check-box.focused > .box, 
+  .combo-box-base.focused, 
+  .button.focused,
+  .list-view.focused:external-focus,  /* without mouse focus */
+  .list-view:focused:external-focus   /* with mouse focus */
+  {
+    -fx-border-color: @control-focus, @control-border;
+  }
+  
+  .slider.focused:external-focus,
+  .slider:focused:external-focus
+  {
+    -fx-border-color: @control-focus, transparent;
+    -fx-border-width: 3, 1;
+    -fx-border-insets: 0, 5.4;
+    -fx-border-radius: 5.4, 0;
+  }
+  
+  .slider.focused:internal-focus *.thumb,
+  .slider:focused:internal-focus *.thumb
+  {
+    -fx-background-color:
+          @control-focus,
+          derive(-fx-color,-36%),
+          derive(-fx-color,73%),
+          linear-gradient(to bottom, derive(-fx-color,-19%),derive(-fx-color,61%));
+    -fx-background-radius: 17.4, 14, 13, 12;
+    -fx-background-insets: -3.4, 0, 1, 2;
+  }
+  
+  .list-view:internal-focus .list-cell:focused,
+  .combo-box-popup .list-view .list-cell:filled:selected
+  {
+    -fx-background-color: @control-focus, -fx-cell-ifocus-color !important;
+    -fx-background-insets: 0, 1 !important;
+  }
 }

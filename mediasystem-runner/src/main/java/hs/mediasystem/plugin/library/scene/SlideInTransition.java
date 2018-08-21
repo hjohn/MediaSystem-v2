@@ -9,12 +9,15 @@ import javafx.util.Duration;
 public class SlideInTransition extends Transition {
   private final Node node;
   private final Pane pane;
+  private final double settleFraction;
 
-  public SlideInTransition(Pane pane, Node node) {
+  public SlideInTransition(Pane pane, Node node, Duration settleDelay, Duration slideIn) {
     this.pane = pane;
     this.node = node;
 
-    setCycleDuration(Duration.millis(2500));
+    settleFraction = settleDelay.toMillis() / (settleDelay.toMillis() + slideIn.toMillis());
+
+    setCycleDuration(settleDelay.add(slideIn));
     setInterpolator(Interpolator.EASE_OUT);
   }
 
@@ -24,13 +27,13 @@ public class SlideInTransition extends Transition {
       return;
     }
 
-    if(frac < 0.8) {  // TODO checking fraction like this doesn't play well with interpolator
+    if(frac < settleFraction) {  // TODO checking fraction like this doesn't play well with interpolator
       node.setTranslateX(pane.getWidth() + 100);
     }
     else {
       node.setVisible(true);
       node.setManaged(true);
-      node.setTranslateX((pane.getWidth() + 100) * (1 - frac) * 5);
+      node.setTranslateX((pane.getWidth() + 100) * (1 - frac) / (1 - settleFraction));
     }
   }
 }

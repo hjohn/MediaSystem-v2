@@ -1,6 +1,9 @@
 package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.domain.PlayerPresentation;
+import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.runner.LessLoader;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
@@ -22,6 +25,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -54,7 +59,8 @@ public class PlaybackOverlayPane extends StackPane {
 
   private final GridPane detailsOverlay = GridPaneUtil.create(new double[] {5, 20, 5, 65, 5}, new double[] {45, 50, 5});
 
-  private final ObjectBinding<ImageHandle> posterHandle = MapBindings.get(presentation).then("mediaItem").then("production").then("image").asObjectBinding();
+  private final ObjectBinding<ImageHandle> posterHandle;
+//      MapBindings.get(presentation).then("mediaItem").then("production").then("image").asObjectBinding();
   private final AsyncImageProperty poster = new AsyncImageProperty();
 
   private final PlaybackInfoBorders borders = new PlaybackInfoBorders(playerBindings);
@@ -77,8 +83,9 @@ public class PlaybackOverlayPane extends StackPane {
     new KeyFrame(Duration.seconds(9), new KeyValue(detailsOverlay.opacityProperty(), 0.0))
   );
 
-  public PlaybackOverlayPane(PlaybackOverlayPresentation presentation) {
+  public PlaybackOverlayPane(PlaybackOverlayPresentation presentation, ImageHandleFactory imageHandleFactory) {
     this.presentation.set(presentation);
+    this.posterHandle = Binds.monadic(this.presentation).map(p -> p.mediaItem.get()).map(MediaItem::getProduction).map(Production::getImage).map(imageHandleFactory::fromURI);
     this.player.bind(presentation.playerPresentation);
     this.overlayVisible.bind(presentation.overlayVisible);
 
@@ -86,7 +93,7 @@ public class PlaybackOverlayPane extends StackPane {
 
     setId("playback-overlay");
 
-    //poster.imageHandleProperty().bind(posterHandle);
+    poster.imageHandleProperty().bind(posterHandle);
 
     playbackStateOverlay.getChildren().addListener(new ListChangeListener<Node>() {
       @Override
@@ -123,17 +130,19 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          final StringBinding serieName = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").thenOrDefault("serie", null).then("name").asStringBinding();
+          final StringBinding serieName = MapBindings.get(PlaybackOverlayPane.this.presentation).then("parentMediaItem").then("production").then("name").asStringBinding();
           final StringBinding title = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("name").asStringBinding();
-          final StringBinding subtitle = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("name").asStringBinding();  // "subtitle" TODO
+          final StringProperty subtitle = new SimpleStringProperty(); //MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("subtitle").asStringBinding();  // "subtitle" TODO
 
           HBox.setHgrow(this, Priority.ALWAYS);
           getChildren().add(new Label() {{
+            setWrapText(true);
             textProperty().bind(Bindings.when(serieName.isNotNull()).then(serieName).otherwise(title));
             getStyleClass().add("video-title");
             setEffect(SpecialEffects.createNeonEffect(64));
           }});
           getChildren().add(new Label() {{
+            setWrapText(true);
             textProperty().bind(Bindings.when(serieName.isNotNull()).then(title).otherwise(subtitle));
             getStyleClass().add("video-subtitle");
           }});

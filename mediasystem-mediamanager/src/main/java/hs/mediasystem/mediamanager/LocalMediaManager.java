@@ -2,15 +2,16 @@ package hs.mediasystem.mediamanager;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.IdentificationService;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.MediaRecord;
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.QueryService;
-import hs.mediasystem.ext.basicmediatypes.QueryService.Result;
-import hs.mediasystem.ext.basicmediatypes.Type;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
+import hs.mediasystem.ext.basicmediatypes.domain.Type;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaRecord;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
+import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
+import hs.mediasystem.ext.basicmediatypes.services.QueryService;
+import hs.mediasystem.ext.basicmediatypes.services.QueryService.Result;
+import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.StringURI;
 
@@ -21,14 +22,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -39,23 +41,23 @@ public class LocalMediaManager {
   private static final Logger LOGGER = Logger.getLogger(LocalMediaManager.class.getName());
   private static final Executor EXECUTOR = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("LocalMediaManager", true));
 
-  @Inject private List<IdentificationService<?>> identificationServices;
+  @Inject private List<IdentificationService> identificationServices;
   @Inject private List<QueryService<?>> queryServices;
 
-  private final Map<DataSource, IdentificationService<?>> identificationServicesByDataSource = new HashMap<>();
+  private final Map<DataSource, IdentificationService> identificationServicesByDataSource = new HashMap<>();
   private final Map<DataSource, QueryService<?>> queryServicesByDataSource = new HashMap<>();
   private final List<LocalMediaListener> localMediaListeners = new ArrayList<>();
 
   // Various MediaStream indices
   private final Map<Type, Map<String, MediaStream<? extends MediaDescriptor>>> streamsByPrintIdentifierByType = new HashMap<>();  // By Type, then by StreamPrint.Identifier
-  private final Map<Identifier, Set<MediaStream<?>>> groupsByIdentifier = new HashMap<>();
+  private final Map<Identifier, Set<MediaStream<?>>> streamsByIdentifier = new HashMap<>();
   private final Map<StringURI, Set<MediaStream<?>>> streamsByParentURI = new HashMap<>();
 
   @PostConstruct
   private void postConstruct() {
     LOGGER.info("Instantiated with " + identificationServices.size() + " identification services and " + queryServices.size() + " query services");
 
-    for(IdentificationService<?> service : identificationServices) {
+    for(IdentificationService service : identificationServices) {
       if(identificationServicesByDataSource.put(service.getDataSource(), service) != null) {
         LOGGER.warning("Multiple identification services available for datasource: " + service.getDataSource());
       }
@@ -96,16 +98,11 @@ public class LocalMediaManager {
       MediaStream<D> replacedStream = removeMediaStream(mediaStream);
 
       addMediaStream(mediaStream);
-      enrichMediaStream(mediaStream);
+      asyncEnrichMediaStream(mediaStream);
 
       return replacedStream;
     }
   }
-
-  // TODO how to return another ID from a service?
-//  public synchronized Collection<MediaStream<?>> findAllByType(Type type) {
-//    return groupListsByType.get(type).values();
-//  }
 
   public synchronized <T extends MediaDescriptor> Collection<MediaStream<T>> findAllByType(Type type) {
     @SuppressWarnings("unchecked")  // Save, as the type guarantees the kind of items in the map
@@ -120,159 +117,183 @@ public class LocalMediaManager {
   }
 
   public synchronized Set<MediaStream<?>> find(ProductionIdentifier identifier) {
-    Set<MediaStream<?>> set = groupsByIdentifier.get(identifier);
+    Set<MediaStream<?>> set = streamsByIdentifier.get(identifier);
 
     return set == null ? Collections.emptySet() : new HashSet<>(set);
   }
 
-  @SuppressWarnings("unchecked")
-  private <D extends MediaDescriptor> void enrichMediaStream(MediaStream<D> mediaStream) {
+  // Method blocks
+  public <D extends MediaDescriptor> List<Exceptional<MediaRecord<D>>> reidentify(MediaStream<D> mediaStream) {
+    List<Exceptional<MediaRecord<D>>> results = identify(mediaStream, false);
+
+    replaceMediaRecords(mediaStream, results.stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toList()));
+
+    return results;
+  }
+
+  // Method blocks
+  public <D extends MediaDescriptor> List<Exceptional<MediaRecord<D>>> incrementalIdentify(MediaStream<D> mediaStream) {
+    List<Exceptional<MediaRecord<D>>> results = identify(mediaStream, true);
+
+    mergeMediaRecords(mediaStream, results.stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toList()));
+
+    return results;
+  }
+
+  // Method may block
+  private <D extends MediaDescriptor> List<Exceptional<MediaRecord<D>>> identify(MediaStream<D> mediaStream, boolean incremental) {
     Type type = mediaStream.getType();
 
-    Set<DataSource> identifiedDataSources = mediaStream.getMediaRecords().keySet().stream()
+    // Create list of already identified datasources:
+    Set<DataSource> identifiedDataSources = !incremental ? new HashSet<>() : mediaStream.getMediaRecords().keySet().stream()
       .map(Identifier::getDataSource)
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(HashSet::new));
 
-    identificationServicesByDataSource.entrySet().stream()
-      .filter(e -> e.getKey().getType().equals(type))  // Filters by type, this makes the cast to IdentificationService<T> safe.
-      .filter(e -> !identifiedDataSources.contains(e.getKey()))
-      .forEach(e -> EXECUTOR.execute(() -> identify(mediaStream, (IdentificationService<MediaStream<D>>)e.getValue())));
+    // Get new identifications:
+    List<Exceptional<Identification>> newIdentifications = identificationServicesByDataSource.entrySet().stream()
+      .filter(e -> e.getKey().getType().equals(type))
+      .filter(e -> !identifiedDataSources.contains(e.getKey()))  // Don't identify ones that exist already
+      .map(e -> Exceptional.from(() -> Optional.ofNullable(e.getValue().identify(mediaStream.getAttributes())).orElseThrow(() -> new UnknownStreamException(mediaStream, e.getValue()))))
+      .collect(Collectors.toList());
 
-    mediaStream.getMediaRecords().values().stream()
-      .filter(e -> e.getMediaDescriptor() == null)  // Only Records that have no entry
-      .filter(e -> queryServicesByDataSource.containsKey(e.getDataSource()))  // Checks that a QueryService matching the DataSource exists
-      .forEach(e -> EXECUTOR.execute(() -> query(mediaStream, e.getIdentification(), (QueryService<D>)queryServicesByDataSource.get(e.getDataSource()))));
+    // Get old identifications with missing queries, but skip if there is no matching query service anyway:
+    List<Exceptional<Identification>> identificationsMissingQueries = !incremental ? Collections.emptyList() : mediaStream.getMediaRecords().values().stream()
+      .filter(v -> v.getMediaDescriptor() == null)
+      .filter(v -> queryServicesByDataSource.get(v.getDataSource()) != null)
+      .map(MediaRecord::getIdentification)
+      .map(Exceptional::of)
+      .collect(Collectors.toList());
+
+    List<Exceptional<Wrapper<D>>> results = new ArrayList<>();
+
+    // Concat new identifications and existing ones with missing data into new list:
+    List<Exceptional<Identification>> identificationsToQuery = Stream.of(newIdentifications, identificationsMissingQueries).flatMap(Collection::stream).collect(Collectors.toList());
+
+    // Loop here as queries may return new Identifications that in turn require querying:
+    while(!identificationsToQuery.isEmpty()) {
+      identificationsToQuery
+        .forEach(identificationExceptional -> results.add(
+          identificationExceptional
+            .map(i -> (QueryService<D>)queryServicesByDataSource.get(i.getIdentifier().getDataSource()))
+            .map(qs -> qs.query(identificationExceptional.get().getIdentifier()))  // get() is safe here, won't get here if not present
+            .map(r -> new Wrapper<>(identificationExceptional.get(), r))
+            .or(() -> Exceptional.of(new Wrapper<D>(identificationExceptional.get(), null)))
+      ));
+
+      // Update identifiedDataSources:
+      identificationsToQuery.forEach(exI -> exI.map(Identification::getIdentifier)
+        .map(Identifier::getDataSource)
+        .ignore(Throwable.class)
+        .ifPresent(identifiedDataSources::add)
+      );
+
+      // Check Results for new Identifications:
+      identificationsToQuery = results.stream()
+        .map(e -> e.map(w -> w.result))
+        .flatMap(Exceptional::ignoreAllAndStream)
+        .map(Result::getNewIdentifications)
+        .flatMap(Collection::stream)
+        .filter(i -> !identifiedDataSources.contains(i.getIdentifier().getDataSource()))  // Don't identify ones that exist already (prevent id loops)
+        .map(Exceptional::of)
+        .collect(Collectors.toList());
+    }
+
+    return results.stream()
+      .map(e -> e.map(w -> new MediaRecord<>(w.identification, w.result == null ? null : w.result.getMediaDescriptor())))
+      .collect(Collectors.toList());
   }
 
-  private <D extends MediaDescriptor> void identify(MediaStream<D> mediaStream, IdentificationService<MediaStream<D>> service) {
-    try {
-      LOGGER.fine("Identifying using " + service.getClass().getName() + ": " + mediaStream);
+  // TODO consider passing Identification to QueryService so it can be associated with the result for easier streams...
+  private class Wrapper<D extends MediaDescriptor> {
+    public final Identification identification;
+    public final Result<D> result;
 
-      Identification identification = service.identify(mediaStream);
-
-      if(identification != null) {
-        synchronized(this) {
-          mediaStream.mergeMediaRecord(new MediaRecord<D>(identification, null));
-          groupsByIdentifier.computeIfAbsent(identification.getIdentifier(), k -> new HashSet<>()).add(mediaStream);
-        }
-
-        localMediaListeners.stream().forEach(l -> l.mediaUpdated(mediaStream));
-
-        @SuppressWarnings("unchecked")
-        QueryService<D> queryService = (QueryService<D>)queryServicesByDataSource.get(service.getDataSource());
-
-        if(queryService != null) {
-          query(mediaStream, identification, queryService);
-        }
-      }
-      else {
-        LOGGER.warning("Unable to identify: " + mediaStream + " with DataSource: " + service.getDataSource());
-      }
-    }
-    catch(Exception e) {
-      LOGGER.log(Level.WARNING, "Exception while identifying: " + mediaStream, e);
+    public Wrapper(Identification identification, Result<D> result) {
+      this.identification = identification;
+      this.result = result;
     }
   }
 
-  private <D extends MediaDescriptor> void query(MediaStream<D> mediaStream, Identification identification, QueryService<D> service) {
-    try {
-      LOGGER.fine("Querying using " + service.getClass().getName() + ": " + mediaStream);
+  private <D extends MediaDescriptor> void mergeMediaRecords(MediaStream<D> mediaStream, List<MediaRecord<D>> records) {
+    synchronized(this) {
+      removeMediaStream(mediaStream);
 
-      Result<D> result = service.query(identification.getIdentifier());
+      for(MediaRecord<D> mediaRecord : records) {
+        mediaStream.mergeMediaRecord(mediaRecord);
+      }
 
-      synchronized(this) {
-        mediaStream.mergeMediaRecord(new MediaRecord<>(identification, result.getMediaDescriptor()));
+      addMediaStream(mediaStream);
+    }
 
-        for(Identification newIdentification : result.getNewIdentifications()) {
-          mediaStream.mergeMediaRecord(new MediaRecord<D>(newIdentification, null));
-          groupsByIdentifier.computeIfAbsent(newIdentification.getIdentifier(), k -> new HashSet<>()).add(mediaStream);
+    localMediaListeners.stream().forEach(l -> l.mediaUpdated(mediaStream));
+  }
+
+  private <D extends MediaDescriptor> void replaceMediaRecords(MediaStream<D> mediaStream, List<MediaRecord<D>> records) {
+    synchronized(this) {
+      removeMediaStream(mediaStream);
+
+      mediaStream.replaceMediaRecords(records);
+
+      addMediaStream(mediaStream);
+    }
+
+    localMediaListeners.stream().forEach(l -> l.mediaUpdated(mediaStream));
+  }
+
+  private <D extends MediaDescriptor> void asyncEnrichMediaStream(MediaStream<D> mediaStream) {
+    EXECUTOR.execute(() -> enrichMediaStream(mediaStream));
+  }
+
+  // Blocks
+  private <D extends MediaDescriptor> void enrichMediaStream(MediaStream<D> mediaStream) {
+    List<Exceptional<MediaRecord<D>>> results = incrementalIdentify(mediaStream);
+
+    if(!results.isEmpty()) {
+      StringBuilder builder = new StringBuilder();
+
+      builder.append("Enrichment results for ").append(mediaStream).append(":");
+
+      for(Exceptional<MediaRecord<D>> exceptional : results) {
+        if(exceptional.isException()) {
+          builder.append("\n - ").append(exceptional.getException());
+        }
+        else if(exceptional.isPresent()) {
+          builder.append("\n - ").append(exceptional.get());
+        }
+        else {
+          builder.append("\n - Unknown");
         }
       }
 
-      localMediaListeners.stream().forEach(l -> l.mediaUpdated(mediaStream));
-    }
-    catch(Exception e) {
-      LOGGER.log(Level.WARNING, "Exception while querying: " + identification.getIdentifier(), e);
+      LOGGER.info(builder.toString());
     }
   }
 
   private void addMediaStream(MediaStream<?> mediaStream) {
-    streamsByPrintIdentifierByType.computeIfAbsent(mediaStream.getType(), k -> new HashMap<>()).put(mediaStream.getStreamPrint().getIdentifier(), mediaStream);
-    mediaStream.getMediaRecords().keySet().stream().forEach(k -> groupsByIdentifier.computeIfAbsent(k, key -> new HashSet<>()).add(mediaStream));
+    synchronized(this) {
+      streamsByPrintIdentifierByType.computeIfAbsent(mediaStream.getType(), k -> new HashMap<>()).put(mediaStream.getStreamPrint().getIdentifier(), mediaStream);
+      mediaStream.getMediaRecords().keySet().stream().forEach(k -> streamsByIdentifier.computeIfAbsent(k, key -> new HashSet<>()).add(mediaStream));
 
-    if(mediaStream.getParentUri() != null) {
-      streamsByParentURI.computeIfAbsent(mediaStream.getParentUri(), k -> new HashSet<>()).add(mediaStream);
+      if(mediaStream.getParentUri() != null) {
+        streamsByParentURI.computeIfAbsent(mediaStream.getParentUri(), k -> new HashSet<>()).add(mediaStream);
+      }
     }
   }
 
   private <D extends MediaDescriptor> MediaStream<D> removeMediaStream(MediaStream<D> mediaStream) {
-    @SuppressWarnings("unchecked")
-    MediaStream<D> removedStream = (MediaStream<D>)streamsByPrintIdentifierByType.computeIfAbsent(mediaStream.getType(), k -> new HashMap<>()).remove(mediaStream.getStreamPrint().getIdentifier());
+    synchronized(this) {
+      @SuppressWarnings("unchecked")
+      MediaStream<D> removedStream = (MediaStream<D>)streamsByPrintIdentifierByType.computeIfAbsent(mediaStream.getType(), k -> new HashMap<>()).remove(mediaStream.getStreamPrint().getIdentifier());
 
-    if(removedStream != null) {
-      removedStream.getMediaRecords().keySet().stream().forEach(k -> groupsByIdentifier.computeIfAbsent(k, key -> new HashSet<>()).remove(removedStream));
+      if(removedStream != null) {
+        removedStream.getMediaRecords().keySet().stream().forEach(k -> streamsByIdentifier.computeIfPresent(k, (key, v) -> v.remove(removedStream) && v.isEmpty() ? null : v));
 
-      if(mediaStream.getParentUri() != null) {
-        streamsByParentURI.computeIfAbsent(mediaStream.getParentUri(), k -> new HashSet<>()).remove(mediaStream);
+        if(removedStream.getParentUri() != null) {
+          streamsByParentURI.computeIfPresent(removedStream.getParentUri(), (k, v) -> v.remove(removedStream) && v.isEmpty() ? null : v);
+        }
       }
+
+      return removedStream;
     }
-
-    return removedStream;
   }
-
-    // Where are we gonna put Path (the only thing special about DB entries is that they have an associated stream!) ? TODO
-
-    // Interesting case: Twice the same movie on disk, but ofcourse path/size/hash are likely to differ... they will however identify as the same TMDB-ID
-    // - merge them?  DB must be able to load and handle it as a merged result then...
-
-
-    // Local Media Scanners need to add a local media with a **stable** Identifier.
-    // In order to do this:
-    // - Take path and size, check with a scanner-specific database part if those are known
-    // - If known, grab the associated UUID/hash/id and use that as Identifier
-    // - If not known, do quick hash of contents, check if hash + size is known
-    // - If known (happens on renames or network path changes), update path/name, and grab associated id
-    // - If not known, create new entry with new id
-    //
-    // This process is unique to the scanner to provide stable id's.  The DB does not care!
-
-    // In order to add something to DB we need:
-    // - An Identifier (which can be used to fetch cached related information)
-    // - An IdData structure (for running other identifications)
-    // - A, filled as best as possible, Entry structure -- it's also possible to
-    //
-    // Alternatively...
-    // - Only an IdData structure, then run an IdentificationService on it (but which one?)
-    // - IdentificationService provides Identifiers (even for local)  ---> won't work, IdData structure would have to contain IMDB ID / Path...
-    // - Query service provides Entry (even for local)
-    // Although this forces local media to be handled in the same fashion as, say TMDB, it does
-    // seem a bit convuluted since all this information is probably known already when IdData is
-    // created...
-    //
-    // Example:
-    // 1) Scanner disects a filename and creates IdData (which would have to include full path and file size)
-    // 2) In parallel several ID services
-
-
-    // - MediaKey contains type as well.  Medias map contains all keys, but can refer to same values.
-    // - When enriching, a DataEntry is returned.
-    // - When a local media disappears, all entries with the same localmedia need to be deleted (slow, no reverse map available, yet)
-    // - Lists need to be maintained on adds/deletes
-    // - Fields from Media are filled by copying data from associated sub-media (LocalMedia, TMDBMedia, etc.) -- every source manipulates its own data object, never Media directly.
-
-
-
-//  public synchronized void removeLocalMedia(StreamKey key) {
-//
-//  }
-
-  // All Local Media of type X as Media's...
-  // Top 100...
-  // Recent releases...
-  // Media from other server...
-
-
-//  public synchronized Media find(StreamKey key) {
-//    return medias.get(key);
-//  }
 }

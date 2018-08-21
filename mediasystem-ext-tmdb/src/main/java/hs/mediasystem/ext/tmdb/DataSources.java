@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.tmdb;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Type;
+import hs.mediasystem.ext.basicmediatypes.domain.Type;
 
 public class DataSources {
   public static final DataSource TMDB_MOVIE = DataSource.instance(Type.of("MOVIE"), "TMDB");
@@ -15,4 +15,5 @@ public class DataSources {
 
   public static final DataSource TMDB_PERSON = DataSource.instance(Type.of("PERSON"), "TMDB");
   public static final DataSource TMDB_CREDIT = DataSource.instance(Type.of("CREDIT"), "TMDB");
+  public static final DataSource TMDB_CHRONOLOGY = DataSource.instance(Type.of("CHRONOLOGY"), "TMDB");
 }

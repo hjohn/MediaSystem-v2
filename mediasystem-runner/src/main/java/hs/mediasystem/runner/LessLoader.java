@@ -19,12 +19,24 @@ public class LessLoader {
   public static URL compile(URL url) {
     try {
       System.out.println("::: LOADING : " + url);
-      String compiledCSS = Less.compile(url.toURI().resolve(".").toURL(), new String(URLs.readAllBytes(url), StandardCharsets.UTF_8), false, new ReaderFactory() {
+      System.out.println("::: PARENT : " + url.toURI().resolve("."));
+      String compiledCSS = Less.compile(url, new String(URLs.readAllBytes(url), StandardCharsets.UTF_8), false, new ReaderFactory() {
         @Override
         public Reader create(URL url) throws IOException {
-          System.out.println("::::::::::::::: " + url);
-          // TODO Auto-generated method stub
+
+          /*
+           * URL here is not valid, but can be resolved in the context of hs.mediasystem.runner by taking the path
+           * only.
+           */
+
+          System.out.println("::::::::::::::: " + url + " (path=" + url.getPath() +")");
+          System.out.println("::::::::::::::: res = " + getClass().getClassLoader().getResource("/" + url.getPath()));
+
+          //return new InputStreamReader(getClass().getClassLoader().getResourceAsStream("hs/mediasystem/runner/" + url.getPath()));
           return super.create(url);
+
+
+//          return super.create(getClass().getClassLoader().getResource(url.getPath()));
         }
       });
 

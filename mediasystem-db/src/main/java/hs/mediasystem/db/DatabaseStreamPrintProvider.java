@@ -1,7 +1,7 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.ext.basicmediatypes.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.StreamPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
+import hs.mediasystem.ext.basicmediatypes.scan.StreamPrintProvider;
 import hs.mediasystem.util.MediaHash;
 import hs.mediasystem.util.StringURI;
 

@@ -15,6 +15,8 @@ import hs.mediasystem.plugin.library.scene.view.PersonParticipationsPresentation
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsSetup;
 import hs.mediasystem.plugin.library.scene.view.ProductionDetailPresentation;
 import hs.mediasystem.plugin.library.scene.view.ProductionDetailSetup;
+import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
+import hs.mediasystem.plugin.library.scene.view.RecommendationsSetup;
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.SerieEpisodesPresentation;
@@ -67,6 +69,9 @@ public class BasicTheme implements Theme {
     if(cls == ProductionPresentation.class) {
       return LibraryPresentation.class;
     }
+    if(cls == RecommendationsPresentation.class) {
+      return LibraryPresentation.class;
+    }
     if(cls == PlaybackOverlayPresentation.class) {
       return RootPresentation.class;
     }
@@ -115,6 +120,9 @@ public class BasicTheme implements Theme {
     if(cls == ProductionPresentation.class) {
       return (Class<T>)ProductionOverviewNodeFactory.class;
     }
+    if(cls == RecommendationsPresentation.class) {
+      return (Class<T>)RecommendationsSetup.class;
+    }
     if(cls == PlaybackOverlayPresentation.class) {
       return (Class<T>)PlaybackLayout.class;
     }
@@ -126,32 +134,42 @@ public class BasicTheme implements Theme {
   }
 
   @Override
+  public <P extends Presentation> P createPresentation(Class<P> presentationClass) {
+    return injector.getInstance(presentationClass);
+  }
+
+  @Override
   public <P extends ParentPresentation, C extends Presentation> Placer<P, C> findPlacer(P parentPresentation, C childPresentation) {
     @SuppressWarnings("unchecked")
-    Class<? extends NodeFactory<C>> childNodeFactoryClass = (Class<? extends NodeFactory<C>>)findNodeFactory(childPresentation.getClass());
-    Class<?> parentNodeFactoryClass = findNodeFactory(parentPresentation.getClass());
+    Class<? extends NodeFactory<C>> childNodeFactoryClass = (Class<? extends NodeFactory<C>>)(Class<?>)findNodeFactory(childPresentation.getClass());
 
-    try {
-      AnnotationDescriptor descriptor = AnnotationDescriptor.describe(
-        PlacerQualifier.class,
-        new Value("parent", parentNodeFactoryClass),
-        new Value("child", childNodeFactoryClass)
-      );
+    if(parentPresentation != null) {
+      Class<?> parentNodeFactoryClass = findNodeFactory(parentPresentation.getClass());
 
-      @SuppressWarnings("unchecked")
-      Placer<P, C> instance = injector.getInstance(Placer.class, descriptor);
+      try {
+        AnnotationDescriptor descriptor = AnnotationDescriptor.describe(
+          PlacerQualifier.class,
+          new Value("parent", parentNodeFactoryClass),
+          new Value("child", childNodeFactoryClass)
+        );
 
-      return instance;
+        @SuppressWarnings("unchecked")
+        Placer<P, C> instance = injector.getInstance(Placer.class, descriptor);
+
+        return instance;
+      }
+      catch(NoSuchBeanException e) {
+        // Fall-through
+      }
     }
-    catch(NoSuchBeanException e) {
-      NodeFactory<C> nodeFactory = injector.getInstance(childNodeFactoryClass);
 
-      return new Placer<>() {
-        @Override
-        public Node place(P parentPresentation, C presentation) {
-          return nodeFactory.create(presentation);
-        }
-      };
-    }
+    NodeFactory<C> nodeFactory = injector.getInstance(childNodeFactoryClass);
+
+    return new Placer<>() {
+      @Override
+      public Node place(P parentPresentation, C presentation) {
+        return nodeFactory.create(presentation);
+      }
+    };
   }
 }

@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene;
 
+import hs.mediasystem.runner.DebugFX;
 import hs.mediasystem.util.javafx.Events;
 import hs.mediasystem.util.javafx.GridListViewSkin;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
@@ -29,6 +30,8 @@ public class MediaGridView<T> extends ListView<T> {
   public final ObjectProperty<List<Integer>> jumpPoints = new SimpleObjectProperty<>();
 
   public MediaGridView() {
+    DebugFX.addReference(this);
+
     GridListViewSkin skin = new GridListViewSkin(this);
 
     this.setSkin(skin);

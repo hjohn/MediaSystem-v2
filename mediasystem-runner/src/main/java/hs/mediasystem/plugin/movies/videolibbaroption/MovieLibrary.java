@@ -1,9 +1,10 @@
 package hs.mediasystem.plugin.movies.videolibbaroption;
 
 import hs.mediasystem.plugin.videolibbar.rootmenu.VideoLibraryMenuPlugin;
-import hs.mediasystem.runner.SceneNavigator;
+import hs.mediasystem.runner.NavigateEvent;
 
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -11,13 +12,11 @@ import javax.inject.Singleton;
 
 @Singleton
 public class MovieLibrary implements VideoLibraryMenuPlugin.OptionPlugin {
-  @Inject private SceneNavigator navigator;
   @Inject private Provider<MovieCollectionPresentation> movieCollectionPresentationProvider;
 
   @Override
   public void onSelect(ActionEvent e) {
-  //  navigator.go(new MovieCollectionLocation());
-    navigator.navigateTo(movieCollectionPresentationProvider.get());
+    Event.fireEvent(e.getTarget(), NavigateEvent.to(movieCollectionPresentationProvider.get()));
+    e.consume();
   }
-
 }

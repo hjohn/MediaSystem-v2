@@ -4,13 +4,14 @@ import hs.mediasystem.plugin.library.scene.ContextLayout;
 import hs.mediasystem.plugin.library.scene.LibraryNodeFactory.Area;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
-import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.MediaStatus;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
 import hs.mediasystem.plugin.library.scene.SlideInTransition;
 import hs.mediasystem.plugin.library.scene.SlideOutTransition;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.presentation.NodeFactory;
+import hs.mediasystem.runner.LessLoader;
 import hs.mediasystem.runner.ResourceManager;
 import hs.mediasystem.util.javafx.AreaPane2;
 import hs.mediasystem.util.javafx.Binds;
@@ -38,11 +39,13 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import javafx.geometry.HPos;
+import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import javax.inject.Inject;
@@ -53,7 +56,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
   @Inject private ContextLayout contextLayout;
 
   public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
-    MediaGridView<MediaItem<?>> listView = new MediaGridView<>();
+    MediaGridView<MediaItem<T>> listView = new MediaGridView<>();
 
     listView.getStyleClass().add("glass-pane");
     listView.onItemSelected.set(e -> onItemSelected(e, presentation));
@@ -71,7 +74,9 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
 
     areaPane.add(Area.CENTER, listView);
 
-    MediaGridViewCellFactory cellFactory = new MediaGridViewCellFactory();
+    MediaGridViewCellFactory<T> cellFactory = new MediaGridViewCellFactory<>();
+
+    cellFactory.setContentBias(Orientation.VERTICAL);
 
     configureCellFactory(cellFactory);
 
@@ -81,27 +86,34 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
       areaPane.add(Area.CONTEXT_PANEL, contextPanel);
     }
 
-    ObservableList<MediaItem<?>> items = getItems(presentation);
+    ObservableList<MediaItem<T>> unsortedItems = getItems(presentation);
 
-    FilteredList<MediaItem<?>> filteredList = setupFiltering(presentation, items, listView);
-    SortedList<MediaItem<?>> sortedList = setupSorting(presentation, filteredList);
+    FilteredList<MediaItem<T>> filteredList = setupFiltering(presentation, unsortedItems, listView);
+    SortedList<MediaItem<T>> sortedList = setupSorting(presentation, filteredList);
 
     listView.setItems(sortedList);
     listView.setCellFactory(cellFactory);
     listView.requestFocus();
 
-    setupStatusBar(areaPane, presentation, sortedList, items);
+    setupStatusBar(areaPane, presentation, sortedList, unsortedItems);
 
     String selectedId = getSelectedId(presentation);
-
-    listView.getSelectionModel().select(0);
+    int selectedIndex = 0;
 
     if(selectedId != null) {
-      listView.getItems().stream()
-        .filter(mi -> mi.getId().equals(selectedId))
-        .findFirst()
-        .ifPresent(mi -> listView.getSelectionModel().select(mi));
+      ObservableList<MediaItem<T>> items = listView.getItems();
+
+      for(int i = 0; i < items.size(); i++) {
+        MediaItem<T> mediaItem = items.get(i);
+
+        if(mediaItem.getId().equals(selectedId)) {
+          selectedIndex = i;
+          break;
+        }
+      }
     }
+System.out.println(">>> CALLING SELECT");
+    listView.getSelectionModel().select(selectedIndex);
 
     presentation.selectedItem.bind(listView.getSelectionModel().selectedItemProperty());
   }
@@ -157,7 +169,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
             node.setManaged(false);
 //            node.setTranslateX(10000); // transition doesn't play immediately, so make sure the node isn't visible immediately by moving it far away
 
-            transition = new SlideInTransition(pane, node);
+            transition = new SlideInTransition(pane, node, Duration.millis(2000), Duration.millis(500));
             transition.play();
           }
 
@@ -220,14 +232,14 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
     return areaPane;
   }
 
-  private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation presentation, ObservableList<MediaItem<?>> filteredItems, ObservableList<MediaItem<?>> originalItems) {
-    GridPane gridPane = new GridPane();
-
-    gridPane.getStyleClass().add("status-bar");
-
+  private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation presentation, ObservableList<MediaItem<T>> filteredItems, ObservableList<MediaItem<T>> originalItems) {
     StringBinding binding = Bindings.createStringBinding(() -> String.format(filteredItems.size() == originalItems.size() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), filteredItems.size(), originalItems.size()), filteredItems, originalItems);
+    GridPane gridPane = new GridPane();
+    VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
 
-    areaPane.add(Area.INFORMATION_PANEL, Containers.vbox("vbox", Labels.create("total", binding), gridPane));
+    vbox.getStylesheets().add(LessLoader.compile(getClass().getResource("status-bar.less")).toExternalForm());
+
+    areaPane.add(Area.INFORMATION_PANEL, vbox);
 
     gridPane.at(0, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.order"), "header"), Labels.create("remote-shortcut, red"), Labels.create("S", "shortcut")));
     gridPane.at(0, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.sortOrder).map(so -> RESOURCES.getText("sort-order", so.resourceKey)).orElse("Unknown")));
@@ -240,11 +252,12 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
     }
   }
 
-  private FilteredList<MediaItem<?>> setupFiltering(P presentation, ObservableList<MediaItem<?>> items, MediaGridView<MediaItem<?>> listView) {
-    FilteredList<MediaItem<?>> filteredList = new FilteredList<>(items);
+  private FilteredList<MediaItem<T>> setupFiltering(P presentation, ObservableList<MediaItem<T>> items, MediaGridView<MediaItem<T>> listView) {
+    FilteredList<MediaItem<T>> filteredList = new FilteredList<>(items);
 
     InvalidationListener listener = obs -> {
-      MediaItem<?> selectedItem = listView.getSelectionModel().getSelectedItem();
+      MediaItem<T> selectedItem = listView.getSelectionModel().getSelectedItem();
+      @SuppressWarnings("unchecked")
       Predicate<MediaItem<?>> predicate = (Predicate<MediaItem<?>>)(Predicate<?>)presentation.filter.get().predicate;
 
       if(!presentation.includeViewed.get()) {  // Exclude viewed?
@@ -272,8 +285,9 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
     return filteredList;
   }
 
-  private SortedList<MediaItem<?>> setupSorting(P presentation, FilteredList<MediaItem<?>> filteredList) {
-    SortedList<MediaItem<?>> sortedList = new SortedList<>(filteredList);
+  @SuppressWarnings("unchecked")
+  private SortedList<MediaItem<T>> setupSorting(P presentation, FilteredList<MediaItem<T>> filteredList) {
+    SortedList<MediaItem<T>> sortedList = new SortedList<>(filteredList);
 
     presentation.sortOrder.addListener((obs, old, current) -> sortedList.setComparator((Comparator<MediaItem<?>>)(Comparator<?>)current.comparator));
 
@@ -283,17 +297,17 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
     return sortedList;
   }
 
-  protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, P presentation);
-  protected abstract void configureCellFactory(MediaGridViewCellFactory cellFactory);
-  protected abstract ObservableList<MediaItem<?>> getItems(P presentationn);
+  protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation);
+  protected abstract void configureCellFactory(MediaGridViewCellFactory<T> cellFactory);
+  protected abstract ObservableList<MediaItem<T>> getItems(P presentationn);
   protected abstract List<SortOrder<T>> getAvailableSortOrders();
   protected abstract List<Filter<T>> getAvailableFilters();
   protected abstract boolean showViewed();
 
-  protected void configureGridView(MediaGridView<MediaItem<?>> gridView) {
+  protected void configureGridView(@SuppressWarnings("unused") MediaGridView<MediaItem<T>> gridView) {
   }
 
-  protected Node createContextPanel(P presentation) {
+  protected Node createContextPanel(@SuppressWarnings("unused") P presentation) {
     return null;
   }
 }

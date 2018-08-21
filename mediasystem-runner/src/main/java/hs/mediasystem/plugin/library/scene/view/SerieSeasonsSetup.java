@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.StreamStateProvider;
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.Serie;
+import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
+import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
 import hs.mediasystem.mediamanager.LocalMediaManager;
 import hs.mediasystem.plugin.library.scene.ContextLayout;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
@@ -12,7 +12,7 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.runner.ImageHandleFactory;
-import hs.mediasystem.runner.SceneNavigator;
+import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.util.Collection;
@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.scene.Node;
 
 import javax.inject.Inject;
@@ -33,30 +34,29 @@ import javax.inject.Singleton;
 @Singleton
 public class SerieSeasonsSetup extends AbstractSetup<Season, SerieSeasonsPresentation> {
   @Inject private LocalMediaManager localMediaManager;
-  @Inject private SceneNavigator navigator;
   @Inject private ContextLayout contextLayout;
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private StreamStateProvider streamStateProvider;
+  @Inject private StreamStateService streamStateService;
   @Inject private Provider<SerieEpisodesPresentation> serieEpisodesPresentationProvider;
 
   @Override
-  public ObservableList<MediaItem<?>> getItems(SerieSeasonsPresentation presentation) {
-    Serie serieDescriptor = (Serie)presentation.mediaItem.get().getData(); // fetchSerieDescriptor(productionItem);
+  public ObservableList<MediaItem<Season>> getItems(SerieSeasonsPresentation presentation) {
+    Serie serieDescriptor = presentation.mediaItem.get().getData(); // fetchSerieDescriptor(productionItem);
 
-    return FXCollections.observableArrayList(serieDescriptor.getSeasons().stream().map(this::wrap).collect(Collectors.toList()));
+    return FXCollections.observableArrayList(serieDescriptor.getSeasons().stream().map(season -> wrap(presentation.mediaItem.get(), season)).collect(Collectors.toList()));
   }
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, SerieSeasonsPresentation presentation) {
-    MediaItem<?> mediaItem = presentation.mediaItem.get();
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<Season>> event, SerieSeasonsPresentation presentation) {
+    MediaItem<Serie> mediaItem = presentation.mediaItem.get();
 
-    navigator.navigateTo(serieEpisodesPresentationProvider.get().set(mediaItem, ((Season)event.getItem().getData()).getNumber()));
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(serieEpisodesPresentationProvider.get().set(mediaItem, event.getItem().getData().getNumber())));
     event.consume();
   }
 
   private int countWatchedStreams(Collection<MediaStream<?>> streams) {
     for(MediaStream<?> stream : streams) {
-      if((boolean)streamStateProvider.get(stream.getStreamPrint()).getOrDefault("watched", false)) {
+      if(streamStateService.isWatched(stream.getStreamPrint())) {
         return 1;
       }
     }
@@ -64,21 +64,21 @@ public class SerieSeasonsSetup extends AbstractSetup<Season, SerieSeasonsPresent
     return 0;
   }
 
-  private MediaItem<Season> wrap(Season data) {
-    Set<MediaStream<?>> streams = localMediaManager.find(data.getProduction().getIdentifier());
+  private MediaItem<Season> wrap(MediaItem<Serie> serieItem, Season data) {
+    Set<MediaStream<?>> streams = localMediaManager.find(data.getIdentifier());
 
-    return new MediaItem<>(data, streams, countWatchedStreams(streams), streams.isEmpty() ? 0 : 1);
+    return new MediaItem<>(data, serieItem, streams, countWatchedStreams(streams), streams.isEmpty() ? 0 : 1);
   }
 
   @Override
   protected Node createContextPanel(SerieSeasonsPresentation presentation) {
-    Serie serieDescriptor = ((MediaItem<Serie>)presentation.mediaItem.get()).getData(); // fetchSerieDescriptor(productionItem);
+    Serie serie = presentation.mediaItem.get().getData(); // fetchSerieDescriptor(productionItem);
 
-    return contextLayout.create(serieDescriptor.getProduction());
+    return contextLayout.create(serie);
   }
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<Season> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
   }

@@ -54,18 +54,17 @@ public class FrontEndRunner extends Application {
     Section generalSection = ini.getSection("general");
     int screenNumber = generalSection == null ? 0 : Integer.parseInt(generalSection.getDefault("screen", "0"));
 
-    SceneManager sceneManager = new DuoWindowSceneManager("MediaSystem", screenNumber);
+    SceneManager sceneManager = new DefaultSceneManager("MediaSystem", screenNumber);
 
     injector.registerInstance(sceneManager);
 
     new PluginManager(injector).loadPluginAndScan("hs.mediasystem");
 
-    SceneNavigator navigator = injector.getInstance(SceneNavigator.class);
-
     StartupLocationSetting startupLocationSetting = injector.getInstance(StartupLocationSetting.class);
 
-//    navigator.setHistory(Arrays.asList(startupLocationSetting.get()));
-    navigator.navigateTo(new MenuPresentation());
+    injector.getInstance(RootPresentationHandler.class);
+
+    sceneManager.getRootPane().fireEvent(NavigateEvent.to(new MenuPresentation()));
   }
 
   private static void loadPlugins(final Injector injector) throws IOException {

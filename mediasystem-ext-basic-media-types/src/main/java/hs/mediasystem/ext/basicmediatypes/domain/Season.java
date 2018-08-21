@@ -4,23 +4,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Season {
+public class Season extends Production {
   private final int number;
-  private final Production production;
   private final List<Episode> episodes;
 
-  public Season(int number, Production production, List<Episode> episodes) {
+  public Season(ProductionIdentifier identifier, Details details, int number, List<Episode> episodes) {
+    super(identifier, details, null, null, Collections.emptyList(), Collections.emptyList());
+
     this.number = number;
-    this.production = production;
     this.episodes = new ArrayList<>(Collections.unmodifiableList(episodes));
   }
 
   public int getNumber() {
     return number;
-  }
-
-  public Production getProduction() {
-    return production;
   }
 
   public List<Episode> getEpisodes() {

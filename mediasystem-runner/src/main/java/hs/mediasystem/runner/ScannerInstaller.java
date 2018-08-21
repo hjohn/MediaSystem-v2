@@ -1,8 +1,8 @@
 package hs.mediasystem.runner;
 
 import hs.mediasystem.db.ScannerController;
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.Scanner;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
+import hs.mediasystem.ext.basicmediatypes.scan.Scanner;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 

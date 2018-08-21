@@ -4,7 +4,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
-public class MonadicObservableValueAdapter<T> implements MonadicObservableValue<T> {
+public class MonadicObservableValueAdapter<T> implements Val<T> {
   private final ObservableValue<T> observableValue;
 
   public MonadicObservableValueAdapter(ObservableValue<T> observableValue) {

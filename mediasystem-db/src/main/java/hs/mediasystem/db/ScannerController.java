@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
 import hs.mediasystem.mediamanager.LocalMediaListener;
 import hs.mediasystem.mediamanager.LocalMediaManager;
 import hs.mediasystem.util.AutoReentrantLock;

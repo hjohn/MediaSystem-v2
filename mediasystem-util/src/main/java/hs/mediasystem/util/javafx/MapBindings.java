@@ -162,7 +162,7 @@ public class MapBindings {
   }
 
   public static <T> ObjectBinding<T> select(final Observable root, final Object... steps) {
-    return new ObjectBinding<T>() {
+    return new ObjectBinding<>() {
       private final Helper helper;
 
       {
@@ -470,7 +470,7 @@ public class MapBindings {
               field = cls.getField(propertyName);
             }
             catch(NoSuchFieldException e2) {
-              return new ObservableValue<Object>() {
+              return new ObservableValue<>() {
                 @Override
                 public void addListener(InvalidationListener listener) {
                 }

@@ -132,7 +132,7 @@ public class AsyncImageProperty2 extends SimpleObjectProperty<Image> {
    * @param imageHandle the image to load
    */
   private static void loadImageInBackground(WeakReference<AsyncImageProperty2> propertyRef, ImageHandle imageHandle, int maxWidth, int maxHeight) {
-    Image cachedImage = ImageCache.getImageUptoMaxSize(imageHandle, maxWidth, maxHeight);
+    Image cachedImage = ImageCache.getClosestImage(imageHandle, maxWidth, maxHeight);
 
     if(cachedImage != null) {
       AsyncImageProperty2 property = propertyRef.get();

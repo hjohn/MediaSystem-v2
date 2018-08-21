@@ -36,14 +36,14 @@
 }
 
 .time.label, .position.label {
-  -fx-text-fill: -c-text-dark-unobtrusive;
+  -fx-text-fill: rgba(173, 216, 230, 0.5);
 }
 
 .time.label, .position.label, .osd {
   -fx-padding: 2 5 2 5;
   
   -fx-background-radius: 5;
-  -fx-background-color: rgba(0, 0, 0, 0.3);
+  -fx-background-color: rgba(0, 0, 0, 0.4);
 }
 
 .osd {

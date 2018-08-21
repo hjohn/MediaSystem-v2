@@ -83,5 +83,8 @@ public class Attributes {
     return true;
   }
 
-
+  @Override
+  public String toString() {
+    return data.toString();
+  }
 }

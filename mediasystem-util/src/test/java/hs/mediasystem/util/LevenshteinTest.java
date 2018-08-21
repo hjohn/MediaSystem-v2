@@ -1,8 +1,5 @@
 package hs.mediasystem.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -10,6 +7,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class LevenshteinTest {
@@ -42,7 +42,16 @@ public class LevenshteinTest {
         {MatchType.POOR, "Star Wars", "Star Wars - 04 - A new hope"},
         {MatchType.POOR, "Star Wars", "Fantasic Four"},
         {MatchType.POOR, "Star Wars: Episode IV - A New Hope", "Star Wars"},
-        {MatchType.POOR, "Star Wars: Episode IV - A New Hope", "Star Wars 4"}
+        {MatchType.POOR, "Star Wars: Episode IV - A New Hope", "Star Wars 4"},
+        {MatchType.PERFECT, "V for Vendetta", "V for Vendetta"},
+        {MatchType.POOR, "V for Vendetta", "Sympathy for Lady Vengeance"},
+        {MatchType.PERFECT, "21", "21"},
+        {MatchType.AVERAGE, "21", "22"},
+        {MatchType.POOR, "21", "B2"},
+        {MatchType.PERFECT, "300", "300"},
+        {MatchType.AVERAGE, "300", "301"},
+        {MatchType.POOR, "300", "299"},
+        {MatchType.AVERAGE, "300", "3000"},
       }
     );
   }
@@ -50,22 +59,23 @@ public class LevenshteinTest {
   @Test
   public void shouldMatchWellEnough() {
     double compare = Levenshtein.compare(text.toLowerCase(), matchText.toLowerCase());
+    String failureText = "\"" + text + "\" vs \"" + matchText + "\"; expected=" + matchType + ", but was: " + compare;
 
     switch(matchType) {
     case PERFECT:
-      assertEquals(1.0, compare, 0.00001);
+      assertEquals(failureText, 1.0, compare, 0.00001);
       break;
     case EXCELLENT:
-      assertTrue(compare >= 0.85);
+      assertTrue(failureText, compare >= 0.85);
       break;
     case GOOD:
-      assertTrue(compare >= 0.66);
+      assertTrue(failureText, compare >= 0.66);
       break;
     case AVERAGE:
-      assertTrue(compare >= 0.4);
+      assertTrue(failureText, compare >= 0.4);
       break;
     case POOR:
-      assertTrue(compare < 0.4);
+      assertTrue(failureText, compare < 0.4);
       break;
     }
   }

@@ -1,5 +1,6 @@
 package hs.mediasystem.presentation;
 
+import hs.mediasystem.runner.DebugFX;
 import hs.mediasystem.runner.Navigable;
 
 import java.util.ArrayDeque;
@@ -11,7 +12,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.event.Event;
 
 public class ParentPresentation implements Presentation, Navigable {
-  private final ObjectProperty<Presentation> childPresentation = new SimpleObjectProperty<>();
+  public final ObjectProperty<Presentation> childPresentation = new SimpleObjectProperty<>();
+
   private final Deque<Presentation> previousPresentations = new ArrayDeque<>();
   private final ChangeListener<? super Presentation> listener = (obs, old, current) -> {
     if(old != null) {
@@ -21,10 +23,8 @@ public class ParentPresentation implements Presentation, Navigable {
 
   {
     childPresentation.addListener(listener);
-  }
 
-  public ObjectProperty<Presentation> childPresentationProperty() {
-    return childPresentation;
+    DebugFX.addReference(this);
   }
 
   @Override

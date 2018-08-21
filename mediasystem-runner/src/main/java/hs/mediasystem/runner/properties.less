@@ -6,17 +6,21 @@
 @text-primary: lighten(@theme-primary, 5%, relative);
 @text-primary-highlight: lighten(@theme-primary, 15%, relative);
 @text-accent: @theme-accent;
-
-
+@text-accent-highlight: lighten(@theme-accent, 15%);
 
 .text-style-base {
-  -fx-font-family: "Segoe UI Semibold";
-  -fx-font-size: 14;
+  -fx-font-family: "Noto Sans SemBd";
+  -fx-font-size: 15;
   -fx-font-weight: normal;
 }
 
 .bold {
-  -fx-font-family: "Segoe UI Bold";
+  -fx-font-family: "Noto Sans";
+  -fx-font-weight: bold;
+}
+
+.black {
+  -fx-font-family: "Noto Sans Blk";
   -fx-font-weight: bold;
 }
 
@@ -43,11 +47,36 @@
   -fx-font-size: 18;
 }
 
+.style-p3 {
+  -fx-font-size: 15;
+}
+
+.style-p3-thin {
+  -fx-font-size: 15;
+  -fx-font-family: "Noto Sans";
+  -fx-font-weight: normal;
+}
+
+.style-p1-extra-light {
+  -fx-font-size: 22;
+  -fx-font-family: "Noto Sans Light";
+  -fx-font-weight: normal;
+}
+
+.style-p3-extra-light {
+  -fx-font-size: 15;
+  -fx-font-family: "Noto Sans Light";
+  -fx-font-weight: normal;
+}
+
 .text-fill-highlight {
   -fx-text-fill: @text-primary-highlight;
 }
 
-.black {
-  -fx-font-family: "Segoe UI Black";
-  -fx-font-weight: bold;
+.text-fill-accent {
+  -fx-text-fill: @text-accent;
+}
+
+.text-fill-accent-highlight {
+  -fx-text-fill: @text-accent-highlight;
 }

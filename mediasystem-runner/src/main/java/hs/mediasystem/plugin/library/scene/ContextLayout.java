@@ -1,16 +1,21 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.ext.basicmediatypes.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
+import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
+import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.runner.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
+import hs.mediasystem.util.javafx.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.Binds;
+import hs.mediasystem.util.javafx.Containers;
 import hs.mediasystem.util.javafx.Labels;
 import hs.mediasystem.util.javafx.ScaledImageView;
+
+import java.util.stream.Collectors;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -28,25 +33,28 @@ import javax.inject.Singleton;
 public class ContextLayout {
   @Inject private ImageHandleFactory imageHandleFactory;
 
-  public Node create(MediaItem<?> mediaItem) {
+  public BasePanel create(MediaItem<?> mediaItem) {
     Object data = mediaItem.getData();
 
     if(data instanceof Episode) {
-      return create((Episode)data);
+      return create((Episode)data, mediaItem.getParent().productionTitle.get());
     }
     if(mediaItem.getProduction() != null) {
       return create(mediaItem.getProduction());
     }
+    if(mediaItem.getPerson() != null) {
+      return create(mediaItem.getPerson());
+    }
 
-    return null;   // TODO for persons we could do a preview..
+    return null;
   }
 
-  public Node create(Serie serie, int seasonNumber) {
+  public BasePanel create(Serie serie, int seasonNumber) {
     BasePanel panel = new BasePanel();
 
-    Production production = serie.findSeason(seasonNumber).getProduction();
+    Production production = serie.findSeason(seasonNumber);
 
-    panel.title.set(serie.getProduction().getName());
+    panel.title.set(serie.getName());
     panel.season.set(seasonNumber == 0 ? "Specials" : "" + seasonNumber);
     panel.overview.set(production.getDescription());
     panel.imageURI.set(production.getImage());
@@ -55,25 +63,26 @@ public class ContextLayout {
     return panel;
   }
 
-  public Node create(Episode episode) {
+  public BasePanel create(Episode episode, String groupTitle) {
     BasePanel panel = new BasePanel();
 
-    Production production = episode.getProduction();
-
+    panel.groupTitle.set(groupTitle);
+    panel.season.set("" + episode.getSeasonNumber());
     panel.episodeNumber.set("" + episode.getNumber());
-    panel.title.set(production.getName());
-    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(production.getDate()));
-    panel.overview.set(production.getDescription());
-    panel.imageURI.set(production.getImage());
-    setReception(panel.rating, production.getReception());
+    panel.title.set(episode.getName());
+    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(episode.getDate()));
+    panel.overview.set(episode.getDescription());
+    panel.imageURI.set(episode.getImage());
+    setReception(panel.rating, episode.getReception());
 
     return panel;
   }
 
-  public Node create(Production production) {
+  public BasePanel create(Production production) {
     BasePanel panel = new BasePanel();
 
     panel.title.set(production.getName());
+    panel.subtitle.set(production.getGenres().stream().collect(Collectors.joining(" / ")));
     panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(production.getDate()));
     panel.overview.set(production.getDescription());
     panel.imageURI.set(production.getImage());
@@ -82,11 +91,21 @@ public class ContextLayout {
     return panel;
   }
 
-  public Node create(Person person) {
+  public BasePanel create(Person person) {
     BasePanel panel = new BasePanel();
 
     panel.title.set(person.getName());
     panel.imageURI.set(person.getImage());
+
+    return panel;
+  }
+
+  public BasePanel create(PersonalProfile personalProfile) {
+    BasePanel panel = create(personalProfile.getPerson());
+
+    panel.birthPlace.set(personalProfile.getBirthPlace());
+    panel.birthDate.set(MediaItemFormatter.formattedLocalDate(personalProfile.getBirthDate()) + (personalProfile.getDeathDate() == null ? "" : " - " + MediaItemFormatter.formattedLocalDate(personalProfile.getDeathDate())));
+    panel.biography.set(personalProfile.getBiography());
 
     return panel;
   }
@@ -98,8 +117,13 @@ public class ContextLayout {
   }
 
   private class BasePanel extends VBox {
+    public final StringProperty groupTitle = new SimpleStringProperty();
     public final StringProperty title = new SimpleStringProperty();
+    public final StringProperty subtitle = new SimpleStringProperty();
     public final StringProperty releaseDate = new SimpleStringProperty();
+    public final StringProperty birthPlace = new SimpleStringProperty();
+    public final StringProperty birthDate = new SimpleStringProperty();
+    public final StringProperty biography = new SimpleStringProperty();
     public final StringProperty season = new SimpleStringProperty();
     public final StringProperty episodeNumber = new SimpleStringProperty();
     public final StringProperty rating = new SimpleStringProperty();
@@ -108,6 +132,8 @@ public class ContextLayout {
 
     {
       AsyncImageProperty poster = new AsyncImageProperty();
+
+      getStyleClass().add("side-panel");
 
       poster.imageHandleProperty().bind(Binds.monadic(imageURI).map(imageHandleFactory::fromURI));
 
@@ -120,21 +146,64 @@ public class ContextLayout {
       }};
 
       getChildren().addAll(
+        Labels.create("groupTitle", groupTitle, groupTitle.isEmpty().not()),
         Labels.create("title", title),
-        Labels.create("SEASON", "header", season.isEmpty().not()),
-        Labels.create("season", season, season.isEmpty().not()),
-        Labels.create("EPISODE NUMBER", "header", episodeNumber.isEmpty().not()),
-        Labels.create("episode-number", episodeNumber, episodeNumber.isEmpty().not()),
-        Labels.create("RELEASE DATE", "header", releaseDate.isEmpty().not()),
-        Labels.create("release-date", releaseDate, releaseDate.isEmpty().not()),
-        Labels.create("RATING", "header", rating.isEmpty().not()),
-        Labels.create("rating", rating, rating.isEmpty().not()),
-        Labels.create("OVERVIEW", "header", overview.isEmpty().not()),
-        Labels.create("overview", overview, overview.isEmpty().not()),
+        Labels.create("subtitle", subtitle, subtitle.isEmpty().not()),
+        Containers.hbox(
+          "hbox",
+          Containers.vbox(
+            Labels.create("SEASON", "header", season.isEmpty().not()),
+            Labels.create("season", season, season.isEmpty().not())
+          ),
+          Containers.vbox(
+            Labels.create("EPISODE NUMBER", "header", episodeNumber.isEmpty().not()),
+            Labels.create("episode-number", episodeNumber, episodeNumber.isEmpty().not())
+          )
+        ),
+        Containers.vbox(
+          Labels.create("BIRTH PLACE", "header", birthPlace.isEmpty().not()),
+          Labels.create("birth-place", birthPlace, birthPlace.isEmpty().not())
+        ),
+        Containers.vbox(
+          Labels.create("BIRTH DATE", "header", birthDate.isEmpty().not()),
+          Labels.create("birth-date", birthDate, birthDate.isEmpty().not())
+        ),
+        Containers.hbox(
+          "hbox",
+          Containers.vbox(
+            Labels.create("RELEASE DATE", "header", releaseDate.isEmpty().not()),
+            Labels.create("release-date", releaseDate, releaseDate.isEmpty().not())
+          ),
+          Containers.vbox(
+            Labels.create("RATING", "header", rating.isEmpty().not()),
+            Labels.create("rating", rating, rating.isEmpty().not())
+          )
+        ),
+        vgrow(Priority.ALWAYS, Containers.vbox(
+          overview.isEmpty().not(),
+          Labels.create("OVERVIEW", "header"),
+          vgrow(Priority.ALWAYS, new AutoVerticalScrollPane(Labels.create("overview", overview), 8000, 8) {{
+            setMinSize(1, 1);
+            setPrefSize(10, 10);
+          }})
+        )),
+        vgrow(Priority.ALWAYS, Containers.vbox(
+          biography.isEmpty().not(),
+          Labels.create("BIOGRAPHY", "header"),
+          vgrow(Priority.ALWAYS, new AutoVerticalScrollPane(Labels.create("overview", biography), 8000, 8) {{
+            setMinSize(1, 1);
+            setPrefSize(10, 10);
+          }})
+        )),
         imageView
       );
 
       VBox.setVgrow(imageView, Priority.ALWAYS);
     }
+  }
+
+  private static Node vgrow(Priority priority, Node node) {
+    VBox.setVgrow(node, priority);
+    return node;
   }
 }

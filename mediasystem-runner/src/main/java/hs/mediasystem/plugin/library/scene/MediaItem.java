@@ -1,16 +1,15 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.MovieDescriptor;
-import hs.mediasystem.ext.basicmediatypes.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
+import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
-import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.MediaStatus;
+import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
 
 import java.util.Set;
 
@@ -21,12 +20,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class MediaItem<T> {
+  public enum MediaStatus {
+    UNAVAILABLE,
+    AVAILABLE,
+    WATCHED
+  }
+
   public final IntegerProperty watchedCount = new SimpleIntegerProperty();
   public final IntegerProperty availableCount = new SimpleIntegerProperty();
 
   public final StringProperty productionTitle = new SimpleStringProperty();
   public final StringProperty personName = new SimpleStringProperty();
-  public final ObjectBinding<MediaStatus> mediaStatus; // = new SimpleObjectProperty<>();//TODO move MediaStatus enum to this class
+  public final ObjectBinding<MediaStatus> mediaStatus;
 
   // Movie: UNAVAILABLE -> 0 0
   // Movie: AVAILABLE   -> 0 1
@@ -36,13 +41,15 @@ public class MediaItem<T> {
   private final T wrappedObject;
   private final Set<MediaStream<?>> streams;
   private final String id;
+  private final MediaItem<?> parent;
 
-  public MediaItem(T wrappedObject, Set<MediaStream<?>> streams, int watchedCount, int availableCount) {
+  public MediaItem(T wrappedObject, MediaItem<?> parent, Set<MediaStream<?>> streams, int watchedCount, int availableCount) {
     if(wrappedObject == null) {
       throw new IllegalArgumentException("wrappedObject cannot be null");
     }
 
     this.wrappedObject = wrappedObject;
+    this.parent = parent;
     this.streams = streams;
 
     // Set properties
@@ -80,6 +87,10 @@ public class MediaItem<T> {
     return id;
   }
 
+  public MediaItem<?> getParent() {
+    return parent;
+  }
+
   private String createId() {
     if(streams.isEmpty()) {
       String id = wrappedObject.getClass().getSimpleName() + ":";
@@ -112,10 +123,10 @@ public class MediaItem<T> {
   }
 
   public Production getProduction() {
-    return wrappedObject instanceof MovieDescriptor ? ((MovieDescriptor)wrappedObject).getProduction() :
-           wrappedObject instanceof Serie ? ((Serie)wrappedObject).getProduction() :
-           wrappedObject instanceof Season ? ((Season)wrappedObject).getProduction() :
-           wrappedObject instanceof Episode ? ((Episode)wrappedObject).getProduction() :
+    return wrappedObject instanceof Movie ? (Movie)wrappedObject :
+           wrappedObject instanceof Serie ? (Serie)wrappedObject :
+           wrappedObject instanceof Season ? (Season)wrappedObject :
+           wrappedObject instanceof Episode ? (Episode)wrappedObject :
            wrappedObject instanceof ProductionRole ? ((ProductionRole)wrappedObject).getProduction() : null;
   }
 

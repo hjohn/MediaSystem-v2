@@ -12,7 +12,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.ext.basicmediatypes.StreamPrint;
+import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.Throwables;
 
@@ -64,7 +64,7 @@ public class DatabaseStreamDataStore {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
       return tx.select(StreamData.class).stream()
         .map(DatabaseStreamDataStore::toStreamPrint)
-        .flatMap(Exceptional::stream)
+        .flatMap(Exceptional::ignoreAllAndStream)
         .collect(Collectors.toMap(keyFunction, Function.identity()));
     }
   }

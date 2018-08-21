@@ -1,8 +1,9 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.ext.basicmediatypes.Type;
 import hs.mediasystem.ext.basicmediatypes.VideoLink;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.domain.Type;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.plugin.library.scene.LibraryNodeFactory.Area;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -10,7 +11,8 @@ import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.ImageHandleFactory;
-import hs.mediasystem.runner.SceneNavigator;
+import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.javafx.AreaPane2;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.GridPane;
@@ -18,11 +20,11 @@ import hs.mediasystem.util.javafx.GridPaneUtil;
 import hs.mediasystem.util.javafx.ScaledImageView;
 import hs.mediasystem.util.javafx.SpecialEffects;
 
-import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
@@ -44,28 +46,27 @@ public class ProductionDetailSetup implements NodeFactory<ProductionDetailPresen
 
   @Inject private VideoDatabase videoDatabase;
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private SceneNavigator navigator;
   @Inject private Provider<CastAndCrewPresentation> castAndCrewPresentationProvider;
   @Inject private Provider<SerieSeasonsPresentation> serieSeasonsPresentationProvider;
   @Inject private Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
 
   private void navigateToPlay(ActionEvent event, MediaItem<?> mediaItem) {
-    navigator.navigateTo(playbackOverlayPresentationProvider.get().set(mediaItem, mediaItem.getStreams().iterator().next().getUri().toURI()));
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationProvider.get().set(mediaItem, mediaItem.getStreams().iterator().next().getUri(), 0)));
     event.consume();
   }
 
-  private void navigateToChildren(ActionEvent event, MediaItem<?> mediaItem) {
-    navigator.navigateTo(serieSeasonsPresentationProvider.get().set(mediaItem));
+  private void navigateToChildren(ActionEvent event, MediaItem<Serie> mediaItem) {
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(serieSeasonsPresentationProvider.get().set(mediaItem)));
     event.consume();
   }
 
   private void navigateToCastAndCrew(ActionEvent event, MediaItem<?> mediaItem) {
-    navigator.navigateTo(castAndCrewPresentationProvider.get().set(mediaItem));
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(castAndCrewPresentationProvider.get().set(mediaItem)));
     event.consume();
   }
 
   private void navigateToTrailer(ActionEvent event, VideoLink videoLink, MediaItem<?> mediaItem) {
-    navigator.navigateTo(playbackOverlayPresentationProvider.get().set(mediaItem, URI.create("https://www.youtube.com/watch?v=" + videoLink.getKey())));
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationProvider.get().set(mediaItem, new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), 0)));
     event.consume();
   }
 
@@ -128,7 +129,11 @@ public class ProductionDetailSetup implements NodeFactory<ProductionDetailPresen
     }
     else {
       areaPane.add(Area.NAVIGATION, new Button("Episodes") {{
-        setOnAction(e -> navigateToChildren(e, mediaItem));
+        setOnAction(e -> {
+          @SuppressWarnings("unchecked")
+          MediaItem<Serie> serieMediaItem = (MediaItem<Serie>)mediaItem;
+          navigateToChildren(e, serieMediaItem);
+        });
       }});
     }
     areaPane.add(Area.NAVIGATION, new Button("Cast & Crew") {{

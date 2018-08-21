@@ -4,7 +4,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.value.ChangeListener;
+import javafx.beans.InvalidationListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
@@ -21,7 +21,7 @@ import javafx.util.Duration;
 
 public class AutoVerticalScrollPane extends ScrollPane {
   private final int pixelsPerSecond;
-  private final ChangeListener<? super Number> listener;
+  private final InvalidationListener listener;
   private final int fadePadding;
 
   private Timeline timeline;
@@ -39,10 +39,11 @@ public class AutoVerticalScrollPane extends ScrollPane {
     setHbarPolicy(ScrollBarPolicy.NEVER);
     setVbarPolicy(ScrollBarPolicy.NEVER);
 
-    this.listener = (obs, old, current) -> createTimeline(((Region)getContent()).getHeight());
+    this.listener = obs -> createTimeline(((Region)getContent()).getHeight());
 
     ((Region)getContent()).heightProperty().addListener(listener);
     heightProperty().addListener(listener);
+    sceneProperty().addListener(listener);
   }
 
   private void createTimeline(double contentHeight) {
@@ -52,22 +53,23 @@ public class AutoVerticalScrollPane extends ScrollPane {
 
     timeline = null;
 
-    double invisibleArea = (contentHeight - getHeight()) * getWidth();
+    if(getScene() != null) {
+      double invisibleArea = (contentHeight - getHeight()) * getWidth();
 
-    if(invisibleArea > 0) {
-      int scrollSeconds = (int)(invisibleArea / pixelsPerSecond);
+      if(invisibleArea > 0) {
+        int scrollSeconds = (int)(invisibleArea / pixelsPerSecond);
+        timeline = new Timeline(
+          30,
+          new KeyFrame(Duration.ZERO, new KeyValue(vvalueProperty(), 0)),
+          new KeyFrame(Duration.seconds(10), new KeyValue(vvalueProperty(), 0)),
+          new KeyFrame(Duration.seconds(10 + scrollSeconds), new KeyValue(vvalueProperty(), 1)),
+          new KeyFrame(Duration.seconds(10 + scrollSeconds + 20), new KeyValue(vvalueProperty(), 1)),
+          new KeyFrame(Duration.seconds(10 + scrollSeconds + 20 + 1), new KeyValue(vvalueProperty(), 0))
+        );
 
-      timeline = new Timeline(
-        30,
-        new KeyFrame(Duration.ZERO, new KeyValue(vvalueProperty(), 0)),
-        new KeyFrame(Duration.seconds(10), new KeyValue(vvalueProperty(), 0)),
-        new KeyFrame(Duration.seconds(10 + scrollSeconds), new KeyValue(vvalueProperty(), 1)),
-        new KeyFrame(Duration.seconds(10 + scrollSeconds + 20), new KeyValue(vvalueProperty(), 1)),
-        new KeyFrame(Duration.seconds(10 + scrollSeconds + 20 + 1), new KeyValue(vvalueProperty(), 0))
-      );
-
-      timeline.setCycleCount(Animation.INDEFINITE);
-      timeline.play();
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+      }
     }
   }
 

@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 public class ClearLoggingFormatter extends Formatter {
   private static final DateFormat DATE_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
   private static final String PIPE = "\u2502";
-  private static final Map<Level, String> INDICATOR_BY_LEVEL = new HashMap<Level, String>() {{
+  private static final Map<Level, String> INDICATOR_BY_LEVEL = new HashMap<>() {{
     put(Level.SEVERE, "!!");
     put(Level.WARNING, " !");
     put(Level.INFO, "++");
@@ -26,6 +26,8 @@ public class ClearLoggingFormatter extends Formatter {
     put(Level.FINEST, "--");
   }};
 
+  private static final String EMPTY_LINE = String.format("%12s" + PIPE + "%60s" + PIPE + "%2s" + PIPE + "%25s" + PIPE, "", "", "", "");
+
   @Override
   public String format(LogRecord record) {
     StringBuilder builder = new StringBuilder();
@@ -33,14 +35,16 @@ public class ClearLoggingFormatter extends Formatter {
     builder
       .append(DATE_FORMAT.format(new Date(record.getMillis())))
       .append(PIPE)
-      .append(String.format("%-60s", createShortLocation(record, 50)))
+      .append(String.format("%-60s", createShortLocation(record, 60)))
       .append(PIPE)
       .append(INDICATOR_BY_LEVEL.get(record.getLevel()))
       .append(PIPE)
       .append(String.format("%-25s", Thread.currentThread().getName()))
-      .append(PIPE)
-      .append(formatMessage(record))
-      .append("\n");
+      .append(PIPE);
+
+    appendMessage(record, builder);
+
+    builder.append("\n");
 
     if(record.getThrown() != null) {
       StringWriter sw = new StringWriter();
@@ -53,6 +57,30 @@ public class ClearLoggingFormatter extends Formatter {
     }
 
     return builder.toString();
+  }
+
+  private static void appendMessage(LogRecord record, StringBuilder builder) {
+    String message = record.getMessage();
+
+    int lineBreak = message.indexOf('\n');
+
+    if(lineBreak >= 0) {
+      int start = 0;
+      builder.append(message.substring(start, lineBreak));
+
+      do {
+        builder.append("\n");
+        builder.append(EMPTY_LINE);
+
+        start = lineBreak + 1;
+        lineBreak = message.indexOf('\n', start);
+
+        builder.append(message.substring(start, lineBreak == -1 ? message.length() : lineBreak));
+      } while(lineBreak != -1);
+    }
+    else {
+      builder.append(message);
+    }
   }
 
   private static final Pattern LONG_PACKAGE_PART = Pattern.compile("[a-z]{2,}\\.");

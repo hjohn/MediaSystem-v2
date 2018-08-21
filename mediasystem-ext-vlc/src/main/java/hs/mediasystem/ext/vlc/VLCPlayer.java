@@ -3,9 +3,9 @@ package hs.mediasystem.ext.vlc;
 import com.sun.jna.Memory;
 
 import hs.mediasystem.domain.AudioTrack;
-import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.domain.PlayerEvent;
 import hs.mediasystem.domain.PlayerEvent.Type;
+import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.domain.Subtitle;
 import hs.mediasystem.util.javafx.Events;
 import hs.mediasystem.util.javafx.ResizableWritableImageView;
@@ -275,6 +275,7 @@ public class VLCPlayer implements PlayerPresentation {
     position = new UpdatableLongProperty() {
       @Override
       public void set(long value) {
+        value = clamp(value, 0L, getLength() - 1000);
         mediaPlayer.setTime(value);
         super.set(value);
       }
@@ -548,4 +549,9 @@ public class VLCPlayer implements PlayerPresentation {
 
   private final ObjectProperty<EventHandler<PlayerEvent>> onPlayerEvent = new SimpleObjectProperty<>();
   @Override public ObjectProperty<EventHandler<PlayerEvent>> onPlayerEvent() { return onPlayerEvent; }
+
+  private static long clamp(long value, long min, long max) {
+    return value < min ? min :
+           value > max ? max : value;
+  }
 }

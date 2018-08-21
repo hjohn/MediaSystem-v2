@@ -1,13 +1,11 @@
 package hs.mediasystem.util.javafx;
 
-import com.sun.javafx.tk.Toolkit;
-
 import hs.mediasystem.util.FocusEvent;
+import hs.mediasystem.util.NamedThreadFactory;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import javafx.beans.value.ChangeListener;
@@ -24,7 +22,7 @@ import javafx.scene.input.KeyEvent;
 
 public class SceneUtil {
   private static final Logger LOGGER = Logger.getLogger(SceneUtil.class.getName());
-  private static final ScheduledExecutorService EVENT_TIMEOUT_EXECUTOR = Executors.newSingleThreadScheduledExecutor();
+  private static final ScheduledExecutorService EVENT_TIMEOUT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("SceneUtil"));
 
   public static Scene createScene(Parent root) {
     Scene scene = new Scene(root);
@@ -74,26 +72,43 @@ public class SceneUtil {
     final EventDispatcher eventDispatcher = scene.getEventDispatcher();
 
     scene.setEventDispatcher(new EventDispatcher() {
+      private ScheduledFuture<StackTraceElement[]> future;
+
       @Override
       public Event dispatchEvent(Event event, EventDispatchChain tail) {
         Thread fxThread = Thread.currentThread();
 
-        ScheduledFuture<?> future = EVENT_TIMEOUT_EXECUTOR.schedule(new Runnable() {
-          @Override
-          public void run() {
-            if(!Toolkit.getToolkit().isNestedLoopRunning()) {
-              LOGGER.warning("Slow Event Handling, trace:");
+        if(future != null) {
+          future.cancel(false);
+        }
 
-              for(StackTraceElement element : fxThread.getStackTrace()) {
-                LOGGER.warning("  -- " + element);
-              }
-            }
-          }
-        }, 100, TimeUnit.MILLISECONDS);
+//        future = EVENT_TIMEOUT_EXECUTOR.schedule(new Callable<StackTraceElement[]>() {
+//          @Override
+//          public StackTraceElement[] call() {
+//            return fxThread.getStackTrace();
+//          }
+//        }, 500, TimeUnit.MILLISECONDS);
+
+        long startTime = System.currentTimeMillis();
 
         Event returnedEvent = eventDispatcher.dispatchEvent(event, tail);
 
-        future.cancel(false);
+        long duration = System.currentTimeMillis() - startTime;
+
+//        future.cancel(false);
+//
+//        if(!future.isCancelled()) {  // separate check, as future may have been cancelled already multiple times, so cannot use result from Future#cancel
+//          try {
+//            LOGGER.warning("Slow Event Handling (" + duration + " ms) of " + event + ":");
+//
+//            for(StackTraceElement element : future.get()) {
+//              LOGGER.warning("  -- " + element);
+//            }
+//          }
+//          catch(InterruptedException | ExecutionException e) {
+//            LOGGER.log(Level.SEVERE, "Unexpected exception", e);
+//          }
+//        }
 
         return returnedEvent;
       }

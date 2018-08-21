@@ -1,12 +1,12 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.StreamStateProvider;
-import hs.mediasystem.ext.basicmediatypes.Attribute;
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.Serie;
+import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
+import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.scan.Attribute;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
 import hs.mediasystem.mediamanager.LocalMediaManager;
 import hs.mediasystem.plugin.library.scene.ContextLayout;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
@@ -15,7 +15,7 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.runner.ImageHandleFactory;
-import hs.mediasystem.runner.SceneNavigator;
+import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.util.Collection;
@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.scene.Node;
 
 import javax.inject.Inject;
@@ -40,33 +41,31 @@ import javax.inject.Singleton;
 @Singleton
 public class SerieEpisodesSetup extends AbstractSetup<Episode, SerieEpisodesPresentation> {
   @Inject private LocalMediaManager localMediaManager;
-  @Inject private SceneNavigator navigator;
   @Inject private ContextLayout contextLayout;
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private StreamStateProvider streamStateProvider;
+  @Inject private StreamStateService streamStateService;
   @Inject private Provider<ProductionDetailPresentation> detailPresentationProvider;
 
   @Override
-  public ObservableList<MediaItem<?>> getItems(SerieEpisodesPresentation presentation) {
+  public ObservableList<MediaItem<Episode>> getItems(SerieEpisodesPresentation presentation) {
     SerieEpisodesPresentation p = presentation;
-    @SuppressWarnings("unchecked")
-    MediaItem<Serie> mediaItem = (MediaItem<Serie>)p.mediaItem.get();
+    MediaItem<Serie> mediaItem = p.mediaItem.get();
     Serie serieDescriptor = mediaItem.getData(); // fetchSerieDescriptor(productionItem);
 
     Map<Integer, Map<Integer, Set<MediaStream<?>>>> serieIndex = createSerieIndex(mediaItem);
 
-    return FXCollections.observableArrayList(serieDescriptor.getSeasons().stream().filter(s -> s.getNumber() == p.seasonNumber.get()).findFirst().map(Season::getEpisodes).stream().flatMap(List::stream).map(s -> wrap(s, serieIndex)).collect(Collectors.toList()));
+    return FXCollections.observableArrayList(serieDescriptor.getSeasons().stream().filter(s -> s.getNumber() == p.seasonNumber.get()).findFirst().map(Season::getEpisodes).stream().flatMap(List::stream).map(s -> wrap(mediaItem, s, serieIndex)).collect(Collectors.toList()));
   }
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, SerieEpisodesPresentation presentation) {
-    navigator.navigateTo(detailPresentationProvider.get().set(event.getItem()));
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<Episode>> event, SerieEpisodesPresentation presentation) {
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(detailPresentationProvider.get().set(event.getItem())));
     event.consume();
   }
 
   private int countWatchedStreams(Collection<MediaStream<?>> streams) {
     for(MediaStream<?> stream : streams) {
-      if((boolean)streamStateProvider.get(stream.getStreamPrint()).getOrDefault("watched", false)) {
+      if(streamStateService.isWatched(stream.getStreamPrint())) {
         return 1;
       }
     }
@@ -74,11 +73,12 @@ public class SerieEpisodesSetup extends AbstractSetup<Episode, SerieEpisodesPres
     return 0;
   }
 
-  private MediaItem<Episode> wrap(Episode data, Map<Integer, Map<Integer, Set<MediaStream<?>>>> streamsByEpisodeBySeason) {
+  private MediaItem<Episode> wrap(MediaItem<Serie> serieItem, Episode data, Map<Integer, Map<Integer, Set<MediaStream<?>>>> streamsByEpisodeBySeason) {
     Set<MediaStream<?>> streams = Optional.ofNullable(streamsByEpisodeBySeason.get(data.getSeasonNumber())).map(m -> m.get(data.getNumber())).orElse(Collections.emptySet());
 
     return new MediaItem<>(
       data,
+      serieItem,
       streams,
       countWatchedStreams(streams),
       streams.isEmpty() ? 0 : 1
@@ -87,22 +87,22 @@ public class SerieEpisodesSetup extends AbstractSetup<Episode, SerieEpisodesPres
 
   @Override
   protected Node createContextPanel(SerieEpisodesPresentation presentation) {
-    MediaItem<Serie> mediaItem = (MediaItem<Serie>)presentation.mediaItem.get();
+    MediaItem<Serie> mediaItem = presentation.mediaItem.get();
     Serie serieDescriptor = mediaItem.getData(); // fetchSerieDescriptor(productionItem);
 
     return contextLayout.create(serieDescriptor, presentation.seasonNumber.get());
   }
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<Episode> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
-    cellFactory.setSequenceNumberExtractor(item -> Optional.ofNullable(((Episode)item.getData()).getNumber()).map(i -> "" + i).orElse(null));
+    cellFactory.setSequenceNumberExtractor(item -> Optional.ofNullable(item.getData().getNumber()).map(i -> "" + i).orElse(null));
   }
 
   @Override
-  protected void configureGridView(MediaGridView<MediaItem<?>> gridView) {
+  protected void configureGridView(MediaGridView<MediaItem<Episode>> gridView) {
     super.configureGridView(gridView);
 
     gridView.visibleRows.set(4);

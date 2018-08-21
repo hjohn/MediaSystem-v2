@@ -259,24 +259,30 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   }
 
   private void updateScrollBar(@SuppressWarnings("unused") Observable obs) {
-    if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
-      int rowCount = getRowCount();
-      int max = Math.max(0, rowCount - visibleRows.get());
+    int lineCount = getSkinnable().getOrientation() == Orientation.VERTICAL ? getRowCount() : getColumnCount();
+    int visibleLines = getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleRows.get() : visibleColumns.get();
+    List<Integer> jumpPoints = this.jumpPoints.get();
 
-      scrollBar.setMin(0);
-      scrollBar.setMax(max);
-      scrollBar.setValue(scrollPosition.get());
-      scrollBar.setVisibleAmount((double)visibleRows.get() / rowCount * max);
-    }
-    else {
-      int columnCount = getColumnCount();
-      int max = Math.max(0, columnCount - visibleColumns.get());
+    if(jumpPoints != null) {
+      // Adjust line count in case jump point is near end:
+      int lastJumpPoint = jumpPoints.get(jumpPoints.size() - 1);
+      int totalItems = getSkinnable().getItems().size();
+      int itemsVisibleAtLastJumpPoint = totalItems - lastJumpPoint;
+      int perpendicularLines = getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get();
+      int linesOccupiedAtLastJumpPoint = (itemsVisibleAtLastJumpPoint + perpendicularLines - 1) / perpendicularLines;
 
-      scrollBar.setMin(0);
-      scrollBar.setMax(max);
-      scrollBar.setValue(scrollPosition.get());
-      scrollBar.setVisibleAmount((double)visibleColumns.get() / columnCount * max);
+      //System.out.println("itemsVis = " + itemsVisibleAtLastJumpPoint + "; linesOccu = " + linesOccupiedAtLastJumpPoint + "; x = " + perpendicularLines);
+      if(linesOccupiedAtLastJumpPoint < visibleLines) {
+        lineCount += visibleLines - linesOccupiedAtLastJumpPoint;
+      }
     }
+
+    int max = Math.max(0, lineCount - visibleLines);
+
+    scrollBar.setMin(0);
+    scrollBar.setMax(max);
+    scrollBar.setValue(scrollPosition.get());
+    scrollBar.setVisibleAmount((double)visibleLines / lineCount * max);
   }
 
   private int getColumnCount() {
@@ -293,9 +299,10 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
     @Override
     public void handle(long now) {
+      double pos = scrollPosition.get();
+      double targetPos = firstVisibleIndex / (getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get());
+
       if(lastUpdate != 0) {
-        double pos = scrollPosition.get();
-        double targetPos = firstVisibleIndex / (getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get());
         long dt = now - lastUpdate;
 
         if(pos != targetPos) {
@@ -342,6 +349,8 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       }
     }
   };
+
+  private boolean firstTime = true;
 
   private void animateWhenSelectedChanges(@SuppressWarnings("unused") Observable obs) {
     int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
@@ -400,6 +409,13 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 //      );
 //
 //      scrollTimeline.play();
+    }
+
+    System.out.println(">>> SELECTED " + selectedIndex + "... first=" + firstVisibleIndex + "; scrollp = " + scrollPosition.get() + "; first=" + firstTime);
+
+    if(firstTime) {
+      scrollPosition.set(firstVisibleIndex / (getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get()));
+      firstTime = false;
     }
   }
 

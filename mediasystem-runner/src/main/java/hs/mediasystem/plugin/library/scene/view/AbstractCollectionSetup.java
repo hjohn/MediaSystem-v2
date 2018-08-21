@@ -1,14 +1,14 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.db.SettingsStore;
-import hs.mediasystem.db.StreamStateProvider;
+import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.MediaRecord;
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.Type;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.ext.basicmediatypes.domain.Type;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaRecord;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
 import hs.mediasystem.mediamanager.LocalMediaManager;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
@@ -16,7 +16,6 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.runner.ImageHandleFactory;
-import hs.mediasystem.runner.SceneNavigator;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.time.LocalDate;
@@ -31,7 +30,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 
 public abstract class AbstractCollectionSetup<T, P extends GridViewPresentation> extends AbstractSetup<T, P> {
   private static final String SYSTEM = "MediaSystem:Library:Collection";
@@ -39,56 +37,56 @@ public abstract class AbstractCollectionSetup<T, P extends GridViewPresentation>
   private final Type type;
 
   @Inject private LocalMediaManager localMediaManager;
-  @Inject private SceneNavigator navigator;
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private StreamStateProvider streamStateProvider;
-  @Inject private Provider<ProductionDetailPresentation> detailPresentationProvider;
-  @Inject private Provider<ProductionPresentation> productionPresentationProvider;
+  @Inject private StreamStateService streamStateService;
+  @Inject private PresentationLoader presentationLoader;
   @Inject private SettingsStore settingsStore;
+  @Inject private ProductionPresentation.Factory productionPresentationFactory;
 
   public AbstractCollectionSetup(Type type) {
     this.type = type;
   }
 
   @Override
-  public ObservableList<MediaItem<?>> getItems(GridViewPresentation presentation) {
+  public ObservableList<MediaItem<T>> getItems(GridViewPresentation presentation) {
     Collection<MediaStream<MediaDescriptor>> mediaStreams = localMediaManager.findAllByType(type);
 
-    return (ObservableList<MediaItem<?>>)(ObservableList<?>)createProductionItems(mediaStreams, this::extractDescriptor);
+    return createProductionItems(mediaStreams, this::extractDescriptor);
   }
 
-  protected abstract <M extends MediaDescriptor> M extractDescriptor(MediaStream<M> mediaStream);
+  protected abstract <M extends MediaDescriptor> T extractDescriptor(MediaStream<M> mediaStream);
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<T> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
   }
 
   private <D extends MediaDescriptor> int countWatchedStreams(MediaStream<D> stream) {
-    if((boolean)streamStateProvider.get(stream.getStreamPrint()).getOrDefault("watched", false)) {
+    if(streamStateService.isWatched(stream.getStreamPrint())) {
       return 1;
     }
 
     return 0;
   }
 
-  private <D extends MediaDescriptor> ObservableList<MediaItem<D>> createProductionItems(Collection<MediaStream<D>> streams, Function<MediaStream<D>, D> mapper) {
+  private <D extends MediaDescriptor> ObservableList<MediaItem<T>> createProductionItems(Collection<MediaStream<D>> streams, Function<MediaStream<D>, T> mapper) {
     return FXCollections.observableArrayList(streams.stream().map(s -> new MediaItem<>(
       mapper.apply(s),
+      null,
       Set.of(s),
       countWatchedStreams(s),
       1
     )).collect(Collectors.toList()));
   }
 
-  protected <D extends MediaDescriptor> D extractDescriptor(MediaStream<D> mediaStream, DataSource dataSource) {
+  protected <D extends MediaDescriptor> T extractDescriptor(MediaStream<D> mediaStream, DataSource dataSource) {
     for(Identifier identifier : mediaStream.getMediaRecords().keySet()) {
       MediaRecord<D> record = mediaStream.getMediaRecords().get(identifier);
 
       if(identifier.getDataSource() == dataSource) {
-        return record.getMediaDescriptor();
+        return (T)record.getMediaDescriptor();
       }
     }
 
@@ -103,17 +101,19 @@ public abstract class AbstractCollectionSetup<T, P extends GridViewPresentation>
   }
 
   @Override
-  protected void configureGridView(MediaGridView<MediaItem<?>> gridView) {
+  protected void configureGridView(MediaGridView<MediaItem<T>> gridView) {
     super.configureGridView(gridView);
 
-    gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> settingsStore.storeSetting(SYSTEM, "last-selected:" + type, current.getId()));
+    gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
+      if(current != null) {
+        settingsStore.storeSetting(SYSTEM, "last-selected:" + type, current.getId());
+      }
+    });
   }
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<?>> event, P presentation) {
-    //navigator.navigateTo(detailPresentationProvider.get().set(event.getItem()));
-    navigator.navigateTo(productionPresentationProvider.get().set(event.getItem()));
-    event.consume();
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation) {
+    presentationLoader.loadAndNavigate(event, () -> productionPresentationFactory.create(event.getItem()));
   }
 
   @Override

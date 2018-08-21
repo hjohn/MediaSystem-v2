@@ -2,6 +2,6 @@ package hs.mediasystem.util.javafx;
 
 import javafx.beans.binding.ObjectBinding;
 
-public abstract class MonadicObjectBinding<T> extends ObjectBinding<T> implements MonadicObservableValue<T> {
+public abstract class MonadicObjectBinding<T> extends ObjectBinding<T> implements Val<T> {
 
 }

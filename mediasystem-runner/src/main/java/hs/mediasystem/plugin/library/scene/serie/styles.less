@@ -37,18 +37,35 @@
     -fx-background-color: -c-dark-glass;
     -fx-padding: 16;
     
-    .label.title
+    .episode-panel
     {
-      .style-heading3;
-      .text-fill-highlight;
+      -fx-spacing: 15;
+
+      .label.title
+      {
+        .style-heading3;
+        .text-fill-highlight;
+        -fx-wrap-text: true;
+      }
+    
+      .image-view
+      {
+        -fx-background-color: @glass-color;
+        -fx-padding: 4;
+      }
+    }
+    
+    .label.tag-line
+    {
+      .style-p2;
       -fx-wrap-text: true;
     }
-  }
     
-  .label.description
-  {
-    .style-p2;
-    -fx-wrap-text: true;
+    .label.description
+    {
+      .style-p2;
+      -fx-wrap-text: true;
+    }
   }
   
   .season-bar
@@ -65,8 +82,6 @@
     .label.focused
     {
       -fx-text-fill: lighten(@text-accent, 20%, relative);
-      -fx-scale-x: 1.1;
-      -fx-scale-y: 1.1;
     }
   }
     
@@ -83,19 +98,8 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
   }
   
-  .episode-panel
-  {
-    -fx-spacing: 15;
-  
-    .image-view
-    {
-      -fx-background-color: @glass-color;
-      -fx-padding: 4;
-    }
-  }
-  
   .navigation-area
   {
-    -fx-padding: 15 0 0 0
+    -fx-padding: 15 0 0 0;
   }
 }

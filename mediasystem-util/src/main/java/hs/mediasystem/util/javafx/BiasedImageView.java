@@ -2,7 +2,6 @@ package hs.mediasystem.util.javafx;
 
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -40,24 +39,27 @@ public class BiasedImageView extends Region {
   public final boolean isPreserveRatio() { return this.preserveRatio.get(); }
   public final void setPreserveRatio(boolean preserveRatio) { this.preserveRatio.set(preserveRatio); }
 
-  private final ObjectBinding<Boolean> backgroundLoadingBinding = Binds.monadic(imageView.imageProperty()).map(Image::isBackgroundLoading);
   private final BooleanBinding imagePresent = imageView.imageProperty().isNotNull();
   private final Node placeHolder;
 
-
   private Orientation orientation = Orientation.HORIZONTAL;
-
+  private double maxRatio = Double.MAX_VALUE;
+  private double minRatio = 0;
 
   public void setOrientation(Orientation orientation) {
     this.orientation = orientation;
   }
 
+  public void setMinRatio(double minRatio) {
+    this.minRatio = minRatio;
+  }
+
+  public void setMaxRatio(double maxRatio) {
+    this.maxRatio = maxRatio;
+  }
+
   public BiasedImageView(Node placeHolder) {
     this.placeHolder = placeHolder;
-
-    getChildren().add(effectRegion);  // effect region before image view so a background color won't overlay over the image
-    getChildren().add(imageView);
-    getChildren().add(overlayRegion);
 
     /*
      * Ratios are preserved by this Region instead of having ImageView do it, because ImageView will sometimes size a pixel smaller than expected depending on whether
@@ -80,30 +82,17 @@ public class BiasedImageView extends Region {
       Platform.runLater(() -> requestLayout());  // Request layout when image presence changes; layout makes image visible or not, to prevent flashing the image at the wrong size
     });
 
-  //  imageView.visibleProperty().bind(imagePresent);
-
-  //  effectRegion.visibleProperty().bind(Bindings.createBooleanBinding(() -> placeHolder != null || imageView.getImage() != null, imageView.imageProperty()));  // prevents effect region from being visible if there is no image and no placeholder
+    getChildren().add(effectRegion);  // effect region before image view so a background color won't overlay over the image
 
     if(placeHolder != null) {
-      effectRegion.getChildren().add(placeHolder);
+      getChildren().add(placeHolder);
+
       placeHolder.getStyleClass().add("place-holder");
-      placeHolder.visibleProperty().bind(imageView.imageProperty().isNull());
+      effectRegion.visibleProperty().set(false);
     }
 
-//    backgroundLoadingBinding.addListener((ov, old, isLoading) -> {
-//      System.out.println("isLoading = " + isLoading + " for " + getImage());
-//      if(isLoading != null && !isLoading) {
-//        if(getOpacity() == 0) {
-//          new Timeline(
-//            new KeyFrame(Duration.ZERO, new KeyValue(opacityProperty(), 0)),
-//            new KeyFrame(Duration.seconds(1), new KeyValue(opacityProperty(), 1))
-//          ).play();
-//        }
-//      }
-//      else {
-//        setOpacity(0);
-//      }
-//    });
+    getChildren().add(imageView);
+    getChildren().add(overlayRegion);
   }
 
   public StackPane getOverlayRegion() {
@@ -135,7 +124,10 @@ public class BiasedImageView extends Region {
     Image image = imageView.getImage();
 
     imageView.setVisible(image != null);
-    effectRegion.setVisible(image != null || placeHolder != null);
+    effectRegion.setVisible(image != null);
+    if(placeHolder != null) {
+      placeHolder.setVisible(image == null);
+    }
 
     if(image != null && isPreserveRatio()) {
       double imageWidth = image.getWidth();
@@ -198,6 +190,9 @@ public class BiasedImageView extends Region {
     effectRegion.setMaxWidth(effectRegion.getMinWidth());
     effectRegion.setMaxHeight(effectRegion.getMinHeight());
 
+    if(placeHolder != null) {
+      layoutInArea(placeHolder, 0, 0, getWidth(), getHeight(), 0, alignment.get().getHpos(), alignment.get().getVpos());
+    }
     layoutInArea(effectRegion, 0, 0, getWidth(), getHeight(), 0, alignment.get().getHpos(), alignment.get().getVpos());
 
     overlayRegion.setMinWidth(Math.round(bounds.getWidth()) + insetsWidth);
@@ -212,6 +207,7 @@ public class BiasedImageView extends Region {
 
   private double imageWidth;
   private double imageHeight;
+  private double ratio;
 
   private void calculateImageSize() {
     Image image = imageView.getImage();
@@ -219,10 +215,12 @@ public class BiasedImageView extends Region {
     if(image != null) {
       imageWidth = image.getWidth();
       imageHeight = image.getHeight();
+      ratio = Math.max(minRatio, Math.min(maxRatio, imageWidth / imageHeight));
     }
     else {
       imageWidth = 0;
       imageHeight = 0;
+      ratio = 1;
     }
   }
 
@@ -260,9 +258,14 @@ public class BiasedImageView extends Region {
     calculateImageSize();
 
     //System.err.println("---computePrefWidth called with : " + height + " : w/h=" + getWidth() + "x" + getHeight() + " ; image=" + imageWidth + "x" + imageHeight);
-    if(height > 0 && isPreserveRatio() && imageWidth != 0 && imageHeight != 0) {
-      //System.err.println("----------> " + (imageWidth * height / imageHeight));
-      return snapSize(imageWidth * height / imageHeight);
+    if(height > 0 && height < 100000 && isPreserveRatio()) {
+      if(imageWidth != 0 && imageHeight != 0) {
+        //System.err.println("----------> " + (imageWidth * height / imageHeight));
+        return snapSize(height * ratio);
+      }
+      if(placeHolder != null) {
+        return placeHolder.prefWidth(height);
+      }
     }
 
     return 30;
@@ -271,9 +274,14 @@ public class BiasedImageView extends Region {
   @Override
   protected double computePrefHeight(double width) {
     calculateImageSize();
-    if(width > 0 && width < 100000 && isPreserveRatio() && imageWidth != 0 && imageHeight != 0) {
-//      System.out.println("----computePrefHeight called with : " + width + " : w/h = " + getWidth() + "x" + getHeight() + " ; image=" + imageWidth + "x" + imageHeight + " ---> " + (imageHeight * width / imageWidth));
-      return snapSize(imageHeight * width / imageWidth);
+    if(width > 0 && width < 100000 && isPreserveRatio()) {
+      if(imageWidth != 0 && imageHeight != 0) {
+  //      System.out.println("----computePrefHeight called with : " + width + " : w/h = " + getWidth() + "x" + getHeight() + " ; image=" + imageWidth + "x" + imageHeight + " ---> " + (imageHeight * width / imageWidth));
+        return snapSize(width / ratio);
+      }
+      if(placeHolder != null) {
+        return placeHolder.prefHeight(width);
+      }
     }
 
     return 30;

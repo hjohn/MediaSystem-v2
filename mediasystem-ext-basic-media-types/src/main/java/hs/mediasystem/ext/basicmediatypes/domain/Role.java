@@ -1,7 +1,5 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-
 public class Role {
   public enum Type {CAST, CREW, GUEST_STAR}
 
@@ -12,10 +10,6 @@ public class Role {
   private final String character;
 
   public static Role asCast(Identifier identifier, String character) {
-    if(character == null) {
-      throw new IllegalArgumentException("character cannot be null");
-    }
-
     return new Role(identifier, Type.CAST, null, null, character);
   }
 

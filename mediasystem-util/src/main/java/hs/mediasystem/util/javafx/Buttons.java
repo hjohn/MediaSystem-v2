@@ -12,4 +12,14 @@ public class Buttons {
 
     return button;
   }
+
+  public static Button create(Action action) {
+    Button button = new Button();
+
+    button.textProperty().bind(action.titleProperty());
+    button.disableProperty().bind(action.enabledProperty().map(b -> !b));
+    button.setOnAction(action::trigger);
+
+    return button;
+  }
 }

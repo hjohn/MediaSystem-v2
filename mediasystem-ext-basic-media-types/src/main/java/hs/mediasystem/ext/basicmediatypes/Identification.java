@@ -1,5 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes;
 
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+
 import java.util.Objects;
 
 public class Identification {
@@ -100,5 +102,8 @@ public class Identification {
     return true;
   }
 
-
+  @Override
+  public String toString() {
+    return "Identification[" + identifier + " (" + matchType + " @ " + matchAccuracy * 100 + "%)]";
+  }
 }

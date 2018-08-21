@@ -43,7 +43,7 @@ public class DuoWindowSceneManager implements SceneManager {
   public DuoWindowSceneManager(String title, int initialScreenNumber) {
     this.screenNumber = initialScreenNumber;
 
-    mainStage = new Stage(StageStyle.UNDECORATED);
+    mainStage = new Stage(StageStyle.TRANSPARENT);
     transparentStage = new Stage(StageStyle.TRANSPARENT);
 
     mainStage.setTitle(title);
@@ -53,7 +53,7 @@ public class DuoWindowSceneManager implements SceneManager {
 
     scene.setFill(Color.BLACK);
     scene.getStylesheets().add(LessLoader.compile(getClass().getResource("global.css")).toExternalForm());
-    scene.fillProperty().addListener(fillChangeListener);
+//    scene.fillProperty().addListener(fillChangeListener);
 
     display();
   }
@@ -61,6 +61,11 @@ public class DuoWindowSceneManager implements SceneManager {
   @Override
   public StackPane getRootPane() {
     return rootPane;
+  }
+
+  @Override
+  public Scene getScene() {
+    return scene;
   }
 
   @Override
@@ -83,12 +88,12 @@ public class DuoWindowSceneManager implements SceneManager {
   private void display() {
     Paint paint = scene.getFill();
 
-    if(paint instanceof Color && ((Color)paint).getOpacity() == 1.0) {
+//    if(paint instanceof Color && ((Color)paint).getOpacity() == 1.0) {
       displayOnStage(mainStage, transparentStage);
-    }
-    else {
-      displayOnStage(transparentStage, mainStage);
-    }
+//    }
+//    else {
+//      displayOnStage(transparentStage, mainStage);
+//    }
 
     for(Screen screen : Screen.getScreens()) {
       System.out.println(screen);

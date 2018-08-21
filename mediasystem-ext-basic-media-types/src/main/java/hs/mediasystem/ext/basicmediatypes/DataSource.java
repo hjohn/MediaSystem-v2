@@ -1,5 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes;
 
+import hs.mediasystem.ext.basicmediatypes.domain.Type;
+
 import java.util.HashMap;
 import java.util.Map;
 

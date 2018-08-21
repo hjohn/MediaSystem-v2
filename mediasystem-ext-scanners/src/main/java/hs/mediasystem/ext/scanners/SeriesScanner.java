@@ -1,12 +1,12 @@
 package hs.mediasystem.ext.scanners;
 
-import hs.mediasystem.ext.basicmediatypes.Attribute;
-import hs.mediasystem.ext.basicmediatypes.EpisodeStream;
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.Scanner;
-import hs.mediasystem.ext.basicmediatypes.SerieStream;
-import hs.mediasystem.ext.basicmediatypes.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.StreamPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.scan.Attribute;
+import hs.mediasystem.ext.basicmediatypes.scan.EpisodeStream;
+import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
+import hs.mediasystem.ext.basicmediatypes.scan.Scanner;
+import hs.mediasystem.ext.basicmediatypes.scan.SerieStream;
+import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
+import hs.mediasystem.ext.basicmediatypes.scan.StreamPrintProvider;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Hint;
 import hs.mediasystem.util.Attributes;
