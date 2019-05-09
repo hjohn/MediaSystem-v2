@@ -1,119 +1,99 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.StreamStateService;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
-import hs.mediasystem.framework.actions.Expose;
-import hs.mediasystem.mediamanager.LocalMediaManager;
+import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.mediamanager.MediaService;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.presentation.AbstractPresentation;
-import hs.mediasystem.runner.Dialogs;
+import hs.mediasystem.scanner.api.BasicStream;
 
 import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.List;
 import java.util.function.Predicate;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.Event;
 
-import javax.inject.Inject;
+import org.reactfx.value.Var;
 
-public class GridViewPresentation extends AbstractPresentation {
+public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPresentation {
+  private static final String SYSTEM = "MediaSystem:Library:Presentation";
 
-  @Expose(values = "availableSortOrders")
-  public final ObjectProperty<SortOrder<?>> sortOrder = objectProperty();
-  public final ObservableList<SortOrder<?>> availableSortOrders = FXCollections.observableArrayList();
+  public final Var<SortOrder<T>> sortOrder = Var.newSimpleVar(null);
+  public final ObservableList<SortOrder<T>> availableSortOrders = FXCollections.observableArrayList();
 
-  @Expose(values = "availableFilters")
-  public final ObjectProperty<Filter<?>> filter = objectProperty();
-  public final ObservableList<Filter<?>> availableFilters = FXCollections.observableArrayList();
+  public final Var<Filter<T>> filter = Var.newSimpleVar(null);
+  public final ObservableList<Filter<T>> availableFilters = FXCollections.observableArrayList();
 
-  @Expose
-  public final BooleanProperty includeViewed = booleanProperty(true);
+  public final Var<StateFilter> stateFilter = Var.newSimpleVar(StateFilter.ALL);
+  public final ObservableList<StateFilter> availableStateFilters = FXCollections.observableArrayList();
 
-  public final ObjectProperty<MediaItem<?>> selectedItem = objectProperty();
+  public final Var<MediaItem<?>> selectedItem = Var.newSimpleVar(null);
 
-  @Inject private StreamStateService streamStateService;
-  @Inject private LocalMediaManager localMediaManager;
+  private final MediaService mediaService;
 
-  @Expose
-  public void toggleWatchedState() {
-    MediaItem<?> mediaItem = selectedItem.get();
-
-    if(mediaItem != null && !mediaItem.getStreams().isEmpty()) {
-      StreamPrint streamPrint = mediaItem.getStreams().iterator().next().getStreamPrint();
-
-      // Update state
-      boolean watched = streamStateService.isWatched(streamPrint);
-      streamStateService.setWatched(streamPrint, !watched);
-
-      // Update MediaItem
-      mediaItem.watchedCount.set(!watched ? mediaItem.availableCount.get() : 0);
-    }
+  public enum StateFilter {
+    ALL, AVAILABLE, UNWATCHED
   }
 
-  private Boolean isWatched() {
-    MediaItem<?> mediaItem = selectedItem.get();
+  protected GridViewPresentation(SettingsStore settingsStore, MediaService mediaService, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
+    this.mediaService = mediaService;
+
+    this.availableSortOrders.setAll(sortOrders);
+    this.availableFilters.setAll(filters);
+    this.availableStateFilters.setAll(stateFilters);
+
+    String settingName = getClass().getName();
+
+    this.sortOrder.setValue(sortOrders.get(settingsStore.getIntSettingOrDefault(SYSTEM, settingName + ":sort-order", 0, 0, sortOrders.size() - 1)));
+    this.filter.setValue(filters.get(settingsStore.getIntSettingOrDefault(SYSTEM, settingName + ":filter", 0, 0, filters.size() - 1)));
+    this.stateFilter.setValue(stateFilters.get(settingsStore.getIntSettingOrDefault(SYSTEM, settingName + ":state-filter", 0, 0, stateFilters.size() - 1)));
+
+    this.sortOrder.addListener(obs -> settingsStore.storeIntSetting(SYSTEM, settingName + ":sort-order", sortOrders.indexOf(sortOrder.getValue())));
+    this.filter.addListener(obs -> settingsStore.storeIntSetting(SYSTEM, settingName + ":filter", availableFilters.indexOf(filter.getValue())));
+    this.stateFilter.addListener(obs -> settingsStore.storeIntSetting(SYSTEM, settingName + ":state-filter", availableStateFilters.indexOf(stateFilter.getValue())));
+  }
+
+  public BooleanProperty watchedProperty() {
+    MediaItem<?> mediaItem = selectedItem.getValue();
 
     if(mediaItem != null && !mediaItem.getStreams().isEmpty()) {
-      StreamPrint streamPrint = mediaItem.getStreams().iterator().next().getStreamPrint();
-
-      return streamStateService.isWatched(streamPrint);
+      return mediaItem.watched;
     }
 
     return null;  // Indicates no state possible as there is no stream
   }
 
-  @Expose
-  public void reidentify() {
-    MediaItem<?> mediaItem = selectedItem.get();
+  public Task<Void> reidentify(Event event) {
+    MediaItem<?> mediaItem = selectedItem.getValue();
+
+    event.consume();
 
     if(mediaItem != null && !mediaItem.getStreams().isEmpty()) {
-      localMediaManager.reidentify(mediaItem.getStreams().iterator().next());
-    }
-  }
+      return new Task<>() {
+        @Override
+        protected Void call() throws Exception {
+          for(BasicStream basicStream : mediaItem.getStreams()) {
+            mediaService.reidentify(basicStream.getId());
+          }
 
-  enum Option {
-    MARK_WATCHED,
-    MARK_UNWATCHED,
-    REIDENTIFY
-  }
+          return null;
+        }
+      };
 
-  @Expose
-  public void showContextMenu(Event event) {
-    // Note: map is sorted according to order of Option enum declaration
-    Map<Option, String> map = new EnumMap<>(Option.class);
-
-    Boolean isWatched = isWatched();
-
-    if(isWatched != null) {
-      if(isWatched) {
-        map.put(Option.MARK_UNWATCHED, "Mark Not Watched");
-      }
-      else {
-        map.put(Option.MARK_UNWATCHED, "Mark Watched");
-      }
+      // TODO after reidentify reload
+      // 1) Replace item in list (or reload entire thing)
+      // 2) Position may jump, depending on sorting
+      // 3) Remember, task method may be called async...
     }
 
-    map.put(Option.REIDENTIFY, "Reidentify");
-
-    Dialogs.show(event, map).ifPresent(option -> {
-      switch(option) {
-      case MARK_WATCHED:
-      case MARK_UNWATCHED:
-        toggleWatchedState();
-        break;
-      case REIDENTIFY:
-        reidentify();
-        break;
-      }
-    });
+    return null;
   }
 
-  public static class SortOrder<T> {
+  public static class SortOrder<T extends MediaDescriptor> {
     public final String resourceKey;
     public final Comparator<MediaItem<T>> comparator;
 
@@ -123,7 +103,7 @@ public class GridViewPresentation extends AbstractPresentation {
     }
   }
 
-  public static class Filter<T> {
+  public static class Filter<T extends MediaDescriptor> {
     public final String resourceKey;
     public final Predicate<MediaItem<T>> predicate;
 

@@ -12,7 +12,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.NumberExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -48,7 +47,6 @@ public class PlaybackInfoBorders extends StackPane {
   private final Label timeLabel;
 
   public PlaybackInfoBorders(PlayerBindings playerBindings) {
-    getStylesheets().add("playback-info-borders.css");
     getStyleClass().add("grid");
 
     positionLabel = new Label() {{
@@ -105,11 +103,11 @@ public class PlaybackInfoBorders extends StackPane {
     rightOSDPane.setUserData(createOSDTimeLine(rightOSDPane));
 
     final OSD volume = new OSD("Volume", playerBindings.volume, playerBindings.formattedVolume, 0.0, 100.0, 0.0, leftOSDPane);
-    final OSD position = new OSD("Position", playerBindings.position.multiply(100.0).divide(playerBindings.length), playerBindings.formattedPosition, 0.0, 100.0, 0.0, rightOSDPane);
+    final OSD position = new OSD("Position", playerBindings.position.map(v -> playerBindings.length.getValue() == 0 ? 0 : v * 100 / playerBindings.length.getValue()), playerBindings.formattedPosition, 0.0, 100.0, 0.0, rightOSDPane);
     final OSD rate = new OSD("Playback Speed", playerBindings.rate, playerBindings.formattedRate, 0.0, 4.0, 0.0, centerOSDPane);
-    final OSD audioDelay = new OSD("Audio Delay", playerBindings.audioDelay.divide(1000.0), playerBindings.formattedAudioDelay, -120.0, 120.0, 0.0, centerOSDPane);
-    final OSD subtitleDelay = new OSD("Subtitle Delay", playerBindings.subtitleDelay.divide(1000.0), playerBindings.formattedSubtitleDelay, -120.0, 120.0, 0.0, centerOSDPane);
-    final OSD brightness = new OSD("Brightness Adjustment", playerBindings.brightness.subtract(1.0).multiply(100.0), playerBindings.formattedBrightness, -100.0, 100.0, 0.0, centerOSDPane);
+    final OSD audioDelay = new OSD("Audio Delay", playerBindings.audioDelay.map(v -> v / 1000.0), playerBindings.formattedAudioDelay, -120.0, 120.0, 0.0, centerOSDPane);
+    final OSD subtitleDelay = new OSD("Subtitle Delay", playerBindings.subtitleDelay.map(v -> v / 1000.0), playerBindings.formattedSubtitleDelay, -120.0, 120.0, 0.0, centerOSDPane);
+    final OSD brightness = new OSD("Brightness Adjustment", playerBindings.brightness.map(v -> (v - 1.0) * 100), playerBindings.formattedBrightness, -100.0, 100.0, 0.0, centerOSDPane);
     final OSD audioTrack = new OSD("Audio Track", playerBindings.formattedAudioTrack, centerOSDPane);
     final OSD subtitle = new OSD("Subtitle", playerBindings.formattedSubtitle, centerOSDPane);
 
@@ -122,40 +120,40 @@ public class PlaybackInfoBorders extends StackPane {
       }
     });
 
-    playerBindings.volume.addListener(new FirstChangeFilter<>(new ChangeListener<Number>() {
+    playerBindings.volume.addListener(new ChangeListener<Number>() {
       @Override
       public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
         showOSD(volume);
       }
-    }));
+    });
 
-    playerBindings.rate.addListener(new FirstChangeFilter<>(new ChangeListener<Number>() {
+    playerBindings.rate.addListener(new ChangeListener<Number>() {
       @Override
       public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
         showOSD(rate);
       }
-    }));
+    });
 
-    playerBindings.audioDelay.addListener(new FirstChangeFilter<>(new ChangeListener<Number>() {
+    playerBindings.audioDelay.addListener(new ChangeListener<Number>() {
       @Override
       public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
         showOSD(audioDelay);
       }
-    }));
+    });
 
-    playerBindings.subtitleDelay.addListener(new FirstChangeFilter<>(new ChangeListener<Number>() {
+    playerBindings.subtitleDelay.addListener(new ChangeListener<Number>() {
       @Override
       public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
         showOSD(subtitleDelay);
       }
-    }));
+    });
 
-    playerBindings.brightness.addListener(new FirstChangeFilter<>(new ChangeListener<Number>() {
+    playerBindings.brightness.addListener(new ChangeListener<Number>() {
       @Override
       public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
         showOSD(brightness);
       }
-    }));
+    });
 
     playerBindings.audioTrack.addListener(new FirstChangeFilter<>(new ChangeListener<AudioTrack>() {
       @Override
@@ -193,7 +191,7 @@ public class PlaybackInfoBorders extends StackPane {
     private final Node node;
     private final StackPane location;
 
-    public OSD(String title, NumberExpression observableValue, StringExpression valueText, double min, double max, double origin, StackPane location) {
+    public OSD(String title, ObservableValue<? extends Number> observableValue, StringExpression valueText, double min, double max, double origin, StackPane location) {
       this.title = title;
       this.location = location;
       this.node = createOSDItem(title, min, max, origin, observableValue, valueText);
@@ -206,7 +204,7 @@ public class PlaybackInfoBorders extends StackPane {
     }
   }
 
-  private static Node createOSDItem(final String title, final double min, final double max, final double origin, final NumberExpression value, final StringExpression valueText) {
+  private static Node createOSDItem(final String title, final double min, final double max, final double origin, final ObservableValue<? extends Number> value, final StringExpression valueText) {
     return new HBox() {{
       setId(title);
       setFillHeight(false);

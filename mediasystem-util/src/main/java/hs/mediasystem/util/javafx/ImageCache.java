@@ -53,7 +53,6 @@ public class ImageCache {
     }
   }
 
-
   public static Image getClosestImage(ImageHandle handle, int w, int h) {
     String key = createKey(handle.getKey(), w, h, true);
 
@@ -98,13 +97,24 @@ public class ImageCache {
             image = new Image(new ByteArrayInputStream(data));
           }
           else {
-            image = new Image(new ByteArrayInputStream(data), w, h, true, true);
+            int[] s = computeImageSize(size.width, size.height, w, h);
+
+            image = new Image(new ByteArrayInputStream(data), s[0], s[1], false, true);
           }
         }
       }
 
       return image;
     });
+  }
+
+  public static int[] computeImageSize(int sourceWidth, int sourceHeight, int finalWidth, int finalHeight) {
+    float scale = Math.min((float) finalWidth / sourceWidth, (float) finalHeight / sourceHeight);
+
+    return new int[] {
+      Math.max(1, Math.round(sourceWidth * scale)),
+      Math.max(1, Math.round(sourceHeight * scale))
+    };
   }
 
   /**
@@ -136,6 +146,7 @@ public class ImageCache {
       }
 
       // Normal flow, create future if needed:
+      @SuppressWarnings("unchecked")
       WeakReference<CompletableFuture<Image>> futureImageRef = (WeakReference<CompletableFuture<Image>>)ref;
 
       futureImage = futureImageRef != null ? futureImageRef.get() : null;

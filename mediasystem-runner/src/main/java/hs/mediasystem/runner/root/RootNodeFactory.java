@@ -1,0 +1,346 @@
+package hs.mediasystem.runner.root;
+
+import hs.mediasystem.presentation.NodeFactory;
+import hs.mediasystem.presentation.ViewPort;
+import hs.mediasystem.presentation.ViewPortFactory;
+import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.runner.util.SceneManager;
+import hs.mediasystem.util.bg.BackgroundTaskRegistry;
+import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
+import hs.mediasystem.util.javafx.SpecialEffects;
+import hs.mediasystem.util.javafx.control.Containers;
+import hs.mediasystem.util.javafx.control.GridPane;
+import hs.mediasystem.util.javafx.control.GridPaneUtil;
+import hs.mediasystem.util.javafx.control.Labels;
+
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.util.Duration;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
+public class RootNodeFactory implements NodeFactory<RootPresentation> {
+  @Inject private SceneManager sceneManager;
+  @Inject private ViewPortFactory viewPortFactory;
+
+  private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM);
+  private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG);
+
+  @Override
+  public Node create(RootPresentation presentation) {
+    Node viewPort = createViewPort(presentation);
+
+    StringProperty time = new SimpleStringProperty();
+    StringProperty date = new SimpleStringProperty();
+    VBox vbox = Containers.vbox("clock-box", Labels.create("clock", time), Labels.create("date", date));
+
+    Timeline timeline = new Timeline(5,
+      new KeyFrame(Duration.seconds(0), e -> {
+        ZonedDateTime now = ZonedDateTime.now();
+
+        time.set(now.format(TIME_FORMATTER));
+        date.set(now.format(DATE_FORMATTER));
+      }),
+      new KeyFrame(Duration.seconds(0.2))
+    );
+
+    timeline.setCycleCount(Timeline.INDEFINITE);
+    timeline.play();
+
+    vbox.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+
+    StackPane clockPane = new StackPane(vbox);
+
+    clockPane.visibleProperty().bind(presentation.clockVisible);
+    clockPane.getStyleClass().add("clock-pane");
+    clockPane.getStylesheets().add(LessLoader.compile(getClass().getResource("clock-pane.less")).toExternalForm());
+
+    StackPane logoPane = new StackPane(createLogo());
+
+    logoPane.visibleProperty().bind(presentation.clockVisible);
+    logoPane.getStyleClass().add("logo-pane");
+    logoPane.getStylesheets().add(LessLoader.compile(getClass().getResource("logo-pane.less")).toExternalForm());
+
+/*
+    Label fpsLabel = new Label();
+
+    StackPane fpsPane = new StackPane(fpsLabel);
+
+    fpsPane.getStylesheets().add(LessLoader.compile(getClass().getResource("fps-pane.less")).toExternalForm());
+    fpsPane.getStyleClass().add("fps-pane");
+
+    AnimationTimer frameRateMeter = new AnimationTimer() {
+      private final long[] frameTimes = new long[100];
+      private int frameTimeIndex = 0;
+      private boolean arrayFilled = false;
+
+      @Override
+      public void handle(long now) {
+        long oldFrameTime = frameTimes[frameTimeIndex];
+
+        frameTimes[frameTimeIndex] = now;
+        frameTimeIndex = (frameTimeIndex + 1) % frameTimes.length;
+
+        if(frameTimeIndex == 0) {
+          arrayFilled = true;
+        }
+
+        if(arrayFilled) {
+          long elapsedNanos = now - oldFrameTime;
+          long elapsedNanosPerFrame = elapsedNanos / frameTimes.length;
+          double frameRate = 1_000_000_000.0 / elapsedNanosPerFrame;
+          double min = Double.MAX_VALUE;
+          double max = 0;
+
+          for(int i = 0; i < frameTimes.length - 1; i++) {
+            long d = frameTimes[(i + frameTimeIndex + 1) % frameTimes.length] - frameTimes[(i + frameTimeIndex) % frameTimes.length];
+
+            min = Math.min(min, d);
+            max = Math.max(max, d);
+          }
+
+          fpsLabel.setText(String.format(" %.1f/%.1f ms - %.1f ", min / 1000000.0, max / 1000000.0, frameRate));
+        }
+      }
+    };
+
+    frameRateMeter.start();
+*/
+    return new StackPane(viewPort, logoPane, createProgressPane(presentation), clockPane); //, fpsPane);
+  }
+
+  public StackPane createProgressPane(RootPresentation presentation) {
+    GridPane gp = GridPaneUtil.create(new double[] {20, 20, 25, 15, 20}, new double[] {100});
+
+    VBox vbox = new VBox();
+
+    vbox.getStyleClass().add("vbox");
+
+    gp.add(vbox, 3, 0);
+
+    StackPane pane = new StackPane(gp);
+    BooleanProperty busy = new SimpleBooleanProperty();
+
+    /*
+    Timeline timeline2 = new Timeline(5,
+      new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
+        private long busyTime;
+        private long idleTime;
+        private long progressStartTask;
+        private long startTask;
+
+        @Override
+        public void handle(ActionEvent e) {
+          long[] counts = LocalMediaManager.getTaskCounts();
+          long completedCount = counts[0];
+          long totalCount = counts[1];
+          long currentTimeMillis = System.currentTimeMillis();
+
+          if(completedCount != totalCount && busyTime == 0) {
+            busyTime = currentTimeMillis;
+            idleTime = 0;
+            startTask = completedCount;
+          }
+          if(completedCount == totalCount && idleTime == 0) {
+            idleTime = currentTimeMillis;
+            busyTime = 0;
+          }
+          if(busyTime != 0 && !busy.get() && currentTimeMillis - busyTime > 10000) {
+            busy.set(true);
+            progressStartTask = startTask;
+          }
+          if(idleTime != 0 && busy.get() && currentTimeMillis - idleTime > 10000) {
+            busy.set(false);
+          }
+          if(busy.get()) {
+            long total = totalCount - progressStartTask;
+            long diff = totalCount - completedCount;
+
+            progressTextProperty.set(String.format("%d of %d tasks left...", diff, total));
+
+            pb.setProgress((total - diff) / (double)total);
+          }
+        }
+      }),
+      new KeyFrame(Duration.seconds(0.2))
+    );
+*/
+
+    Timeline timeline = new Timeline(5,
+      new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
+        private final Map<Workload, WorkloadProperties> knownWorkloads = new HashMap<>();
+
+        class WorkloadProperties {
+          final Workload workload;
+          final long SETTLE_TIME = 5000;
+
+          StringProperty progressTextProperty = new SimpleStringProperty();
+          DoubleProperty progressProperty = new SimpleDoubleProperty();
+          ProgressBar progressBar = new ProgressBar();
+          Label label = Labels.create("progress-text", progressTextProperty);
+          long firstSeen = System.currentTimeMillis();
+          long lastSeen = System.currentTimeMillis();
+          boolean displayed;
+
+          WorkloadProperties(Workload workload) {
+            this.workload = workload;
+            progressBar.setMaxWidth(Double.MAX_VALUE);
+            progressBar.progressProperty().bind(progressProperty);
+          }
+
+          void update() {
+            progressTextProperty.set(workload.getDescription() + " (" + workload.getCompleted() + " of " + workload.getTotal() + ")");
+            progressProperty.set(workload.getCompleted() / (double)workload.getTotal());
+
+            if(progressProperty.get() < 1.0) {
+              lastSeen = System.currentTimeMillis();
+            }
+          }
+
+          void display() {
+            vbox.getChildren().addAll(progressBar, label);
+            displayed = true;
+          }
+
+          void dispose() {
+            if(displayed) {
+              vbox.getChildren().removeAll(progressBar, label);
+              displayed = false;
+            }
+
+            knownWorkloads.remove(workload);
+          }
+
+          boolean shouldDisplay() {
+            return System.currentTimeMillis() - firstSeen > SETTLE_TIME && isActive() && !displayed;
+          }
+
+          boolean isNotActive() {
+            return !isActive();
+          }
+
+          boolean isActive() {
+            return (displayed && System.currentTimeMillis() - lastSeen < SETTLE_TIME) || progressProperty.get() < 1.0;
+          }
+        }
+
+        @Override
+        public void handle(ActionEvent event) {
+          List<Workload> activeWorkloads = BackgroundTaskRegistry.getActiveWorkloads();
+
+          // Add any new workloads:
+          activeWorkloads.stream()
+            .filter(w -> !knownWorkloads.containsKey(w))
+            .forEach(w -> knownWorkloads.put(w, new WorkloadProperties(w)));
+
+          // Create UI for workloads that have been active for SETTLE_TIME seconds:
+          knownWorkloads.values().stream()
+            .filter(WorkloadProperties::shouldDisplay)
+            .forEach(WorkloadProperties::display);
+
+          // Delete workloads that are inactive:
+          knownWorkloads.values().stream()
+            .filter(WorkloadProperties::isNotActive)
+            .collect(Collectors.toList()).stream()
+            .forEach(WorkloadProperties::dispose);
+
+          // Update workloads:
+          knownWorkloads.values().stream()
+            .forEach(WorkloadProperties::update);
+
+          busy.set(!vbox.getChildren().isEmpty());
+        }
+      }),
+      new KeyFrame(Duration.seconds(0.2))
+    );
+
+    timeline.setCycleCount(Timeline.INDEFINITE);
+    timeline.play();
+
+    pane.visibleProperty().bind(presentation.clockVisible.and(busy));
+    pane.getStyleClass().add("progress-pane");
+    pane.getStylesheets().add(LessLoader.compile(getClass().getResource("progress-pane.less")).toExternalForm());
+
+    return pane;
+  }
+
+  private static Node createLogo() {
+    return new HBox() {{
+      getStyleClass().addAll("program-name", "element");
+      getChildren().add(new Label("Media") {{
+        getStyleClass().add("left");
+      }});
+      getChildren().add(new Label("S") {{
+        getStyleClass().add("center");
+      }});
+      getChildren().add(new Label("ystem") {{
+        getStyleClass().add("right");
+      }});
+      setEffect(SpecialEffects.createNeonEffect(12));
+      setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+    }};
+  }
+
+  private boolean backgroundNodeActive = false;
+
+  private Node createViewPort(RootPresentation presentation) {
+    ViewPort viewPort = viewPortFactory.create(presentation, n -> {
+
+      /*
+       * Special functionality for a background node:
+       */
+
+      Object backgroundNode = n.getProperties().get("background");
+
+      if(backgroundNode != null) {
+        backgroundNodeActive = true;
+
+        sceneManager.setPlayerRoot(backgroundNode);
+        sceneManager.fillProperty().set(Color.TRANSPARENT);
+
+        presentation.clockVisible.set(false);
+      }
+      else {
+        backgroundNodeActive = false;
+
+        sceneManager.fillProperty().set(Color.BLACK);
+        presentation.clockVisible.set(true);
+
+        // dispose player root instantly closes the AWT pane, causing a flash when fill isn't BLACK yet, delay it therefore:
+        new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+          if(!backgroundNodeActive) {
+            sceneManager.disposePlayerRoot();
+          }
+        })).play();
+      }
+    });
+
+    return viewPort;
+  }
+}

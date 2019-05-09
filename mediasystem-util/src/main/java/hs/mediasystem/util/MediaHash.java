@@ -11,31 +11,58 @@ import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import javax.inject.Singleton;
+
+@Singleton
 public class MediaHash {
 
-  public static byte[] getMediaHash(Path path) {
-    try {
-      return loadMediaHash(path);
+  public static void main(String[] args) {
+    for(int i = 0; i < 1000000; i++) {
+      if(isPowerOf(3, i) || isPowerOf(5, i) || isPowerOf(7, i)) {
+        //System.out.println(i * 64.0 / 1024);
+      }
     }
-    catch(IOException e) {
-      System.out.println("[WARN] MediaHash.getMediaHash() - exception while computing hash for '" + path + "': " + e);
-      return null;
+
+    int p = 0;
+    int t = 64;
+    int a = 64;
+    for(int i = 0; i < 200; i++) {
+      System.out.println(p);
+      p += t;
+      t += a;
+      a += 64;
     }
+  }
+
+  private static boolean isPowerOf(int power, int input) {
+    if(input == 0) {
+      return false;
+    }
+
+    while(input % power == 0) {
+      input /= power;
+    }
+
+    return input == 1;
   }
 
   /**
    * Computes SHA-256 hash on several blocks of 64 kB of the input file.  The blocks are chosen starting
-   * with the block at offset 0 and then subsequently every block that is a power of 4 starting with the
-   * block at offset 262144, followed by 1 MB, 4 MB, 16 MB, 64 MB, etc..
+   * with the block at offset 0 kB.  Subsequent blocks are calculated using a step size (64 kB initially),
+   * an increase of the step size by step increment (64 kB initially) and step increment increased with
+   * 64 kB each round.<p>
+   *
+   * This gives the first few blocks as:<p>
+   *
+   * 0, 64, 192, 448, 896, 1600, 2624, 4032, 5888, 8256, 11200, etc.
    *
    * @param uri a file to hash
    * @return a byte array containing the hash
    * @throws IOException if a read error occurs
    */
-  public static byte[] loadMediaHash(Path path) throws IOException {
+  public byte[] computeFileHash(Path path) throws IOException {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      long position = 65536;
 
       try(SeekableByteChannel channel = Files.newByteChannel(path)) {
         ByteBuffer buf = ByteBuffer.allocate(65536);
@@ -45,7 +72,13 @@ public class MediaHash {
         digest.update(buf);
         buf.clear();
 
+        long position = 0;       // in kB
+        long stepSize = 64;      // initial step size
+        long stepIncrement = 64; // increment of step size (which in turn is incremented by 64 each round)
+
         for(;;) {
+          channel.position(position * 1024);
+
           int bytesRead = readFully(channel, buf);
           buf.flip();
           digest.update(buf);
@@ -55,32 +88,45 @@ public class MediaHash {
           }
 
           buf.clear();
-          channel.position(position);
-          position <<= 2;
+
+          position += stepSize;
+          stepSize += stepIncrement;
+          stepIncrement += 64;
         }
       }
 
       return digest.digest();
     }
     catch(NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 
-  public static byte[] createHash(Path path) {
+  /**
+   * Computes SHA-256 hash on all the names in the given directory.
+   *
+   * @param path a directory to hash
+   * @return a byte array containing the hash
+   * @throws IOException if a read error occurs
+   */
+  public byte[] computeDirectoryHash(Path path) throws IOException {
+    if(!Files.isDirectory(path)) {
+      throw new IllegalArgumentException("path must be a directory: " + path);
+    }
+
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-      digest.update(path.toUri().toString().getBytes(StandardCharsets.UTF_8));
+      Files.list(path).forEach(p -> digest.update(path.toUri().toString().getBytes(StandardCharsets.UTF_8)));
 
       return digest.digest();
     }
     catch(NoSuchAlgorithmException e) {
-      throw new RuntimeException(e);
+      throw new IllegalStateException(e);
     }
   }
 
-  public static long loadOpenSubtitlesHash(Path path) throws IOException {
+  public long loadOpenSubtitlesHash(Path path) throws IOException {
     long fileLength = Files.size(path);
     long checksum = fileLength;
     int chunkSize = (int)Math.min(65536, fileLength);
@@ -103,7 +149,7 @@ public class MediaHash {
     return checksum;
   }
 
-  public static long getLongChecksum(ByteBuffer buf) {
+  private static long getLongChecksum(ByteBuffer buf) {
     LongBuffer longBuffer = buf.order(ByteOrder.LITTLE_ENDIAN).asLongBuffer();
     long checksum = 0;
 
@@ -114,7 +160,7 @@ public class MediaHash {
     return checksum;
   }
 
-  public static int readFully(SeekableByteChannel channel, ByteBuffer buf) throws IOException {
+  private static int readFully(SeekableByteChannel channel, ByteBuffer buf) throws IOException {
     int totalBytesRead = 0;
 
     while(buf.hasRemaining()) {

@@ -1,9 +1,13 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
+import hs.mediasystem.ext.basicmediatypes.Identification;
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.util.Tuple.Tuple3;
+
+import java.util.Set;
 
 public interface LocalMediaListener {
-  void mediaAdded(MediaStream<?> mediaStream);
-  void mediaUpdated(MediaStream<?> mediaStream);
-  void mediaRemoved(MediaStream<?> mediaStream);
+  <D extends MediaDescriptor> void mediaUpdated(BasicStream stream, Set<Tuple3<Identifier, Identification, D>> records);
 }

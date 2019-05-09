@@ -1,30 +1,27 @@
 package hs.mediasystem.plugin.library.scene.serie;
 
-import hs.mediasystem.framework.actions.Expose;
 import hs.mediasystem.presentation.Presentation;
 
 public class EpisodePresentation implements Presentation {
-  private final ProductionPresentation.Model model;
+  private final ProductionPresentation presentation;
 
-  public EpisodePresentation(ProductionPresentation.Model model) {
-    this.model = model;
+  public EpisodePresentation(ProductionPresentation presentation) {
+    this.presentation = presentation;
   }
 
-  @Expose
   public void previous() {
-    int index = model.episodeItems.indexOf(model.episodeItem.get());
+    int index = presentation.episodeItems.indexOf(presentation.episodeItem.get());
 
     if(index > 0) {
-      model.episodeItem.set(model.episodeItems.get(index - 1));
+      presentation.episodeItem.set(presentation.episodeItems.get(index - 1));
     }
   }
 
-  @Expose
   public void next() {
-    int index = model.episodeItems.indexOf(model.episodeItem.get());
+    int index = presentation.episodeItems.indexOf(presentation.episodeItem.get());
 
-    if(index < model.episodeItems.size() - 1) {
-      model.episodeItem.set(model.episodeItems.get(index + 1));
+    if(index < presentation.episodeItems.size() - 1) {
+      presentation.episodeItem.set(presentation.episodeItems.get(index + 1));
     }
   }
 }

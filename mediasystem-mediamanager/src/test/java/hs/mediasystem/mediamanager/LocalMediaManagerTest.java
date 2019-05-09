@@ -5,25 +5,25 @@ import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.Type;
-import hs.mediasystem.ext.basicmediatypes.scan.AbstractMediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.scan.AbstractMediaStream;
-import hs.mediasystem.ext.basicmediatypes.scan.Attribute;
-import hs.mediasystem.ext.basicmediatypes.scan.MediaRecord;
-import hs.mediasystem.ext.basicmediatypes.scan.MovieStream;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService.Result;
+import hs.mediasystem.scanner.api.Attribute;
+import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
+import hs.mediasystem.util.Tuple;
 
+import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,10 +41,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class LocalMediaManagerTest {
-  private static final StreamPrint STREAM_PRINT = new StreamPrint(new StringURI("file://test"), 1024L, 0L, new byte[] {1, 2, 3}, 12345L);
+  private static final StreamPrint STREAM_PRINT = new StreamPrint(new StreamID(999), 1024L, 0L, new byte[] {1, 2, 3});
+  private static final StreamTags STREAM_TAGS = new StreamTags(Set.of("A", "B"));
 
-  private static final Type MOVIE = Type.of("MOVIE");
-  private static final Type EPISODE = Type.of("EPISODE");
+  private static final MediaType MOVIE = MediaType.of("MOVIE");
+  private static final MediaType SERIE = MediaType.of("SERIE");
+  private static final MediaType EPISODE = MediaType.of("EPISODE");
   private static final DataSource DATA_SOURCE_1 = DataSource.instance(MOVIE, "D1");
   private static final DataSource DATA_SOURCE_2 = DataSource.instance(MOVIE, "D2");
   private static final DataSource DATA_SOURCE_3 = DataSource.instance(EPISODE, "D3");
@@ -52,14 +54,22 @@ public class LocalMediaManagerTest {
   private static final DataSource DATA_SOURCE_5 = DataSource.instance(MOVIE, "D5");
   private static final DataSource DATA_SOURCE_6 = DataSource.instance(MOVIE, "D6");
 
-  @Mock private IdentificationService idService1;
+  private final StreamPrint streamPrint1 = new StreamPrint(new StreamID(201), 1024L, 0L, new byte[] {1, 2, 3});
+  private final StreamPrint streamPrint2 = new StreamPrint(new StreamID(201), 1024L, 0L, new byte[] {1, 2, 3});
+  private final StreamPrint streamPrint3 = new StreamPrint(new StreamID(202), 2048L, 0L, new byte[] {3, 4, 5});
+
+  @Mock private IdentificationService idServiceForDS1;
+  @Mock private IdentificationService idServiceForDS2;
   @Mock private IdentificationService idService2;
   @Mock private IdentificationService idService3;
-  @Mock private IdentificationService idService4;
   @Mock private IdentificationService idService5;
-  @Mock private QueryService<EpisodeDescriptor> queryService1;
-  @Mock private QueryService<Movie> queryService2;
-  @Mock private QueryService<Movie> queryService3;
+  @Mock private IdentificationService serieIdService;
+  @Mock private IdentificationService episodeIdService;
+  @Mock private QueryService<Episode> queryService1;
+  @Mock private QueryService<Movie> queryServiceForDS1;
+  @Mock private QueryService<Movie> queryServiceForDS6;
+
+  private StreamStore streamStore = new StreamStore();
 
   private LocalMediaManager db;
 
@@ -67,218 +77,236 @@ public class LocalMediaManagerTest {
   public void before() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    when(idService1.getDataSource()).thenReturn(DATA_SOURCE_2);
+    when(idServiceForDS1.getDataSource()).thenReturn(DATA_SOURCE_1);
+    when(idServiceForDS2.getDataSource()).thenReturn(DATA_SOURCE_2);
     when(idService2.getDataSource()).thenReturn(DATA_SOURCE_3);
     when(idService3.getDataSource()).thenReturn(DATA_SOURCE_4);
-    when(idService4.getDataSource()).thenReturn(DATA_SOURCE_1);
     when(idService5.getDataSource()).thenReturn(DATA_SOURCE_6);
+    when(serieIdService.getDataSource()).thenReturn(DataSource.instance(SERIE, "TMDB"));
+    when(episodeIdService.getDataSource()).thenReturn(DataSource.instance(EPISODE, "TMDB"));
+
     when(queryService1.getDataSource()).thenReturn(DATA_SOURCE_3);
-    when(queryService2.getDataSource()).thenReturn(DATA_SOURCE_1);
-    when(queryService3.getDataSource()).thenReturn(DATA_SOURCE_6);
+    when(queryServiceForDS1.getDataSource()).thenReturn(DATA_SOURCE_1);
+    when(queryServiceForDS6.getDataSource()).thenReturn(DATA_SOURCE_6);
 
     Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
 
-    injector.registerInstance(idService1);
+    injector.registerInstance(idServiceForDS2);
     injector.registerInstance(idService2);
     injector.registerInstance(idService3);
-    injector.registerInstance(idService4);
+    injector.registerInstance(idServiceForDS1);
     injector.registerInstance(idService5);
+    injector.registerInstance(serieIdService);
+    injector.registerInstance(episodeIdService);
     injector.registerInstance(queryService1);
-    injector.registerInstance(queryService2);
-    injector.registerInstance(queryService3);
+    injector.registerInstance(queryServiceForDS1);
+    injector.registerInstance(queryServiceForDS6);
+    injector.registerInstance(streamStore);
 
     this.db = injector.getInstance(LocalMediaManager.class);
   }
 
   @Test
-  public void shouldAddNewMediaAndIdentifyOnly() throws InterruptedException {
-    Identifier identifier = new Identifier(DATA_SOURCE_1, "A1");
+  public void shouldAddNewMediaAndIdentifyOnly() {
+    ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_1, "A1");
     Identifier identifier2 = new Identifier(DATA_SOURCE_2, "B1");
     Identifier identifier3 = new Identifier(DATA_SOURCE_5, "IMDB");
 
     Attributes attributes = Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015");
-    MovieStream stream = new MovieStream(STREAM_PRINT, attributes, new HashMap<Identifier, MediaRecord<Movie>>() {{
-      put(identifier, new MediaRecord<>(new Identification(identifier, MatchType.ID, 1.0), Movies.create()));
-      put(identifier3, new MediaRecord<>(new Identification(identifier3, MatchType.ID, 1.0), null));
-    }});
+    BasicStream stream = createMovie("file://parent/test", attributes);
 
-    when(idService1.identify(eq(attributes))).thenReturn(new Identification(identifier2, MatchType.ID, 1.0));
+    when(idServiceForDS2.identify(eq(stream)))
+      .thenReturn(Tuple.of(identifier2, new Identification(MatchType.ID, 1.0, Instant.now())));
 
-    db.add(stream);
+    db.put(stream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Movies.create(identifier)),
+      Tuple.of(identifier3, new Identification(MatchType.ID, 1.0, Instant.now()), null)
+    ));
 
-    Thread.sleep(100);
+    db.incrementallyUpdateStream(stream.getId());
 
-    assertTrue(stream.getMediaRecords().containsKey(identifier2));
-    assertTrue(stream.getMediaRecords().get(identifier2).getMediaDescriptor() == null);
+    assertTrue(streamStore.findIdentifiers(stream.getId()).contains(identifier2));
+    assertTrue(streamStore.findDescriptorsAndIdentifications(stream.getId()).get(identifier2).b == null);
 
-    verify(queryService2, never()).query(any(Identifier.class));  // This Query result was provided, so should not be queried
+    verify(queryServiceForDS1, never()).query(any(Identifier.class));  // This Query result was provided, so should not be queried
   }
 
   @Test
-  public void shouldAddNewMediaAndIdentifyAndQuery() throws InterruptedException {
-    Identifier identifier = new Identifier(DATA_SOURCE_4, "A1");
-    Identifier identifier2 = new Identifier(DATA_SOURCE_3, "B1");
-    EpisodeDescriptor episodeDescriptor = new EpisodeDescriptor();
+  public void shouldAddNewMediaAndIdentifyAndQuery() {
+    ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_4, "A1");
+    ProductionIdentifier identifier2 = new ProductionIdentifier(DATA_SOURCE_3, "B1");
+    Episode episode1 = Episodes.create(identifier);
+    Episode episode2 = Episodes.create(identifier2);
 
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
-    EpisodeStream stream = new EpisodeStream(EPISODE, STREAM_PRINT, attributes, new HashMap<Identifier, MediaRecord<EpisodeDescriptor>>() {{
-      put(identifier, new MediaRecord<>(new Identification(identifier, MatchType.ID, 1.0), new EpisodeDescriptor()));
-    }});
+    BasicStream stream = createEpisode("file://parent/test", attributes);
 
-    Identification identification = new Identification(identifier2, MatchType.HASH, 0.99);
+    Identification identification = new Identification(MatchType.HASH, 0.99, Instant.now());
 
-    when(idService2.identify(eq(attributes))).thenReturn(identification);
+    when(idService2.identify(eq(stream)))
+      .thenReturn(Tuple.of(identifier2, identification));
 
-    when(queryService1.query(identifier2)).thenReturn(Result.of(episodeDescriptor));
+    when(queryService1.query(identifier2)).thenReturn(Result.of(episode2));
 
-    db.add(stream);
+    db.put(stream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), episode1)
+    ));
 
-    Thread.sleep(100);
+    db.incrementallyUpdateStream(stream.getId());
 
-    assertTrue(stream.getMediaRecords().containsKey(identifier2));
-    assertEquals(new MediaRecord<>(identification, episodeDescriptor), stream.getMediaRecords().get(identifier2));
+    assertTrue(streamStore.findIdentifiers(stream.getId()).contains(identifier2));
+    assertEquals(Tuple.of(identification, episode2), streamStore.findDescriptorsAndIdentifications(stream.getId()).get(identifier2));
 
-    verify(idService3, never()).identify(any(Attributes.class));  // This Identifier provided, so should not be identified
+    verify(idService3, never()).identify(any(BasicStream.class));  // This Identifier provided, so should not be identified
   }
 
   @Test
   public void shouldReplaceDuplicate() {
-    StreamPrint streamPrint1 = new StreamPrint(new StringURI("file://test"), 1024L, 0L, new byte[] {1, 2, 3}, 12345L);
-    StreamPrint streamPrint2 = new StreamPrint(new StringURI("file://moved/test"), 1024L, 0L, new byte[] {1, 2, 3}, 12345L);
-    StreamPrint streamPrint3 = new StreamPrint(new StringURI("file://test"), 2048L, 0L, new byte[] {3, 4, 5}, 12345L);
+    ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_4, "A1");
 
-    Identifier identifier = new Identifier(DATA_SOURCE_4, "A1");
-
-    EpisodeStream stream = new EpisodeStream(EPISODE, streamPrint1, Attributes.of(Attribute.TITLE, "Title"), new HashMap<Identifier, MediaRecord<EpisodeDescriptor>>() {{
-      put(identifier, new MediaRecord<>(new Identification(identifier, MatchType.ID, 1.0), new EpisodeDescriptor()));
-    }});
-    EpisodeStream similarStream = new EpisodeStream(EPISODE, streamPrint2, Attributes.of(Attribute.TITLE, "Title"), new HashMap<Identifier, MediaRecord<EpisodeDescriptor>>() {{
-      put(identifier, new MediaRecord<>(new Identification(identifier, MatchType.ID, 1.0), new EpisodeDescriptor()));
-    }});
-    EpisodeStream differentStream = new EpisodeStream(EPISODE, streamPrint3, Attributes.of(Attribute.TITLE, "Title"), new HashMap<Identifier, MediaRecord<EpisodeDescriptor>>() {{
-      put(identifier, new MediaRecord<>(new Identification(identifier, MatchType.ID, 1.0), new EpisodeDescriptor()));
-    }});
+    BasicStream stream = createEpisode("file://test", streamPrint1, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream similarStream = createEpisode("file://moved/test", streamPrint2, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream differentStream = createEpisode("file://test", streamPrint3, Attributes.of(Attribute.TITLE, "Title"));
 
     // Add the stream
-    db.add(stream);
+    db.put(stream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
+    ));
 
     // Should have 1 item
-    assertEquals(1, db.findAllByType(EPISODE).size());
+    assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Add same stream
-    db.add(stream);
+    db.put(stream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
+    ));
 
     // Should still have 1 item
-    assertEquals(1, db.findAllByType(EPISODE).size());
+    assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Add similar stream
-    db.add(similarStream);
+    db.put(similarStream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
+    ));
 
     // Should still have 1 item
-    assertEquals(1, db.findAllByType(EPISODE).size());
+    assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Add really different stream
-    db.add(differentStream);
+    db.put(differentStream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
+    ));
 
     // Should have 2 item
-    assertEquals(2, db.findAllByType(EPISODE).size());
+    assertEquals(2, streamStore.findStreams(EPISODE).size());
   }
 
   @Test
   public void shouldRemoveMediaByStreamPrintIdentifier() {
-    StreamPrint streamPrint1 = new StreamPrint(new StringURI("file://test"), 1024L, 0L, new byte[] {1, 2, 3}, 12345L);
-    StreamPrint streamPrint2 = new StreamPrint(new StringURI("file://moved/test"), 1024L, 0L, new byte[] {1, 2, 3}, 12345L);
+    StreamPrint streamPrint1 = new StreamPrint(new StreamID(101), 1024L, 0L, new byte[] {1, 2, 3});
+    StreamPrint streamPrint2 = new StreamPrint(new StreamID(101), 1024L, 0L, new byte[] {1, 2, 3});
 
-    Identifier identifier = new Identifier(DATA_SOURCE_4, "A1");
+    ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_4, "A1");
 
-    EpisodeStream stream = new EpisodeStream(EPISODE, streamPrint1, Attributes.of(Attribute.TITLE, "Title"), new HashMap<Identifier, MediaRecord<EpisodeDescriptor>>() {{
-      put(identifier, new MediaRecord<>(new Identification(identifier, MatchType.ID, 1.0), new EpisodeDescriptor()));
-    }});
-    EpisodeStream similarStream = new EpisodeStream(EPISODE, streamPrint2, Attributes.of(Attribute.TITLE, "Title"), new HashMap<Identifier, MediaRecord<EpisodeDescriptor>>() {{
-      put(identifier, new MediaRecord<>(new Identification(identifier, MatchType.ID, 1.0), new EpisodeDescriptor()));
-    }});
+    BasicStream stream = createEpisode("file://test", streamPrint1, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream similarStream = createEpisode("file://moved/test", streamPrint2, Attributes.of(Attribute.TITLE, "Title"));
 
     // Add the stream
-    db.add(stream);
+    db.put(stream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
+    ));
+
+    assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Here the stream is removed, with the exact same input
-    assertTrue(db.remove(stream));
+    db.remove(stream);
+
+    assertEquals(0, streamStore.findStreams(EPISODE).size());
 
     // Re-add it again
-    db.add(stream);
+    db.put(stream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
+    ));
+
+    assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Here the stream is removed, the fact that the StreamPrint differs in URL should have no effect.
-    assertTrue(db.remove(similarStream));
+    db.remove(similarStream);
+
+    assertEquals(0, streamStore.findStreams(EPISODE).size());
   }
 
   @Test
   public void reidentifyShouldCreateIdentificationWithoutMatchingQueryService() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier = new Identifier(DATA_SOURCE_2, "12345");
-    Identification identification = new Identification(identifier, MatchType.ID, 1.0);
+    Identification identification = new Identification(MatchType.ID, 1.0, Instant.now());
+    BasicStream stream = createMovie("file://parent/test", attributes);
 
-    when(idService1.identify(eq(attributes))).thenReturn(identification);
+    when(idServiceForDS2.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
 
-    MovieStream mediaStream = new MovieStream(STREAM_PRINT, attributes, Collections.emptyMap());
+    db.put(stream, STREAM_TAGS, Set.of());
 
-    List<Exceptional<MediaRecord<Movie>>> results = db.reidentify(mediaStream);
+    MediaIdentification mi = db.reidentifyStream(stream.getId());
 
-    assertEquals(3, results.size());
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService4))));
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService5))));
-    assertTrue(results.contains(Exceptional.of(new MediaRecord<Movie>(identification, null))));
+    assertEquals(3, mi.getResults().size());
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS1))));
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idService5))));
+    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier, identification, null))));
   }
 
   @Test
   public void reidentifyShouldCreateIdentificationAndDescriptorAndRecursivelyAnotherDescriptor() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
-    Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
-    Identifier identifier2 = new Identifier(DATA_SOURCE_6, "abcdef");
-    Identification identification = new Identification(identifier, MatchType.ID, 1.0);
-    Identification identification2 = new Identification(identifier2, MatchType.ID, 1.0);
-    Movie movie1 = Movies.create();
-    Movie movie2 = Movies.create();
+    ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_1, "12345");
+    ProductionIdentifier identifier2 = new ProductionIdentifier(DATA_SOURCE_6, "abcdef");
+    Identification identification = new Identification(MatchType.ID, 1.0, Instant.now());
+    Identification identification2 = new Identification(MatchType.ID, 1.0, Instant.now());
+    Movie movie1 = Movies.create(identifier);
+    Movie movie2 = Movies.create(identifier2);
 
-    when(idService4.identify(eq(attributes))).thenReturn(identification);
-    when(queryService2.query(identifier)).thenReturn(QueryService.Result.of(movie1, Set.of(identification2, identification)));  // Also returns original identification which should be skipped
-    when(queryService3.query(identifier2)).thenReturn(QueryService.Result.of(movie2, Set.of(identification)));  // Returns original identification which should be skipped
+    BasicStream stream = createMovie("file://parent/test", attributes);
 
-    MovieStream mediaStream = new MovieStream(STREAM_PRINT, attributes, Collections.emptyMap());
+    when(idServiceForDS1.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
+    when(queryServiceForDS1.query(identifier)).thenReturn(QueryService.Result.of(movie1, Map.of(identifier2, identification2, identifier, identification)));  // Also returns original identification which should be skipped
+    when(queryServiceForDS6.query(identifier2)).thenReturn(QueryService.Result.of(movie2, Map.of(identifier, identification)));  // Returns original identification which should be skipped
 
-    List<Exceptional<MediaRecord<Movie>>> results = db.reidentify(mediaStream);
+    db.put(stream, STREAM_TAGS, Set.of());
 
-    assertEquals(4, results.size());
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService1))));
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService5))));
-    assertTrue(results.contains(Exceptional.of(new MediaRecord<>(identification, movie1))));
-    assertTrue(results.contains(Exceptional.of(new MediaRecord<>(identification2, movie2))));
+    MediaIdentification mi = db.reidentifyStream(stream.getId());
+
+    assertEquals(4, mi.getResults().size());
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS2))));
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idService5))));
+    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier, identification, movie1))));
+    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier2, identification2, movie2))));
   }
 
   @Test
   public void incrementalIdentifyShouldNotIdentifyOrQueryExistingSources() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
-    Map<Identifier, MediaRecord<Movie>> map = new HashMap<>();
-    Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
-    Identifier identifier2 = new Identifier(DATA_SOURCE_6, "abcdef");
-    Identification identification = new Identification(identifier, MatchType.ID, 1.0);
-    Identification identification2 = new Identification(identifier2, MatchType.ID, 1.0);
-    Movie movie1 = Movies.create();
-    Movie movie2 = Movies.create();
+    ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_1, "12345");
+    ProductionIdentifier identifier2 = new ProductionIdentifier(DATA_SOURCE_6, "abcdef");
+    Identification identification = new Identification(MatchType.ID, 1.0, Instant.now());
+    Identification identification2 = new Identification(MatchType.ID, 1.0, Instant.now());
+    Movie movie1 = Movies.create(identifier);
+    Movie movie2 = Movies.create(identifier2);
 
-    map.put(identifier, new MediaRecord<>(identification, null));      // Exists, but incomplete, expect it in results but should not call identificationService
-    map.put(identifier2, new MediaRecord<>(identification2, movie2));  // Exists and is complete, donot expect it in results
+    BasicStream stream = createMovie("file://parent/test", attributes);
 
-    when(idService4.identify(eq(attributes))).thenReturn(identification);
-    when(queryService2.query(identifier)).thenReturn(QueryService.Result.of(movie1));  // Also returns original identification which should be skipped
+    when(queryServiceForDS1.query(identifier)).thenReturn(QueryService.Result.of(movie1));  // Also returns original identification which should be skipped
 
-    MovieStream mediaStream = new MovieStream(STREAM_PRINT, attributes, map);
+    streamStore.put(stream, STREAM_TAGS, Set.of(
+      Tuple.of(identifier, identification, null),
+      Tuple.of(identifier2, identification2, movie2)
+    ));
 
-    List<Exceptional<MediaRecord<Movie>>> results = db.incrementalIdentify(mediaStream);
+    MediaIdentification mi = db.incrementallyUpdateStream(stream.getId());
 
-    assertEquals(2, results.size());
-    assertTrue(results.contains(Exceptional.of(new MediaRecord<>(identification, movie1))));
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService1))));
-    verify(idService4, never()).identify(any());
+    assertEquals(2, mi.getResults().size());
+    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier, identification, movie1))));
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS2))));
+    verify(idServiceForDS1, never()).identify(any());
   }
 
   @Test
@@ -286,46 +314,52 @@ public class LocalMediaManagerTest {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
+    BasicStream stream = createMovie("file://parent/test", attributes);
 
-    when(idService1.identify(eq(attributes))).thenThrow(illegalStateException);
+    when(idServiceForDS2.identify(eq(stream))).thenThrow(illegalStateException);
 
-    MovieStream mediaStream = new MovieStream(STREAM_PRINT, attributes, Collections.emptyMap());
+    db.put(stream, STREAM_TAGS, Set.of());
 
-    List<Exceptional<MediaRecord<Movie>>> results = db.reidentify(mediaStream);
+    MediaIdentification mi = db.reidentifyStream(stream.getId());
 
-    assertEquals(3, results.size());
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService4))));
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService5))));
-    assertTrue(results.contains(Exceptional.ofException(illegalStateException)));
+    assertEquals(3, mi.getResults().size());
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS1))));
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idService5))));
+    assertTrue(mi.getResults().contains(Exceptional.ofException(illegalStateException)));
   }
 
   @Test
   public void reindentifyShouldHandleQueryException() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
-    Identification identification = new Identification(identifier, MatchType.ID, 1.0);
+    Identification identification = new Identification(MatchType.ID, 1.0, Instant.now());
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
+    BasicStream stream = createMovie("file://parent/test", attributes);
 
-    when(idService4.identify(eq(attributes))).thenReturn(identification);
-    when(queryService2.query(identifier)).thenThrow(illegalStateException);
+    when(idServiceForDS1.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
+    when(queryServiceForDS1.query(identifier)).thenThrow(illegalStateException);
 
-    MovieStream mediaStream = new MovieStream(STREAM_PRINT, attributes, Collections.emptyMap());
+    db.put(stream, STREAM_TAGS, Set.of());
 
-    List<Exceptional<MediaRecord<Movie>>> results = db.reidentify(mediaStream);
+    MediaIdentification mi = db.reidentifyStream(stream.getId());
 
-    assertEquals(3, results.size());
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService1))));
-    assertTrue(results.contains(Exceptional.ofException(new UnknownStreamException(mediaStream, idService5))));
-    assertTrue(results.contains(Exceptional.ofException(illegalStateException)));
+    assertEquals(3, mi.getResults().size());
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS2))));
+    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idService5))));
+    assertTrue(mi.getResults().contains(Exceptional.ofException(illegalStateException)));
   }
 
-  private static class EpisodeStream extends AbstractMediaStream<EpisodeDescriptor> {
-    public EpisodeStream(Type type, StreamPrint streamPrint, Attributes attributes, Map<Identifier, MediaRecord<EpisodeDescriptor>> mediaRecords) {
-      super(type, null, streamPrint, attributes, mediaRecords);
-    }
+
+  private static BasicStream createMovie(String uri, Attributes attributes) {
+    return new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), STREAM_PRINT, attributes, Collections.emptyList());
   }
 
-  private static class EpisodeDescriptor extends AbstractMediaDescriptor {
+  private static BasicStream createEpisode(String uri, StreamPrint streamPrint, Attributes attributes) {
+    return new BasicStream(MediaType.of("EPISODE"), new StringURI(uri), streamPrint, attributes, Collections.emptyList());
+  }
+
+  private static BasicStream createEpisode(String uri, Attributes attributes) {
+    return createEpisode(uri, STREAM_PRINT, attributes);
   }
 }

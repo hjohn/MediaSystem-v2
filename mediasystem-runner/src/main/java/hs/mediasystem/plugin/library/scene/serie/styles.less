@@ -1,87 +1,202 @@
 @import "../../../../runner/properties.less";
+@import "../media-grid-view.less";
 
-.main-panel
-{
+.main-panel {
   -fx-border-width: 3;
   -fx-border-color: @glass-color;
 
-  .title-panel
-  {
+  .title-panel {
     -fx-background-color: lighten(@glass-color, 20%, relative);
     -fx-padding: 16;
     -fx-border-width: 0 0 2 0;
     -fx-border-color: lighten(@glass-color, 25%, relative);
     
-    .label.title
-    {
+    .label.title {
       .style-heading1;
       .text-fill-highlight;
-      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+      .heading-drop-shadow; 
     }
     
-    .label.release-year
-    {
+    .label.release-year {
       .style-heading2;
-      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+      .heading-drop-shadow;
     }
     
-    .label.genres
-    {
+    .label.genres {
       .style-p2;
-      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+      .heading-drop-shadow;
+    }
+    
+    .indicator-pane {
+      -fx-padding: 20 0 0 0;
     }
   }
   
-  .dynamic-panel
-  {
+  .dynamic-panel {
     -fx-background-color: -c-dark-glass;
-    -fx-padding: 16;
-    
-    .episode-panel
-    {
-      -fx-spacing: 15;
 
-      .label.title
-      {
-        .style-heading3;
-        .text-fill-highlight;
+    .media-grid-view {
+      .cell-box {
+        -fx-alignment: CENTER;
+      }
+      
+      .place-holder {
+        -fx-alignment: center;
+        -fx-text-fill: -c-text-watermark;
+        -fx-font-size: 70;
+        // Removed border, as the place-holder here could be for 4:3 or 16:9 images, which makes the fade-in/out look 
+        // ugly as the border shines through the middle of image during that process
+        //-fx-border-color: @glass-color;
+        //-fx-border-width: 2;
+        //-fx-border-insets: -2;
+        -fx-padding: 40;
+      }
+    }
+
+    .overview-dynamic-panel {
+      -fx-padding: 16;
+          
+      .label.tag-line {
+        .style-p2;
+        -fx-wrap-text: true;
+        -fx-padding: 0 0 0.75em 0;
+      }
+      
+      .label.description {
+        .style-p2;
         -fx-wrap-text: true;
       }
-    
-      .image-view
-      {
-        -fx-background-color: @glass-color;
-        -fx-padding: 4;
+      
+      .overview-panel {
+        -fx-spacing: 20;
+        
+        .actors-panel {
+          -fx-hgap: 10;
+
+          .actor-description {
+            -fx-alignment: top-center;
+          }      
+          
+          .place-holder {
+            -fx-font-size: 100px;
+            -fx-alignment: center;
+            -fx-text-fill: -c-text-watermark;
+            -fx-border-color: @glass-color;
+            -fx-border-width: 2;
+          }  
+          
+          .name, .role {
+            -fx-text-alignment: center;
+            -fx-wrap-text: true;
+            -fx-font-size: 13px;
+          }
+          
+          .name {
+            .bold;
+          }
+          
+          .role {
+            .medium;
+            .text-fill-highlight;
+          }
+          
+          .scaled-image-view {
+            .image-view {
+              -fx-border-color: @glass-color;
+              -fx-border-width: 2;
+            }
+          }
+        }
       }
     }
     
-    .label.tag-line
-    {
-      .style-p2;
-      -fx-wrap-text: true;
-    }
+    .episode-dynamic-panel {
+      -fx-padding: 16;
     
-    .label.description
-    {
-      .style-p2;
-      -fx-wrap-text: true;
-    }
-  }
+      .episode-panel {
+        -fx-spacing: 15;
   
-  .season-bar
-  {
-    -fx-spacing: 15;
-    
-    .label
-    {
-      .style-heading2;
-      -fx-text-fill: darken(@text-accent, 20%, relative);
-      -fx-padding: 5;
+        .label.title {
+          .style-heading3;
+          .text-fill-highlight;
+          -fx-wrap-text: true;
+        }
+        
+        .label.subtitle {
+          .style-p3;
+          -fx-padding: 0 0 0.75em 0;
+        }
+        
+        .label.description {
+          .style-p2;
+          -fx-wrap-text: true;
+        }
+      
+        .image-view {
+          -fx-background-color: @glass-color;
+          -fx-padding: 4;
+        }
+  
+        .place-holder {
+          -fx-alignment: center;
+          -fx-text-fill: -c-text-watermark;
+          -fx-font-size: 70;
+          -fx-border-color: -c-dark-glass-medium;
+          -fx-border-width: 1;
+          -fx-padding: 40;
+        }
+  
+        .indicator-pane {
+          -fx-padding: 20;
+        }
+      }
     }
-    
-    .label.focused
-    {
-      -fx-text-fill: lighten(@text-accent, 20%, relative);
+
+    .season-bar {
+      .items {
+        -fx-spacing: 15;
+      }
+        
+      -fx-padding: 8 16 8 16;
+      -fx-background-color: fade(black, 20%);
+      -fx-border-color: -c-dark-glass;
+      -fx-border-width: 0 0 2 0;
+      
+      .label {
+        .style-heading2;
+        -fx-text-fill: darken(@text-accent, 20%, relative);
+        -fx-padding: 5;
+        
+        &.focused {
+          -fx-text-fill: lighten(@text-accent, 20%, relative);
+        }
+      }
+      
+      .graphic, .graphic-bg {
+        -fx-min-width: 15px;
+        -fx-max-width: 15px;
+        -fx-min-height: 15px;
+        -fx-max-height: 15px;
+        -fx-translate-x: 7px;
+        -fx-translate-y: 15px;
+      }
+      
+      .watched .graphic {
+        -fx-shape: @shape-checkmark;
+        -fx-background-color: rgba(125, 255, 125, 0.5);
+      }
+
+      .unavailable .graphic {
+        -fx-shape: @shape-cross;
+        -fx-background-color: rgba(255, 0, 0, 0.5);
+      }
+      
+      .watched .graphic-bg, .unavailable .graphic-bg {
+        -fx-shape: @shape-disc;          
+        -fx-background-color: rgba(0, 0, 0, 0.6);
+        -fx-scale-x: 1.1;
+        -fx-scale-y: 1.1;
+      }
     }
   }
     
@@ -89,17 +204,145 @@
     -c-star: yellow;
     -fx-fill: linear-gradient(from 0% 0% to 0% 100%, derive(-c-star, -25%) 0%, derive(-c-star, 75%) 33%, derive(-c-star, -25%) 100%);
     -fx-stroke: rgba(255, 255, 0, 0.5);
-    -fx-stroke-width: 1;
+    -fx-stroke-width: 2;
   }
   
   .background .star {
-    -fx-fill: linear-gradient(from 0% 0% to 0% 100%, derive(gray, -25%) 0%, derive(gray, 75%) 33%, derive(gray, -25%) 100%);
-    -fx-stroke: gray;
+    @color: fade(gray, 25%);
+    -fx-fill: linear-gradient(from 0% 0% to 0% 100%, derive(@color, -25%) 0%, derive(@color, 75%) 33%, derive(@color, -25%) 100%);
+    -fx-stroke: fade(gray, 50%);
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
   }
   
   .navigation-area
   {
     -fx-padding: 15 0 0 0;
+  }
+  
+  .indicator-pane-background,
+  .indicator-checkmark,
+  .indicator-cross,
+  .indicator-percentage,
+  .indicator-arc
+  {      
+    -fx-min-width: 50;
+    -fx-min-height: 50;
+  }
+  
+  .indicator-pane-background
+  {
+    -fx-background-color: rgba(0, 0, 0, 0.6);
+    -fx-scale-x: 1.1;
+    -fx-scale-y: 1.1;
+    -fx-shape: @shape-disc;
+  }
+  
+  .indicator-checkmark
+  {
+    -fx-background-color: rgba(125, 255, 125, 0.5);
+    -fx-shape: @shape-checkmark;
+  }
+  
+  .indicator-cross
+  {
+    -fx-background-color: rgba(255, 125, 125, 0.5);
+    -fx-shape: @shape-cross;
+  }
+  
+  .indicator-percentage
+  {
+    -fx-text-fill: rgba(125, 255, 125, 0.8);
+    -fx-alignment: center;
+    .bold;
+    -fx-font-size: 16;
+  }
+  
+  .indicator-arc-shape,
+  .indicator-circle-shape
+  {
+    -fx-fill: transparent;
+    -fx-stroke: rgba(125, 255, 125, 0.5);
+    -fx-stroke-line-cap: butt; 
+  }
+  
+  .indicator-arc-shape-missing
+  {
+    -fx-fill: transparent;
+    -fx-stroke: rgba(255, 125, 125, 0.5);
+    -fx-stroke-line-cap: butt; 
+    -fx-stroke-width: 5;
+  }
+  
+  .indicator-arc-shape
+  {
+    -fx-stroke-width: 5;
+  }
+  
+  .navigation-area {
+    -fx-spacing: 10;
+    -fx-alignment: center;
+  
+    .button {
+      -fx-background-color:
+        radial-gradient(center 50% -40%, radius 200%, rgba(170, 170, 170, 0.375) 45%, rgba(68, 68, 68, 0.375) 50%);
+      -fx-background-radius: 6;
+      -fx-background-insets: 0;
+      -fx-effect: dropshadow(three-pass-box, rgba(90, 90, 90, 0.8), 10, 0.4, 0, 0);
+      -fx-border-radius: 5, 4, 4, 3;
+      -fx-border-width: 1, 2, 1, 1;
+      -fx-border-insets: 0, 1, 3, 4;
+      -fx-border-color:
+        linear-gradient(rgba(153, 153, 153, 0.625), rgba(51, 51, 51, 0.625)),
+        -c-dark-glass,
+        linear-gradient(rgba(255, 255, 255, 0.625), rgba(85, 85, 85, 0.625)),
+        linear-gradient(rgba(153, 153, 153, 0.625), rgba(51, 51, 51, 0.625));
+      -fx-padding: 0 16 0 16;
+      -fx-min-height: 2em;
+      -fx-alignment: center;
+      
+      .label.subtitle
+      {
+        -fx-font-size: 12;
+        -fx-max-height: 1;
+        -fx-padding: 0 0 5 0;
+      }
+      
+      .vbox
+      {
+        -fx-spacing: -5;
+        -fx-alignment: center;
+      }
+      
+      .text 
+      {
+        -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+      }
+    }
+
+    .button,
+    .button .label
+    {
+      -fx-text-fill: #eeeeee;
+      -fx-font-size: 32;
+      -fx-max-height: 1;
+      .bold;
+    }
+
+    
+    .button.focused .text,
+    .button:focused .text 
+    {
+      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.6), 4, 0.0, 4, 4);
+    }
+        
+    .button.focused, 
+    .button:focused 
+    {
+      -fx-background-color:
+        radial-gradient(center 50% -40%, radius 200%, rgba(170, 170, 170, 0.375) 45%, rgba(68, 68, 68, 0.375) 50%),
+        radial-gradient(center 50% 10%, radius 80%, rgba(170, 170, 170, 0.375) 15%, rgba(68, 68, 68, 0.375) 50%);
+    
+      -fx-effect: dropshadow(gaussian, rgba(255, 165, 0, 0.8), 10, 0.4, 0, 0);
+    }
   }
 }

@@ -4,15 +4,19 @@ import hs.ddif.core.Injector;
 import hs.ddif.core.NoSuchBeanException;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Value;
-import hs.mediasystem.plugin.library.scene.LibraryNodeFactory;
-import hs.mediasystem.plugin.library.scene.LibraryPresentation;
+import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
+import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.serie.ProductionOverviewNodeFactory;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewPresentation;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewSetup;
+import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.view.GenericCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.MovieCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsSetup;
+import hs.mediasystem.plugin.library.scene.view.ProductionCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.view.ProductionCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsSetup;
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionPresentation;
@@ -28,8 +32,8 @@ import hs.mediasystem.presentation.Placer;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Theme;
-import hs.mediasystem.runner.RootNodeFactory;
-import hs.mediasystem.runner.RootPresentation;
+import hs.mediasystem.runner.root.RootNodeFactory;
+import hs.mediasystem.runner.root.RootPresentation;
 
 import javafx.scene.Node;
 
@@ -48,6 +52,9 @@ public class BasicTheme implements Theme {
     if(cls == SerieCollectionPresentation.class) {
       return LibraryPresentation.class;
     }
+    if(cls == GenericCollectionPresentation.class) {
+      return LibraryPresentation.class;
+    }
     if(cls == PersonParticipationsPresentation.class) {
       return LibraryPresentation.class;
     }
@@ -58,6 +65,9 @@ public class BasicTheme implements Theme {
       return LibraryPresentation.class;
     }
     if(cls == RecommendationsPresentation.class) {
+      return LibraryPresentation.class;
+    }
+    if(cls == ProductionCollectionPresentation.class) {
       return LibraryPresentation.class;
     }
     if(cls == PlaybackOverlayPresentation.class) {
@@ -84,6 +94,9 @@ public class BasicTheme implements Theme {
     if(cls == SerieCollectionPresentation.class) {
       return (Class<T>)SerieCollectionSetup.class;
     }
+    if(cls == GenericCollectionPresentation.class) {
+      return (Class<T>)GenericCollectionSetup.class;
+    }
     if(cls == LibraryPresentation.class) {
       return (Class<T>)LibraryNodeFactory.class;
     }
@@ -101,6 +114,9 @@ public class BasicTheme implements Theme {
     }
     if(cls == RecommendationsPresentation.class) {
       return (Class<T>)RecommendationsSetup.class;
+    }
+    if(cls == ProductionCollectionPresentation.class) {
+      return (Class<T>)ProductionCollectionSetup.class;
     }
     if(cls == PlaybackOverlayPresentation.class) {
       return (Class<T>)PlaybackLayout.class;

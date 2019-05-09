@@ -1,16 +1,62 @@
 package hs.mediasystem.plugin.library.scene.view;
 
+import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.mediamanager.MediaService;
+import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.util.NaturalLanguage;
 
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-public class RecommendationsPresentation extends GridViewPresentation {
-  public final ObjectProperty<MediaItem<?>> mediaItem = new SimpleObjectProperty<>();
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
-  public RecommendationsPresentation set(MediaItem<?> mediaItem) {
-    this.mediaItem.set(mediaItem);
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
-    return this;
+public class RecommendationsPresentation extends GridViewPresentation<Production> {
+  public final MediaItem<?> mediaItem;
+  public final ObservableList<MediaItem<Production>> recommendations;
+
+  private static final List<SortOrder<Production>> SORT_ORDERS = List.of(
+    new SortOrder<Production>("best", null),
+    new SortOrder<Production>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL))),
+    new SortOrder<Production>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed()))
+  );
+
+  private static final List<Filter<Production>> FILTERS = List.of(
+    new Filter<Production>("none", mi -> true),
+    new Filter<Production>("released-recently", mi -> Optional.ofNullable(mi.getProduction().getDate()).filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+  );
+
+  @Singleton
+  public static class Factory {
+    @Inject private MediaService mediaService;
+    @Inject private VideoDatabase videoDatabase;
+    @Inject private MediaItem.Factory mediaItemFactory;
+    @Inject private SettingsStore settingsStore;
+
+    public RecommendationsPresentation create(MediaItem<?> mediaItem) {
+      return new RecommendationsPresentation(
+        settingsStore,
+        mediaService,
+        mediaItem,
+        FXCollections.observableList(videoDatabase.queryRecommendedProductions(mediaItem.getProduction().getIdentifier()).stream()
+          .map(p -> mediaItemFactory.create(p, null))
+          .collect(Collectors.toList()))
+      );
+    }
+  }
+
+  protected RecommendationsPresentation(SettingsStore settingsStore, MediaService mediaService, MediaItem<?> mediaItem, ObservableList<MediaItem<Production>> recommendations) {
+    super(settingsStore, mediaService, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+
+    this.mediaItem = mediaItem;
+    this.recommendations = recommendations;
   }
 }

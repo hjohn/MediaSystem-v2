@@ -1,16 +1,20 @@
 package hs.mediasystem.plugin.rootmenu;
 
+import hs.mediasystem.presentation.Presentation;
+
 import java.util.function.Supplier;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Named("primary")
 @Singleton
-public class StartupLocationSetting implements Supplier<Object> {
+public class StartupLocationSetting implements Supplier<Presentation> {
+  @Inject private MenuPresentation.Factory factory;
 
   @Override
-  public Object get() {
-    return new MenuPresentation();  // TODO needs to be configurable
+  public Presentation get() {
+    return factory.create();  // TODO needs to be configurable
   }
 }

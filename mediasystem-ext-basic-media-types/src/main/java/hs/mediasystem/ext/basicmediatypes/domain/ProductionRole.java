@@ -1,6 +1,9 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-public class ProductionRole {
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+
+public class ProductionRole implements MediaDescriptor {
   private final Production production;
   private final Role role;
   private final Integer episodeCount;
@@ -18,6 +21,11 @@ public class ProductionRole {
     this.role = role;
     this.episodeCount = episodeCount;
     this.popularity = popularity;
+  }
+
+  @Override
+  public Identifier getIdentifier() {
+    return role.getIdentifier();
   }
 
   public Production getProduction() {

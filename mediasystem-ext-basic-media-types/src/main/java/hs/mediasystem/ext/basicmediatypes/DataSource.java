@@ -1,6 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Type;
+import hs.mediasystem.scanner.api.MediaType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,20 +8,20 @@ import java.util.Map;
 public class DataSource {
   private static final Map<String, DataSource> knownDataSources = new HashMap<>();
 
-  private final Type type;
+  private final MediaType type;
   private final String name;
 
-  public static DataSource instance(Type type, String name) {
+  public static DataSource instance(MediaType type, String name) {
     return knownDataSources.computeIfAbsent(name + ":" + type, k -> new DataSource(type, name));
   }
 
   public static DataSource fromString(String key) {
     String[] parts = key.split(":");
 
-    return DataSource.instance(Type.of(parts[1]), parts[0]);
+    return DataSource.instance(MediaType.of(parts[1]), parts[0]);
   }
 
-  private DataSource(Type type, String name) {
+  private DataSource(MediaType type, String name) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
@@ -33,8 +33,12 @@ public class DataSource {
     this.name = name;
   }
 
-  public Type getType() {
+  public MediaType getType() {
     return type;
+  }
+
+  public String getName() {
+    return name;
   }
 
   @Override

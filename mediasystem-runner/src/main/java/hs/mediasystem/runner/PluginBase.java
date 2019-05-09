@@ -1,5 +1,7 @@
 package hs.mediasystem.runner;
 
+import hs.mediasystem.runner.util.ResourceManager;
+
 import javafx.scene.image.Image;
 
 public interface PluginBase {

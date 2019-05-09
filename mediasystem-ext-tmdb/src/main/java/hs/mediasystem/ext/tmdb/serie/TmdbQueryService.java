@@ -2,9 +2,9 @@ package hs.mediasystem.ext.tmdb.serie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
@@ -18,7 +18,6 @@ import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,11 +34,11 @@ public class TmdbQueryService extends AbstractQueryService<Serie> {
 
   @Override
   public Result<Serie> query(Identifier identifier) {
-    JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "append_to_response", "videos");  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
+    JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "append_to_response", "keywords");  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
     List<JsonNode> seasons = new ArrayList<>();
 
     for(JsonNode season : node.path("seasons")) {
-      seasons.add(tmdb.query("3/tv/" + identifier.getId() + "/season/" + season.get("season_number").asText(), "append_to_response", "videos"));
+      seasons.add(tmdb.query("3/tv/" + identifier.getId() + "/season/" + season.get("season_number").asText()));
     }
 
     Serie serie = objectFactory.toSerie(node, seasons.stream().map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
@@ -47,7 +46,7 @@ public class TmdbQueryService extends AbstractQueryService<Serie> {
     // Popularity... Status... last air date ... inproduction field
     //['Returning Series', 'Planned', 'In Production', 'Ended', 'Canceled', 'Pilot']
 
-    return Result.of(serie, Collections.emptySet());
+    return Result.of(serie);
   }
 
   private Season toSeason(JsonNode node, String parentId) {
@@ -78,7 +77,7 @@ public class TmdbQueryService extends AbstractQueryService<Serie> {
     String releaseDate = node.path("air_date").textValue();
     Reception reception = node.get("vote_count").isNumber() && node.get("vote_average").isNumber() ?
       new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt()) : null;
-      int seasonNumber = node.get("season_number").asInt();
+    int seasonNumber = node.get("season_number").asInt();
     int episodeNumber = node.get("episode_number").asInt();
 
     return new Episode(

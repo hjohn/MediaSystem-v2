@@ -1,0 +1,128 @@
+@import "../../../../runner/properties.less";
+@import "../media-grid-view.less";
+
+.prefix {
+  -fx-font-size: 10;
+  -fx-min-width: 5ex;
+  -fx-alignment: center-right;
+}
+
+.title {
+  -fx-font-size: 19;
+  -fx-font-weight: bold;
+  -fx-wrap-text: true;
+}
+
+.field {
+  -fx-wrap-text: true;
+}
+
+/*
+ * glass-pane style
+ */
+
+.label.glass-pane {
+}
+
+.glass-pane {
+  -fx-background-color: -c-dark-glass;
+  -fx-padding: 16;
+}
+
+.scaled-image-view.glass-pane {
+  -fx-background-color: transparent;
+}
+
+.scaled-image-view.glass-pane .image-view {
+  -fx-border-radius: 4;
+  -fx-border-color: -c-dark-glass;
+  -fx-border-width: 16;
+}
+
+/*
+ * black pane style
+ */
+
+.black-pane {
+  -fx-background-color: rgb(0, 0, 0);
+}
+
+.scaled-image-view.black-pane {
+  -fx-background-color: transparent;
+}
+
+.scaled-image-view.black-pane .image-view {
+  -fx-border-color: rgb(0, 0, 0);
+  -fx-border-width: 2;
+}
+
+.side-panel .hbox
+{
+  -fx-spacing: 20;
+}
+
+.overlay-panel > *
+{
+  -fx-background-color: -c-dark-glass;
+  -fx-padding: 20;
+}
+
+.overlay-panel .label
+{
+  .style-p2;
+  -fx-wrap-text: true;
+}
+
+.overlay-panel .title
+{
+  .style-heading2;
+  .text-fill-highlight;
+}
+
+.overlay-panel .subtitle
+{
+  .style-p2;
+}
+
+.overlay-panel .header
+{
+  -fx-padding: 20 0 0 0;
+}
+
+.label.header
+{
+  .black;
+  -fx-font-size: 12;
+  -fx-text-fill: -c-text-unobtrusive;
+}
+
+.overlay-panel .image-view
+{
+  -fx-border-color: transparent, -c-dark-glass-highlight;
+  -fx-border-width: 20 0 0 0, 2;
+  -fx-border-insets: 0, 20 0 0 0;
+}
+
+.overlay-panel .poster-image
+{
+}
+
+.slide-in-right-panel > *
+{
+  -fx-background-radius: 30 0 0 30;
+  -fx-background-insets: 1 0 1 1;
+  
+  -fx-border-color: -c-dark-glass-medium;
+  -fx-border-radius: 30 0 0 30;
+  -fx-border-width: 2 0 2 2;
+}
+
+.scaled-image-view .place-holder.media-grid-view-image-place-holder.label
+{
+  -fx-text-fill: -c-text-watermark;
+  -fx-font-size: 70;
+  -fx-border-color: @glass-color;
+  -fx-border-width: 2;
+  -fx-border-insets: -2;
+  -fx-padding: 40;
+}

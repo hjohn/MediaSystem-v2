@@ -10,18 +10,33 @@ public class Movie extends Production {
     RELEASED
   }
 
+  private final Duration runtime;
+  private final List<Keyword> keywords;
   private final String tagLine;
   private final State state;
-  private final double popularity;
-  private final Chronology chronology;
 
-  public Movie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, List<String> languages, List<String> genres, double popularity, String tagLine, State state, Chronology chronology) {
-    super(identifier, details, reception, runtime, languages, genres);
+  private final ProductionCollection chronology;
 
-    this.popularity = popularity;
+  public Movie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, List<String> languages, List<String> genres, List<Keyword> keywords, double popularity, String tagLine, State state, ProductionCollection chronology) {
+    super(identifier, details, reception, languages, genres, popularity);
+
+    if(keywords == null) {
+      throw new IllegalArgumentException("keywords cannot be null");
+    }
+
+    this.runtime = runtime;
+    this.keywords = keywords;
     this.state = state;
     this.tagLine = tagLine;
     this.chronology = chronology;
+  }
+
+  public Duration getRuntime() {
+    return runtime;
+  }
+
+  public List<Keyword> getKeywords() {
+    return keywords;
   }
 
   public State getState() {
@@ -32,11 +47,8 @@ public class Movie extends Production {
     return tagLine;
   }
 
-  public double getPopularity() {
-    return popularity;
-  }
 
-  public Chronology getChronology() {
+  public ProductionCollection getCollection() {
     return chronology;
   }
 }

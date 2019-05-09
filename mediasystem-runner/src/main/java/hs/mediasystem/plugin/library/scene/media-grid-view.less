@@ -1,0 +1,135 @@
+@import "../../../runner/properties.less";
+
+.media-grid-view
+{
+  -fx-padding: 6;
+
+  .list-cell {
+    -fx-padding: 2;
+    
+    .container-box
+    {
+      -fx-padding: 6;
+      
+      -fx-background-insets: 2;
+      -fx-background-radius: 8;
+      
+      -fx-alignment: center;  // centers title/detail if only one line
+      
+      -fx-border-insets: 0, 1;
+      -fx-border-radius: 9, 8;  
+      -fx-border-width: 1, 1.5;
+      -fx-border-color: transparent, transparent;
+     
+      .label.name,
+      .label.detail
+      {
+        -fx-wrap-text: true;
+        -fx-text-alignment: center;
+        -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.8), 6, 0.3, 0, 0);
+      }
+      
+      .label.name
+      {
+        .style-p2;
+      }
+          
+      .label.detail
+      {
+        .style-p3;
+        .text-fill-accent;
+      }
+      
+      .image-box
+      {
+        -fx-alignment: center;
+          
+        &.vertical .image-detail-bar {
+          -fx-background-color: linear-gradient(to right, -c-dark-glass, black);
+          -fx-padding: 5 0 5 0;
+        }
+        
+        &.horizontal .image-detail-bar {
+          -fx-background-color: linear-gradient(to bottom, -c-dark-glass, black);
+          -fx-padding: -2 5 2 5;
+        }
+          
+        .image-detail-bar {    
+          -fx-spacing: 5;
+          -fx-alignment: center;
+          
+          .center .label {
+            -fx-font-size: 11;
+            -fx-wrap-text: true;
+            -fx-alignment: center;
+            -fx-text-alignment: center;
+            .text-fill-accent-highlight;
+          }
+        }
+        
+        .image-view
+        {
+          -fx-background-color: -c-dark-glass;
+          -fx-padding: 2;
+        }
+      }
+    }
+    
+    &:focused .container-box
+    {
+      -fx-background-color: linear-gradient(rgba(235, 235, 235, 0.4), rgba(235, 235, 235, 0.2) 25%, rgba(255, 255, 255, 0.3) 75%, rgba(235, 235, 235, 0.4));
+      -fx-border-color:
+         linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.9) 20%, rgba(0, 0, 0, 0.9) 70%, rgba(0, 0, 0, 0.6)),
+         linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6) 10%, rgba(255, 255, 255, 0.6) 80%, rgba(255, 255, 255, 0.9));
+    
+      .label
+      {
+        .text-fill-highlight;
+      }
+      
+      .label.detail
+      {
+        .text-fill-accent-highlight;
+      }
+    }
+  
+    .indicator,
+    .indicator-background
+    {
+      -fx-min-width: 20;
+      -fx-min-height: 20;
+      -fx-translate-x: -2;  // because of scaling used
+      -fx-translate-y: 0;
+    }
+    
+    &.watched .indicator-background,
+    &.unavailable .indicator-background
+    {
+      -fx-background-color: rgba(0, 0, 0, 0.6);
+      -fx-scale-x: 1.1;
+      -fx-scale-y: 1.1;
+      -fx-shape: @shape-disc;
+    }
+    
+    &.watched .indicator
+    {
+      -fx-background-color: rgba(125, 255, 125, 0.5);
+      -fx-shape: @shape-checkmark;
+    }
+    
+    &.unavailable .indicator
+    {
+      -fx-background-color: rgba(255, 0, 0, 0.5);
+      -fx-shape: @shape-cross;
+    }
+    
+    .label.sequence-number,
+    &:focused .label.sequence-number
+    {
+      .bold;
+      -fx-font-size: 14;
+      -fx-padding: 2 4 2 4;
+      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.8), 8, 0.9, 0, 0);
+    }
+  }
+}

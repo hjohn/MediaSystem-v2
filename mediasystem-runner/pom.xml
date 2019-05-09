@@ -27,7 +27,30 @@
       <artifactId>mediasystem-domain</artifactId>
       <version>2.0.0-SNAPSHOT</version>
     </dependency>
-    
+    <dependency>
+      <groupId>hs.mediasystem</groupId>
+      <artifactId>mediasystem-ext-basic-media-types</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
+    </dependency>    
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${version.jackson}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>${version.jackson}</version>
+    </dependency>    
+    <!-- 
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>11</version>
+    </dependency>
+     -->
+
     <!-- 3rd party -->
     <dependency>
       <groupId>org.eclipse.jdt</groupId>
@@ -39,23 +62,25 @@
       <artifactId>javax.annotation-api</artifactId>
       <version>1.3.2</version>
     </dependency>
-    <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy</artifactId>
-      <version>2.5.0</version>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>org.codehaus.groovy</groupId> -->
+<!--       <artifactId>groovy</artifactId> -->
+<!--       <version>2.5.0</version> -->
+<!--     </dependency> -->
     <dependency>
       <groupId>de.inetsoftware</groupId>
       <artifactId>jlessc</artifactId>
       <version>1.5</version>
-    </dependency>    
-    <dependency>
-      <groupId>org.reactfx</groupId>
-      <artifactId>reactfx</artifactId>
-      <version>2.0-M5</version>
     </dependency>
-
+    
     <!-- Test Dependencies -->
+    <dependency>
+      <groupId>hs.mediasystem</groupId>
+      <artifactId>mediasystem-util</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -79,13 +104,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>9</source>
-          <target>9</target>
-          <compilerArgument>-parameters</compilerArgument>
-        </configuration>
-      </plugin>
+      </plugin>  
     </plugins>
   </build>
 </project>

@@ -7,14 +7,14 @@ import hs.mediasystem.domain.PlayerEvent;
 import hs.mediasystem.domain.PlayerEvent.Type;
 import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.domain.Subtitle;
+import hs.mediasystem.framework.actions.controls.DecimalControl;
+import hs.mediasystem.framework.actions.controls.IntegerControl;
+import hs.mediasystem.framework.actions.controls.ListControl;
+import hs.mediasystem.framework.actions.controls.ValueRestrictions;
 import hs.mediasystem.util.javafx.Events;
-import hs.mediasystem.util.javafx.ResizableWritableImageView;
 import hs.mediasystem.util.javafx.beans.Accessor;
 import hs.mediasystem.util.javafx.beans.BeanBooleanProperty;
-import hs.mediasystem.util.javafx.beans.BeanFloatProperty;
-import hs.mediasystem.util.javafx.beans.BeanIntegerProperty;
-import hs.mediasystem.util.javafx.beans.BeanObjectProperty;
-import hs.mediasystem.util.javafx.beans.UpdatableLongProperty;
+import hs.mediasystem.util.javafx.control.ResizableWritableImageView;
 
 import java.awt.Canvas;
 import java.nio.ByteBuffer;
@@ -30,17 +30,19 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.FloatProperty;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritablePixelFormat;
+
+import org.reactfx.Change;
+import org.reactfx.EventStreams;
+import org.reactfx.SuspendableEventStream;
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 import uk.co.caprica.vlcj.binding.internal.libvlc_media_t;
 import uk.co.caprica.vlcj.player.MediaPlayer;
@@ -143,26 +145,32 @@ public class VLCPlayer implements PlayerPresentation {
       this.mediaPlayer = mp;
     }
 
+    position = new IntegerControl(
+      0L,
+      new ValueRestrictions<>(Val.<Long>constant(0L), Val.map(lengthProperty(), (Long v) -> v - 1000), 100L),
+      v -> "ms: " + v
+    );
+
+    SuspendableEventStream<Change<Long>> positionChanges = EventStreams.changesOf(position).suppressible();
+
+    positionChanges.observe(c -> mediaPlayer.setTime(c.getNewValue().longValue()));  // Basically, only called when updated externally, not by player
+
     mediaPlayer.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
       private final AtomicInteger ignoreFinish = new AtomicInteger();
       private boolean videoAdjusted;
 
       @Override
       public void timeChanged(final MediaPlayer mediaPlayer, final long newTime) {
-        position.update(newTime);
+        Platform.runLater(() -> positionChanges.suspendWhile(() -> position.setValue(newTime)));
+
         final int currentSubtitleId = mediaPlayer.getSpu();
 
         if(currentSubtitleId > 0 && currentSubtitleId != getSubtitleInternal().getId()) {
           System.out.println("[INFO] VLCPlayer: Subtitle changed externally to " + currentSubtitleId + ", updating to match");
 
-          Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-              updateSubtitles();
-              Subtitle subtitle = getSubtitleInternal();
-
-              setSubtitle(subtitle);
-            }
+          Platform.runLater(() -> {
+            updateSubtitles();
+            subtitle.setValue(getSubtitleInternal());
           });
         }
 
@@ -174,7 +182,7 @@ public class VLCPlayer implements PlayerPresentation {
 
       @Override
       public void lengthChanged(MediaPlayer mediaPlayer, long newLength) {
-        length.update(newLength);
+        Platform.runLater(() -> length.setValue(newLength));
       }
 
       @Override
@@ -203,7 +211,7 @@ public class VLCPlayer implements PlayerPresentation {
           videoOutputStarted = false;
         }
 
-        System.out.println("[FINE] VLCPlayer: Event[mediaStateChanged]: " + newState + "; volume=" + volume.get() + " --> " + mediaPlayer.getVolume() + "; mute=" + mediaPlayer.isMute());
+        System.out.println("[FINE] VLCPlayer: Event[mediaStateChanged]: " + newState);
 
         pausedProperty.update(newState == 4);
       }
@@ -212,13 +220,11 @@ public class VLCPlayer implements PlayerPresentation {
       public void mediaParsedChanged(MediaPlayer mediaPlayer, int parsed) {
         System.out.println("[FINE] VLCPlayer: Event[mediaParsedChanged]: " + parsed);
         if(parsed == 1) {
-          Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-              updateSubtitles();
-              updateAudioTracks();
-              audioTrack.update();
-            }
+          Platform.runLater(() -> {
+            updateSubtitles();
+            updateAudioTracks();
+            System.out.println(">>> AudioTracks are now: " + audioTracks + ", setting to: " + getAudioTrackInternal());
+            audioTrack.setValue(getAudioTrackInternal());
           });
         }
       }
@@ -239,8 +245,10 @@ public class VLCPlayer implements PlayerPresentation {
       public void videoOutput(final MediaPlayer mediaPlayer, int newCount) {
         System.out.println("VLCPlayer: videoOutput");
 
-        mediaPlayer.setVolume(volume.get());
-        mediaPlayer.mute(mutedProperty.get());
+        Platform.runLater(() -> {
+          mediaPlayer.setVolume(volume.getValue().intValue());
+          mediaPlayer.mute(mutedProperty.get());
+        });
 
         videoOutputStarted = true;
       }
@@ -271,56 +279,43 @@ public class VLCPlayer implements PlayerPresentation {
       }
     });
 
-    length = new UpdatableLongProperty();
-    position = new UpdatableLongProperty() {
-      @Override
-      public void set(long value) {
-        value = clamp(value, 0L, getLength() - 1000);
-        mediaPlayer.setTime(value);
-        super.set(value);
-      }
-    };
-    volume = new BeanIntegerProperty(new Accessor<Integer>() {
-      private int cachedVolume = 100;
+    volume = new IntegerControl(
+      100L,
+      new ValueRestrictions<>(0L, 100L, 5L),
+      v -> String.format("%d%%", v)
+    );
+    volume.addListener((obs, old, value) -> mediaPlayer.setVolume(value.intValue()));
 
-      @Override
-      public Integer read() {
-        if(videoOutputStarted) {
-          cachedVolume = mediaPlayer.getVolume();
-        }
+    audioDelay = new IntegerControl(
+      0L,
+      new ValueRestrictions<>(-60000L, 60000L, 100L),
+      v -> v == 0 ? "None" :
+           v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0)
+    );
+    audioDelay.addListener((obs, old, value) -> mediaPlayer.setAudioDelay(value * 1000));
 
-        return cachedVolume;
-      }
+    subtitleDelay = new IntegerControl(
+      0L,
+      new ValueRestrictions<>(-60000L, 60000L, 100L),
+      v -> v == 0 ? "None" :
+           v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0)
+    );
+    subtitleDelay.addListener((obs, old, value) -> mediaPlayer.setSpuDelay(-value * 1000));
 
-      @Override
-      public void write(Integer value) {
-        mediaPlayer.setVolume(value);
-      }
-    });
-    audioDelay = new BeanIntegerProperty(new Accessor<Integer>() {
-      @Override
-      public void write(Integer value) {
-        mediaPlayer.setAudioDelay(value * 1000L);
-      }
+    rate = new DecimalControl(
+      1.0,
+      new ValueRestrictions<>(0.1, 1.9, 0.1),
+      v -> v.floatValue() == 1.0f ? "Standard" : String.format("%+.0f%%", (v.floatValue() - 1) * 100)
+    );
+    rate.addListener((obs, old, value) -> mediaPlayer.setRate(value.floatValue()));
 
-      @Override
-      public Integer read() {
-        return (int)(mediaPlayer.getAudioDelay() / 1000);
-      }
-    });
-    subtitleDelay = new BeanIntegerProperty(new Accessor<Integer>() {
-      @Override
-      public void write(Integer value) {
-        mediaPlayer.setSpuDelay(-value * 1000L);
-      }
+    brightness = new DecimalControl(
+      1.0,
+      new ValueRestrictions<>(0.0, 2.0, 0.01),
+      v -> v.floatValue() == 1.0f ? "Standard" : String.format("%+.0f%%", (v.floatValue() - 1) * 100)
+    );
+    brightness.addListener((obs, old, value) -> mediaPlayer.setBrightness(value.floatValue()));
 
-      @Override
-      public Integer read() {
-        return (int)(-mediaPlayer.getSpuDelay() / 1000);
-      }
-    });
-    rate = new BeanFloatProperty(mediaPlayer, "rate");
-    brightness = new BeanFloatProperty(mediaPlayer, "brightness");
     mutedProperty = new BeanBooleanProperty(new Accessor<Boolean>() {
       private boolean cachedMuteStatus = false;
 
@@ -349,15 +344,23 @@ public class VLCPlayer implements PlayerPresentation {
         mediaPlayer.setPause(value);
       }
     });
+
+    subtitle.addListener((obs, old, value) -> mediaPlayer.setSpu(value.getId()));
+    audioTrack.addListener((obs, old, value) -> {
+      if(value != null) {
+        mediaPlayer.setAudioTrack(value.getId());
+      }
+    });
   }
 
   public AudioTrack getAudioTrackInternal() {
     int index = mediaPlayer.getAudioTrack();
 
-    if(index == -1 || index >= getAudioTracks().size()) {
+    if(index == -1 || index >= audioTracks.size()) {
       return AudioTrack.NO_AUDIO_TRACK;
     }
-    return getAudioTracks().get(index);
+
+    return audioTracks.get(index);
   }
 
   public void setAudioTrackInternal(AudioTrack audioTrack) {
@@ -367,7 +370,7 @@ public class VLCPlayer implements PlayerPresentation {
   public Subtitle getSubtitleInternal() {
     int id = mediaPlayer.getSpu();
 
-    for(Subtitle subtitle : getSubtitles()) {
+    for(Subtitle subtitle : subtitles) {
       if(subtitle.getId() == id) {
         return subtitle;
       }
@@ -377,24 +380,11 @@ public class VLCPlayer implements PlayerPresentation {
   }
 
   public void setSubtitleInternal(Subtitle subtitle) {
-    System.out.println("[FINE] VLCPlayer.setSubtitleInternal() - Subtitles available: " + getSubtitles());
-    System.out.println("[FINE] VLCPlayer.setSubtitleInternal() - Setting subtitle to: " + subtitle + ", index = " + getSubtitles().indexOf(subtitle));
     mediaPlayer.setSpu(subtitle.getId());
   }
 
   private final ObservableList<Subtitle> subtitles = FXCollections.observableArrayList(Subtitle.DISABLED);
-
-  @Override
-  public ObservableList<Subtitle> getSubtitles() {
-    return FXCollections.unmodifiableObservableList(subtitles);
-  }
-
-  private final ObservableList<AudioTrack> audioTracks = FXCollections.observableArrayList();
-
-  @Override
-  public ObservableList<AudioTrack> getAudioTracks() {
-    return FXCollections.unmodifiableObservableList(audioTracks);
-  }
+  private final ObservableList<AudioTrack> audioTracks = FXCollections.observableArrayList(AudioTrack.NO_AUDIO_TRACK);
 
   @Override
   public void play(String uri, long positionInMillis) {
@@ -406,13 +396,13 @@ public class VLCPlayer implements PlayerPresentation {
       resizableWritableImageView.clear();
     }
 
-    position.update(0);
-    audioDelay.update();
-    audioTrack.update();
-    brightness.update();
-    rate.update();
-    subtitle.update();
-    subtitleDelay.update();
+    position.setValue(0L);
+    audioDelay.setValue(mediaPlayer.getAudioDelay() / 1000);
+    audioTrack.setValue(getAudioTrackInternal());
+    brightness.setValue((double)mediaPlayer.getBrightness());
+    rate.setValue((double)mediaPlayer.getRate());
+    subtitle.setValue(getSubtitleInternal());
+    subtitleDelay.setValue(-mediaPlayer.getSpuDelay() / 1000);
 
     List<String> arguments = new ArrayList<>();
 
@@ -493,65 +483,39 @@ public class VLCPlayer implements PlayerPresentation {
     System.out.println("[FINE] VLCPlayer.updateAudioTracks(), now available: " + audioTracks);
   }
 
-  private final UpdatableLongProperty length;
-  @Override public long getLength() { return length.get(); }
-  @Override public ReadOnlyLongProperty lengthProperty() { return length; }
+  private final Var<Long> length = Var.newSimpleVar(null);
+  @Override public Val<Long> lengthProperty() { return length.orElseConst(1000L); }
 
-  private final UpdatableLongProperty position;
-  @Override public long getPosition() { return position.get(); }
-  @Override public void setPosition(long position) { this.position.set(position); }
-  @Override public LongProperty positionProperty() { return position; }
+  private final IntegerControl position;
+  @Override public IntegerControl positionControl() { return position; }
 
-  private final BeanIntegerProperty volume;
-  @Override public int getVolume() { return volume.get(); }
-  @Override public void setVolume(int volume) { this.volume.set(volume); }
-  @Override public IntegerProperty volumeProperty() { return volume; }
+  private final IntegerControl volume;
+  @Override public IntegerControl volumeControl() { return volume; }
 
-  private final BeanIntegerProperty audioDelay;
-  @Override public int getAudioDelay() { return audioDelay.get(); }
-  @Override public void setAudioDelay(int audioDelay) { this.audioDelay.set(audioDelay); }
-  @Override public IntegerProperty audioDelayProperty() { return audioDelay; }
+  private final IntegerControl audioDelay;
+  @Override public IntegerControl audioDelayControl() { return audioDelay; }
 
-  private final BeanFloatProperty rate;
-  @Override public float getRate() { return rate.get(); }
-  @Override public void setRate(float rate) { this.rate.set(rate); }
-  @Override public FloatProperty rateProperty() { return rate; }
+  private final DecimalControl rate;
+  @Override public DecimalControl rateControl() { return rate; }
 
-  private final BeanFloatProperty brightness;
-  @Override public float getBrightness() { return brightness.get(); }
-  @Override public void setBrightness(float brightness) { this.brightness.set(brightness); }
-  @Override public FloatProperty brightnessProperty() { return brightness; }
+  private final DecimalControl brightness;
+  @Override public DecimalControl brightnessControl() { return brightness; }
 
-  private final BeanObjectProperty<Subtitle> subtitle = new BeanObjectProperty<>(this, "subtitleInternal");
-  @Override public Subtitle getSubtitle() { return subtitle.get(); }
-  @Override public void setSubtitle(Subtitle subtitle) { this.subtitle.set(subtitle); }
-  @Override public ObjectProperty<Subtitle> subtitleProperty() { return subtitle; }
+  private final ListControl<Subtitle> subtitle = new ListControl<>(Subtitle.DISABLED, subtitles, s -> s.getDescription());
+  @Override public ListControl<Subtitle> subtitleControl() { return subtitle; }
 
-  private final BeanObjectProperty<AudioTrack> audioTrack = new BeanObjectProperty<>(this, "audioTrackInternal");
-  @Override public AudioTrack getAudioTrack() { return audioTrack.get(); }
-  @Override public void setAudioTrack(AudioTrack audioTrack) { this.audioTrack.set(audioTrack); }
-  @Override public ObjectProperty<AudioTrack> audioTrackProperty() { return audioTrack; }
+  private final ListControl<AudioTrack> audioTrack = new ListControl<>(AudioTrack.NO_AUDIO_TRACK, audioTracks, a -> a.getDescription());
+  @Override public ListControl<AudioTrack> audioTrackControl() { return audioTrack; }
 
-  private final BeanIntegerProperty subtitleDelay;
-  @Override public int getSubtitleDelay() { return subtitleDelay.get(); }
-  @Override public void setSubtitleDelay(int subtitleDelay) { this.subtitleDelay.set(subtitleDelay); }
-  @Override public IntegerProperty subtitleDelayProperty() { return subtitleDelay; }
+  private final IntegerControl subtitleDelay;
+  @Override public IntegerControl subtitleDelayControl() { return subtitleDelay; }
 
   private final BooleanProperty mutedProperty;
-  @Override public boolean isMuted() { return mutedProperty.get(); }
-  @Override public void setMuted(boolean muted) { mutedProperty.set(muted); }
   @Override public BooleanProperty mutedProperty() { return mutedProperty; }
 
   private final BeanBooleanProperty pausedProperty;
-  @Override public boolean isPaused() { return pausedProperty.get(); }
-  @Override public void setPaused(boolean paused) { pausedProperty.set(paused); }
   @Override public BooleanProperty pausedProperty() { return pausedProperty; }
 
   private final ObjectProperty<EventHandler<PlayerEvent>> onPlayerEvent = new SimpleObjectProperty<>();
   @Override public ObjectProperty<EventHandler<PlayerEvent>> onPlayerEvent() { return onPlayerEvent; }
-
-  private static long clamp(long value, long min, long max) {
-    return value < min ? min :
-           value > max ? max : value;
-  }
 }

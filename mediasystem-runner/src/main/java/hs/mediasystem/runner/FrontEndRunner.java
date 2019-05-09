@@ -2,8 +2,9 @@ package hs.mediasystem.runner;
 
 import hs.ddif.core.Injector;
 import hs.ddif.plugins.PluginManager;
-import hs.mediasystem.plugin.rootmenu.MenuPresentation;
 import hs.mediasystem.plugin.rootmenu.StartupLocationSetting;
+import hs.mediasystem.runner.util.DefaultSceneManager;
+import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 
@@ -23,6 +24,8 @@ public class FrontEndRunner extends Application {
 //  private static final Comparator<PlayerFactory> PLAYER_FACTORY_COMPARATOR = (o1, o2) -> o1.getName().compareTo(o2.getName());
 
   public static void main(String[] args) {
+    //System.setProperty("http.proxyHost", "127.0.0.1");
+    //System.setProperty("http.proxyPort", "8080");
     //System.setProperty("prism.text", "t2k");  // With Segoe UI will result in pixel jumping letters with numbers that change, ie: "1:15 / 1:43:34" May render slightly differently with different spacing in the last fixed part!
     System.setProperty("prism.lcdtext", "false");
     System.setProperty("com.sun.javafx.twoLevelFocus", "true");
@@ -64,7 +67,7 @@ public class FrontEndRunner extends Application {
 
     injector.getInstance(RootPresentationHandler.class);
 
-    sceneManager.getRootPane().fireEvent(NavigateEvent.to(new MenuPresentation()));
+    sceneManager.getRootPane().fireEvent(NavigateEvent.to(startupLocationSetting.get()));
   }
 
   private static void loadPlugins(final Injector injector) throws IOException {

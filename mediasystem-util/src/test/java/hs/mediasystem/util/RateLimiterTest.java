@@ -1,12 +1,12 @@
 package hs.mediasystem.util;
 
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+
+import static org.junit.Assert.assertTrue;
 
 public class RateLimiterTest {
 
@@ -50,4 +50,5 @@ public class RateLimiterTest {
       assertTrue(timestamps.get(i + 1) - timestamps.get(i) > (20L - 2L) * 1000L * 1000L);
     }
   }
+
 }

@@ -1,97 +1,148 @@
 package hs.mediasystem.plugin.rootmenu;
 
+import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
+import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
+import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.PluginBase;
 import hs.mediasystem.util.FocusEvent;
+import hs.mediasystem.util.javafx.control.Buttons;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
-import javafx.util.Duration;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
+
+import org.reactfx.util.Interpolator;
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 @Singleton
 public class RootMenuScenePlugin implements NodeFactory<MenuPresentation> {
-  public interface MenuPlugin extends PluginBase {
+
+  public interface MenuPlugin extends PluginBase {  // FIXME remove
     Node getNode();
   }
 
-  @Inject private Provider<List<MenuPlugin>> pluginsProvider;
-
   @Override
   public Node create(MenuPresentation presentation) {
-    List<Node> nodes = pluginsProvider.get().stream()
-      .sorted(Comparator.comparing(p -> p.getDouble("order")))
-      .map(this::toBar)
-      .collect(Collectors.toList());
+    HBox hbox = new HBox();
 
-    VBox vbox = new VBox();
+    hbox.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+    hbox.getStyleClass().add("menu-scroll-box");
 
-    vbox.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
-    vbox.getStyleClass().add("menu-scroll-box");
+    for(Menu menu : presentation.menus) {
+      MenuPane pane = new MenuPane(menu.getImage());
 
-    vbox.getChildren().setAll(nodes);
+      for(MenuItem menuItem : menu.getMenuItems()) {
+        pane.getChildren().add(Buttons.create(menuItem.getTitle(), e -> PresentationLoader.navigate(e, menuItem.getPresentationSupplier())));
+      }
 
-    vbox.addEventHandler(FocusEvent.FOCUS_GAINED, new EventHandler<FocusEvent>() {
+      hbox.getChildren().add(pane);
+    }
+
+    hbox.addEventHandler(FocusEvent.FOCUS_GAINED, new EventHandler<FocusEvent>() {
       @Override
       public void handle(FocusEvent event) {
         Node target = ((Node)event.getTarget());
 
         Platform.runLater(() -> {  // During construction sizes are still unknown.
-          double sceneHeight = vbox.getScene().getHeight();
+          double scenewidth = hbox.getScene().getWidth();
 
           Bounds bounds = target.getLayoutBounds();
           Point2D p2d = target.localToScene((bounds.getMinX() + bounds.getMaxX()) / 2, (bounds.getMinY() + bounds.getMaxY()) / 2);
 
-          vbox.setTranslateX(vbox.getScene().getWidth() / 2);
+          //hbox.setTranslateX(hbox.getScene().getWidth() / 2);
 
-          p2d = p2d.add(0, -sceneHeight / 2);
-          p2d = vbox.sceneToLocal(p2d);
+          p2d = p2d.add(-scenewidth / 2, 0);
+          p2d = hbox.sceneToLocal(p2d);
 
-          new Timeline(new KeyFrame(Duration.millis(250),
-            new KeyValue(vbox.translateYProperty(), -p2d.getY())
-          )).play();
+//          new Timeline(new KeyFrame(Duration.millis(250),
+//            new KeyValue(hbox.translateXProperty(), -p2d.getX())
+//          )).play();
         });
       }
     });
 
-    return vbox;
+    return hbox;
   }
 
-  private Node toBar(MenuPlugin plugin) {
-    VBox vbox = new VBox();
+  public class MenuPane extends Pane {
+    private final Label imageLabel;
 
-    Label label = new Label(plugin.getText("title"));
+    private final Val<Double> animatedActiveIndex;
+    private final Var<Double> activeIndex = Var.newSimpleVar(0.0);
 
-    Node node = plugin.getNode();
+    public MenuPane(Image image) {
+      imageLabel = new Label("", new ImageView(image));
 
-    vbox.getChildren().addAll(label, node);
+      getChildren().add(imageLabel);
 
-    node.addEventHandler(FocusEvent.FOCUS_GAINED, new EventHandler<FocusEvent>() {
-      @Override
-      public void handle(FocusEvent event) {
-        Node target = ((Node)event.getTarget());
+      animatedActiveIndex = activeIndex.animate(java.time.Duration.ofMillis(250), Interpolator.LINEAR_DOUBLE);
+      animatedActiveIndex.observeChanges((obs, old, current) -> requestLayout());
+    }
 
-        new Timeline(new KeyFrame(Duration.millis(250),
-          new KeyValue(node.translateXProperty(), -target.getLayoutX())
-        )).play();
+    @Override
+    protected void layoutChildren() {
+      super.layoutChildren();
+
+      double iw = imageLabel.prefWidth(-1);
+      double ih = imageLabel.prefHeight(-1);
+
+      double w = getWidth();
+      double x = 0;
+      double h = 50;
+
+      ObservableList<Node> children = getChildren();
+
+      layoutInArea(imageLabel, x, (getHeight() - ih) / 2, w, ih, 0, Insets.EMPTY, true, true, HPos.CENTER, VPos.CENTER);
+
+      Node focusedNode = children.stream().filter(Node::isFocused).findFirst().orElse(null);
+
+      int focusedIndex = children.indexOf(focusedNode);
+
+      if(focusedIndex != -1) {
+        activeIndex.setValue((double)focusedIndex - 1);
       }
-    });
 
-    return vbox;
+      double index = animatedActiveIndex.getValue();
+
+      for(int i = 0; i < children.size() - 1; i++) {
+        double y = 0.5 * getHeight() + h * 0.5;
+
+        if(Math.floor(index) == i) {
+          y += 0.5 * (ih - h) + (ih + h) * (i - index);
+        }
+        else {
+          y += (i - index - 0.5) * h;
+
+          if(i < index) {
+            y -= 0.5 * ih;
+          }
+          else {
+            y += 0.5 * ih;
+          }
+        }
+
+        Node node = children.get(i + 1);
+
+        layoutInArea(node, x, y, w, h, 0, Insets.EMPTY, true, true, HPos.CENTER, VPos.CENTER);
+
+        y += h;
+      }
+    }
   }
 }
+

@@ -10,7 +10,10 @@ import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.DatabaseStreamPrintProvider;
+import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.domain.PlayerFactory;
+import hs.mediasystem.runner.expose.Annotations;
+import hs.mediasystem.runner.util.DatabaseResponseCache;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 
@@ -19,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.ResponseCache;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
@@ -50,6 +54,7 @@ public class MediaSystemConfigurer {
     injector.registerInstance(ini);
 
     configureDatabase(injector, ini.getSection("database"));
+    configureResponseCache(injector);
 
     injector.register(DatabaseStreamPrintProvider.class);
 
@@ -59,7 +64,6 @@ public class MediaSystemConfigurer {
 
     if(Files.exists(root)) {
       Files.find(root, 1, (p, a) -> !p.equals(root)).forEach(p -> {
-        LOGGER.warning(">>> p = " + p);
         try {
           List<URL> urls = Files.find(p, 1, (cp, a) -> !cp.equals(p)).map(Path::toUri).map(uri -> {
             try {
@@ -69,7 +73,6 @@ public class MediaSystemConfigurer {
               throw new IllegalStateException(e);
             }
           }).collect(Collectors.toList());
-          LOGGER.warning(">>> list = " + urls);
 
           pluginManager.loadPluginAndScan(urls.toArray(new URL[] {}));
         }
@@ -88,7 +91,8 @@ public class MediaSystemConfigurer {
       );
     }
 
-    injector.getInstance(ScannerInstaller.class);
+    injector.getInstance(CollectionLocationManager.class);  // Triggers background thread
+    injector.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
 
 //    try {
 //      p.getClassLoader().loadClass("com.sun.jna.NativeLibrary");
@@ -97,6 +101,8 @@ public class MediaSystemConfigurer {
 //      throw new RuntimeException(e);
 //    }
     injector.getInstance(PlayerFactory.class).create(ini);
+
+    Annotations.initialize();
 
     return injector;
   }
@@ -110,6 +116,10 @@ public class MediaSystemConfigurer {
     }
 
     LOGGER.info("Logging configured");
+  }
+
+  private static void configureResponseCache(Injector injector) {
+    ResponseCache.setDefault(injector.getInstance(DatabaseResponseCache.class));
   }
 
   private static Injector createInjector() {

@@ -1,7 +1,7 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.runner.DebugFX;
 import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.runner.util.DebugFX;
 
 import java.util.ArrayDeque;
 import java.util.Deque;

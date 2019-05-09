@@ -1,13 +1,13 @@
 package hs.mediasystem.plugin.basictheme;
 
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.plugin.library.scene.LibraryNodeFactory;
-import hs.mediasystem.plugin.library.scene.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
+import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.serie.ProductionOverviewNodeFactory;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.presentation.PlacerQualifier;
-import hs.mediasystem.runner.ImageHandleFactory;
+import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
@@ -32,7 +32,7 @@ public class ProductionOverviewPlacer extends AbstractPlacer<LibraryPresentation
   @Override
   public Node place(LibraryPresentation parentPresentation, ProductionPresentation presentation) {
     Node node = super.place(parentPresentation, presentation);
-System.out.println("$$$$ Placing ProductionPresentation");
+
     ((Pane)node).setMaxSize(10000, 10000);
 
     GridPane gridPane = GridPaneUtil.create(new double[] {10, 80, 10}, new double[] {25, 50, 25});

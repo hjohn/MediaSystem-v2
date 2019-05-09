@@ -10,10 +10,10 @@ public class Levenshtein {
       return 0;
     }
 
-    return 1.0 - (compare(s1, n, s2, m) / (Math.max(n, m)));
+    return 1.0 - ((double)compare(s1, n, s2, m) / (Math.max(n, m)));
   }
 
-  private static double compare(final String s1, final int n, final String s2, final int m) {
+  private static int compare(final String s1, final int n, final String s2, final int m) {
     int[][] matrix = new int[n + 1][m + 1];
 
     for(int i = 0; i <= n; i++) {

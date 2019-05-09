@@ -11,15 +11,22 @@ import org.eclipse.jdt.annotation.Nullable;
 public class Member {
   private final Field field;
   private final Method method;
+  private final boolean internal;
 
-  public Member(Field field) {
+  public Member(Field field, boolean internal) {
     this.field = field;
     this.method = null;
+    this.internal = internal;
   }
 
-  public Member(Method method) {
+  public Member(Method method, boolean internal) {
     this.field = null;
     this.method = method;
+    this.internal = internal;
+  }
+
+  public boolean isInternal() {
+    return internal;
   }
 
   public Method getMethod() {

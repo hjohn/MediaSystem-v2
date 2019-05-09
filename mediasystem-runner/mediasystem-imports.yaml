@@ -1,0 +1,22 @@
+- type: "Movies"
+  paths: ["//Ukyo/Movies/HD"]
+  identification: "TMDB"
+  tags: ["movie"]
+  id: 1
+
+- type: "Series"
+  paths: ["//Ukyo/Series"]
+  identification: "TMDB"
+  tags: ["serie"]
+  id: 2
+    
+#  - type: "Series"
+#    paths: ["//Ukyo/library/Workouts"]
+#    tags: ["workout"]
+#    id: 3
+  
+- type: "Series"
+  paths: ["//Ukyo/library/Animation/Cartoons"]
+  identification: "TMDB"
+  tags: ["cartoon"]
+  id: 4    

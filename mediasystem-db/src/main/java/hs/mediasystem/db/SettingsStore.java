@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -21,6 +22,7 @@ import javax.inject.Singleton;
 public class SettingsStore {
   private static final String SEPARATOR = "/::/";
   private static final Logger LOGGER = Logger.getLogger(SettingsStore.class.getName());
+  private static final Pattern INT_PATTERN = Pattern.compile("-?\\d+");
 
   @Inject private Database database;
 
@@ -88,6 +90,8 @@ public class SettingsStore {
     String value = cache.get(key);
 
     if(value != null) {
+      LOGGER.fine("Retrieved cached value for '" + key + "': " + value);
+
       return value;
     }
 
@@ -97,18 +101,42 @@ public class SettingsStore {
       value = setting == null ? null : setting.getValue();
       cache.put(key, value);
 
+      LOGGER.fine("Retrieved database value for '" + key + "': " + value);
+
       return value;
     }
   }
 
+  public String getSettingOrDefault(String system, String name, String defaultValue) {
+    String value = getSetting(system, name);
+
+    return value == null ? defaultValue : value;
+  }
+
+  public int getIntSettingOrDefault(String system, String name, int defaultValue, int min, int max) {
+    String value = getSetting(system, name);
+
+    if(value != null && INT_PATTERN.matcher(value).matches()) {
+      return Math.min(max, Math.max(min, Integer.parseInt(value)));
+    }
+
+    return defaultValue;
+  }
+
   public void storeSetting(String system, String name, String value) {
     String key = key(system, name);
+
+    LOGGER.fine("Stored value for '" + key + "': " + value);
 
     cache.put(key, value);
 
     synchronized(dirtyKeys) {
       dirtyKeys.add(key);
     }
+  }
+
+  public void storeIntSetting(String system, String name, int value) {
+    storeSetting(system, name, "" + value);
   }
 
   private static String key(String system, String name) {

@@ -1,18 +1,14 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.plugin.library.scene.ContextLayout;
-import hs.mediasystem.plugin.library.scene.LibraryNodeFactory.Area;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
-import hs.mediasystem.plugin.library.scene.SlideInTransition;
-import hs.mediasystem.plugin.library.scene.SlideOutTransition;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
+import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.StateFilter;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.runner.LessLoader;
-import hs.mediasystem.runner.ResourceManager;
+import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.control.AreaPane2;
@@ -21,8 +17,6 @@ import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.Labels;
 
-import java.util.Comparator;
-import java.util.List;
 import java.util.function.Predicate;
 
 import javafx.animation.Interpolator;
@@ -31,7 +25,6 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.animation.Transition;
 import javafx.application.Platform;
-import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
@@ -50,10 +43,23 @@ import javafx.util.Duration;
 
 import javax.inject.Inject;
 
-public abstract class AbstractSetup<T, P extends GridViewPresentation> implements NodeFactory<P> {
+import org.reactfx.EventStreams;
+
+public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridViewPresentation<T>> implements NodeFactory<P> {
   private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
 
   @Inject private ContextLayout contextLayout;
+
+  public enum Area {
+    CENTER_TOP,
+    CENTER,
+    NAVIGATION,
+    NAME,
+    DETAILS,
+    INFORMATION_PANEL,
+    CONTEXT_PANEL,  // Panel that quickly fades in on the left depending on the presence of content
+    PREVIEW_PANEL   // Panel that slides in from the right depending on the presence of content
+  }
 
   public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
     MediaGridView<MediaItem<T>> listView = new MediaGridView<>();
@@ -76,6 +82,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
 
     MediaGridViewCellFactory<T> cellFactory = new MediaGridViewCellFactory<>();
 
+    cellFactory.setMaxRatio(0.9);
     cellFactory.setContentBias(Orientation.VERTICAL);
 
     configureCellFactory(cellFactory);
@@ -112,14 +119,14 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation> implement
         }
       }
     }
-System.out.println(">>> CALLING SELECT");
+
     listView.getSelectionModel().select(selectedIndex);
 
     presentation.selectedItem.bind(listView.getSelectionModel().selectedItemProperty());
   }
 
   protected String getSelectedId(P presentation) {
-    return presentation.selectedItem.get() != null ? presentation.selectedItem.get().getId() : null;
+    return presentation.selectedItem.getValue() != null ? presentation.selectedItem.getValue().getId() : null;
   }
 
   public Node createView(P presentation) {
@@ -226,13 +233,14 @@ System.out.println(">>> CALLING SELECT");
     };
 
     areaPane.setMinSize(1, 1);
+    areaPane.getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
 
     configurePanes(areaPane, presentation);
 
     return areaPane;
   }
 
-  private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation presentation, ObservableList<MediaItem<T>> filteredItems, ObservableList<MediaItem<T>> originalItems) {
+  private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation<T> presentation, ObservableList<MediaItem<T>> filteredItems, ObservableList<MediaItem<T>> originalItems) {
     StringBinding binding = Bindings.createStringBinding(() -> String.format(filteredItems.size() == originalItems.size() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), filteredItems.size(), originalItems.size()), filteredItems, originalItems);
     GridPane gridPane = new GridPane();
     VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
@@ -241,68 +249,58 @@ System.out.println(">>> CALLING SELECT");
 
     areaPane.add(Area.INFORMATION_PANEL, vbox);
 
-    gridPane.at(0, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.order"), "header"), Labels.create("remote-shortcut, red"), Labels.create("S", "shortcut")));
+    gridPane.at(0, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.order"), "header"), Labels.create("remote-shortcut, red")));
     gridPane.at(0, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.sortOrder).map(so -> RESOURCES.getText("sort-order", so.resourceKey)).orElse("Unknown")));
     gridPane.at(1, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.filter"), "header"), Labels.create("remote-shortcut, green")));
     gridPane.at(1, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.filter).map(f -> RESOURCES.getText("filter", f.resourceKey)).orElse("Unknown")));
 
-    if(showViewed()) {
-      gridPane.at(2, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.viewed"), "header"), Labels.create("remote-shortcut, yellow")));
-      gridPane.at(2, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.includeViewed).map(iv -> RESOURCES.getText("viewed", iv ? "include" : "exclude")).orElse("Unknown")));
+    if(presentation.availableStateFilters.size() > 1) {
+      gridPane.at(2, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.stateFilter"), "header"), Labels.create("remote-shortcut, yellow")));
+      gridPane.at(2, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.name().toLowerCase())).orElse("Unknown")));
     }
   }
 
   private FilteredList<MediaItem<T>> setupFiltering(P presentation, ObservableList<MediaItem<T>> items, MediaGridView<MediaItem<T>> listView) {
     FilteredList<MediaItem<T>> filteredList = new FilteredList<>(items);
 
-    InvalidationListener listener = obs -> {
-      MediaItem<T> selectedItem = listView.getSelectionModel().getSelectedItem();
-      @SuppressWarnings("unchecked")
-      Predicate<MediaItem<?>> predicate = (Predicate<MediaItem<?>>)(Predicate<?>)presentation.filter.get().predicate;
+    EventStreams.merge(EventStreams.invalidationsOf(presentation.filter), EventStreams.invalidationsOf(presentation.stateFilter))
+      .withDefaultEvent(null)
+      .conditionOnShowing(listView)
+      .observe(e -> {
+        MediaItem<T> selectedItem = listView.getSelectionModel().getSelectedItem();
+        @SuppressWarnings("unchecked")
+        Predicate<MediaItem<?>> predicate = (Predicate<MediaItem<?>>)(Predicate<?>)presentation.filter.getValue().predicate;
 
-      if(!presentation.includeViewed.get()) {  // Exclude viewed?
-        predicate = predicate.and(mi -> mi.mediaStatus.get() != MediaStatus.WATCHED);
-      }
+        if(presentation.stateFilter.getValue() == StateFilter.UNWATCHED) {  // Exclude viewed and not in collection?
+          predicate = predicate.and(mi -> mi.mediaStatus.get() == MediaStatus.AVAILABLE);
+        }
+        if(presentation.stateFilter.getValue() == StateFilter.AVAILABLE) {  // Exclude not in collection?
+          predicate = predicate.and(mi -> mi.mediaStatus.get() != MediaStatus.UNAVAILABLE);
+        }
 
-      filteredList.setPredicate(predicate);
+        filteredList.setPredicate(predicate);  // Triggers clearing of selected index
 
-      listView.getSelectionModel().select(selectedItem);
+        listView.getSelectionModel().select(selectedItem);
 
-      if(listView.getSelectionModel().isEmpty()) {
-        listView.getSelectionModel().select(0);
-      }
-    };
-
-    presentation.filter.addListener(listener);
-
-    if(showViewed()) {
-      presentation.includeViewed.addListener(listener);
-    }
-
-    presentation.availableFilters.setAll(getAvailableFilters());
-    presentation.filter.set(presentation.availableFilters.get(0));
+        if(listView.getSelectionModel().isEmpty()) {
+          listView.getSelectionModel().select(0);
+        }
+      });
 
     return filteredList;
   }
 
-  @SuppressWarnings("unchecked")
   private SortedList<MediaItem<T>> setupSorting(P presentation, FilteredList<MediaItem<T>> filteredList) {
     SortedList<MediaItem<T>> sortedList = new SortedList<>(filteredList);
 
-    presentation.sortOrder.addListener((obs, old, current) -> sortedList.setComparator((Comparator<MediaItem<?>>)(Comparator<?>)current.comparator));
-
-    presentation.availableSortOrders.setAll(getAvailableSortOrders());
-    presentation.sortOrder.set(presentation.availableSortOrders.get(0));
+    sortedList.comparatorProperty().bind(Binds.monadic(presentation.sortOrder).map(so -> so.comparator));
 
     return sortedList;
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation);
   protected abstract void configureCellFactory(MediaGridViewCellFactory<T> cellFactory);
-  protected abstract ObservableList<MediaItem<T>> getItems(P presentationn);
-  protected abstract List<SortOrder<T>> getAvailableSortOrders();
-  protected abstract List<Filter<T>> getAvailableFilters();
-  protected abstract boolean showViewed();
+  protected abstract ObservableList<MediaItem<T>> getItems(P presentation);
 
   protected void configureGridView(@SuppressWarnings("unused") MediaGridView<MediaItem<T>> gridView) {
   }

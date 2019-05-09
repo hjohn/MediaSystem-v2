@@ -1,11 +1,13 @@
 package hs.mediasystem.util;
 
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.Objects;
 
-public class StringURI {
+public class StringURI implements Comparable<StringURI> {
   private final String uri;
 
   public StringURI(String uri) {
@@ -16,6 +18,15 @@ public class StringURI {
 
   public StringURI(URI uri) {
     this.uri = uri.toString();
+  }
+
+  public String asReadableString() {
+    try {
+      return URLDecoder.decode(uri, "UTF-8");
+    }
+    catch(UnsupportedEncodingException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public String getUri() {
@@ -56,5 +67,10 @@ public class StringURI {
   @Override
   public String toString() {
     return uri;
+  }
+
+  @Override
+  public int compareTo(StringURI o) {
+    return uri.compareTo(o.uri);
   }
 }

@@ -1,6 +1,5 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,18 +15,22 @@ public class Serie extends Production {
     PILOT
   }
 
+  private final List<Keyword> keywords;
   private final State state;
   private final List<Season> seasons;
   private final LocalDate lastAirDate;
-  private final double popularity;
 
-  public Serie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, List<String> languages, List<String> genres, State state, LocalDate lastAirDate, double popularity, List<Season> seasons) {
-    super(identifier, details, reception, runtime, languages, genres);
+  public Serie(ProductionIdentifier identifier, Details details, Reception reception, List<String> languages, List<String> genres, List<Keyword> keywords, State state, LocalDate lastAirDate, double popularity, List<Season> seasons) {
+    super(identifier, details, reception, languages, genres, popularity);
 
-    this.popularity = popularity;
+    this.keywords = keywords;
     this.state = state;
     this.lastAirDate = lastAirDate;
     this.seasons = new ArrayList<>(Collections.unmodifiableList(seasons));
+  }
+
+  public List<Keyword> getKeywords() {
+    return keywords;
   }
 
   public State getState() {
@@ -40,10 +43,6 @@ public class Serie extends Production {
 
   public List<Season> getSeasons() {
     return seasons;
-  }
-
-  public double getPopularity() {
-    return popularity;
   }
 
   public Season findSeason(int seasonNumber) {

@@ -2,14 +2,14 @@ package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
-import hs.mediasystem.framework.actions.Expose;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.StringURI;
 
+import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
 import javafx.beans.property.BooleanProperty;
@@ -33,10 +33,8 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
   public final ObjectProperty<StringURI> uri = new SimpleObjectProperty<>();
   public final LongProperty startPositionMillis = new SimpleLongProperty();
 
-  @Expose(name = "player")
   public final ObjectProperty<PlayerPresentation> playerPresentation = new SimpleObjectProperty<>();
 
-  @Expose
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
 
   @Inject private PlayerSetting playerSetting;
@@ -58,7 +56,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
   private void postConstruct() {
     this.playerPresentation.set(playerSetting.get());
 
-    this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
+    this.playerPresentation.get().positionControl().addListener(new ChangeListener<Number>() {
       private long totalTimeViewed;
       private long timeViewedSinceLastSkip;
 
@@ -84,12 +82,16 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
       }
 
       private void updatePositionAndViewed() {
-        mediaItem.get().getStreams().stream().filter(s -> s.getUri().equals(uri.get())).findFirst().map(MediaStream::getStreamPrint).ifPresent(this::updatePositionAndViewed);
+        mediaItem.get().getStreams().stream()
+          .filter(s -> s.getUri().equals(uri.get()))
+          .findFirst()
+          .map(BasicStream::getStreamPrint)
+          .ifPresent(this::updatePositionAndViewed);
       }
 
       private void updatePositionAndViewed(StreamPrint streamPrint) {
         PlayerPresentation player = PlaybackOverlayPresentation.this.playerPresentation.get();
-        long length = player.getLength();
+        long length = player.lengthProperty().getValue();
 
         if(length > 0) {
           long timeViewed = totalTimeViewed + startPositionMillis.get();
@@ -99,11 +101,16 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             LOGGER.config("Marking as viewed: " + mediaItem.get());
 
             streamStateService.setWatched(streamPrint, true);
+            streamStateService.setLastWatchedTime(streamPrint, LocalDateTime.now());
+
+            if(parentMediaItem.get() != null) {
+              streamStateService.setLastWatchedTime(parentMediaItem.get().getStream().getStreamPrint(), LocalDateTime.now());
+            }
           }
 
           if(timeViewedSinceLastSkip > 30 * 1000) {
             int resumePosition = 0;
-            long position = player.getPosition();
+            long position = player.positionControl().getValue();
 
             if(position > 30 * 1000 && position < length * 9 / 10) {
               resumePosition = (int)(position / 1000) - 10;
@@ -113,6 +120,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
             if(Math.abs(storedResumePosition - resumePosition) > 10) {
               streamStateService.setResumePosition(streamPrint, resumePosition);
+              streamStateService.setTotalDuration(streamPrint, (int)(length / 1000));
             }
           }
         }

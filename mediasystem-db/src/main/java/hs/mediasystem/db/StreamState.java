@@ -1,30 +1,20 @@
 package hs.mediasystem.db;
 
+import hs.mediasystem.scanner.api.StreamID;
+
 import java.util.Map;
 
 public class StreamState {
   private final Map<String, Object> properties;
-  private final byte[] hash;
-  private final Long size;
-  private final long lastModificationTime;
+  private final StreamID streamId;
 
-  public StreamState(byte[] hash, Long size, long lastModificationTime, Map<String, Object> properties) {
-    this.hash = hash;
-    this.size = size;
-    this.lastModificationTime = lastModificationTime;
+  public StreamState(StreamID streamId, Map<String, Object> properties) {
+    this.streamId = streamId;
     this.properties = properties;
   }
 
-  public byte[] getHash() {
-    return hash;
-  }
-
-  public Long getSize() {
-    return size;
-  }
-
-  public long getLastModificationTime() {
-    return lastModificationTime;
+  public StreamID getStreamID() {
+    return streamId;
   }
 
   public Map<String, Object> getProperties() {

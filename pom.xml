@@ -7,17 +7,23 @@
   <artifactId>mediasystem-parent</artifactId>
   <version>2.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <version.jackson>2.9.3</version.jackson>
+  </properties>
+
   <modules>
     <module>mediasystem-runner</module>
     <module>mediasystem-domain</module>
     <module>mediasystem-util</module>
     <module>mediasystem-mediamanager</module>
     <module>mediasystem-db</module>
-	<module>mediasystem-ext-basic-media-types</module>
-	<module>mediasystem-package</module>
+    <module>mediasystem-ext-basic-media-types</module>
+    <module>mediasystem-scanner-api</module>
+    <module>mediasystem-package</module>
   </modules>
-  
+    
   <build>
     <resources>
       <resource>
@@ -27,12 +33,46 @@
           <include>**/*.jpg</include>
           <include>**/*.png</include>
           <include>**/*.css</include>
-		  <include>**/*.less</include>
+          <include>**/*.less</include>
+          <include>**/*.json</include>
+          <include>**/*.yaml</include>
         </includes>
       </resource>
       <resource>
         <directory>src/main/resources</directory>
       </resource>
     </resources>   
+      
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>      
+          <version>3.2.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.0</version>      
+          <configuration>
+            <source>9</source>
+            <target>9</target>
+            <compilerArgument>-parameters</compilerArgument>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.1.1</version>    
+          <executions>
+            <execution>
+              <goals>
+                <goal>test-jar</goal>
+              </goals>
+            </execution>
+          </executions>  
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

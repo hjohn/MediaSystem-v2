@@ -1,31 +1,31 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
+import hs.mediasystem.scanner.api.BasicStream;
 
 import java.util.Objects;
 
 public class UnknownStreamException extends RuntimeException {
-  private final MediaStream<?> mediaStream;
+  private final BasicStream stream;
   private final IdentificationService idService;
 
-  public UnknownStreamException(MediaStream<?> mediaStream, IdentificationService idService) {
-    super("Unable to identify " + mediaStream + " with " + idService);
+  public UnknownStreamException(BasicStream stream, IdentificationService idService) {
+    super("Unable to identify " + stream + " with " + idService);
 
-    if(mediaStream == null) {
-      throw new IllegalArgumentException("mediaStream cannot be null");
+    if(stream == null) {
+      throw new IllegalArgumentException("stream cannot be null");
     }
     if(idService == null) {
       throw new IllegalArgumentException("idService cannot be null");
     }
 
-    this.mediaStream = mediaStream;
+    this.stream = stream;
     this.idService = idService;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(mediaStream, idService);
+    return Objects.hash(stream, idService);
   }
 
   @Override
@@ -42,7 +42,7 @@ public class UnknownStreamException extends RuntimeException {
     if(!idService.equals(other.idService)) {
       return false;
     }
-    if(!mediaStream.equals(other.mediaStream)) {
+    if(!stream.equals(other.stream)) {
       return false;
     }
 

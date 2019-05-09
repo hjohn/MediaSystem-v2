@@ -11,7 +11,7 @@
 }
 
 #video-overlay .video-subtitle {
-  -fx-font-size: 24px;
+  -fx-font-size: 36px;
   -fx-font-weight: bold;
   -fx-text-fill: white;
   -fx-padding: 0 0 20 0;

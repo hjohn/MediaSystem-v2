@@ -1,0 +1,1 @@
+ALTER TABLE stream_ids ADD COLUMN lastseentime bigint;

@@ -1,18 +1,21 @@
 package hs.mediasystem.ext.scanners;
 
-import hs.mediasystem.ext.basicmediatypes.scan.Attribute;
-import hs.mediasystem.ext.basicmediatypes.scan.EpisodeStream;
-import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.scan.Scanner;
-import hs.mediasystem.ext.basicmediatypes.scan.SerieStream;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrintProvider;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
-import hs.mediasystem.ext.scanners.NameDecoder.Hint;
+import hs.mediasystem.ext.scanners.NameDecoder.Mode;
+import hs.mediasystem.scanner.api.Attribute;
+import hs.mediasystem.scanner.api.Attribute.ChildType;
+import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.scanner.api.Scanner;
+import hs.mediasystem.scanner.api.StreamPrint;
+import hs.mediasystem.scanner.api.StreamPrintProvider;
 import hs.mediasystem.util.Attributes;
+import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.RuntimeIOException;
 import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.bg.BackgroundTaskRegistry;
+import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
 
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -28,26 +31,34 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
-public class SeriesScanner implements Scanner<MediaStream<?>> {
+public class SeriesScanner implements Scanner {
   private static final Logger LOGGER = Logger.getLogger(MoviesScanner.class.getName());
-  private static final NameDecoder NAME_DECODER = new NameDecoder(Hint.MOVIE, Hint.FOLDER_NAMES);
-  private static final NameDecoder EPISODE_NAME_DECODER = new NameDecoder(Hint.EPISODE);
+  private static final NameDecoder NAME_DECODER = new NameDecoder(Mode.SERIE);
+  private static final NameDecoder EPISODE_NAME_DECODER = new NameDecoder(Mode.EPISODE);
+  private static final NameDecoder SPECIAL_NAME_DECODER = new NameDecoder(Mode.SPECIAL);
+  private static final NameDecoder SIMPLE_NAME_DECODER = new NameDecoder(Mode.SIMPLE);
   private static final Set<FileVisitOption> FILE_VISIT_OPTIONS = new HashSet<>(Arrays.asList(FileVisitOption.FOLLOW_LINKS));
+  private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Scanning series");
 
   @Inject private StreamPrintProvider streamPrintProvider;
 
   @Override
-  public List<MediaStream<?>> scan(List<Path> roots) {
-    List<MediaStream<?>> results = new ArrayList<>();
+  public List<Exceptional<List<BasicStream>>> scan(List<Path> roots) {
+    List<Exceptional<List<BasicStream>>> rootResults = new ArrayList<>();
 
     LOGGER.info("Scanning " + roots);
 
     for(Path root : roots) {
       try {
         List<Path> scanResults = scan(root);
+
+        WORKLOAD.start(scanResults.size());
+
+        List<BasicStream> results = new ArrayList<>();
 
         for(Path path : scanResults) {
           DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
@@ -69,27 +80,41 @@ public class SeriesScanner implements Scanner<MediaStream<?>> {
             Attribute.ID_PREFIX + "IMDB", imdbNumber
           );
 
-          results.add(new SerieStream(streamPrint, attributes, Collections.emptyMap()));
+          List<BasicStream> children = scanSerie(path);
 
-          results.addAll(scanSerie(path, uri));
+          results.add(new BasicStream(MediaType.of("SERIE"), uri, streamPrint, attributes, children));
+
+          WORKLOAD.complete();
         }
+
+        rootResults.add(Exceptional.of(results));
       }
       catch(RuntimeException | IOException e) {
         LOGGER.warning("Exception while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility
+
+        WORKLOAD.reset();
+
+        rootResults.add(Exceptional.ofException(e));
       }
     }
 
-    return results;
+    return rootResults;
   }
 
-  private List<MediaStream<?>> scanSerie(Path root, StringURI parentUri) {
-    List<MediaStream<?>> results = new ArrayList<>();
+  private List<BasicStream> scanSerie(Path root) {
+    List<BasicStream> results = new ArrayList<>();
 
     try {
-      List<Path> scanResults = new PathFinder(2).find(root);
+      List<Path> scanResults = new PathFinder(5).find(root);
 
       for(Path path : scanResults) {
-        DecodeResult result = EPISODE_NAME_DECODER.decode(path.getFileName().toString());
+        Path relative = root.relativize(path);
+        ChildType type = hasPathPart(relative, "specials?") ? ChildType.SPECIAL :
+                         hasPathPart(relative, "extras?")   ? ChildType.EXTRA : null;
+
+        DecodeResult result = type == ChildType.SPECIAL ? SPECIAL_NAME_DECODER.decode(path.getFileName().toString()) :
+                              type == ChildType.EXTRA   ? SIMPLE_NAME_DECODER.decode(path.getFileName().toString()) :
+                                                          EPISODE_NAME_DECODER.decode(path.getFileName().toString());
 
         String title = result.getTitle();
         String subtitle = result.getSubtitle();
@@ -101,16 +126,20 @@ public class SeriesScanner implements Scanner<MediaStream<?>> {
 
         StreamPrint streamPrint = streamPrintProvider.get(new StringURI(path.toUri()), Files.size(path), Files.getLastModifiedTime(path).toMillis());
 
+        if(type == null && sequence != null && sequence.contains(",")) {
+          type = ChildType.EPISODE;  // sequences with a comma have an episode number in them (",2", "10,15"); ones without comma only had a season or special number in it, or nothing at all
+        }
+
         Attributes attributes = Attributes.of(
           Attribute.TITLE, title,
           Attribute.SUBTITLE, subtitle,
           Attribute.SEQUENCE, sequence,
           Attribute.YEAR, year == null ? null : year.toString(),
-          Attribute.ID_PREFIX + "IMDB", imdbNumber
+          Attribute.ID_PREFIX + "IMDB", imdbNumber,
+          Attribute.CHILD_TYPE, type == null ? null : type.toString()
         );
 
-        // TODO PARENT!
-        results.add(new EpisodeStream(parentUri, streamPrint, attributes, Collections.emptyMap()));
+        results.add(new BasicStream(MediaType.of("EPISODE"), new StringURI(path.toUri()), streamPrint, attributes, Collections.emptyList()));
       }
     }
     catch(RuntimeException | IOException e) {
@@ -118,6 +147,21 @@ public class SeriesScanner implements Scanner<MediaStream<?>> {
     }
 
     return results;
+  }
+
+  private static boolean hasPathPart(Path input, String part) {
+    Pattern prefixPattern = Pattern.compile(part + "\\b");
+    Pattern postfixPattern = Pattern.compile("\\b" + part);
+
+    for(Path path : input) {
+      String name = path.toString().toLowerCase();
+
+      if(prefixPattern.matcher(name).matches() || postfixPattern.matcher(name).matches()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private static List<Path> scan(Path scanPath) {

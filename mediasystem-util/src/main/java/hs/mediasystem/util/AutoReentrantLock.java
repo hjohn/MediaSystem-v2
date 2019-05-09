@@ -2,20 +2,37 @@ package hs.mediasystem.util;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-public class AutoReentrantLock implements AutoCloseable {
-  private final ReentrantLock lock;
+public class AutoReentrantLock {
+  private final ReentrantLock reentrantLock = new ReentrantLock();
 
-  public AutoReentrantLock() {
-    this.lock = new ReentrantLock();
+  /**
+   * Obtains the lock, returning a {@link Key} that can be used to
+   * release the lock again (early) and/or automatically release it when
+   * used in a try-with-resource block.
+   *
+   * @return a {@link Key}, never null
+   */
+  public Key lock() {
+    return new Key();
   }
 
-  public AutoReentrantLock lock() {
-    lock.lock();
-    return this;
-  }
+  public class Key implements AutoCloseable {
+    private boolean alreadyClosed;
 
-  @Override
-  public void close() {
-    lock.unlock();
+    private Key() {
+      reentrantLock.lock();
+    }
+
+    public void earlyUnlock() {
+      close();
+    }
+
+    @Override
+    public void close() {
+      if(!alreadyClosed) {
+        reentrantLock.unlock();
+        alreadyClosed = true;
+      }
+    }
   }
 }

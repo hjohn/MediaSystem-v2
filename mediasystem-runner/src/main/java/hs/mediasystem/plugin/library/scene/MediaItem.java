@@ -1,49 +1,85 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
+import hs.mediasystem.db.StreamStateService;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
+import hs.mediasystem.ext.basicmediatypes.domain.Release;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
+import hs.mediasystem.mediamanager.MediaService;
+import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.scanner.api.StreamPrint;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-public class MediaItem<T> {
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+public class MediaItem<T extends MediaDescriptor> {
+  @Singleton
+  public static class Factory {
+    @Inject private StreamStateService streamStateService;
+    @Inject private MediaService mediaService;
+
+    public <T extends MediaDescriptor> MediaItem<T> create(T descriptor, MediaItem<?> parent) {
+      Release release = getRelease(descriptor);
+      Set<BasicStream> streams = release == null ? Collections.emptySet() : mediaService.findStreams(release.getIdentifier());
+      List<BasicStream> sortedStreams = streams.stream()
+        .sorted(Comparator.<BasicStream, Long>comparing(s -> s.getStreamPrint().getSize(), Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
+        .collect(Collectors.toList());
+
+      StreamPrint streamPrint = sortedStreams.isEmpty() ? null : sortedStreams.get(0).getStreamPrint();
+
+      return new MediaItem<>(
+        descriptor,
+        parent,
+        sortedStreams,
+        streamPrint == null ? new SimpleBooleanProperty() : streamStateService.watchedProperty(streamPrint),
+        streamPrint == null ? null : streamStateService.getLastWatchedTime(streamPrint)
+      );
+    }
+  }
+
   public enum MediaStatus {
     UNAVAILABLE,
     AVAILABLE,
     WATCHED
   }
 
-  public final IntegerProperty watchedCount = new SimpleIntegerProperty();
-  public final IntegerProperty availableCount = new SimpleIntegerProperty();
-
+  public final BooleanProperty watched;
+  public final BooleanExpression missing;
   public final StringProperty productionTitle = new SimpleStringProperty();
+  public final StringProperty productionYearRange = new SimpleStringProperty();
   public final StringProperty personName = new SimpleStringProperty();
   public final ObjectBinding<MediaStatus> mediaStatus;
-
-  // Movie: UNAVAILABLE -> 0 0
-  // Movie: AVAILABLE   -> 0 1
-  // Movie: WATCHED     -> 1 1
-  // Serie: 10 episodes, 5 watched, 7 available -> 5/7 or 5/10 ?
+  public final ObjectProperty<LocalDateTime> lastWatchedTime = new SimpleObjectProperty<>();
 
   private final T wrappedObject;
-  private final Set<MediaStream<?>> streams;
-  private final String id;
+  private final List<BasicStream> streams;
+  private final String logicalId;
+  private final String physicalId;
   private final MediaItem<?> parent;
 
-  public MediaItem(T wrappedObject, MediaItem<?> parent, Set<MediaStream<?>> streams, int watchedCount, int availableCount) {
+  private MediaItem(T wrappedObject, MediaItem<?> parent, List<BasicStream> streams, BooleanProperty watchedProperty, LocalDateTime lastWatchedTime) {
     if(wrappedObject == null) {
       throw new IllegalArgumentException("wrappedObject cannot be null");
     }
@@ -51,27 +87,28 @@ public class MediaItem<T> {
     this.wrappedObject = wrappedObject;
     this.parent = parent;
     this.streams = streams;
-
-    // Set properties
-    this.watchedCount.set(watchedCount);
-    this.availableCount.set(availableCount);
+    this.watched = watchedProperty;
+    this.lastWatchedTime.set(lastWatchedTime);
 
     this.mediaStatus = new ObjectBinding<>() {
       {
-        bind(MediaItem.this.watchedCount, MediaItem.this.availableCount);
+        bind(MediaItem.this.watched);
       }
 
       @Override
       protected MediaStatus computeValue() {
-        return MediaItem.this.availableCount.get() == 0 ? MediaStatus.UNAVAILABLE :
-          MediaItem.this.availableCount.get() == MediaItem.this.watchedCount.get() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE;
+        return MediaItem.this.streams.isEmpty() ? MediaStatus.UNAVAILABLE :
+                   MediaItem.this.watched.get() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE;
       }
     };
 
-    Production production = getProduction();
+    this.missing = mediaStatus.isEqualTo(MediaStatus.UNAVAILABLE);
 
-    if(production != null) {
-      productionTitle.set(production.getName());
+    Release release = getRelease();
+
+    if(release != null) {
+      productionTitle.set(release.getName());
+      productionYearRange.set(createYearRange(release));
     }
 
     Person person = getPerson();
@@ -80,41 +117,85 @@ public class MediaItem<T> {
       personName.set(person.getName());
     }
 
-    this.id = createId();
+    this.physicalId = createPhysicalId();
+    this.logicalId = createLogicalId();
+
+    if(physicalId == null && logicalId == null) {
+      throw new IllegalStateException("MediaItem must have an id: " + this);
+    }
   }
 
+  private static String createYearRange(Release release) {
+    if(release instanceof Serie) {
+      Serie serie = (Serie)release;
+
+      if(serie.getDate() == null) {
+        return "";
+      }
+
+      String year = "" + serie.getDate().getYear();
+
+      if(serie.getState() == Serie.State.ENDED && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != serie.getDate().getYear()) {
+        year += " - " + serie.getLastAirDate().getYear();
+      }
+      else if(serie.getState() == Serie.State.CONTINUING) {
+        year += " -";
+      }
+
+      return year;
+    }
+
+    return Optional.ofNullable(release.getDate()).map(LocalDate::getYear).map(Object::toString).orElse("");
+  }
+
+  /**
+   * Returns the id for this item.
+   *
+   * @return the id, never null
+   */
   public String getId() {
-    return id;
+    return physicalId != null ? physicalId : logicalId;
+  }
+
+  /**
+   * Returns the id of the phyiscal stream associated with this item.
+   *
+   * @return the id of the phyiscal stream, can be null if there is no stream
+   */
+  public String getPhysicalId() {
+    return physicalId;
+  }
+
+  /**
+   * Returns the id of the logical item this item was identified as.
+   *
+   * @return the id of the logical item this item was identified as, can be null if not identified
+   */
+  public String getLogicalId() {
+    return logicalId;
   }
 
   public MediaItem<?> getParent() {
     return parent;
   }
 
-  private String createId() {
-    if(streams.isEmpty()) {
-      String id = wrappedObject.getClass().getSimpleName() + ":";
-      Production production = getProduction();
-      Role role = getRole();
-      Person person = getPerson();
-
-      if(production != null) {
-        id += "Production:" + production.getIdentifier();
-      }
-      if(role != null) {
-        id += "Role:" + role.getIdentifier();
-      }
-      if(person != null) {
-        id += "Person:" + person.getIdentifier();
-      }
-
-      return id;
-    }
-
-    return "StreamPrint:" + streams.iterator().next().getStreamPrint().getIdentifier();
+  private String createLogicalId() {
+    return wrappedObject.getClass().getSimpleName() + ":" + wrappedObject.getIdentifier();
   }
 
-  public Set<MediaStream<?>> getStreams() {
+  private String createPhysicalId() {
+    if(streams.isEmpty()) {
+      return null;
+    }
+
+    return "StreamPrint:" + streams.iterator().next().getId().asInt();
+  }
+
+  public BasicStream getStream() {
+    return getStreams().isEmpty() ? null : getStreams().get(0);
+  }
+
+  public List<BasicStream> getStreams() {
     return streams;
   }
 
@@ -123,10 +204,20 @@ public class MediaItem<T> {
   }
 
   public Production getProduction() {
-    return wrappedObject instanceof Movie ? (Movie)wrappedObject :
-           wrappedObject instanceof Serie ? (Serie)wrappedObject :
-           wrappedObject instanceof Season ? (Season)wrappedObject :
-           wrappedObject instanceof Episode ? (Episode)wrappedObject :
+    return getProduction(wrappedObject);
+  }
+
+  public Release getRelease() {
+    return getRelease(wrappedObject);
+  }
+
+  private static Release getRelease(Object wrappedObject) {
+    return wrappedObject instanceof Release ? (Release)wrappedObject :
+           wrappedObject instanceof ProductionRole ? ((ProductionRole)wrappedObject).getProduction() : null;
+  }
+
+  private static Production getProduction(Object wrappedObject) {
+    return wrappedObject instanceof Production ? (Production)wrappedObject :
            wrappedObject instanceof ProductionRole ? ((ProductionRole)wrappedObject).getProduction() : null;
   }
 

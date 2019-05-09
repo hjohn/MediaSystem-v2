@@ -8,10 +8,41 @@
 @text-accent: @theme-accent;
 @text-accent-highlight: lighten(@theme-accent, 15%);
 
-.text-style-base {
-  -fx-font-family: "Noto Sans SemBd";
-  -fx-font-size: 15;
+@shape-checkmark: "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S392 8 256 8zm0 48c110 0 200 89 200 200 0 110-89 200-200 200-110 0-200-89-200-200 0-110 89-200 200-200m140 130l-22-22c-4-4-12-4-16 0L215 303l-59-60c-4-4-12-4-16 0l-22 22c-4 4-4 12 0 16l90 91c4 4 12 4 16 0l172-171c4-4 4-12 0-16z";
+@shape-disc: "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8z";
+@shape-cross: "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 448c-110.5 0-200-89.5-200-200S145.5 56 256 56s200 89.5 200 200-89.5 200-200 200zm101.8-262.2L295.6 256l62.2 62.2c4.7 4.7 4.7 12.3 0 17l-22.6 22.6c-4.7 4.7-12.3 4.7-17 0L256 295.6l-62.2 62.2c-4.7 4.7-12.3 4.7-17 0l-22.6-22.6c-4.7-4.7-4.7-12.3 0-17l62.2-62.2-62.2-62.2c-4.7-4.7-4.7-12.3 0-17l22.6-22.6c4.7-4.7 12.3-4.7 17 0l62.2 62.2 62.2-62.2c4.7-4.7 12.3-4.7 17 0l22.6 22.6c4.7 4.7 4.7 12.3 0 17z";
+
+
+/*
+ * The Noto Sans font supports many variations.  To get the correct variation
+ * in JavaFX, select them as follows:
+ * 
+ * - Black      = Noto Sans Blk
+ * - Bold       = Noto Sans + font-weight: bold
+ * - Semi Bold  = Noto Sans SemBd
+ * - Medium     = Noto Sans Med
+ * - Regular    = Noto Sans + font-weight: normal
+ * - Light      = Noto Sans Light
+ */
+
+.light {
+  -fx-font-family: "Noto Sans Light";
   -fx-font-weight: normal;
+}
+
+.regular {
+  -fx-font-family: "Noto Sans";
+  -fx-font-weight: normal;
+}
+
+.medium {
+  -fx-font-family: "Noto Sans Med";
+  -fx-font-weight: bold;
+}
+
+.semi-bold {
+  -fx-font-family: "Noto Sans SemBd";
+  -fx-font-weight: bold;
 }
 
 .bold {
@@ -24,14 +55,33 @@
   -fx-font-weight: bold;
 }
 
+.text-style-base {
+  .semi-bold;
+  -fx-font-size: 15;
+}
+
+.heading-drop-shadow {
+  -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
+}
+
 .style-heading1 {
   .bold;
   -fx-font-size: 36;
+  
+  &.smaller {
+    -fx-font-size: 28;
+    -fx-wrap-text: true;
+  }
 }
 
 .style-heading2 {
   .bold;
   -fx-font-size: 28;
+  
+  &.smaller {
+    -fx-font-size: 24;
+    -fx-wrap-text: true;
+  }
 }
 
 .style-heading3 {
@@ -39,12 +89,18 @@
   -fx-font-size: 24;
 }
 
+// Difference between headings and paragraphs: bold vs regular, not wrapped vs wrapped
+
 .style-p1 {
   -fx-font-size: 22;
 }
 
 .style-p2 {
   -fx-font-size: 18;
+  
+  &.smaller {
+    -fx-font-size: 15;
+  }
 }
 
 .style-p3 {

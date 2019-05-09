@@ -3,15 +3,30 @@ package hs.mediasystem.plugin.library.scene;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Label;
 
+/**
+ * Note: aspect correct includes borders and padding, so the content itself may not be aspect correct!
+ */
 public class AspectCorrectLabel extends Label {
   private final double aspectRatio;
   private final Orientation orientation;
+  private final double baseWidth;
+  private final double baseHeight;
 
-  public AspectCorrectLabel(String text, double aspectRatio, Orientation orientation) {
+  /**
+   *
+   * @param text
+   * @param aspectRatio
+   * @param orientation
+   * @param baseWidth the width to return if no height was given to calculate aspect with
+   * @param baseHeight the height to return if no width was given to calculate aspect with
+   */
+  public AspectCorrectLabel(String text, double aspectRatio, Orientation orientation, double baseWidth, double baseHeight) {
     super(text);
 
     this.aspectRatio = aspectRatio;
     this.orientation = orientation;
+    this.baseWidth = baseWidth;
+    this.baseHeight = baseHeight;
   }
 
   @Override
@@ -22,25 +37,25 @@ public class AspectCorrectLabel extends Label {
   @Override
   protected double computePrefWidth(double height) {
     if(height > 0) {
-      return height / aspectRatio;
+      return snapSizeX(height / aspectRatio);
     }
 
-    return super.computePrefWidth(height);
+    return baseWidth;
   }
 
   @Override
   protected double computePrefHeight(double width) {
     if(width > 0) {
-      return width * aspectRatio;
+      return snapSizeY(width * aspectRatio);
     }
 
-    return super.computePrefHeight(width);
+    return baseHeight;
   }
 
   @Override
   protected double computeMaxWidth(double height) {
     if(height > 0) {
-      return height / aspectRatio;
+      return computePrefWidth(height);
     }
 
     return 10000;
@@ -49,7 +64,7 @@ public class AspectCorrectLabel extends Label {
   @Override
   protected double computeMaxHeight(double width) {
     if(width > 0) {
-      return width * aspectRatio;
+      return computePrefHeight(width);
     }
 
     return 10000 * aspectRatio;

@@ -2,21 +2,21 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.VideoLink;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Type;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.ext.tmdb.VideoLinks;
+import hs.mediasystem.scanner.api.MediaType;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
 public class TmdbVideoLinksQueryService implements VideoLinksQueryService {
-  private static final Type MOVIE = Type.of("MOVIE");
-  private static final Type SERIE = Type.of("SERIE");
-  private static final Type EPISODE = Type.of("EPISODE");
+  private static final MediaType MOVIE = MediaType.of("MOVIE");
+  private static final MediaType SERIE = MediaType.of("SERIE");
+  private static final MediaType EPISODE = MediaType.of("EPISODE");
 
   @Inject private TheMovieDatabase tmdb;
   @Inject private VideoLinks videoLinks;

@@ -1,6 +1,7 @@
 package hs.mediasystem.util.javafx;
 
 import hs.mediasystem.util.AutoReentrantLock;
+import hs.mediasystem.util.AutoReentrantLock.Key;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.NamedThreadFactory;
 
@@ -89,7 +90,7 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
   }
 
   private void loadImageInBackgroundIfNeeded() {
-    try(AutoReentrantLock lock = backgroundLoadLock.lock()) {
+    try(Key key = backgroundLoadLock.lock()) {
       if(!backgroundLoadInProgress && imageHandleToLoad != null) {
         ImageHandle copy = imageHandleToLoad;
 
@@ -112,7 +113,7 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
     AsyncImageProperty property = propertyRef.get();
 
     if(property != null) {
-      try(AutoReentrantLock lock = property.backgroundLoadLock.lock()) {
+      try(Key key = property.backgroundLoadLock.lock()) {
         property.imageHandleToLoad = imageHandle;
         property.loadImageInBackgroundIfNeeded();
       }
@@ -142,7 +143,7 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
           }
         }
         finally {
-          try(AutoReentrantLock lock = property.backgroundLoadLock.lock()) {
+          try(Key key = property.backgroundLoadLock.lock()) {
             property.backgroundLoadInProgress = false;
             property.loadImageInBackgroundIfNeeded();
           }
@@ -163,7 +164,7 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
             }
           }
           finally {
-            try(AutoReentrantLock lock = property.backgroundLoadLock.lock()) {
+            try(Key key = property.backgroundLoadLock.lock()) {
               property.backgroundLoadInProgress = false;
               property.loadImageInBackgroundIfNeeded();
             }

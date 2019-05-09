@@ -1,6 +1,9 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-public class PersonRole {
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+
+public class PersonRole implements MediaDescriptor {
   private final Person person;
   private final Role role;
   private final double order;
@@ -18,6 +21,11 @@ public class PersonRole {
     this.order = order;
   }
 
+  @Override
+  public Identifier getIdentifier() {
+    return role.getIdentifier();
+  }
+
   public Person getPerson() {
     return person;
   }
@@ -30,3 +38,4 @@ public class PersonRole {
     return order;
   }
 }
+

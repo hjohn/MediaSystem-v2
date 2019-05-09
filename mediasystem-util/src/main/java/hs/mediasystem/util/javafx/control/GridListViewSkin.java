@@ -7,9 +7,11 @@ import java.util.List;
 import javafx.animation.AnimationTimer;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -32,6 +34,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   public final IntegerProperty visibleColumns = new SimpleIntegerProperty(4);
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
   public final ObjectProperty<List<Integer>> jumpPoints = new SimpleObjectProperty<>();
+  public final BooleanProperty scrollBarVisible = new SimpleBooleanProperty(true);
 
   private final DoubleProperty scrollPosition = new SimpleDoubleProperty();  // In rows
   private final ArrayDeque<ListCell<?>> cells = new ArrayDeque<>();
@@ -218,6 +221,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
     scrollBar.orientationProperty().bind(skinnable.orientationProperty());
     getSkinnable().orientationProperty().addListener(obs -> relayout());
+    scrollBarVisible.addListener(obs -> relayout());
 
     visibleRows.addListener(obs -> content.requestLayout());
     visibleColumns.addListener(obs -> content.requestLayout());
@@ -227,6 +231,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
     scrollPosition.addListener(updateScrollBarListener);
     getSkinnable().getItems().addListener(updateScrollBarListener);
+    getSkinnable().getItems().addListener((Observable obs) -> content.requestLayout());  // When filter is removed, new items may appear/disappear without selected index changing, so must update in that case as well
 
     getSkinnable().itemsProperty().addListener((obs, old, current) -> {
       if(old != null) {
@@ -244,16 +249,18 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   }
 
   private void relayout() {
-    if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
-      skin.setBottom(null);
-      skin.setRight(scrollBar);
-    }
-    else {
-      skin.setRight(null);
-      skin.setBottom(scrollBar);
-    }
-
+    skin.setBottom(null);
+    skin.setRight(null);
     skin.setCenter(content);
+
+    if(scrollBarVisible.get()) {
+      if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
+        skin.setRight(scrollBar);
+      }
+      else {
+        skin.setBottom(scrollBar);
+      }
+    }
 
     content.requestLayout();
   }

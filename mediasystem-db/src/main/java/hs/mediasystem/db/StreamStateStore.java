@@ -3,9 +3,11 @@ package hs.mediasystem.db;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
+import hs.mediasystem.scanner.api.StreamID;
 
 import java.io.IOException;
 import java.util.Map;
@@ -21,6 +23,7 @@ public class StreamStateStore {
   @Inject private Database database;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+    .registerModule(new JavaTimeModule())
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
   public void forEach(Consumer<@NonNull StreamState> consumer) {
@@ -33,7 +36,7 @@ public class StreamStateStore {
     StreamStateRecord record = toStreamStateRecord(streamState);
 
     try(Transaction tx = database.beginTransaction()) {
-      StreamStateRecord existingRecord = tx.selectUnique(StreamStateRecord.class, "hash = ? AND size = ? AND modtime = ?", record.getId().getHash(), record.getId().getSize(), record.getId().getModTime());
+      StreamStateRecord existingRecord = tx.selectUnique(StreamStateRecord.class, "stream_id = ?", record.getStreamId());
 
       if(existingRecord == null) {
         tx.insert(record);
@@ -50,7 +53,7 @@ public class StreamStateStore {
     try {
       StreamStateRecord record = new StreamStateRecord();
 
-      record.setId(new StreamStateRecordId(streamState.getHash(), streamState.getSize(), streamState.getLastModificationTime()));
+      record.setStreamId(streamState.getStreamID().asInt());
       record.setJson(OBJECT_MAPPER.writeValueAsBytes(streamState.getProperties()));
 
       return record;
@@ -60,9 +63,10 @@ public class StreamStateStore {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private static @NonNull StreamState toStreamState(StreamStateRecord record) {
     try {
-      return new StreamState(record.getId().getHash(), record.getId().getSize(), record.getId().getModTime(), OBJECT_MAPPER.readValue(record.getJson(), Map.class));
+      return new StreamState(new StreamID(record.getStreamId()), OBJECT_MAPPER.readValue(record.getJson(), Map.class));
     }
     catch(IOException e) {
       throw new IllegalStateException(e);

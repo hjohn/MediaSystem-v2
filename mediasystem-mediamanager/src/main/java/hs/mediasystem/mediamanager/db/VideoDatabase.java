@@ -1,16 +1,19 @@
 package hs.mediasystem.mediamanager.db;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.VideoLink;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
+import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
+import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 
 import java.util.List;
@@ -25,6 +28,8 @@ public class VideoDatabase {
   @Inject private List<QueryService<?>> queryServices;
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
   @Inject private List<PersonalProfileQueryService> personalProfileQueryServices;
+  @Inject private List<ProductionCollectionQueryService> productionCollectionQueryServices;
+  @Inject private List<Top100QueryService> top100QueryServices;
 
   public List<PersonRole> queryRoles(Identifier identifier) {
     return rolesQueryServices.get(0).query(identifier);
@@ -34,6 +39,7 @@ public class VideoDatabase {
     return videoLinksQueryServices.get(0).query(identifier);
   }
 
+  @SuppressWarnings("unchecked")
   public <T extends Production> T queryProduction(ProductionIdentifier identifier) {
     for(QueryService<?> queryService : queryServices) {
       if(queryService.getDataSource().equals(identifier.getDataSource())) {
@@ -50,5 +56,13 @@ public class VideoDatabase {
 
   public PersonalProfile queryPersonalProfile(PersonIdentifier identifier) {
     return personalProfileQueryServices.get(0).query(identifier);
+  }
+
+  public ProductionCollection queryProductionCollection(Identifier identifier) {
+    return productionCollectionQueryServices.get(0).query(identifier);
+  }
+
+  public List<Production> queryTop100() {
+    return top100QueryServices.get(0).query();
   }
 }

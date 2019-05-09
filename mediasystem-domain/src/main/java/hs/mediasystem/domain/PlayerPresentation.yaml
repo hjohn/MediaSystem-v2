@@ -1,0 +1,29 @@
+action-target:
+  brightness:
+    order: 1
+    label: Brightness
+  rate:
+    order: 2
+    label: Playback Speed
+  subtitle:
+    order: 3
+    label: Subtitle
+  subtitleDelay:
+    order: 4
+    label: Subtitle Delay
+  audioTrack:
+    order: 5
+    label: Audio Track
+  volume:
+    order: 6
+    label: Volume
+  muted:
+    order: 7
+    label: Mute
+  position:
+    label: Position
+    visible: false
+  paused:
+    label: Pause
+    visible: false
+    

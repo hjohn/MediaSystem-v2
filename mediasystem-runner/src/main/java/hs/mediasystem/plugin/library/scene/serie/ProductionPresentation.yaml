@@ -1,0 +1,13 @@
+action-target:
+  watched:
+    order: 1
+    label: Watched
+  episodeWatched:
+    order: 2
+    label: Episode Watched
+  seasonWatched:
+    order: 3
+    label: Season Watched
+  showInfo:
+    order: 4
+    label: Show File Information

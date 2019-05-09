@@ -1,6 +1,7 @@
 package hs.mediasystem.db;
 
 import hs.database.annotations.Column;
+import hs.database.annotations.Id;
 import hs.database.annotations.Table;
 import hs.database.core.DatabaseObject;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "images")
 public class Image extends DatabaseObject {
 
+  @Id(generated = false)
   @Column
   private String url;
 

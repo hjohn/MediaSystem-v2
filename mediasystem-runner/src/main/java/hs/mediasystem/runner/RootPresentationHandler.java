@@ -1,14 +1,13 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.actions.ExposedMethod;
-import hs.mediasystem.framework.actions.Member;
+import hs.mediasystem.framework.expose.Expose;
+import hs.mediasystem.framework.expose.ExposedControl;
 import hs.mediasystem.presentation.ParentPresentation;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.InputActionHandler.Action;
+import hs.mediasystem.runner.util.SceneManager;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,17 +32,17 @@ public class RootPresentationHandler {
   private static final Action BACK_ACTION;
 
   static {
-    try {
-      BACK_ACTION = new Action(new ActionTarget(List.of(new ExposedMethod(new Member(Navigable.class.getMethod("navigateBack", Event.class)), "navigateBack"))), "trigger");
-    }
-    catch(NoSuchMethodException | SecurityException e) {
-      throw new IllegalStateException();
-    }
+    Expose.action(Navigable::navigateBack)
+      .of(Navigable.class)
+      .as("navigateBack");
+
+    BACK_ACTION = new Action(new ActionTarget(List.of(ExposedControl.find(Navigable.class, "navigateBack"))), "trigger");
   }
 
   @Inject private Theme theme;
   @Inject private SceneManager sceneManager;
   @Inject private InputActionHandler inputActionHandler;
+  @Inject private ContextMenuHandler contextMenuHandler;
 
   @PostConstruct
   private void postConstruct() {
@@ -85,6 +84,14 @@ public class RootPresentationHandler {
     }
 
     if(event.getCode().isFunctionKey()) {
+      // Special handling of Context Menu key
+      if(event.getCode() == KeyCode.F10) {
+        System.out.println(">>> Menu pressed, target = " + event.getTarget() + "; stack = " + createPresentationStack(event));
+        contextMenuHandler.handle(event, createPresentationStack(event));
+
+        return;
+      }
+
       if(keyPressedCode != event.getCode()) {
         keyPressedCode = event.getCode();
         keyPressedStartTime = System.currentTimeMillis();
@@ -115,13 +122,7 @@ public class RootPresentationHandler {
   }
 
   private void handleEvent(Event event, List<Action> actions) {
-    Node target = event.getTarget() instanceof Scene ? ((Scene)event.getTarget()).getRoot() : (Node)event.getTarget();
-
-    List<Presentation> activePresentations = Stream.iterate(target, s -> s != null, Node::getParent)
-      .map(s -> s.getProperties().get("presentation2"))
-      .filter(Objects::nonNull)
-      .map(Presentation.class::cast)
-      .collect(Collectors.toList());
+    List<Presentation> activePresentations = createPresentationStack(event);
 
     LOGGER.fine("Possible Actions: " + actions + ", active presentations: " + activePresentations + ", for event: " + event);
 
@@ -134,6 +135,16 @@ public class RootPresentationHandler {
     }
   }
 
+  private static List<Presentation> createPresentationStack(Event event) {
+    Node target = event.getTarget() instanceof Scene ? ((Scene)event.getTarget()).getRoot() : (Node)event.getTarget();
+
+    return Stream.iterate(target, s -> s != null, Node::getParent)
+      .map(s -> s.getProperties().get("presentation2"))
+      .filter(Objects::nonNull)
+      .map(Presentation.class::cast)
+      .collect(Collectors.toList());
+  }
+
   public void handleNavigateBackEvent(NavigateEvent event) {
     handleEvent(event, List.of(BACK_ACTION));
   }
@@ -144,9 +155,10 @@ public class RootPresentationHandler {
     // - In theory, we could have each presentation level handle this event, making it unnecessary to reverse look for the highest matching presentation, since the level that can handle the navigation is the correct level
     // - WHether or not a level can handle a presentation depends on whether the given presentation's hierarchy contains the current presentation or not.
 
-    System.out.println("$$$$$$ Navigating to " + e.getPresentation());
+    /*
+     * Create map of active presentations:
+     */
 
-    Presentation presentation = e.getPresentation();
     Node target = (Node)e.getTarget();
 
     Map<Class<? extends ParentPresentation>, ParentPresentation> activePresentations = Stream.iterate(target, s -> s.getParent() != null, Node::getParent)
@@ -155,34 +167,39 @@ public class RootPresentationHandler {
       .map(ParentPresentation.class::cast)
       .collect(Collectors.toMap(ParentPresentation::getClass, Function.identity()));
 
-    // Build a list of presentations:
-    Deque<Presentation> presentations = new ArrayDeque<>();
+    /*
+     * Loop through target presentation and its parents to find nearest existing parent or create a new hierarchy:
+     */
 
-    for(Presentation p = presentation;;) {
-      presentations.addFirst(p);
+    Presentation targetPresentation = e.getPresentation();  // The new presentation to use
 
-      Class<? extends Presentation> parentCls = theme.findParent(p.getClass());
-      ParentPresentation activePresentation = activePresentations.get(parentCls);
+    for(Class<? extends Presentation> parentCls; (parentCls = theme.findParent(targetPresentation.getClass())) != null;) {
+      ParentPresentation activePresentation = activePresentations.get(parentCls);  // See if we have intended parent already in current hierarchy
 
-      if(activePresentation != null) {
-        activePresentation.childPresentation.set(p);
+      if(activePresentation != null) {  // If intended parent already existed, just switch its child
+        activePresentation.childPresentation.set(targetPresentation);
 
         return;
       }
-      if(parentCls == null) {
-        break;
-      }
 
-      ParentPresentation instance = (ParentPresentation)theme.createPresentation(parentCls);
+      // Create the intended parent and set its child
+      activePresentation = (ParentPresentation)theme.createPresentation(parentCls);
 
-      instance.childPresentation.set(presentation);
-      p = instance;
+      activePresentation.childPresentation.set(targetPresentation);
+      targetPresentation = activePresentation;
     }
 
-    Node node = theme.findPlacer(null, presentations.getFirst()).place(null, presentations.getFirst());
+    /*
+     * Create a new root node as the target presentation required a new root presentation (not
+     * necessarily the target presentation itself, it could also be one of its intended parents),
+     * hence why "presentations.getFirst()" is used here.  The child hierarchy towards the target
+     * presentation is already set up at this point.
+     */
 
-    node.getProperties().put("presentation2", presentations.getFirst());
+    Node node = theme.findPlacer(null, targetPresentation).place(null, targetPresentation);
 
-    sceneManager.getRootPane().getChildren().add(node);
+    node.getProperties().put("presentation2", targetPresentation);
+
+    sceneManager.getRootPane().getChildren().setAll(node);
   }
 }

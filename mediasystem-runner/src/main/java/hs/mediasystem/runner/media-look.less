@@ -2,7 +2,7 @@
 
 .scroll-bar
 {
-  -fx-skin: "hs.mediasystem.util.javafx.MinimalScrollBarSkin";
+  -fx-skin: "hs.mediasystem.util.javafx.control.MinimalScrollBarSkin";
   -fx-background-color: transparent;
 }
 
@@ -77,11 +77,58 @@
     -fx-text-fill: @text-primary-highlight;
   
     -fx-border-color: transparent, @control-border;
-    -fx-border-width: 3, 1;
+    -fx-border-width: 3, 2;
     -fx-border-insets: 0, 5.4;
     -fx-border-radius: 5.4, 0;
   }
- 
+
+  .check-box {
+    -fx-text-fill: @text-primary-highlight;
+  }
+  
+  .check-box > .box {
+    -fx-background-color: @control-bg;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+      
+    -fx-border-color: transparent, @control-border;
+    -fx-border-width: 3, 2;
+    -fx-border-insets: 0, 5.4;
+    -fx-border-radius: 5.4, 0;    
+  }
+  
+  .check-box:selected > .box > .mark,
+  .check-box:indeterminate > .box > .mark {
+    -fx-background-color: @text-primary-highlight;
+  }
+
+  .check-box:indeterminate > .box {
+    -fx-padding: 0em 0em 0.083333em 0.083333em;
+  }
+
+  .spinner {
+    -fx-background-color: @control-bg;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+  
+    -fx-text-fill: @text-primary-highlight;
+  
+    -fx-border-color: transparent, @control-border;
+    -fx-border-width: 3, 2;
+    -fx-border-insets: 0, 5.4;
+    -fx-border-radius: 5.4, 0;
+    
+    .text-field, .increment-arrow-button, .decrement-arrow-button {
+      -fx-background-color: @control-bg;
+      -fx-text-fill: @text-primary-highlight;
+    }
+    
+    .increment-arrow, .decrement-arrow {
+      -fx-background-color: @text-primary-highlight;
+    }
+  }
+
+  .spinner.focused,
   .check-box.focused > .box, 
   .combo-box-base.focused, 
   .button.focused,
@@ -89,8 +136,39 @@
   .list-view:focused:external-focus   /* with mouse focus */
   {
     -fx-border-color: @control-focus, @control-border;
+    -fx-border-width: 3, 2;
+    -fx-border-insets: 0, 5.4;
+    -fx-border-radius: 5.4, 0;    
   }
   
+  .slider .track
+  {
+    -fx-background-color: @control-bg;
+    -fx-border-color: @control-border;
+    -fx-border-width: 2;
+    -fx-border-insets: -2;
+    -fx-border-radius: 5.4;
+  }
+  
+  .slider .axis {
+    -fx-tick-label-fill: @text-primary;
+    -fx-fill: @control-border;
+  }
+ 
+  
+  .slider.focused *.thumb,
+  .slider:focused *.thumb
+  {
+    -fx-background-color:
+          @control-focus,
+          derive(-fx-color,-36%),
+          derive(-fx-color,73%),
+          linear-gradient(to bottom, derive(-fx-color,-19%),derive(-fx-color,61%));
+    -fx-background-radius: 17.4, 14, 13, 12;
+    -fx-background-insets: -3.4, 0, 1, 2;
+  }
+  
+  /*
   .slider.focused:external-focus,
   .slider:focused:external-focus
   {
@@ -111,7 +189,7 @@
     -fx-background-radius: 17.4, 14, 13, 12;
     -fx-background-insets: -3.4, 0, 1, 2;
   }
-  
+   */
   .list-view:internal-focus .list-cell:focused,
   .combo-box-popup .list-view .list-cell:filled:selected
   {

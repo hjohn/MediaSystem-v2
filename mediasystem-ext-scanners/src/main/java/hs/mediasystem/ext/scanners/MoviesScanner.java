@@ -1,15 +1,19 @@
 package hs.mediasystem.ext.scanners;
 
-import hs.mediasystem.ext.basicmediatypes.scan.Attribute;
-import hs.mediasystem.ext.basicmediatypes.scan.MovieStream;
-import hs.mediasystem.ext.basicmediatypes.scan.Scanner;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrintProvider;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
-import hs.mediasystem.ext.scanners.NameDecoder.Hint;
+import hs.mediasystem.ext.scanners.NameDecoder.Mode;
+import hs.mediasystem.scanner.api.Attribute;
+import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.scanner.api.Scanner;
+import hs.mediasystem.scanner.api.StreamPrint;
+import hs.mediasystem.scanner.api.StreamPrintProvider;
 import hs.mediasystem.util.Attributes;
+import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.bg.BackgroundTaskRegistry;
+import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
 
 import java.io.IOException;
 import java.net.URI;
@@ -24,53 +28,71 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class MoviesScanner implements Scanner<MovieStream> {
+public class MoviesScanner implements Scanner {
   private static final Logger LOGGER = Logger.getLogger(MoviesScanner.class.getName());
-  private static final NameDecoder NAME_DECODER = new NameDecoder(Hint.MOVIE);
+  private static final NameDecoder NAME_DECODER = new NameDecoder(Mode.MOVIE);
+  private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Scanning movies");
 
   @Inject private StreamPrintProvider streamPrintProvider;
 
   @Override
-  public List<MovieStream> scan(List<Path> roots) {
-    List<MovieStream> results = new ArrayList<>();
+  public List<Exceptional<List<BasicStream>>> scan(List<Path> roots) {
+    List<Exceptional<List<BasicStream>>> rootResults = new ArrayList<>();
 
     LOGGER.info("Scanning " + roots);
 
     for(Path root : roots) {
       try {
         List<Path> scanResults = new PathFinder(1).find(root);
+        List<BasicStream> results = new ArrayList<>();
+
+        WORKLOAD.start(scanResults.size());
 
         for(Path path : scanResults) {
-          DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
+          try {
+            DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
 
-          String title = result.getTitle();
-          String sequence = result.getSequence();
-          String subtitle = result.getSubtitle();
-          Integer year = result.getReleaseYear();
+            String title = result.getTitle();
+            String sequence = result.getSequence();
+            String subtitle = result.getSubtitle();
+            Integer year = result.getReleaseYear();
 
-          String imdb = result.getCode();
-          String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
-          URI uri = path.toUri();
+            String imdb = result.getCode();
+            String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
+            URI uri = path.toUri();
 
-          StreamPrint streamPrint = streamPrintProvider.get(new StringURI(uri), Files.size(path), Files.getLastModifiedTime(path).toMillis());
+            StreamPrint streamPrint = streamPrintProvider.get(new StringURI(uri), Files.size(path), Files.getLastModifiedTime(path).toMillis());
 
-          Attributes attributes = Attributes.of(
-            Attribute.TITLE, title,
-            Attribute.ALTERNATIVE_TITLE, result.getAlternativeTitle(),
-            Attribute.SUBTITLE, subtitle,
-            Attribute.SEQUENCE, sequence,
-            Attribute.YEAR, year == null ? null : year.toString(),
-            Attribute.ID_PREFIX + "IMDB", imdbNumber
-          );
+            Attributes attributes = Attributes.of(
+              Attribute.TITLE, title,
+              Attribute.ALTERNATIVE_TITLE, result.getAlternativeTitle(),
+              Attribute.SUBTITLE, subtitle,
+              Attribute.SEQUENCE, sequence,
+              Attribute.YEAR, year == null ? null : year.toString(),
+              Attribute.ID_PREFIX + "IMDB", imdbNumber
+            );
 
-          results.add(new MovieStream(streamPrint, attributes, Collections.emptyMap()));
+            results.add(new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), streamPrint, attributes, Collections.emptyList()));
+          }
+          catch(RuntimeException | IOException e) {
+            LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
+          }
+          finally {
+            WORKLOAD.complete();
+          }
         }
+
+        rootResults.add(Exceptional.of(results));
       }
       catch(RuntimeException | IOException e) {
-        LOGGER.warning("Exception while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility
+        LOGGER.warning("Exception while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
+
+        WORKLOAD.reset();
+
+        rootResults.add(Exceptional.ofException(e));
       }
     }
 
-    return results;
+    return rootResults;
   }
 }

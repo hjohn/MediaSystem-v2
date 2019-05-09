@@ -3,6 +3,7 @@ package hs.mediasystem.util.javafx.control;
 import javafx.beans.binding.BooleanBinding;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 public class Containers {
@@ -10,9 +11,7 @@ public class Containers {
   public static HBox hbox(String styleClass, Node... nodes) {
     HBox hbox = new HBox(nodes);
 
-    if(styleClass != null) {
-      hbox.getStyleClass().addAll(styleClass.split(",(?: *)"));
-    }
+    addStyleClass(hbox, styleClass);
 
     return hbox;
   }
@@ -24,9 +23,7 @@ public class Containers {
   public static VBox vbox(String styleClass, BooleanBinding visibility, Node... nodes) {
     VBox vbox = new VBox(nodes);
 
-    if(styleClass != null) {
-      vbox.getStyleClass().addAll(styleClass.split(",(?: *)"));
-    }
+    addStyleClass(vbox, styleClass);
 
     if(visibility != null) {
       vbox.managedProperty().bind(visibility);
@@ -46,5 +43,25 @@ public class Containers {
 
   public static VBox vbox(Node... nodes) {
     return vbox(null, null, nodes);
+  }
+
+  public static GridPane grid(String styleClass) {
+    return addStyleClass(new GridPane(), styleClass);
+  }
+
+  public static StackPane stack(Node... nodes) {
+    return stack(null, nodes);
+  }
+
+  public static StackPane stack(String styleClass, Node... nodes) {
+    return addStyleClass(new StackPane(nodes), styleClass);
+  }
+
+  private static <T extends Node> T addStyleClass(T node, String styleClass) {
+    if(styleClass != null) {
+      node.getStyleClass().addAll(styleClass.split(",(?: *)"));
+    }
+
+    return node;
   }
 }

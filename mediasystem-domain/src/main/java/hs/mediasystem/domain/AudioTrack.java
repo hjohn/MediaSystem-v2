@@ -1,7 +1,7 @@
 package hs.mediasystem.domain;
 
 public class AudioTrack {
-  public static final AudioTrack NO_AUDIO_TRACK = new AudioTrack(-1, "Unavailable");
+  public static final AudioTrack NO_AUDIO_TRACK = new AudioTrack(-1, "Disabled");
 
   private final int id;
   private final String description;

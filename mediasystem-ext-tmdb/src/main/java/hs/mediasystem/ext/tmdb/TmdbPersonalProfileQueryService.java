@@ -3,8 +3,8 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
@@ -14,8 +14,8 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.domain.Type;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
+import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;
@@ -29,8 +29,8 @@ import javax.inject.Singleton;
 
 @Singleton
 public class TmdbPersonalProfileQueryService implements PersonalProfileQueryService {
-  private static final Type MOVIE = Type.of("MOVIE");
-  private static final Type SERIE = Type.of("SERIE");
+  private static final MediaType MOVIE = MediaType.of("MOVIE");
+  private static final MediaType SERIE = MediaType.of("SERIE");
 
   @Inject private TheMovieDatabase tmdb;
 
@@ -86,14 +86,14 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
       new Details(
         isMovie ? node.path("title").textValue() : node.path("name").textValue(),
         node.path("overview").textValue(),
-        releaseDate == null || releaseDate.isEmpty() ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
+        TheMovieDatabase.parseDateOrNull(releaseDate),
         posterURI,
         backdropURI
       ),
       reception,
-      null,
       Collections.emptyList(),
-      genres
+      genres,
+      node.path("popularity").doubleValue()
     );
 
     Identifier identifier = new Identifier(DataSources.TMDB_CREDIT, node.get("credit_id").asText());

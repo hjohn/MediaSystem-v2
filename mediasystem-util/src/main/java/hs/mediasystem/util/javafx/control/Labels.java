@@ -1,6 +1,7 @@
 package hs.mediasystem.util.javafx.control;
 
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
 
@@ -10,7 +11,7 @@ public class Labels {
     return create(text, styleClass, null);
   }
 
-  public static Label create(String text, String styleClass, BooleanBinding visibility) {
+  public static Label create(String text, String styleClass, BooleanExpression visibility) {
     Label label = new Label(text);
 
     label.getStyleClass().addAll(styleClass.split(",(?: *)"));

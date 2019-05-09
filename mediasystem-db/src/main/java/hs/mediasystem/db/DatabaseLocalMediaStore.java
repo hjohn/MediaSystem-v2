@@ -21,22 +21,22 @@ public class DatabaseLocalMediaStore {
     }
   }
 
-  public Map<String, LocalMedia> findByScannerId(long scannerId) {
+  public Map<Integer, LocalMedia> findByScannerId(long scannerId) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
       return tx.select(LocalMedia.class, "scannerId = ?", scannerId).stream()
-        .collect(Collectors.toMap(LocalMedia::getId, Function.identity()));
+        .collect(Collectors.toMap(LocalMedia::getStreamId, Function.identity()));
     }
   }
 
-  public LocalMedia findById(String id) {
+  public LocalMedia findById(int id) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
-      return tx.selectUnique(LocalMedia.class, "id = ?", id);
+      return tx.selectUnique(LocalMedia.class, "stream_id = ?", id);
     }
   }
 
   public void store(LocalMedia localMedia) {
     try(Transaction tx = database.beginTransaction()) {
-      if(tx.selectUnique(LocalMedia.class, "id = ?", localMedia.getId()) != null) {
+      if(tx.selectUnique(LocalMedia.class, "stream_id = ?", localMedia.getStreamId()) != null) {
         tx.update(localMedia);
       }
       else {

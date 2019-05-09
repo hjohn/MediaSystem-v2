@@ -2,13 +2,13 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Type;
 import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
+import hs.mediasystem.scanner.api.MediaType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,8 +17,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 public class TmdbRecommendationQueryService implements RecommendationQueryService {
-  private static final Type MOVIE = Type.of("MOVIE");
-  private static final Type SERIE = Type.of("SERIE");
+  private static final MediaType MOVIE = MediaType.of("MOVIE");
+  private static final MediaType SERIE = MediaType.of("SERIE");
 
   @Inject private TheMovieDatabase tmdb;
   @Inject private ObjectFactory objectFactory;

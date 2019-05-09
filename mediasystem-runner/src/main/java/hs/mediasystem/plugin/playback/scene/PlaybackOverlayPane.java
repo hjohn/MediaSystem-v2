@@ -3,9 +3,9 @@ package hs.mediasystem.plugin.playback.scene;
 import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
-import hs.mediasystem.runner.ImageHandleFactory;
-import hs.mediasystem.runner.LessLoader;
+import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.MapBindings;
@@ -60,7 +60,6 @@ public class PlaybackOverlayPane extends StackPane {
   private final GridPane detailsOverlay = GridPaneUtil.create(new double[] {5, 20, 5, 65, 5}, new double[] {45, 50, 5});
 
   private final ObjectBinding<ImageHandle> posterHandle;
-//      MapBindings.get(presentation).then("mediaItem").then("production").then("image").asObjectBinding();
   private final AsyncImageProperty poster = new AsyncImageProperty();
 
   private final PlaybackInfoBorders borders = new PlaybackInfoBorders(playerBindings);
@@ -130,8 +129,8 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          final StringBinding serieName = MapBindings.get(PlaybackOverlayPane.this.presentation).then("parentMediaItem").then("production").then("name").asStringBinding();
-          final StringBinding title = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("name").asStringBinding();
+          final StringBinding serieName = MapBindings.get(PlaybackOverlayPane.this.presentation).then("parentMediaItem").then("release").then("name").asStringBinding();
+          final StringBinding title = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("release").then("name").asStringBinding();
           final StringProperty subtitle = new SimpleStringProperty(); //MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("subtitle").asStringBinding();  // "subtitle" TODO
 
           HBox.setHgrow(this, Priority.ALWAYS);

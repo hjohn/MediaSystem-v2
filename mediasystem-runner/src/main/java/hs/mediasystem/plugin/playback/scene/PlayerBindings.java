@@ -8,11 +8,9 @@ import hs.mediasystem.util.javafx.StringBinding;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.FloatBinding;
-import javafx.beans.binding.IntegerBinding;
-import javafx.beans.binding.LongBinding;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
+
+import org.reactfx.value.Val;
 
 public class PlayerBindings {
   public final StringBinding formattedVolume;
@@ -25,63 +23,63 @@ public class PlayerBindings {
   public final StringBinding formattedPosition;
   public final StringBinding formattedLength;
 
-  public final LongBinding position;
-  public final LongBinding length;
-  public final IntegerBinding volume;
-  public final FloatBinding rate;
-  public final IntegerBinding audioDelay;
-  public final IntegerBinding subtitleDelay;
-  public final FloatBinding brightness;
-  public final ObjectBinding<AudioTrack> audioTrack;
-  public final ObjectBinding<Subtitle> subtitle;
+  public final Val<Double> rate;
+  public final Val<Long> position;
+  public final Val<Long> length;
+  public final Val<Long> volume;
+  public final Val<Long> audioDelay;
+  public final Val<Long> subtitleDelay;
+  public final Val<Double> brightness;
+  public final Val<AudioTrack> audioTrack;
+  public final Val<Subtitle> subtitle;
   public final BooleanBinding muted;
   public final BooleanBinding paused;
 
   public PlayerBindings(final ObjectProperty<PlayerPresentation> player) {
-    position = (LongBinding)Bindings.when(player.isNull()).then(0L).otherwise(Bindings.selectLong(player, "position"));
-    length = (LongBinding)Bindings.when(player.isNull()).then(0L).otherwise(Bindings.selectLong(player, "length"));
-    volume = (IntegerBinding)Bindings.when(player.isNull()).then(100).otherwise(Bindings.selectInteger(player, "volume"));
-    rate = (FloatBinding)Bindings.when(player.isNull()).then(1.0f).otherwise(Bindings.selectFloat(player, "rate"));
-    audioDelay = Bindings.selectInteger(player, "audioDelay");
-    subtitleDelay = Bindings.selectInteger(player, "subtitleDelay");
-    brightness = Bindings.selectFloat(player, "brightness");
-    audioTrack = Bindings.select(player, "audioTrack");
-    subtitle = Bindings.select(player, "subtitle");
+    position = Val.flatMap(player, PlayerPresentation::positionControl).orElseConst(0L);
+    length = Val.flatMap(player, PlayerPresentation::lengthProperty).orElseConst(1000L);
+    volume = Val.flatMap(player, PlayerPresentation::volumeControl).orElseConst(100L);
+    rate = Val.flatMap(player, PlayerPresentation::rateControl).orElseConst(1.0);
+    audioDelay = Val.flatMap(player, PlayerPresentation::audioDelayControl).orElseConst(0L);
+    subtitleDelay = Val.flatMap(player, PlayerPresentation::subtitleDelayControl).orElseConst(0L);
+    brightness = Val.flatMap(player, PlayerPresentation::brightnessControl).orElseConst(1.0);
+    audioTrack = Val.flatMap(player, PlayerPresentation::audioTrackControl);
+    subtitle = Val.flatMap(player, PlayerPresentation::subtitleControl);
     muted = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "muted"));
     paused = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "paused"));
 
     formattedVolume = new StringBinding(volume) {
       @Override
       protected String computeValue() {
-        return String.format("%3d%%", volume.get());
+        return String.format("%3d%%", volume.getValue());
       }
     };
 
     formattedRate = new StringBinding(rate) {
       @Override
       protected String computeValue() {
-        return String.format("%4.1fx", rate.get());
+        return String.format("%4.1fx", rate.getValue().floatValue());
       }
     };
 
     formattedAudioDelay = new StringBinding(audioDelay) {
       @Override
       protected String computeValue() {
-        return String.format("%5.1fs", audioDelay.get() / 1000.0);
+        return String.format("%5.1fs", audioDelay.getValue() / 1000.0);
       }
     };
 
     formattedSubtitleDelay = new StringBinding(subtitleDelay) {
       @Override
       protected String computeValue() {
-        return String.format("%5.1fs", subtitleDelay.get() / 1000.0);
+        return String.format("%5.1fs", subtitleDelay.getValue() / 1000.0);
       }
     };
 
     formattedBrightness = new StringBinding(brightness) {
       @Override
       protected String computeValue() {
-        long value = Math.round((brightness.get() - 1.0) * 100);
+        long value = Math.round((brightness.getValue() - 1.0) * 100);
         return value == 0 ? "0%" : String.format("%+3d%%", value);
       }
     };
@@ -89,7 +87,7 @@ public class PlayerBindings {
     formattedAudioTrack = new StringBinding(audioTrack) {
       @Override
       protected String computeValue() {
-        AudioTrack value = audioTrack.get();
+        AudioTrack value = audioTrack.getValue();
 
         return value == null ? "" : value.getDescription();
       }
@@ -98,7 +96,7 @@ public class PlayerBindings {
     formattedSubtitle = new StringBinding(subtitle) {
       @Override
       protected String computeValue() {
-        Subtitle value = subtitle.get();
+        Subtitle value = subtitle.getValue();
 
         return value == null ? "" : value.getDescription();
       }
@@ -107,14 +105,14 @@ public class PlayerBindings {
     formattedPosition = new StringBinding(position) {
       @Override
       protected String computeValue() {
-        return SizeFormatter.SECONDS_AS_POSITION.format(position.get() / 1000);
+        return SizeFormatter.SECONDS_AS_POSITION.format(position.getValue() / 1000);
       }
     };
 
     formattedLength = new StringBinding(length) {
       @Override
       protected String computeValue() {
-        return SizeFormatter.SECONDS_AS_POSITION.format(length.get() / 1000);
+        return SizeFormatter.SECONDS_AS_POSITION.format(length.getValue() / 1000);
       }
     };
   }

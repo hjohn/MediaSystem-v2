@@ -1,7 +1,7 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
-import hs.mediasystem.util.ByteArrays;
+import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.NamedThreadFactory;
 
 import java.util.HashMap;
@@ -19,11 +19,11 @@ public class StreamStateProvider {
 
   @Inject private StreamStateStore store;
 
-  private final Map<String, StreamState> streamStates = new HashMap<>();
+  private final Map<StreamID, StreamState> streamStates = new HashMap<>();
 
   @PostConstruct
   private void postConstruct() {
-    store.forEach(ss -> streamStates.put(toKey(ss.getHash(), ss.getSize(), ss.getLastModificationTime()), ss));
+    store.forEach(ss -> streamStates.put(ss.getStreamID(), ss));
   }
 
   @SuppressWarnings("unchecked")
@@ -38,16 +38,13 @@ public class StreamStateProvider {
 
     streamState.getProperties().put(key, value);
 
-    EXECUTOR.execute(() -> store.store(streamState));
+    // Make a copy to save, as the entry can be updated asynchronously while this one is being saved:
+    StreamState copy = new StreamState(streamState.getStreamID(), new HashMap<>(streamState.getProperties()));
+
+    EXECUTOR.execute(() -> store.store(copy));
   }
 
   private StreamState getStreamState(StreamPrint streamPrint) {
-    String key = toKey(streamPrint.getHash(), streamPrint.getSize(), streamPrint.getLastModificationTime());
-
-    return streamStates.computeIfAbsent(key, k -> new StreamState(streamPrint.getHash(), streamPrint.getSize(), streamPrint.getLastModificationTime(), new HashMap<>()));
-  }
-
-  private static String toKey(byte[] hash, Long size, long lastModificationTime) {
-    return ByteArrays.toHex(hash) + "-" + size + "-" + lastModificationTime;
+    return streamStates.computeIfAbsent(streamPrint.getId(), k -> new StreamState(streamPrint.getId(), new HashMap<>()));
   }
 }

@@ -21,9 +21,6 @@ public class PersonalProfile {
     if(person == null) {
       throw new IllegalArgumentException("person cannot be null");
     }
-    if(birthDate == null) {
-      throw new IllegalArgumentException("birthDate cannot be null");
-    }
     if(productionRoles == null) {
       throw new IllegalArgumentException("productionRoles cannot be null");
     }
@@ -56,6 +53,14 @@ public class PersonalProfile {
 
   public String getBiography() {
     return biography;
+  }
+
+  public double getPopularity() {
+    return popularity;
+  }
+
+  public Gender getGender() {
+    return gender;
   }
 
   public List<ProductionRole> getProductionRoles() {

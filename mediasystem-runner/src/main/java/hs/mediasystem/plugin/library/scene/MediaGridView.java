@@ -1,14 +1,16 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.runner.DebugFX;
+import hs.mediasystem.runner.util.DebugFX;
 import hs.mediasystem.util.javafx.Events;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.control.GridListViewSkin;
 
 import java.util.List;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
@@ -28,6 +30,7 @@ public class MediaGridView<T> extends ListView<T> {
   public final IntegerProperty visibleColumns = new SimpleIntegerProperty(4);
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
   public final ObjectProperty<List<Integer>> jumpPoints = new SimpleObjectProperty<>();
+  public final BooleanProperty scrollBarVisible = new SimpleBooleanProperty(true);
 
   public MediaGridView() {
     DebugFX.addReference(this);
@@ -39,6 +42,7 @@ public class MediaGridView<T> extends ListView<T> {
     skin.visibleColumns.bindBidirectional(visibleColumns);
     skin.visibleRows.bindBidirectional(visibleRows);
     skin.jumpPoints.bindBidirectional(jumpPoints);
+    skin.scrollBarVisible.bindBidirectional(scrollBarVisible);
 
     this.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
       @Override
@@ -58,10 +62,7 @@ public class MediaGridView<T> extends ListView<T> {
       }
     });
 
-  //gridView.setCellWidth(300);
-  //gridView.setCellHeight(400);
-  //gridView.getSelectionModel().selectedItemProperty().addListener(this::navigateFromListToMedia);
-    this.getStyleClass().add("media-grid-view");
+    getStyleClass().add("media-grid-view");
   }
 
   private void onItemSelected(Event event) {

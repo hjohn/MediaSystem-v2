@@ -1,38 +1,37 @@
 package hs.mediasystem.ext.tmdb;
 
 import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
-import hs.mediasystem.util.Levenshtein;
+import hs.mediasystem.util.WeightedNgramDistance;
 
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 
 public class TextMatcher {
-  private static final double MATCH_NAME_SCORE = 60;
-  private static final double MATCH_YEAR_SCORE = 40;
-  private static final double MATCH_ADJACENT_YEAR_SCORE = 15;
+  private static final double MATCH_NAME_SCORE = 0.6;
+  private static final double MATCH_YEAR_SCORE = 0.4;
+  private static final double MATCH_ADJACENT_YEAR_SCORE = 0.15;
 
   public static Match createMatch(LocalDate releaseDate, String titleToMatch, Integer year, String nodeTitle, String id) {
     Integer movieYear = extractYear(releaseDate);
 
     MatchType nameMatchType = MatchType.NAME;
-    double score = 0;
+    double score = WeightedNgramDistance.calculate(nodeTitle.toLowerCase(), titleToMatch.toLowerCase());
 
     if(year != null && movieYear != null) {
       if(year.equals(movieYear)) {
         nameMatchType = MatchType.NAME_AND_RELEASE_DATE;
+        score *= MATCH_NAME_SCORE;
         score += MATCH_YEAR_SCORE;
       }
       else if(Math.abs(year - movieYear) == 1) {
+        nameMatchType = MatchType.NAME_AND_RELEASE_DATE;
+        score *= MATCH_NAME_SCORE;
         score += MATCH_ADJACENT_YEAR_SCORE;
       }
     }
 
-    double matchScore = Levenshtein.compare(nodeTitle.toLowerCase(), titleToMatch.toLowerCase());
-
-    score += matchScore * MATCH_NAME_SCORE;
-
-    return new Match(releaseDate, nameMatchType, id, nodeTitle, score);
+    return new Match(releaseDate, nameMatchType, id, nodeTitle, score * 100);
   }
 
   private static Integer extractYear(LocalDate date) {
@@ -91,6 +90,10 @@ public class TextMatcher {
 
     public double getScore() {
       return score;
+    }
+
+    public double getNormalizedScore() {
+      return type == MatchType.NAME ? score * 0.6 : score;
     }
 
     @Override

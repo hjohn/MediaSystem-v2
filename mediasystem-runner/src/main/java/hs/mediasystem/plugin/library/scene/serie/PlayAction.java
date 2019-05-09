@@ -20,6 +20,8 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+import org.reactfx.value.Val;
+
 public class PlayAction implements Action {
 
   @Singleton
@@ -33,7 +35,7 @@ public class PlayAction implements Action {
 
   private final Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
   private final MonadicObjectBinding<MediaItem<?>> playableMediaItem;
-  private final MonadicObjectBinding<Boolean> enabled;
+  private final Val<Boolean> enabled;
 
   private PlayAction(Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider, ObservableValue<MediaItem<?>> mediaItem) {
     this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
@@ -41,9 +43,7 @@ public class PlayAction implements Action {
       .filter(Objects::nonNull)
       .filter(mi -> mi.getData() instanceof Movie || mi.getData() instanceof Episode)
       .filter(mi -> !mi.getStreams().isEmpty());
-    this.enabled = Binds.monadic(playableMediaItem)
-      .map(Objects::nonNull)
-      .orElse(false);
+    this.enabled = Val.map(playableMediaItem, Objects::nonNull).orElseConst(false);
   }
 
   @Override
@@ -52,7 +52,7 @@ public class PlayAction implements Action {
   }
 
   @Override
-  public MonadicObjectBinding<Boolean> enabledProperty() {
+  public Val<Boolean> enabledProperty() {
     return enabled;
   }
 

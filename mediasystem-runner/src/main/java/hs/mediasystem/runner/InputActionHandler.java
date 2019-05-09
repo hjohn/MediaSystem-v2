@@ -1,6 +1,6 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.actions.ExposedMember;
+import hs.mediasystem.framework.expose.ExposedControl;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 
@@ -48,7 +48,7 @@ public class InputActionHandler {
       ActionTarget actionTarget = action.getActionTarget();
 
       if(actionTarget.getActionClass().isAssignableFrom(root.getClass())) {
-        actionTarget.doAction(action.getAction(), root, event);
+        actionTarget.doAction(action.getAction(), root, event);   // TODO May return a Task, that needs execution asynchronously
       }
     }
   }
@@ -110,12 +110,12 @@ public class InputActionHandler {
     }
   }
 
-  private static String createPath(List<ExposedMember> path) {
+  private static String createPath(List<ExposedControl<?>> path) {
     StringBuilder sb = new StringBuilder();
 
-    for(ExposedMember member : path) {
+    for(ExposedControl<?> member : path) {
       if(sb.length() == 0) {
-        sb.append(member.getMember().getDeclaringClass().getName());
+        sb.append(member.getDeclaringClass().getName());
       }
 
       sb.append(".").append(member.getName());

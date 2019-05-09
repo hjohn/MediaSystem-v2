@@ -4,7 +4,6 @@ import hs.mediasystem.ext.scanners.NameDecoder.Parts.Group;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -20,60 +19,132 @@ public class NameDecoder {
 
   private static final Pattern INFO = Pattern.compile("(" + RELEASE_YEAR + ")?(?: ?(?:" + IMDB + ")?)?.*");
 
-  private static final Set<String> KNOWN_DOUBLE_EXTENSIONS = new LinkedHashSet<String>() {{
+  private static final Set<String> KNOWN_DOUBLE_EXTENSIONS = new LinkedHashSet<>() {{
     add("tar");
   }};
 
-  private static final Set<String> SPACE_REPLACERS = new LinkedHashSet<String>() {{
+  private static final Set<String> SPACE_REPLACERS = new LinkedHashSet<>() {{
     add("_");
     add(".");
   }};
 
-  private static final String SEASON = "([0-9]{1,2})";
-  private static final String EPISODE = "([0-9]{1,2})(?:-?[Ee]?([0-9]{1,2}))?";
+  private static final String EPISODE = "([0-9]{1,2})";
+  private static final String SEASON = "([0-9]{1,2}|(?:19|20)[0-9]{2})";
+  private static final String EPISODE_WITH_RANGE = EPISODE + "(?:(?:-|-?[Ee])([0-9]{1,2}))?";   // "2", "12", "13-14", "15E16", "15-E16", !"1516"
   private static final String NOT_PRECEDED_BY_DIGIT = "(?<!\\d)";
   private static final String NOT_SUCCEEDED_BY_DIGIT_OR_LETTER = "(?!(?:\\d|\\p{L}))";
 
-  private static final Set<Pattern> EPISODE_SEQUENCE_PATTERNS = new LinkedHashSet<Pattern>() {{
-    add(Pattern.compile("(.*?)" + "-" + SEASON + "x" + EPISODE + "-" + "(.*?)"));
-    add(Pattern.compile("(.*?)" + "\\(" + SEASON + "x" + EPISODE + "\\)" + "(.*?)"));
-    add(Pattern.compile("(.*?)" + "\\[" + SEASON + "x" + EPISODE + "\\]" + "(.*?)"));
-    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "[Ss]" + SEASON + " ?[Ee]" + EPISODE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
-    add(Pattern.compile("(.*?)" + "-[Ss]" + SEASON + " ?[Ee]" + EPISODE + "-" + "(.*?)"));
-    add(Pattern.compile("(.*?)" + "\\([Ss]" + SEASON + " ?[Ee]" + EPISODE + "\\)" + "(.*?)"));
-    add(Pattern.compile("(.*?)" + "\\[[Ss]" + SEASON + " ?[Ee]" + EPISODE + "\\]" + "(.*?)"));
-    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + SEASON + "x" + EPISODE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
+  /*
+   * Patterns define 5 groups: Pre-text, Season Number, Episode Number, Episode End Number, Post-text
+   */
 
-    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "([1-3][0-9]|0?[1-9])([1-3][0-9]|0[1-9])()" + "\\b" + "(.*?)"));    // matches seasons upto 39, episodes upto 39 when written without space
-
-    add(Pattern.compile("(.*?)" + "()#" + EPISODE + "(.*?)"));  // No Season
-    add(Pattern.compile("(.*?)" + "()(?:Part|part|PART) " + EPISODE + "(.*?)"));  // No Season
-    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "[Ss]" + SEASON + "()()" + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)")); // Season Only
+  private static final Set<Pattern> SEASON_EPISODE_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
+    // Season + Episode patterns:
+    add(Pattern.compile("(.*?)" + "-" + SEASON + "[Xx]" + EPISODE_WITH_RANGE + "-" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\(" + SEASON + "[Xx]" + EPISODE_WITH_RANGE + "\\)" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\[" + SEASON + "[Xx]" + EPISODE_WITH_RANGE + "\\]" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "-[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITH_RANGE + "-" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\([Ss]" + SEASON + " ?[Ee]" + EPISODE_WITH_RANGE + "\\)" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\[[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITH_RANGE + "\\]" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITH_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
+    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + SEASON + "[Xx]" + EPISODE_WITH_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
   }};
 
-  private static final Set<Pattern> MOVIE_SEQUENCE_PATTERNS = new LinkedHashSet<Pattern>() {{
-    add(Pattern.compile("(.*?)" + "- " + SEASON + "()()(( [-\\[]|$).*?)"));
+  private static final Set<Pattern> EPISODE_ONLY_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
+    // Patterns without a Season (single season series):
+    add(Pattern.compile("(.*?)" + "()#" + EPISODE_WITH_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));  // "Name #2"
+    add(Pattern.compile("(.*?)" + "()(?:Part|part|PART) " + EPISODE_WITH_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));  // "Name Part 2"
+    add(Pattern.compile("(.*?)" + "() ?- ?" + EPISODE_WITH_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));  // "Name - 2"
+  }};
+
+  private static final Set<Pattern> DANGEROUS_SEASON_EPISODE_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
+
+    // Season and Episode written as one number (eg. "301" -> s3e1, "1002" -> s10e2, "2017" -> s20e17); dangerous pattern, can match years and hex hash codes easily...
+    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "([1-9])([1-3][0-9]|0[1-9])()" + "\\b" + "(.*?)"));    // matches seasons 1-39, episodes upto 39 when written without space
+  }};
+
+  private static final Set<Pattern> SEASON_ONLY_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
+    // Season only (specials):
+    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "[Ss]" + SEASON + "()()" + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));  // Season Only
+  }};
+
+  private static final Set<Pattern> MOVIE_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
+    add(Pattern.compile("(.*?)" + "- " + EPISODE + "()()(( [-\\[]|$).*?)"));
   }};
 
   private final Set<Pattern> sequencePatternsToCheck = new LinkedHashSet<>();
 
-  public enum Hint {EPISODE, FOLDER_NAMES, MOVIE}
+  public enum Mode {
 
-  private final EnumSet<Hint> hints = EnumSet.noneOf(Hint.class);
+    /**
+     * Attempts to extract season and episode numbers (as sequence), as well as episode title and subtitle.
+     */
+    EPISODE,
 
-  public NameDecoder(Hint... hints) {
-    this.hints.addAll(Arrays.asList(hints));
+    /**
+     * Attempts to extract title and year.
+     */
+    SERIE,
 
-    if(this.hints.contains(Hint.EPISODE)) {
-      sequencePatternsToCheck.addAll(EPISODE_SEQUENCE_PATTERNS);
-    }
-    if(this.hints.contains(Hint.MOVIE)) {
+    /**
+     * Attempts to extract title, alternative title and subtitle, and a sequence number if available.
+     */
+    MOVIE,
+
+    /**
+     * Attempts to extract season and episode numbers (as sequence), or a "special" number, as well as episode title and subtitle
+     */
+    SPECIAL,
+
+    /**
+     * Extracts title only
+     */
+    SIMPLE
+  }
+
+  private final boolean extractAlternativeTitle;
+  private final boolean extractSubtitle;
+  private final boolean extractYear;
+  private final boolean extractExtension;
+
+  public NameDecoder(Mode mode) {
+    switch(mode) {
+    case EPISODE:
+      sequencePatternsToCheck.addAll(SEASON_EPISODE_SEQUENCE_PATTERNS);
+      sequencePatternsToCheck.addAll(EPISODE_ONLY_SEQUENCE_PATTERNS);
+      sequencePatternsToCheck.addAll(DANGEROUS_SEASON_EPISODE_SEQUENCE_PATTERNS);
+      extractYear = false;
+      extractAlternativeTitle = false;
+      extractSubtitle = true;
+      extractExtension = true;
+      break;
+    case MOVIE:
       sequencePatternsToCheck.addAll(MOVIE_SEQUENCE_PATTERNS);
-    }
-
-    if(sequencePatternsToCheck.isEmpty()) {
-      sequencePatternsToCheck.addAll(EPISODE_SEQUENCE_PATTERNS);
-      sequencePatternsToCheck.addAll(MOVIE_SEQUENCE_PATTERNS);
+      extractYear = true;
+      extractAlternativeTitle = true;
+      extractSubtitle = true;
+      extractExtension = true;
+      break;
+    case SERIE:
+      extractYear = true;
+      extractAlternativeTitle = true;
+      extractSubtitle = true;
+      extractExtension = false;
+      break;
+    case SPECIAL:
+      sequencePatternsToCheck.addAll(SEASON_EPISODE_SEQUENCE_PATTERNS);
+      sequencePatternsToCheck.addAll(SEASON_ONLY_SEQUENCE_PATTERNS);
+      extractAlternativeTitle = false;
+      extractSubtitle = true;
+      extractYear = false;
+      extractExtension = true;
+      break;
+    default:
+      extractAlternativeTitle = false;
+      extractSubtitle = false;
+      extractYear = false;
+      extractExtension = true;
+      break;
     }
   }
 
@@ -86,7 +157,7 @@ public class NameDecoder {
     String code = null;
     String extension = null;
 
-    String[] nameAndExtension = hints.contains(Hint.FOLDER_NAMES) ? new String[] {input, ""} : splitExtension(input);
+    String[] nameAndExtension = extractExtension ? splitExtension(input) : new String[] {input, ""};
 
     String cleanedInput = cleanInput(nameAndExtension[0]);
     extension = nameAndExtension[1];
@@ -124,7 +195,7 @@ public class NameDecoder {
       }
     }
 
-    // System.out.println("title=" + title + "; alternativeTitle=" + alternativeTitle + "; subtitle=" + subtitle + "; sequence=" + sequence + "; code=" + code + "; releaseYear=" + releaseYear + "; extension=" + extension);
+  //   System.out.println("title=" + title + "; alternativeTitle=" + alternativeTitle + "; subtitle=" + subtitle + "; sequence=" + sequence + "; code=" + code + "; releaseYear=" + releaseYear + "; extension=" + extension);
     return new DecodeResult(title, alternativeTitle, subtitle, sequence, code, releaseYear, extension);
   }
 
@@ -150,21 +221,21 @@ public class NameDecoder {
     Group title = parts.before(splitter);
     Group subtitle = parts.after(splitter);
 
-    Group special = parts.all().between("[", "]");
+    Group special = extractYear ? parts.all().between("[", "]") : parts.group(0, 0);
     String specialText = special.toString();
 
     if(!special.isEmpty()) {
       special.expand(1).delete();
     }
 
-    Group alternativeTitle = title.copy().between("(", ")");
+    Group alternativeTitle = extractAlternativeTitle ? title.copy().between("(", ")") : parts.group(0, 0);
     String alternativeTitleText = alternativeTitle.toString();
 
     if(!alternativeTitle.isEmpty()) {
       alternativeTitle.expand(1).delete();
     }
 
-    if(subtitle.isEmpty()) {
+    if(extractSubtitle && subtitle.isEmpty()) {
       int index = title.indexOf(" ", "-", " ");
 
       if(index >= 0) {
@@ -178,10 +249,17 @@ public class NameDecoder {
 
 //    System.out.println("FULL: [" + title.getStartIndex() + "-" + (title.getEndIndex() - 1) + "] [" + subtitle.getStartIndex() + "-" + subtitle.getEndIndex() + "]: " + parts);
 
-    return new String[] {title.toString(), season, episode + (episodeEnd == null || episodeEnd.isEmpty() ? "" : "-" + episodeEnd), subtitle.toString(), specialText, alternativeTitleText};
+    return new String[] {
+      title.toString(),
+      season,
+      episode + (episodeEnd == null || episodeEnd.isEmpty() ? "" : "-" + episodeEnd),
+      subtitle.toString(),
+      specialText,
+      alternativeTitleText
+    };
   }
 
-  private String[] splitExtension(String input) {
+  private static String[] splitExtension(String input) {
     String[] parts = input.split("\\.");
     int extensionStart = parts.length - 1;
 
@@ -372,10 +450,10 @@ public class NameDecoder {
         throw new IllegalArgumentException("size must be positive");
       }
 
-      return new Iterable<Group>() {
+      return new Iterable<>() {
         @Override
         public Iterator<Group> iterator() {
-          return new Iterator<Group>() {
+          return new Iterator<>() {
             private Group lastGroup = null;
             private int position = 0;
 

@@ -1,0 +1,4 @@
+action-target:
+  debugOnce:
+    label: Debug Once
+    visible: false

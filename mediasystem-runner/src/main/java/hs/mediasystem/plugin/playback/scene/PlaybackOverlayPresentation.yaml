@@ -1,0 +1,4 @@
+action-target:
+  overlayVisible:
+    order: 101
+    label: Position and Clock visible

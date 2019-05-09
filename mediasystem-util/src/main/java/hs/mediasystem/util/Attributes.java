@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class Attributes {
   private final Map<String, Object> data;
@@ -38,6 +39,10 @@ public class Attributes {
     }
 
     this.data = Collections.unmodifiableMap(new HashMap<>(data));
+  }
+
+  public Set<String> keySet() {
+    return Collections.unmodifiableSet(data.keySet());
   }
 
   @SuppressWarnings("unchecked")

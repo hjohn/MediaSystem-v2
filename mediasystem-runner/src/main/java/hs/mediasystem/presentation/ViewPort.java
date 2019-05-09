@@ -1,8 +1,5 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.plugin.library.scene.view.TransitionPane;
-import hs.mediasystem.util.javafx.property.Unbindable;
-
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
 
@@ -56,12 +53,6 @@ public class ViewPort extends TransitionPane {
     //node.getProperties().put("presentation1", presentationCopy);
     node.getProperties().put("presentation2", current);
 
-    // Unbind every presentation, of every node (with quick transitions, there could be more than one):
-    for(Node oldNode : getChildren()) {
-      unbindAll((Presentation)oldNode.getProperties().get("presentation2"));
-      //unbindBidirectional((Presentation)oldNode.getProperties().get("presentation1"), (Presentation)oldNode.getProperties().get("presentation2"));
-    }
-
     add((Pane)node);
 //    getChildren().setAll(node);
 
@@ -70,36 +61,6 @@ public class ViewPort extends TransitionPane {
     }
 
     return node;
-  }
-
-  private static void unbindAll(Presentation presentation) {
-    if(presentation instanceof AbstractPresentation) {
-      AbstractPresentation abstractPresentation = (AbstractPresentation)presentation;
-
-      abstractPresentation.unbindAll();
-
-      return;
-    }
-
-    try {
-      for(Field field : presentation.getClass().getFields()) {
-        Class<?> type = field.getType();
-        Object fieldValue = field.get(presentation);
-
-        if(Unbindable.class.isInstance(fieldValue)) {
-          System.out.println("Calling unbindAll on " + field);
-          ((Unbindable)field.get(presentation)).unbindAll();
-        }
-        else if(Property.class.isAssignableFrom(type)) {
-          System.out.println("Calling unbind on " + field);
-          // TODO make this an error, there should be only unbindables in presentations
-          ((Property<Object>)field.get(presentation)).unbind();
-        }
-      }
-    }
-    catch(IllegalAccessException e) {
-      throw new IllegalStateException(e);
-    }
   }
 
   @SuppressWarnings("unchecked")

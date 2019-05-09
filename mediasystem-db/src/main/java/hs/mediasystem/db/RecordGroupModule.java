@@ -14,24 +14,24 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Type;
-import hs.mediasystem.ext.basicmediatypes.scan.EpisodeStream;
-import hs.mediasystem.ext.basicmediatypes.scan.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.scan.MovieStream;
-import hs.mediasystem.ext.basicmediatypes.scan.SerieStream;
-import hs.mediasystem.ext.basicmediatypes.scan.StreamPrint;
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.Episode;
+import hs.mediasystem.ext.basicmediatypes.domain.Movie;
+import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
+import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.StringURI;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 public class RecordGroupModule extends SimpleModule {
-  @Inject
+
   public RecordGroupModule() {
     addKeyDeserializer(Identifier.class, new KeyDeserializer() {
       @Override
@@ -40,17 +40,17 @@ public class RecordGroupModule extends SimpleModule {
       }
     });
 
-    addSerializer(Type.class, new JsonSerializer<Type>() {
+    addSerializer(MediaType.class, new JsonSerializer<MediaType>() {
       @Override
-      public void serialize(Type value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      public void serialize(MediaType value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeString(value.toString());
       }
     });
 
-    addDeserializer(Type.class, new JsonDeserializer<Type>() {
+    addDeserializer(MediaType.class, new JsonDeserializer<MediaType>() {
       @Override
-      public Type deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        return Type.of(p.getText());
+      public MediaType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        return MediaType.of(p.getText());
       }
     });
 
@@ -100,23 +100,16 @@ public class RecordGroupModule extends SimpleModule {
   @Override
   public void setupModule(SetupContext context) {
     registerSubtypes(
-      new NamedType(MovieStream.class, "MovieStream"),
-      new NamedType(SerieStream.class, "SerieStream"),
-      new NamedType(EpisodeStream.class, "EpisodeStream")
+      new NamedType(Movie.class, "Movie"),
+      new NamedType(Serie.class, "Serie"),
+      new NamedType(Episode.class, "Episode")
     );
 
     super.setupModule(context);
 
-    context.setMixInAnnotations(StreamPrint.class, StreamPrintMixIn.class);
-    context.setMixInAnnotations(MediaStream.class, MediaStreamMixIn.class);
     context.setMixInAnnotations(Attributes.class, AttributesMixIn.class);
-  }
-
-  static class StreamPrintMixIn extends StreamPrint {
-    @JsonCreator
-    public StreamPrintMixIn(StringURI uri, Long size, long lastModificationTime, byte[] hash, Long openSubtitleHash) {
-      super(uri, size, lastModificationTime, hash, openSubtitleHash);
-    }
+    context.setMixInAnnotations(MediaDescriptor.class, MediaDescriptorMixIn.class);
+    context.setMixInAnnotations(ProductionCollection.class, ProductionCollectionMixin.class);
   }
 
   static class AttributesMixIn extends Attributes {
@@ -127,6 +120,13 @@ public class RecordGroupModule extends SimpleModule {
   }
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
-  static class MediaStreamMixIn {
+  static class MediaDescriptorMixIn {
+  }
+
+  static class ProductionCollectionMixin extends ProductionCollection {
+    @JsonCreator
+    protected ProductionCollectionMixin(boolean complete, Identifier identifier, String name, String overview, ImageURI image, ImageURI backdrop, List<Production> productions) {
+      super(complete, identifier, name, overview, image, backdrop, productions);
+    }
   }
 }

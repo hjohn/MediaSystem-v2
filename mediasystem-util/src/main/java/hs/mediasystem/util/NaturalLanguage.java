@@ -5,16 +5,16 @@ import java.util.Set;
 
 public class NaturalLanguage {
   public static final Comparator<String> ALPHABETICAL = (a, b) -> {
-    int result = stripArticle(a).compareTo(stripArticle(b));
+    int result = stripArticle(a).compareToIgnoreCase(stripArticle(b));
 
     if(result == 0) {
-      result = getArticle(a).compareTo(getArticle(b));
+      result = getArticle(a).compareToIgnoreCase(getArticle(b));
     }
 
     return result;
   };
 
-  private static final Set<String> ARTICLES = Set.of("THE", "A", "AN"); //, "LE", "LA", "LES", "DE", "DIE", "DAS", "DER");  need to know title language... die = dying
+  private static final Set<String> ARTICLES = Set.of("THE", "A", "AN"); //, "LE", "LA", "LES", "DE", "HET", "DIE", "DAS", "DER");  need to know title language... die = dying
 
   public static boolean isArticle(String text) {
     return ARTICLES.contains(text.toUpperCase());

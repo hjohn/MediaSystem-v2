@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.services;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.scan.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 
 public abstract class AbstractQueryService<T extends MediaDescriptor> implements QueryService<T> {
   private final DataSource dataSource;

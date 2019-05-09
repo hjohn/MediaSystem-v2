@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @Table(name = "localmedia")
 public class LocalMedia extends DatabaseObject {
 
-  @Id(generated = false) @Column
-  private String id;
+  @Id(generated = false) @Column(name = "stream_id")
+  private int streamId;
 
   @Column
   private LocalDateTime deleteTime;
@@ -22,12 +22,12 @@ public class LocalMedia extends DatabaseObject {
   @Column
   private byte[] json;
 
-  public String getId() {
-    return id;
+  public int getStreamId() {
+    return streamId;
   }
 
-  public void setId(String id) {
-    this.id = id;
+  public void setStreamId(int streamId) {
+    this.streamId = streamId;
   }
 
   public long getScannerId() {

@@ -1,7 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
-
+import java.time.Instant;
 import java.util.Objects;
 
 public class Identification {
@@ -41,28 +40,24 @@ public class Identification {
     NAME
   }
 
-  private final Identifier identifier;
   private final MatchType matchType;
   private final double matchAccuracy;
+  private final Instant creationTime;
 
-  public Identification(Identifier identifier, MatchType matchType, double matchAccuracy) {
-    if(identifier == null) {
-      throw new IllegalArgumentException("identifier cannot be null");
-    }
+  public Identification(MatchType matchType, double matchAccuracy, Instant creationTime) {
     if(matchType == null) {
       throw new IllegalArgumentException("matchType cannot be null");
     }
     if(matchAccuracy < 0 || matchAccuracy > 1) {
       throw new IllegalArgumentException("matchAccuracy must be between 0 and 1.0: " + matchAccuracy);
     }
+    if(creationTime == null) {
+      throw new IllegalArgumentException("creationTime cannot be null");
+    }
 
-    this.identifier = identifier;
     this.matchType = matchType;
     this.matchAccuracy = matchAccuracy;
-  }
-
-  public Identifier getIdentifier() {
-    return identifier;
+    this.creationTime = creationTime;
   }
 
   public MatchType getMatchType() {
@@ -73,9 +68,13 @@ public class Identification {
     return matchAccuracy;
   }
 
+  public Instant getCreationTime() {
+    return creationTime;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(identifier, matchType, matchAccuracy);
+    return Objects.hash(matchType, matchAccuracy, creationTime);
   }
 
   @Override
@@ -89,13 +88,13 @@ public class Identification {
 
     Identification other = (Identification)obj;
 
-    if(!identifier.equals(other.identifier)) {
-      return false;
-    }
     if(Double.doubleToLongBits(matchAccuracy) != Double.doubleToLongBits(other.matchAccuracy)) {
       return false;
     }
     if(matchType != other.matchType) {
+      return false;
+    }
+    if(creationTime != other.creationTime) {
       return false;
     }
 
@@ -104,6 +103,6 @@ public class Identification {
 
   @Override
   public String toString() {
-    return "Identification[" + identifier + " (" + matchType + " @ " + matchAccuracy * 100 + "%)]";
+    return "Identification[" + matchType + " @ " + matchAccuracy * 100 + "%]";
   }
 }

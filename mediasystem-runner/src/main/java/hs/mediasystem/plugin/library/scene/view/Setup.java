@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.plugin.library.scene.LibraryPresentation;
+import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 
 import javafx.scene.Node;
 

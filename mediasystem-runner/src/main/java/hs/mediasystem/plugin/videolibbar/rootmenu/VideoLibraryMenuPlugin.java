@@ -10,7 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -27,14 +27,14 @@ public class VideoLibraryMenuPlugin implements RootMenuScenePlugin.MenuPlugin {
 
   @Override
   public Node getNode() {
-    HBox hbox = new HBox();
+    VBox vbox = new VBox();
 
     pluginsProvider.get().stream()
       .sorted(Comparator.comparing(p -> p.getDouble("order")))
       .map(this::toButton)
-      .forEach(b -> hbox.getChildren().add(b));
+      .forEach(b -> vbox.getChildren().add(b));
 
-    return hbox;
+    return vbox;
   }
 
   private Button toButton(OptionPlugin plugin) {

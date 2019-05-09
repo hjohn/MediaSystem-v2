@@ -6,8 +6,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.NavigateEvent;
-import hs.mediasystem.util.javafx.Binds;
-import hs.mediasystem.util.javafx.Val;
 import hs.mediasystem.util.javafx.action.Action;
 
 import java.util.Objects;
@@ -20,6 +18,8 @@ import javafx.event.Event;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+
+import org.reactfx.value.Val;
 
 public class ResumeAction implements Action {
 
@@ -42,19 +42,16 @@ public class ResumeAction implements Action {
   private ResumeAction(StreamStateService streamStateService, Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider, ObservableValue<MediaItem<?>> mediaItem) {
     this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
 
-    Val<MediaItem<?>> playableMediaItem = Binds.monadic(mediaItem)
-      .filter(Objects::nonNull)
+    Val<MediaItem<?>> playableMediaItem = Val.filter(mediaItem, Objects::nonNull)
       .filter(mi -> mi.getData() instanceof Movie || mi.getData() instanceof Episode)
       .filter(mi -> !mi.getStreams().isEmpty());
 
     this.resumePosition = playableMediaItem
       .flatMap(playItem -> streamStateService.resumePositionProperty(playItem.getStreams().iterator().next().getStreamPrint()))
-      .orElse(-1);
+      .orElseConst(-1);
 
-    this.resumableMediaItem = playableMediaItem.filter(resumePosition.map(i -> i > 0));
-    this.enabled = Binds.monadic(resumableMediaItem)
-      .map(Objects::nonNull)
-      .orElse(false);
+    this.resumableMediaItem = Val.combine(resumePosition, playableMediaItem, (rp, mi) -> rp > 0 && mi != null ? mi : null);
+    this.enabled = Val.map(resumableMediaItem, Objects::nonNull).orElseConst(false);
   }
 
   @Override
@@ -75,3 +72,4 @@ public class ResumeAction implements Action {
     });
   }
 }
+
