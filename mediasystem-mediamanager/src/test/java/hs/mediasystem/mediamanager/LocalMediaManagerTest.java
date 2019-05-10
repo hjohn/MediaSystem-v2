@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 
 public class LocalMediaManagerTest {
   private static final StreamPrint STREAM_PRINT = new StreamPrint(new StreamID(999), 1024L, 0L, new byte[] {1, 2, 3});
-  private static final StreamTags STREAM_TAGS = new StreamTags(Set.of("A", "B"));
+  private static final StreamSource STREAM_SOURCE = new StreamSource(new StreamTags(Set.of("A", "B")), "TMDB");
 
   private static final MediaType MOVIE = MediaType.of("MOVIE");
   private static final MediaType SERIE = MediaType.of("SERIE");
@@ -118,7 +118,7 @@ public class LocalMediaManagerTest {
     when(idServiceForDS2.identify(eq(stream)))
       .thenReturn(Tuple.of(identifier2, new Identification(MatchType.ID, 1.0, Instant.now())));
 
-    db.put(stream, STREAM_TAGS, Set.of(
+    db.put(stream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Movies.create(identifier)),
       Tuple.of(identifier3, new Identification(MatchType.ID, 1.0, Instant.now()), null)
     ));
@@ -148,7 +148,7 @@ public class LocalMediaManagerTest {
 
     when(queryService1.query(identifier2)).thenReturn(Result.of(episode2));
 
-    db.put(stream, STREAM_TAGS, Set.of(
+    db.put(stream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), episode1)
     ));
 
@@ -169,7 +169,7 @@ public class LocalMediaManagerTest {
     BasicStream differentStream = createEpisode("file://test", streamPrint3, Attributes.of(Attribute.TITLE, "Title"));
 
     // Add the stream
-    db.put(stream, STREAM_TAGS, Set.of(
+    db.put(stream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
     ));
 
@@ -177,7 +177,7 @@ public class LocalMediaManagerTest {
     assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Add same stream
-    db.put(stream, STREAM_TAGS, Set.of(
+    db.put(stream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
     ));
 
@@ -185,7 +185,7 @@ public class LocalMediaManagerTest {
     assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Add similar stream
-    db.put(similarStream, STREAM_TAGS, Set.of(
+    db.put(similarStream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
     ));
 
@@ -193,7 +193,7 @@ public class LocalMediaManagerTest {
     assertEquals(1, streamStore.findStreams(EPISODE).size());
 
     // Add really different stream
-    db.put(differentStream, STREAM_TAGS, Set.of(
+    db.put(differentStream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
     ));
 
@@ -212,7 +212,7 @@ public class LocalMediaManagerTest {
     BasicStream similarStream = createEpisode("file://moved/test", streamPrint2, Attributes.of(Attribute.TITLE, "Title"));
 
     // Add the stream
-    db.put(stream, STREAM_TAGS, Set.of(
+    db.put(stream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
     ));
 
@@ -224,7 +224,7 @@ public class LocalMediaManagerTest {
     assertEquals(0, streamStore.findStreams(EPISODE).size());
 
     // Re-add it again
-    db.put(stream, STREAM_TAGS, Set.of(
+    db.put(stream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Episodes.create(identifier))
     ));
 
@@ -245,7 +245,7 @@ public class LocalMediaManagerTest {
 
     when(idServiceForDS2.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
 
-    db.put(stream, STREAM_TAGS, Set.of());
+    db.put(stream, STREAM_SOURCE, Set.of());
 
     MediaIdentification mi = db.reidentifyStream(stream.getId());
 
@@ -271,7 +271,7 @@ public class LocalMediaManagerTest {
     when(queryServiceForDS1.query(identifier)).thenReturn(QueryService.Result.of(movie1, Map.of(identifier2, identification2, identifier, identification)));  // Also returns original identification which should be skipped
     when(queryServiceForDS6.query(identifier2)).thenReturn(QueryService.Result.of(movie2, Map.of(identifier, identification)));  // Returns original identification which should be skipped
 
-    db.put(stream, STREAM_TAGS, Set.of());
+    db.put(stream, STREAM_SOURCE, Set.of());
 
     MediaIdentification mi = db.reidentifyStream(stream.getId());
 
@@ -296,7 +296,7 @@ public class LocalMediaManagerTest {
 
     when(queryServiceForDS1.query(identifier)).thenReturn(QueryService.Result.of(movie1));  // Also returns original identification which should be skipped
 
-    streamStore.put(stream, STREAM_TAGS, Set.of(
+    streamStore.put(stream, STREAM_SOURCE, Set.of(
       Tuple.of(identifier, identification, null),
       Tuple.of(identifier2, identification2, movie2)
     ));
@@ -318,7 +318,7 @@ public class LocalMediaManagerTest {
 
     when(idServiceForDS2.identify(eq(stream))).thenThrow(illegalStateException);
 
-    db.put(stream, STREAM_TAGS, Set.of());
+    db.put(stream, STREAM_SOURCE, Set.of());
 
     MediaIdentification mi = db.reidentifyStream(stream.getId());
 
@@ -340,7 +340,7 @@ public class LocalMediaManagerTest {
     when(idServiceForDS1.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
     when(queryServiceForDS1.query(identifier)).thenThrow(illegalStateException);
 
-    db.put(stream, STREAM_TAGS, Set.of());
+    db.put(stream, STREAM_SOURCE, Set.of());
 
     MediaIdentification mi = db.reidentifyStream(stream.getId());
 

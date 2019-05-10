@@ -11,6 +11,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.mediasystem.db.ScanResultSupplier;
 import hs.mediasystem.db.ScannerController;
+import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.scanner.api.Scanner;
 
@@ -78,7 +79,7 @@ public class CollectionLocationManager {
             .map(s -> Paths.get(s))
             .collect(Collectors.toList());
 
-          suppliers.add(new ScanResultSupplier(scanner, definition.getId(), paths, new StreamTags(definition.getTags()), definition.getIdentification()));
+          suppliers.add(new ScanResultSupplier(scanner, definition.getId(), paths, new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification())));
         }
       }
     }

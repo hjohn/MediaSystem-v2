@@ -46,7 +46,7 @@ public class ScannerController {
       future.cancel(true);
     }
 
-    mediaManagerUpdater.setScannerIds(suppliers.stream().collect(Collectors.toMap(ScanResultSupplier::getId, ScanResultSupplier::getStreamTags)));
+    mediaManagerUpdater.setScannerIds(suppliers.stream().collect(Collectors.toMap(ScanResultSupplier::getId, ScanResultSupplier::getStreamSource)));
 
     // TODO when scanners are reconfigured, we may need to purge things from MediaManager...
 
@@ -87,7 +87,7 @@ public class ScannerController {
             }
           }
 
-          mediaManagerUpdater.update(supplier.getId(), supplier.getStreamTags(), results);
+          mediaManagerUpdater.update(supplier.getId(), supplier.getStreamSource(), results);
         }
       }
       catch(Throwable t) {

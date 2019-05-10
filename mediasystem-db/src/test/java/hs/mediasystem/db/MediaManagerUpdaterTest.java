@@ -2,6 +2,7 @@ package hs.mediasystem.db;
 
 import hs.mediasystem.ext.basicmediatypes.MediaStream;
 import hs.mediasystem.mediamanager.LocalMediaManager;
+import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
@@ -33,7 +34,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class MediaManagerUpdaterTest {
-  private static final StreamTags STREAM_TAGS = new StreamTags(Set.of("A", "B"));
+  private static final StreamSource STREAM_SOURCE = new StreamSource(new StreamTags(Set.of("A", "B")), "TMDB");
 
   @Mock private LocalMediaManager localMediaManager;
   @Mock private DatabaseLocalMediaStore mediaStore;
@@ -49,13 +50,13 @@ public class MediaManagerUpdaterTest {
   public void shouldAddMedia() throws InterruptedException {
     BasicStream stream1 = basicStream(1234, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
 
-    updater.update(1, STREAM_TAGS, List.of(Exceptional.of(List.of(
+    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(localMediaManager).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")), eq(STREAM_TAGS), any());
+    verify(localMediaManager).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")), eq(STREAM_SOURCE), any());
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
   }
@@ -72,13 +73,13 @@ public class MediaManagerUpdaterTest {
 
     BasicStream stream1 = basicStream(1234, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica");
 
-    updater.update(1, STREAM_TAGS, List.of(Exceptional.of(List.of(
+    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(localMediaManager).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")), eq(STREAM_TAGS), any());
+    verify(localMediaManager).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")), eq(STREAM_SOURCE), any());
     verify(localMediaManager).remove(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
@@ -90,13 +91,13 @@ public class MediaManagerUpdaterTest {
 
     BasicStream stream1 = basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
 
-    updater.update(1, STREAM_TAGS, List.of(Exceptional.of(List.of(
+    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(localMediaManager).put(argThat(ms -> ms.getUri().toString().equals("/home/user/Battlestar%20Galactica")), eq(STREAM_TAGS), any());
+    verify(localMediaManager).put(argThat(ms -> ms.getUri().toString().equals("/home/user/Battlestar%20Galactica")), eq(STREAM_SOURCE), any());
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
   }
@@ -122,14 +123,14 @@ public class MediaManagerUpdaterTest {
 
     BasicStream stream1 = basicStream;
 
-    updater.update(1, STREAM_TAGS, List.of(Exceptional.of(List.of(
+    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
     verify(mediaStore).store(otherLocalMedia);
-    verify(localMediaManager).put(stream1, STREAM_TAGS, Set.of());
+    verify(localMediaManager).put(stream1, STREAM_SOURCE, Set.of());
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
   }
@@ -149,13 +150,13 @@ public class MediaManagerUpdaterTest {
 
     BasicStream stream1 = basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica v2");
 
-    updater.update(1, STREAM_TAGS, List.of(Exceptional.of(List.of(
+    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(localMediaManager).put(argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")), eq(STREAM_TAGS), any());
+    verify(localMediaManager).put(argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")), eq(STREAM_SOURCE), any());
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
   }

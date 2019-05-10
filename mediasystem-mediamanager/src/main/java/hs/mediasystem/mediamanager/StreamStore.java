@@ -46,25 +46,25 @@ public class StreamStore {
 
   private final Map<StringURI, StreamID> byUri = new HashMap<>();
   private final Map<StreamID, BasicStream> streams = new HashMap<>();
-  private final Map<StreamID, StreamTags> streamTags = new HashMap<>();
+  private final Map<StreamID, StreamSource> streamSources = new HashMap<>();
 
   private final BiMultiMap<StreamID, Identifier, Tuple2<Identification, MediaDescriptor>> bmm = new BiMultiMap<>();
 
-  synchronized void put(BasicStream stream, StreamTags tags, Set<Tuple3<Identifier, Identification, MediaDescriptor>> records) {
+  synchronized void put(BasicStream stream, StreamSource source, Set<Tuple3<Identifier, Identification, MediaDescriptor>> records) {
     remove(stream);
 
-    add(stream, tags, null, null, null);
+    add(stream, source, null, null, null);
 
     for(Tuple3<Identifier, Identification, MediaDescriptor> tuple : records) {
-      add(stream, tags, tuple.a, tuple.b, tuple.c);
+      add(stream, source, tuple.a, tuple.b, tuple.c);
     }
   }
 
   synchronized void update(BasicStream stream, Set<Tuple3<Identifier, Identification, MediaDescriptor>> records) {
-    put(stream, streamTags.get(stream.getId()), records);
+    put(stream, streamSources.get(stream.getId()), records);
   }
 
-  private synchronized void add(BasicStream stream, StreamTags tags, Identifier identifier, Identification identification, MediaDescriptor descriptor) {
+  private synchronized void add(BasicStream stream, StreamSource source, Identifier identifier, Identification identification, MediaDescriptor descriptor) {
     if(stream == null) {
       throw new IllegalArgumentException("stream cannot be null");
     }
@@ -84,8 +84,8 @@ public class StreamStore {
     byUri.put(stream.getUri(), stream.getStreamPrint().getId());
     streams.put(stream.getId(), stream);
 
-    if(tags != null) {
-      streamTags.put(stream.getId(), tags);
+    if(source != null) {
+      streamSources.put(stream.getId(), source);
     }
 
     if(identifier != null) {
@@ -126,7 +126,7 @@ public class StreamStore {
 
     byUri.remove(stream.getUri());
     streams.remove(stream.getId());
-    streamTags.remove(stream.getId());
+    streamSources.remove(stream.getId());
 
     StreamID id = stream.getStreamPrint().getId();
 
@@ -163,8 +163,8 @@ public class StreamStore {
   }
 
   public synchronized Set<BasicStream> findStreams(String tag) {
-    return streamTags.entrySet().stream()
-      .filter(e -> e.getValue().contains(tag))
+    return streamSources.entrySet().stream()
+      .filter(e -> e.getValue().getTags().contains(tag))
       .map(e -> streams.get(e.getKey()))
       .collect(Collectors.toSet());
   }
@@ -176,8 +176,8 @@ public class StreamStore {
   }
 
   public synchronized Map<BasicStream, Map<Identifier, Tuple2<Identification, MediaDescriptor>>> findAllDescriptorsAndIdentifications(MediaType type, String tag) {
-    return streamTags.entrySet().stream()
-      .filter(e -> e.getValue().contains(tag))
+    return streamSources.entrySet().stream()
+      .filter(e -> e.getValue().getTags().contains(tag))
       .map(e -> streams.get(e.getKey()))
       .filter(s -> s.getType().equals(type))
       .collect(Collectors.toMap(Function.identity(), s -> findDescriptorsAndIdentifications(s.getId())));

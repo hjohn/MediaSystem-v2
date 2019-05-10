@@ -7,7 +7,7 @@ import hs.mediasystem.ext.basicmediatypes.MediaRecord;
 import hs.mediasystem.ext.basicmediatypes.MediaStream;
 import hs.mediasystem.mediamanager.LocalMediaListener;
 import hs.mediasystem.mediamanager.LocalMediaManager;
-import hs.mediasystem.mediamanager.StreamTags;
+import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Exceptional;
@@ -49,7 +49,7 @@ public class MediaManagerUpdater {
 
   private final Guard<Map<StreamID, EnrichTimes>> enrichTimes = new Guard<>(new HashMap<>());
 
-  public void setScannerIds(Map<Integer, StreamTags> scannerIds) {
+  public void setScannerIds(Map<Integer, StreamSource> scannerIds) {
     // Can only be called once for now
     // Should purge database of scanner id's not present
     // Probably best to remove scanner id's altogether, and just grab cached data from db
@@ -61,7 +61,7 @@ public class MediaManagerUpdater {
     initializePeriodicEnrichThread();
   }
 
-  private void initializeMediaManager(Map<Integer, StreamTags> scannerIds) {
+  private void initializeMediaManager(Map<Integer, StreamSource> scannerIds) {
     for(LocalMedia localMedia : mediaStore.findAllActive()) {
       int key = (int)localMedia.getScannerId() & 0xffff;
 
@@ -222,7 +222,7 @@ public class MediaManagerUpdater {
     });
   }
 
-  public synchronized void update(long scannerId, StreamTags tags, List<Exceptional<List<BasicStream>>> rootResults) {
+  public synchronized void update(long scannerId, StreamSource source, List<Exceptional<List<BasicStream>>> rootResults) {
     for(int rootResultIdx = 0; rootResultIdx < rootResults.size(); rootResultIdx++) {
       Exceptional<List<BasicStream>> rootResult = rootResults.get(rootResultIdx);
 
@@ -237,19 +237,19 @@ public class MediaManagerUpdater {
             LocalMedia existingLocalMedia = existingLocalMedias.remove(scannedStream.getId().asInt());
 
             if(existingLocalMedia == null) {
-              putMediaStream(scannerAndRootId, tags, mediaStream, "New Stream found: " + scannedStream);
+              putMediaStream(scannerAndRootId, source, mediaStream, "New Stream found: " + scannedStream);
             }
             else {
               MediaStream existingMediaStream = localMediaCodec.toMediaStream(existingLocalMedia);
 
               if(existingMediaStream == null) {
-                putMediaStream(scannerAndRootId, tags, mediaStream, "Error decoding existing Stream, replacing with new version: " + existingLocalMedia);
+                putMediaStream(scannerAndRootId, source, mediaStream, "Error decoding existing Stream, replacing with new version: " + existingLocalMedia);
               }
               else if(existingLocalMedia.getDeleteTime() != null) {
-                putMediaStream(scannerAndRootId, tags, existingMediaStream, "Existing Stream undeleted: " + existingMediaStream);
+                putMediaStream(scannerAndRootId, source, existingMediaStream, "Existing Stream undeleted: " + existingMediaStream);
               }
               else if(!scannedStream.equals(existingMediaStream.getStream())) {
-                putMediaStream(scannerAndRootId, tags, mediaStream, "Existing stream modified: " + scannedStream);
+                putMediaStream(scannerAndRootId, source, mediaStream, "Existing stream modified: " + scannedStream);
               }
             }
           }
@@ -292,7 +292,7 @@ public class MediaManagerUpdater {
     }
   }
 
-  private void putMediaStream(long scannerId, StreamTags tags, MediaStream mediaStream, String message) {
+  private void putMediaStream(long scannerId, StreamSource source, MediaStream mediaStream, String message) {
     LOGGER.finer(message);
 
     mediaStore.store(localMediaCodec.toLocalMedia(scannerId, null, mediaStream));
@@ -300,7 +300,7 @@ public class MediaManagerUpdater {
     enrichTimes.write(et -> {
       localMediaManager.put(
         mediaStream.getStream(),
-        tags,
+        source,
         mediaStream.getMediaRecords().entrySet().stream()
           .map(e -> Tuple.of(e.getKey(), e.getValue().getIdentification(), e.getValue().getMediaDescriptor()))
           .collect(Collectors.toSet())

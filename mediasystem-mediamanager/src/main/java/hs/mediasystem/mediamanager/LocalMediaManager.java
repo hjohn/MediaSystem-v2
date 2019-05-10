@@ -67,9 +67,9 @@ public class LocalMediaManager {
     }
   }
 
-  public void put(BasicStream stream, StreamTags tags, Set<Tuple3<Identifier, Identification, MediaDescriptor>> descriptors) {
+  public void put(BasicStream stream, StreamSource source, Set<Tuple3<Identifier, Identification, MediaDescriptor>> descriptors) {
     try(Key key = storeConsistencyLock.lock()) {
-      store.put(stream, tags, descriptors);
+      store.put(stream, source, descriptors);
     }
   }
 

@@ -1,6 +1,6 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.mediamanager.StreamTags;
+import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.Scanner;
 import hs.mediasystem.util.Exceptional;
@@ -12,15 +12,13 @@ public class ScanResultSupplier {
   private final Scanner scanner;
   private final int id;
   private final List<Path> roots;
-  private final StreamTags tags;
-  private final String dataSourceName;
+  private final StreamSource streamSource;
 
-  public ScanResultSupplier(Scanner scanner, int id, List<Path> roots, StreamTags tags, String dataSourceName) {
+  public ScanResultSupplier(Scanner scanner, int id, List<Path> roots, StreamSource streamSource) {
     this.scanner = scanner;
     this.id = id;
     this.roots = roots;
-    this.tags = tags;
-    this.dataSourceName = dataSourceName;
+    this.streamSource = streamSource;
   }
 
   public String getName() {
@@ -39,7 +37,7 @@ public class ScanResultSupplier {
     return id;
   }
 
-  public StreamTags getStreamTags() {
-    return tags;
+  public StreamSource getStreamSource() {
+    return streamSource;
   }
 }

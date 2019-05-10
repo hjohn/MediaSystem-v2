@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 public class StreamStoreTest {
   private static final Identification IDENTIFICATION = new Identification(MatchType.ID, 1.0, Instant.now());
-  private static final StreamTags STREAM_TAGS = new StreamTags(Set.of("A", "B"));
+  private static final StreamSource STREAM_SOURCE = new StreamSource(new StreamTags(Set.of("A", "B")), "TMDB");
 
   @Mock private EpisodeMatcher episodeMatcher;
   @InjectMocks private StreamStore store;
@@ -40,7 +40,7 @@ public class StreamStoreTest {
     Movie movie = Movies.create();
     BasicStream stream = Streams.create();
 
-    store.put(stream, STREAM_TAGS, Set.of(Tuple.of(movie.getIdentifier(), IDENTIFICATION, movie)));
+    store.put(stream, STREAM_SOURCE, Set.of(Tuple.of(movie.getIdentifier(), IDENTIFICATION, movie)));
 
     assertEquals(Set.of(stream), store.findStreams(movie.getIdentifier()));
 
@@ -61,7 +61,7 @@ public class StreamStoreTest {
     when(episodeMatcher.attemptMatch(serie, IDENTIFICATION, episode1Stream.getAttributes())).thenReturn(Tuple.of(IDENTIFICATION, List.of(episode1)));
     when(episodeMatcher.attemptMatch(serie, IDENTIFICATION, episode2Stream.getAttributes())).thenReturn(Tuple.of(IDENTIFICATION, List.of(episode2)));
 
-    store.put(serieStream, STREAM_TAGS, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
+    store.put(serieStream, STREAM_SOURCE, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
 
     assertEquals(Set.of(serieStream), store.findStreams(serie.getIdentifier()));
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
@@ -81,20 +81,20 @@ public class StreamStoreTest {
     Serie serie = Series.create(List.of(episode1, episode2));
     BasicStream serieStream = Streams.create("http://serie", StreamPrints.create(new StreamID(1)));
 
-    store.put(serieStream, STREAM_TAGS, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
+    store.put(serieStream, STREAM_SOURCE, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
 
     assertEquals(Set.of(serieStream), store.findStreams(serie.getIdentifier()));
 
     BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", StreamPrints.create(new StreamID(11)), "1,5");
 
-    store.put(episode1Stream, STREAM_TAGS, Set.of(Tuple.of(episode1.getIdentifier(), IDENTIFICATION, episode1)));
+    store.put(episode1Stream, STREAM_SOURCE, Set.of(Tuple.of(episode1.getIdentifier(), IDENTIFICATION, episode1)));
 
     assertEquals(Set.of(serieStream), store.findStreams(serie.getIdentifier()));
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
 
     BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", StreamPrints.create(new StreamID(12)), "1,6");
 
-    store.put(episode2Stream, STREAM_TAGS, Set.of(Tuple.of(episode2.getIdentifier(), IDENTIFICATION, episode2)));
+    store.put(episode2Stream, STREAM_SOURCE, Set.of(Tuple.of(episode2.getIdentifier(), IDENTIFICATION, episode2)));
 
     assertEquals(Set.of(serieStream), store.findStreams(serie.getIdentifier()));
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
@@ -126,20 +126,20 @@ public class StreamStoreTest {
     Serie serie = Series.create(List.of(episode1, episode2));
     BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", StreamPrints.create(new StreamID(11)), "1,5");
 
-    store.put(episode1Stream, STREAM_TAGS, Set.of(Tuple.of(episode1.getIdentifier(), IDENTIFICATION, episode1)));
+    store.put(episode1Stream, STREAM_SOURCE, Set.of(Tuple.of(episode1.getIdentifier(), IDENTIFICATION, episode1)));
 
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
 
     BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", StreamPrints.create(new StreamID(12)), "1,6");
 
-    store.put(episode2Stream, STREAM_TAGS, Set.of(Tuple.of(episode2.getIdentifier(), IDENTIFICATION, episode2)));
+    store.put(episode2Stream, STREAM_SOURCE, Set.of(Tuple.of(episode2.getIdentifier(), IDENTIFICATION, episode2)));
 
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
     assertEquals(Set.of(episode2Stream), store.findStreams(episode2.getIdentifier()));
 
     BasicStream serieStream = Streams.create("http://serie", StreamPrints.create(new StreamID(1)));
 
-    store.put(serieStream, STREAM_TAGS, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
+    store.put(serieStream, STREAM_SOURCE, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
 
     assertEquals(Set.of(serieStream), store.findStreams(serie.getIdentifier()));
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
