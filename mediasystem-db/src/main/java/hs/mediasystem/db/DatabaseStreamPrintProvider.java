@@ -84,15 +84,34 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
         StreamPrint print = streamPrints.get(existingStreamId);
 
         if(Objects.equals(print.getSize(), size) && print.getLastModificationTime() == lastModificationTime) {
-          markSeen(print.getId());
+          markSeen(existingStreamId);
 
           return print;
+        }
+
+        if(size == null) {  // is it a directory?
+
+          /*
+           * For directories, if the name matched, the StreamPrint is always
+           * simply updated, and the same StreamID is kept.  This is because
+           * adding or removing files from a directory will change its last
+           * modification time and hash, but does not affect how it would be
+           * matched.
+           *
+           * Unlike files, directories donot have a specific signature that
+           * needs to be tracked for, for example, watched state.
+           */
+
+          markSeen(existingStreamId);
+
+          return updateDirectory(uri, existingStreamId, lastModificationTime);
         }
       }
 
       /*
        * There was either no existing stream id for the given uri, or the size
-       * and/or last modification time did not match with an existing stream id.
+       * and/or last modification time did not match with an existing stream id
+       * (and it was not a directory in the second case).
        *
        * In either case, a new or existing stream id will be found, and linked
        * to the uri.
@@ -182,6 +201,18 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
         // Ignore;
       }
     }
+  }
+
+  private StreamPrint updateDirectory(StringURI uri, StreamID streamId, long lastModificationTime) throws IOException {
+    byte[] hash = createHash(uri);
+    streamIdStore.update(streamId, null, lastModificationTime, hash);
+
+    StreamPrint streamPrint = new StreamPrint(streamId, null, lastModificationTime, hash);
+
+    // No need to update streamIds or the uriStore as the name and id remains unchanged.
+    streamPrints.put(streamId, streamPrint);
+
+    return streamPrint;
   }
 
   private StreamPrint link(StringURI uri, Long size, long lastModificationTime) throws IOException {

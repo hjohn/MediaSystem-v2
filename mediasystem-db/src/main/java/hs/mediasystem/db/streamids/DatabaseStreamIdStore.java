@@ -55,6 +55,20 @@ public class DatabaseStreamIdStore {
     }
   }
 
+  public void update(StreamID streamId, Long size, long lastModificationTime, byte[] hash) {  // used to update directories with latest signature
+    try(Transaction tx = database.beginTransaction()) {
+      StreamIdRecord record = new StreamIdRecord();
+
+      record.setId(streamId.asInt());
+      record.setSize(size);
+      record.setLastModificationTime(lastModificationTime);
+      record.setHash(hash);
+
+      tx.update(record);
+      tx.commit();
+    }
+  }
+
   private StreamIdRecord findStreamDataByHash(byte[] hash, Long size, long lastModificationTime) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
       if(size == null) {
