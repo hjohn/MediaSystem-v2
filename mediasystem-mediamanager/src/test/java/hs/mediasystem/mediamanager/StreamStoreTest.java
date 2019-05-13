@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 public class StreamStoreTest {
   private static final Identification IDENTIFICATION = new Identification(MatchType.ID, 1.0, Instant.now());
-  private static final StreamSource STREAM_SOURCE = new StreamSource(new StreamTags(Set.of("A", "B")), "TMDB");
+  private static final StreamSource STREAM_SOURCE = new StreamSource(new StreamTags(Set.of("A", "B")), List.of("TMDB"));
 
   @Mock private EpisodeMatcher episodeMatcher;
   @InjectMocks private StreamStore store;

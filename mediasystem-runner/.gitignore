@@ -1,2 +1,5 @@
 /target/
 /Logs/
+/mediasystem-collections.yaml
+/mediasystem-imports.yaml
+/mediasystem.ini

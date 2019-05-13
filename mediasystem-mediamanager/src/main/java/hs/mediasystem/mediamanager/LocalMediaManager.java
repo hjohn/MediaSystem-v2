@@ -108,11 +108,14 @@ public class LocalMediaManager {
         throw new IllegalArgumentException("No matching stream found for streamId: " + streamId);
       }
 
+      StreamSource streamSource = store.findStreamSource(streamId);
+
       Map<Identifier, Tuple2<Identification, MediaDescriptor>> records = store.findDescriptorsAndIdentifications(stream.getId());
       MediaType type = stream.getType();
 
       // Get old identifications with missing descriptors (queries), but skip if there is no matching query service anyway:
       List<Tuple2<Identifier, Identification>> identificationsMissingQueries = !incremental ? Collections.emptyList() : records.entrySet().stream()
+        .filter(e -> streamSource.getDataSourceNames().contains(e.getKey().getDataSource().getName()))  // Must match data source specified by StreamSource
         .filter(e -> e.getValue().b == null)
         .filter(e -> queryServicesByDataSource.get(e.getKey().getDataSource()) != null)
         .map(e -> Tuple.of(e.getKey(), e.getValue().a))
@@ -121,11 +124,13 @@ public class LocalMediaManager {
       // Create list of already identified datasources (only filled if incremental):
       Set<DataSource> identifiedDataSources = !incremental ? new HashSet<>() : records.keySet().stream()
         .map(Identifier::getDataSource)
+        .filter(ds -> streamSource.getDataSourceNames().contains(ds.getName()))  // Must match data source specified by StreamSource
         .collect(Collectors.toCollection(HashSet::new));
 
       // Create list of identifications to perform:
       List<IdentificationService> identificationsToPerform = identificationServicesByDataSource.entrySet().stream()
         .filter(e -> e.getKey().getType().equals(type))
+        .filter(e -> streamSource.getDataSourceNames().contains(e.getKey().getName()))  // Must match data source specified by StreamSource
         .filter(e -> !identifiedDataSources.contains(e.getKey()))  // Don't identify ones that exist already (if incremental true)
         .map(Map.Entry::getValue)
         .collect(Collectors.toList());

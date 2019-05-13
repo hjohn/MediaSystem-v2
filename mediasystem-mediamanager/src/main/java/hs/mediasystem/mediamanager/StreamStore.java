@@ -182,4 +182,8 @@ public class StreamStore {
       .filter(s -> s.getType().equals(type))
       .collect(Collectors.toMap(Function.identity(), s -> findDescriptorsAndIdentifications(s.getId())));
   }
+
+  public synchronized StreamSource findStreamSource(StreamID streamId) {
+    return streamSources.get(streamId);
+  }
 }

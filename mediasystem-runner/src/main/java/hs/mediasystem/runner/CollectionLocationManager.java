@@ -79,7 +79,7 @@ public class CollectionLocationManager {
             .map(s -> Paths.get(s))
             .collect(Collectors.toList());
 
-          suppliers.add(new ScanResultSupplier(scanner, definition.getId(), paths, new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification())));
+          suppliers.add(new ScanResultSupplier(scanner, definition.getId(), paths, new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification() == null ? Collections.emptyList() : List.of(definition.getIdentification()))));
         }
       }
     }
