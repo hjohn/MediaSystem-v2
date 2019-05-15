@@ -74,7 +74,9 @@ public class EpisodesPresentation extends AbstractPresentation {
         }
       }
 
-      episodeItem.setValue(episodeItems.get(0));
+      if(!episodeItems.isEmpty()) {
+        episodeItem.setValue(episodeItems.get(0));
+      }
       break;
     }
 
