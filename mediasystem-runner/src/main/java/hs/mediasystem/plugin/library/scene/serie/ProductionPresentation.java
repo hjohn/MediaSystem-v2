@@ -53,7 +53,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     @Inject private MediaService mediaService;
 
     public ProductionPresentation create(MediaItem<?> mediaItem) {
-      if(mediaItem.getData().getClass().equals(Production.class) || (mediaItem.getData() instanceof Serie && ((Serie)mediaItem.getData()).getSeasons().isEmpty())) {  // If not a subclass of Production, or a Serie without seasons, we'll need more details
+      if(mediaItem.getData().getClass().equals(Production.class) || (mediaItem.getData() instanceof Serie && ((Serie)mediaItem.getData()).getSeasons() == null)) {  // If not a subclass of Production, or an incomplete Serie, get more details
         mediaItem = mediaItemFactory.create(videoDatabase.queryProduction(mediaItem.getProduction().getIdentifier()), mediaItem.getParent());
       }
       else if(mediaItem.getData() instanceof Serie) {

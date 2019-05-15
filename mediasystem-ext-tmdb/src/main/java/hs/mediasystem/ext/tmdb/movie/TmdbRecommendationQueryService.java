@@ -11,7 +11,6 @@ import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.scanner.api.MediaType;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -33,7 +32,7 @@ public class TmdbRecommendationQueryService implements RecommendationQueryServic
         productions.add(objectFactory.toMovie(result));
       }
       else if(identifier.getDataSource().getType() == SERIE) {
-        productions.add(objectFactory.toSerie(result, Collections.emptyList()));
+        productions.add(objectFactory.toSerie(result, null));
       }
     }
 
