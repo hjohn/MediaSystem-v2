@@ -15,4 +15,8 @@ public class StreamTags {
     return tags.contains(tag);
   }
 
+  @Override
+  public String toString() {
+    return "StreamTags[" + tags + "]";
+  }
 }
