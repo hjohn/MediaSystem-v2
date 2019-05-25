@@ -11,6 +11,8 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.scanner.api.StreamPrint;
+import hs.mediasystem.scanner.api.StreamPrintProvider;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -39,6 +41,7 @@ public class ShowInfoEventHandler {
 
   @Inject private MediaService mediaService;
   @Inject private StreamMetaDataProvider metaDataProvider;
+  @Inject private StreamPrintProvider streamPrintProvider;
 
   public void handle(Event event, MediaItem<?> mediaItem) {
     Label titleLabel = Labels.create(mediaItem.productionTitle.get(), "title");
@@ -60,6 +63,7 @@ public class ShowInfoEventHandler {
     for(BasicStream stream : mediaItem.getStreams()) {
       Identification identification = mediaService.getIdentification(stream.getId(), List.of("TMDB", "LOCAL"));
       GridPane gridPane = Containers.grid("item");
+      StreamPrint streamPrint = streamPrintProvider.get(stream.getId());
 
       String path = stream.getUri().asReadableString().trim();
 
@@ -73,10 +77,10 @@ public class ShowInfoEventHandler {
         GridPane.FILL
       );
 
-      if(stream.getStreamPrint().getSize() != null) {
+      if(streamPrint.getSize() != null) {
         gridPane.addRow(
           Labels.create("File Size", "title"),
-          Labels.create(SizeFormatter.BYTES_THREE_SIGNIFICANT.format(stream.getStreamPrint().getSize()), "value"),
+          Labels.create(SizeFormatter.BYTES_THREE_SIGNIFICANT.format(streamPrint.getSize()), "value"),
           GridPane.FILL,
           GridPane.FILL
         );
@@ -84,7 +88,7 @@ public class ShowInfoEventHandler {
 
       gridPane.addRow(
         Labels.create("Last Modified", "title"),
-        Labels.create("" + DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(stream.getStreamPrint().getLastModificationTime()).atOffset(ZoneOffset.UTC)), "value"),
+        Labels.create("" + DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(streamPrint.getLastModificationTime()).atOffset(ZoneOffset.UTC)), "value"),
         GridPane.FILL,
         GridPane.FILL
       );

@@ -8,7 +8,6 @@ import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.scanner.api.StreamID;
-import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
@@ -164,7 +163,7 @@ public class MediaManagerUpdaterTest {
   private static BasicStream basicStream(int identifier, String uri, String title, List<BasicStream> childStreams) {
     Attributes attributes = Attributes.of(Attribute.TITLE, title);
 
-    return new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), new StreamPrint(new StreamID(identifier), null, 10, new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16}), attributes, childStreams);
+    return new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), new StreamID(identifier), attributes, childStreams);
   }
 
   private static BasicStream basicStream(int identifier, String uri, String title) {

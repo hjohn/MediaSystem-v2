@@ -1,7 +1,7 @@
 package hs.mediasystem.db;
 
 import hs.database.util.WeakValueMap;
-import hs.mediasystem.scanner.api.StreamPrint;
+import hs.mediasystem.scanner.api.StreamID;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -26,19 +26,19 @@ public class StreamStateService {
 
   private final Map<String, Property<?>> properties = new WeakValueMap<>();
 
-  public boolean isWatched(StreamPrint streamPrint) {
-    return streamStateProvider.getOrDefault(streamPrint, WATCHED_KEY, false);
+  public boolean isWatched(StreamID streamId) {
+    return streamStateProvider.getOrDefault(streamId, WATCHED_KEY, false);
   }
 
-  public void setWatched(StreamPrint streamPrint, boolean watched) {
-    watchedProperty(streamPrint).set(watched);
+  public void setWatched(StreamID streamId, boolean watched) {
+    watchedProperty(streamId).set(watched);
   }
 
-  public BooleanProperty watchedProperty(StreamPrint streamPrint) {
-    return (BooleanProperty)properties.computeIfAbsent(streamPrint.getId().asInt() + "/" + WATCHED_KEY, k -> {
-      BooleanProperty property = new SimpleBooleanProperty(isWatched(streamPrint));
+  public BooleanProperty watchedProperty(StreamID streamId) {
+    return (BooleanProperty)properties.computeIfAbsent(streamId.asInt() + "/" + WATCHED_KEY, k -> {
+      BooleanProperty property = new SimpleBooleanProperty(isWatched(streamId));
 
-      property.addListener((ov, old, current) -> streamStateProvider.put(streamPrint, WATCHED_KEY, current));
+      property.addListener((ov, old, current) -> streamStateProvider.put(streamId, WATCHED_KEY, current));
 
       return property;
     });
@@ -47,25 +47,25 @@ public class StreamStateService {
   /**
    * Returns the last time an item was considered watched.
    *
-   * @param streamPrint a {@link StreamPrint}
+   * @param streamId a {@link StreamID}
    * @return a time, or null if not available
    */
-  public LocalDateTime getLastWatchedTime(StreamPrint streamPrint) {
-    String text = streamStateProvider.getOrDefault(streamPrint, LAST_WATCHED_TIME_KEY, null);
+  public LocalDateTime getLastWatchedTime(StreamID streamId) {
+    String text = streamStateProvider.getOrDefault(streamId, LAST_WATCHED_TIME_KEY, null);
 
     return text == null ? null : LocalDateTime.parse(text);
   }
 
-  public void setLastWatchedTime(StreamPrint streamPrint, LocalDateTime lastWatchedTime) {
-    lastWatchedTimeProperty(streamPrint).set(lastWatchedTime);
+  public void setLastWatchedTime(StreamID streamId, LocalDateTime lastWatchedTime) {
+    lastWatchedTimeProperty(streamId).set(lastWatchedTime);
   }
 
   @SuppressWarnings("unchecked")
-  public ObjectProperty<LocalDateTime> lastWatchedTimeProperty(StreamPrint streamPrint) {
-    return (ObjectProperty<LocalDateTime>)properties.computeIfAbsent(streamPrint.getId().asInt() + "/" + LAST_WATCHED_TIME_KEY, k -> {
-      ObjectProperty<LocalDateTime> property = new SimpleObjectProperty<>(getLastWatchedTime(streamPrint));
+  public ObjectProperty<LocalDateTime> lastWatchedTimeProperty(StreamID streamId) {
+    return (ObjectProperty<LocalDateTime>)properties.computeIfAbsent(streamId.asInt() + "/" + LAST_WATCHED_TIME_KEY, k -> {
+      ObjectProperty<LocalDateTime> property = new SimpleObjectProperty<>(getLastWatchedTime(streamId));
 
-      property.addListener((ov, old, current) -> streamStateProvider.put(streamPrint, LAST_WATCHED_TIME_KEY, current.toString()));
+      property.addListener((ov, old, current) -> streamStateProvider.put(streamId, LAST_WATCHED_TIME_KEY, current.toString()));
 
       return property;
     });
@@ -74,23 +74,23 @@ public class StreamStateService {
   /**
    * Returns the resume position (in seconds).
    *
-   * @param streamPrint a {@link StreamPrint}
+   * @param streamId a {@link StreamID}
    * @return the resume position (in seconds), or 0 if there was none
    */
-  public int getResumePosition(StreamPrint streamPrint) {
-    return streamStateProvider.getOrDefault(streamPrint, RESUME_POSITION_KEY, 0);
+  public int getResumePosition(StreamID streamId) {
+    return streamStateProvider.getOrDefault(streamId, RESUME_POSITION_KEY, 0);
   }
 
-  public void setResumePosition(StreamPrint streamPrint, int resumePosition) {
-    resumePositionProperty(streamPrint).set(resumePosition);
+  public void setResumePosition(StreamID streamId, int resumePosition) {
+    resumePositionProperty(streamId).set(resumePosition);
   }
 
   @SuppressWarnings("unchecked")
-  public ObjectProperty<Integer> resumePositionProperty(StreamPrint streamPrint) {
-    return (ObjectProperty<Integer>)properties.computeIfAbsent(streamPrint.getId().asInt() + "/" + RESUME_POSITION_KEY, k -> {
-      ObjectProperty<Integer> property = new SimpleObjectProperty<>(getResumePosition(streamPrint));
+  public ObjectProperty<Integer> resumePositionProperty(StreamID streamId) {
+    return (ObjectProperty<Integer>)properties.computeIfAbsent(streamId.asInt() + "/" + RESUME_POSITION_KEY, k -> {
+      ObjectProperty<Integer> property = new SimpleObjectProperty<>(getResumePosition(streamId));
 
-      property.addListener((ov, old, current) -> streamStateProvider.put(streamPrint, RESUME_POSITION_KEY, current));
+      property.addListener((ov, old, current) -> streamStateProvider.put(streamId, RESUME_POSITION_KEY, current));
 
       return property;
     });
@@ -99,23 +99,23 @@ public class StreamStateService {
   /**
    * Returns the total duration (in seconds).
    *
-   * @param streamPrint a {@link StreamPrint}
+   * @param streamId a {@link StreamID}
    * @return the total duration (in seconds), or -1 if unknown
    */
-  public int getTotalDuration(StreamPrint streamPrint) {
-    return streamStateProvider.getOrDefault(streamPrint, TOTAL_DURATION_KEY, -1);
+  public int getTotalDuration(StreamID streamId) {
+    return streamStateProvider.getOrDefault(streamId, TOTAL_DURATION_KEY, -1);
   }
 
-  public void setTotalDuration(StreamPrint streamPrint, int totalDuration) {
-    totalDurationProperty(streamPrint).set(totalDuration);
+  public void setTotalDuration(StreamID streamId, int totalDuration) {
+    totalDurationProperty(streamId).set(totalDuration);
   }
 
   @SuppressWarnings("unchecked")
-  public ObjectProperty<Integer> totalDurationProperty(StreamPrint streamPrint) {
-    return (ObjectProperty<Integer>)properties.computeIfAbsent(streamPrint.getId().asInt() + "/" + TOTAL_DURATION_KEY, k -> {
-      ObjectProperty<Integer> property = new SimpleObjectProperty<>(getTotalDuration(streamPrint));
+  public ObjectProperty<Integer> totalDurationProperty(StreamID streamId) {
+    return (ObjectProperty<Integer>)properties.computeIfAbsent(streamId.asInt() + "/" + TOTAL_DURATION_KEY, k -> {
+      ObjectProperty<Integer> property = new SimpleObjectProperty<>(getTotalDuration(streamId));
 
-      property.addListener((ov, old, current) -> streamStateProvider.put(streamPrint, TOTAL_DURATION_KEY, current));
+      property.addListener((ov, old, current) -> streamStateProvider.put(streamId, TOTAL_DURATION_KEY, current));
 
       return property;
     });

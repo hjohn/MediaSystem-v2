@@ -2,6 +2,7 @@ package hs.mediasystem.ext.basicmediatypes;
 
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
@@ -59,8 +60,8 @@ public class MediaStream {
     return stream.getType();
   }
 
-  public StreamPrint getStreamPrint() {
-    return stream.getStreamPrint();
+  public StreamID getId() {
+    return stream.getId();
   }
 
   public Attributes getAttributes() {

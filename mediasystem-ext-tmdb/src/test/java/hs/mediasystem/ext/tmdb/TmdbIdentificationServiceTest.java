@@ -7,10 +7,10 @@ import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.tmdb.movie.TmdbIdentificationService;
-import hs.mediasystem.mediamanager.StreamPrints;
 import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.Tuple.Tuple2;
@@ -110,7 +110,7 @@ public class TmdbIdentificationServiceTest {
     assertEquals(Arrays.asList("Admiral, The", "The Admiral", "Admiral"), TextMatcher.createVariations("Admiral, The"));
   }
 
-  private BasicStream basicStream(Attributes attributes) {
-    return new BasicStream(MediaType.of("MOVIE"), new StringURI(""), StreamPrints.create(), attributes, Collections.emptyList());
+  private static BasicStream basicStream(Attributes attributes) {
+    return new BasicStream(MediaType.of("MOVIE"), new StringURI(""), new StreamID(1), attributes, Collections.emptyList());
   }
 }

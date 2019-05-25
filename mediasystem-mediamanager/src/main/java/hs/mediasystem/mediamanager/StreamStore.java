@@ -81,7 +81,7 @@ public class StreamStore {
       throw new IllegalArgumentException("identifier from descriptor must match identifier");
     }
 
-    byUri.put(stream.getUri(), stream.getStreamPrint().getId());
+    byUri.put(stream.getUri(), stream.getId());
     streams.put(stream.getId(), stream);
 
     if(source != null) {
@@ -90,7 +90,7 @@ public class StreamStore {
 
     if(identifier != null) {
       bmm.associate(
-        stream.getStreamPrint().getId(),
+        stream.getId(),
         identifier,
         Tuple.of(identification, descriptor)
       );
@@ -128,7 +128,7 @@ public class StreamStore {
     streams.remove(stream.getId());
     streamSources.remove(stream.getId());
 
-    StreamID id = stream.getStreamPrint().getId();
+    StreamID id = stream.getId();
 
     bmm.getRightSet(id).stream().forEach(identifier -> bmm.unassociate(id, identifier));
   }

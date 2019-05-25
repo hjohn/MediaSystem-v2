@@ -102,7 +102,7 @@ public class EpisodesPresentation extends AbstractPresentation {
     for(MediaItem<Episode> episodeItem : internalEpisodeItems) {
       BasicStream stream = episodeItem.getStream();
       boolean missing = stream == null;
-      boolean watched = stream == null ? false : streamStateService.isWatched(stream.getStreamPrint());
+      boolean watched = stream == null ? false : streamStateService.isWatched(stream.getId());
 
       missingCounts.merge(episodeItem.getData().getSeasonNumber(), missing ? 1 : 0, (a, b) -> a + b);
       watchCounts.merge(episodeItem.getData().getSeasonNumber(), watched ? 1 : 0, (a, b) -> a + b);

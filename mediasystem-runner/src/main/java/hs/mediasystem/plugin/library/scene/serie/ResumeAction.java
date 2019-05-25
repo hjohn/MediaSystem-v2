@@ -47,7 +47,7 @@ public class ResumeAction implements Action {
       .filter(mi -> !mi.getStreams().isEmpty());
 
     this.resumePosition = playableMediaItem
-      .flatMap(playItem -> streamStateService.resumePositionProperty(playItem.getStreams().iterator().next().getStreamPrint()))
+      .flatMap(playItem -> streamStateService.resumePositionProperty(playItem.getStreams().iterator().next().getId()))
       .orElseConst(-1);
 
     this.resumableMediaItem = Val.combine(resumePosition, playableMediaItem, (rp, mi) -> rp > 0 && mi != null ? mi : null);

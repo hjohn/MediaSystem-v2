@@ -6,7 +6,7 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.scanner.api.BasicStream;
-import hs.mediasystem.scanner.api.StreamPrint;
+import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.StringURI;
 
 import java.time.LocalDateTime;
@@ -85,26 +85,26 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
         mediaItem.get().getStreams().stream()
           .filter(s -> s.getUri().equals(uri.get()))
           .findFirst()
-          .map(BasicStream::getStreamPrint)
+          .map(BasicStream::getId)
           .ifPresent(this::updatePositionAndViewed);
       }
 
-      private void updatePositionAndViewed(StreamPrint streamPrint) {
+      private void updatePositionAndViewed(StreamID streamId) {
         PlayerPresentation player = PlaybackOverlayPresentation.this.playerPresentation.get();
         long length = player.lengthProperty().getValue();
 
         if(length > 0) {
           long timeViewed = totalTimeViewed + startPositionMillis.get();
-          boolean watched = streamStateService.isWatched(streamPrint);
+          boolean watched = streamStateService.isWatched(streamId);
 
           if(timeViewed >= length * 9 / 10 && !watched) {   // 90% viewed and not viewed yet?
             LOGGER.config("Marking as viewed: " + mediaItem.get());
 
-            streamStateService.setWatched(streamPrint, true);
-            streamStateService.setLastWatchedTime(streamPrint, LocalDateTime.now());
+            streamStateService.setWatched(streamId, true);
+            streamStateService.setLastWatchedTime(streamId, LocalDateTime.now());
 
             if(parentMediaItem.get() != null) {
-              streamStateService.setLastWatchedTime(parentMediaItem.get().getStream().getStreamPrint(), LocalDateTime.now());
+              streamStateService.setLastWatchedTime(parentMediaItem.get().getStream().getId(), LocalDateTime.now());
             }
           }
 
@@ -116,11 +116,11 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
               resumePosition = (int)(position / 1000) - 10;
             }
 
-            int storedResumePosition = streamStateService.getResumePosition(streamPrint);
+            int storedResumePosition = streamStateService.getResumePosition(streamId);
 
             if(Math.abs(storedResumePosition - resumePosition) > 10) {
-              streamStateService.setResumePosition(streamPrint, resumePosition);
-              streamStateService.setTotalDuration(streamPrint, (int)(length / 1000));
+              streamStateService.setResumePosition(streamId, resumePosition);
+              streamStateService.setTotalDuration(streamId, (int)(length / 1000));
             }
           }
         }

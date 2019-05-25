@@ -16,7 +16,6 @@ import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.scanner.api.StreamID;
-import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
@@ -42,7 +41,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class LocalMediaManagerTest {
-  private static final StreamPrint STREAM_PRINT = new StreamPrint(new StreamID(999), 1024L, 0L, new byte[] {1, 2, 3});
+  private static final StreamID STREAM_ID = new StreamID(999);
   private static final StreamSource STREAM_SOURCE = new StreamSource(new StreamTags(Set.of("A", "B")), List.of("TMDB"));
   private static final StreamSource STREAM_SOURCE_MOVIE = new StreamSource(new StreamTags(Set.of("A", "B")), List.of("D1", "D2", "D5", "D6"));
   private static final StreamSource STREAM_SOURCE_EP = new StreamSource(new StreamTags(Set.of("A", "B")), List.of("D3", "D4"));
@@ -57,9 +56,9 @@ public class LocalMediaManagerTest {
   private static final DataSource DATA_SOURCE_5 = DataSource.instance(MOVIE, "D5");
   private static final DataSource DATA_SOURCE_6 = DataSource.instance(MOVIE, "D6");
 
-  private final StreamPrint streamPrint1 = new StreamPrint(new StreamID(201), 1024L, 0L, new byte[] {1, 2, 3});
-  private final StreamPrint streamPrint2 = new StreamPrint(new StreamID(201), 1024L, 0L, new byte[] {1, 2, 3});
-  private final StreamPrint streamPrint3 = new StreamPrint(new StreamID(202), 2048L, 0L, new byte[] {3, 4, 5});
+  private final StreamID streamId1 = new StreamID(201);
+  private final StreamID streamId2 = new StreamID(201);
+  private final StreamID streamId3 = new StreamID(202);
 
   @Mock private IdentificationService idServiceForDS1;
   @Mock private IdentificationService idServiceForDS2;
@@ -167,9 +166,9 @@ public class LocalMediaManagerTest {
   public void shouldReplaceDuplicate() {
     ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_4, "A1");
 
-    BasicStream stream = createEpisode("file://test", streamPrint1, Attributes.of(Attribute.TITLE, "Title"));
-    BasicStream similarStream = createEpisode("file://moved/test", streamPrint2, Attributes.of(Attribute.TITLE, "Title"));
-    BasicStream differentStream = createEpisode("file://test", streamPrint3, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream stream = createEpisode("file://test", streamId1, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream similarStream = createEpisode("file://moved/test", streamId2, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream differentStream = createEpisode("file://test", streamId3, Attributes.of(Attribute.TITLE, "Title"));
 
     // Add the stream
     db.put(stream, STREAM_SOURCE, Set.of(
@@ -206,13 +205,13 @@ public class LocalMediaManagerTest {
 
   @Test
   public void shouldRemoveMediaByStreamPrintIdentifier() {
-    StreamPrint streamPrint1 = new StreamPrint(new StreamID(101), 1024L, 0L, new byte[] {1, 2, 3});
-    StreamPrint streamPrint2 = new StreamPrint(new StreamID(101), 1024L, 0L, new byte[] {1, 2, 3});
+    StreamID streamId1 = new StreamID(101);
+    StreamID streamId2 = new StreamID(101);
 
     ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_4, "A1");
 
-    BasicStream stream = createEpisode("file://test", streamPrint1, Attributes.of(Attribute.TITLE, "Title"));
-    BasicStream similarStream = createEpisode("file://moved/test", streamPrint2, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream stream = createEpisode("file://test", streamId1, Attributes.of(Attribute.TITLE, "Title"));
+    BasicStream similarStream = createEpisode("file://moved/test", streamId2, Attributes.of(Attribute.TITLE, "Title"));
 
     // Add the stream
     db.put(stream, STREAM_SOURCE, Set.of(
@@ -355,14 +354,14 @@ public class LocalMediaManagerTest {
 
 
   private static BasicStream createMovie(String uri, Attributes attributes) {
-    return new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), STREAM_PRINT, attributes, Collections.emptyList());
+    return new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), STREAM_ID, attributes, Collections.emptyList());
   }
 
-  private static BasicStream createEpisode(String uri, StreamPrint streamPrint, Attributes attributes) {
-    return new BasicStream(MediaType.of("EPISODE"), new StringURI(uri), streamPrint, attributes, Collections.emptyList());
+  private static BasicStream createEpisode(String uri, StreamID streamId, Attributes attributes) {
+    return new BasicStream(MediaType.of("EPISODE"), new StringURI(uri), streamId, attributes, Collections.emptyList());
   }
 
   private static BasicStream createEpisode(String uri, Attributes attributes) {
-    return createEpisode(uri, STREAM_PRINT, attributes);
+    return createEpisode(uri, STREAM_ID, attributes);
   }
 }

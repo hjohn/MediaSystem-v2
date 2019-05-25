@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class BasicStream {
   private final MediaType type;
   private final StringURI uri;
-  private final StreamPrint streamPrint;
+  private final StreamID streamId;
   private final Attributes attributes;
   private final List<BasicStream> children;
 
@@ -21,19 +21,19 @@ public class BasicStream {
    *
    * @param type a {@link MediaType}, cannot be null
    * @param uri a {@link StringURI}, cannot be null
-   * @param streamPrint a {@link StreamPrint}, cannot be null
+   * @param streamId a {@link StreamID}, cannot be null
    * @param attributes an {@link Attributes}, cannot be null
    * @param children a {@link List} of child streams, cannot be null but can be empty
    */
-  public BasicStream(MediaType type, StringURI uri, StreamPrint streamPrint, Attributes attributes, List<BasicStream> children) {
+  public BasicStream(MediaType type, StringURI uri, StreamID streamId, Attributes attributes, List<BasicStream> children) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
     if(uri == null) {
       throw new IllegalArgumentException("uri cannot be null");
     }
-    if(streamPrint == null) {
-      throw new IllegalArgumentException("streamPrint cannot be null");
+    if(streamId == null) {
+      throw new IllegalArgumentException("streamId cannot be null");
     }
     if(attributes == null) {
       throw new IllegalArgumentException("attributes cannot be null");
@@ -47,7 +47,7 @@ public class BasicStream {
 
     this.type = type;
     this.uri = uri;
-    this.streamPrint = streamPrint;
+    this.streamId = streamId;
     this.attributes = attributes;
     this.children = Collections.unmodifiableList(children.stream()
       .sorted(Comparator.comparing(BasicStream::getUri))  // Sort so that equals/hashcode is stable
@@ -69,11 +69,7 @@ public class BasicStream {
   }
 
   public StreamID getId() {
-    return streamPrint.getId();
-  }
-
-  public StreamPrint getStreamPrint() {
-    return streamPrint;
+    return streamId;
   }
 
   public Attributes getAttributes() {
@@ -86,7 +82,7 @@ public class BasicStream {
 
   @Override
   public int hashCode() {
-    return Objects.hash(attributes, streamPrint, type, children);
+    return Objects.hash(attributes, streamId, type, children);
   }
 
   @Override
@@ -101,7 +97,7 @@ public class BasicStream {
     BasicStream other = (BasicStream)obj;
 
     return Objects.equals(attributes, other.attributes)
-      && Objects.equals(streamPrint, other.streamPrint)
+      && Objects.equals(streamId, other.streamId)
       && Objects.equals(type, other.type)
       && Objects.equals(children, other.children);
   }

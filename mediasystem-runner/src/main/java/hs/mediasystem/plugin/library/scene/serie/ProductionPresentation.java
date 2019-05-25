@@ -141,7 +141,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
     this.totalDuration = episodeOrMovieItem
       .filter(mi -> !mi.getStreams().isEmpty())
-      .flatMap(mi -> streamStateService.totalDurationProperty(mi.getStream().getStreamPrint()))
+      .flatMap(mi -> streamStateService.totalDurationProperty(mi.getStream().getId()))
       .filter(d -> d != -1);
 
     this.watchedPercentage = Val.create(this::getWatchedPercentage, EventStreams.merge(

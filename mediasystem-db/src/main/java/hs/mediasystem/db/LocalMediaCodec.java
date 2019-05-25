@@ -17,14 +17,11 @@ import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class LocalMediaCodec {
   private static final Logger LOGGER = Logger.getLogger(LocalMediaCodec.class.getName());
-
-  @Inject private StreamPrintModule streamPrintModule;
 
   private ObjectMapper objectMapper;
 
@@ -36,8 +33,7 @@ public class LocalMediaCodec {
       .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
       .registerModule(new ParameterNamesModule(Mode.PROPERTIES))
       .registerModule(new JavaTimeModule())
-      .registerModule(new RecordGroupModule())
-      .registerModule(streamPrintModule);
+      .registerModule(new RecordGroupModule());
   }
 
   public MediaStream toMediaStream(LocalMedia localMedia) {
@@ -59,7 +55,7 @@ public class LocalMediaCodec {
     try {
       LocalMedia localMedia = new LocalMedia();
 
-      localMedia.setStreamId(mediaStream.getStreamPrint().getId().asInt());
+      localMedia.setStreamId(mediaStream.getId().asInt());
       localMedia.setScannerId(scannerId);
       localMedia.setDeleteTime(deleteTime);
       localMedia.setJson(objectMapper.writeValueAsBytes(mediaStream));

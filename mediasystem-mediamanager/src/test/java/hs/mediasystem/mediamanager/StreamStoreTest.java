@@ -54,9 +54,9 @@ public class StreamStoreTest {
     Episode episode1 = Episodes.create("0001", 1, 5);
     Episode episode2 = Episodes.create("0002", 1, 6);
     Serie serie = Series.create(List.of(episode1, episode2));
-    BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", StreamPrints.create(new StreamID(11)), "1,5");
-    BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", StreamPrints.create(new StreamID(12)), "1,6");
-    BasicStream serieStream = Streams.create("http://serie", StreamPrints.create(new StreamID(1)), List.of(episode1Stream, episode2Stream));
+    BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", new StreamID(11), "1,5");
+    BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", new StreamID(12), "1,6");
+    BasicStream serieStream = Streams.create("http://serie", new StreamID(1), List.of(episode1Stream, episode2Stream));
 
     when(episodeMatcher.attemptMatch(serie, IDENTIFICATION, episode1Stream.getAttributes())).thenReturn(Tuple.of(IDENTIFICATION, List.of(episode1)));
     when(episodeMatcher.attemptMatch(serie, IDENTIFICATION, episode2Stream.getAttributes())).thenReturn(Tuple.of(IDENTIFICATION, List.of(episode2)));
@@ -79,20 +79,20 @@ public class StreamStoreTest {
     Episode episode1 = Episodes.create("0001", 1, 5);
     Episode episode2 = Episodes.create("0002", 1, 6);
     Serie serie = Series.create(List.of(episode1, episode2));
-    BasicStream serieStream = Streams.create("http://serie", StreamPrints.create(new StreamID(1)));
+    BasicStream serieStream = Streams.create("http://serie", new StreamID(1));
 
     store.put(serieStream, STREAM_SOURCE, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
 
     assertEquals(Set.of(serieStream), store.findStreams(serie.getIdentifier()));
 
-    BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", StreamPrints.create(new StreamID(11)), "1,5");
+    BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", new StreamID(11), "1,5");
 
     store.put(episode1Stream, STREAM_SOURCE, Set.of(Tuple.of(episode1.getIdentifier(), IDENTIFICATION, episode1)));
 
     assertEquals(Set.of(serieStream), store.findStreams(serie.getIdentifier()));
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
 
-    BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", StreamPrints.create(new StreamID(12)), "1,6");
+    BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", new StreamID(12), "1,6");
 
     store.put(episode2Stream, STREAM_SOURCE, Set.of(Tuple.of(episode2.getIdentifier(), IDENTIFICATION, episode2)));
 
@@ -124,20 +124,20 @@ public class StreamStoreTest {
     Episode episode1 = Episodes.create("0001", 1, 5);
     Episode episode2 = Episodes.create("0002", 1, 6);
     Serie serie = Series.create(List.of(episode1, episode2));
-    BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", StreamPrints.create(new StreamID(11)), "1,5");
+    BasicStream episode1Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep01.avi", new StreamID(11), "1,5");
 
     store.put(episode1Stream, STREAM_SOURCE, Set.of(Tuple.of(episode1.getIdentifier(), IDENTIFICATION, episode1)));
 
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
 
-    BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", StreamPrints.create(new StreamID(12)), "1,6");
+    BasicStream episode2Stream = Streams.create(MediaType.of("EPISODE"), "http://serie/ep02.avi", new StreamID(12), "1,6");
 
     store.put(episode2Stream, STREAM_SOURCE, Set.of(Tuple.of(episode2.getIdentifier(), IDENTIFICATION, episode2)));
 
     assertEquals(Set.of(episode1Stream), store.findStreams(episode1.getIdentifier()));
     assertEquals(Set.of(episode2Stream), store.findStreams(episode2.getIdentifier()));
 
-    BasicStream serieStream = Streams.create("http://serie", StreamPrints.create(new StreamID(1)));
+    BasicStream serieStream = Streams.create("http://serie", new StreamID(1));
 
     store.put(serieStream, STREAM_SOURCE, Set.of(Tuple.of(serie.getIdentifier(), IDENTIFICATION, serie)));
 

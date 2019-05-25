@@ -16,7 +16,6 @@ import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrint;
-import hs.mediasystem.scanner.api.StreamPrintProvider;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
 
@@ -34,15 +33,12 @@ import org.mockito.MockitoAnnotations;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
 
 public class LocalMediaCodecTest {
   private static final StreamID STREAM_ID = new StreamID(100);
-  private static final StreamPrint STREAM_PRINT = new StreamPrint(STREAM_ID, 1024L, 0L, new byte[] {1, 2, 3});
   private static final Attributes ATTRIBUTES = Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015");
   private static final LocalDateTime NOW = LocalDateTime.now();
 
-  @Mock private StreamPrintProvider streamPrintProvider;
   @Mock private StreamPrint streamPrint;
   private LocalMediaCodec codec;
 
@@ -52,11 +48,7 @@ public class LocalMediaCodecTest {
 
     Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
 
-    injector.registerInstance(streamPrintProvider);
-
     codec = injector.getInstance(LocalMediaCodec.class);
-
-    when(streamPrintProvider.get(STREAM_ID)).thenReturn(STREAM_PRINT);
   }
 
   @Test
@@ -66,11 +58,11 @@ public class LocalMediaCodecTest {
 
     map.put(identifier, new MediaRecord(identifier, new Identification(MatchType.ID, 1.0, Instant.now()), Movies.create()));
 
-    LocalMedia localMedia = codec.toLocalMedia(1, NOW, new MediaStream(new BasicStream(MediaType.of("MOVIE"), new StringURI("a"), STREAM_PRINT, ATTRIBUTES, Collections.emptyList()), null, null, map));
+    LocalMedia localMedia = codec.toLocalMedia(1, NOW, new MediaStream(new BasicStream(MediaType.of("MOVIE"), new StringURI("a"), STREAM_ID, ATTRIBUTES, Collections.emptyList()), null, null, map));
     MediaStream mediaStream = codec.toMediaStream(localMedia);
 
     assertNotNull(mediaStream);
-    assertEquals((Long)1024L, mediaStream.getStreamPrint().getSize());
+    assertEquals(STREAM_ID, mediaStream.getId());
     assertTrue(MediaType.of("MOVIE") == mediaStream.getType());
     assertEquals("Terminator, The", mediaStream.getAttributes().get(Attribute.TITLE));
     assertEquals("Robot kills humans", ((Movie)mediaStream.getMediaRecords().get(identifier).getMediaDescriptor()).getDescription());
@@ -84,6 +76,6 @@ public class LocalMediaCodecTest {
 
     MediaStream mediaStream = codec.toMediaStream(localMedia);
 
-    assertEquals((Long)1024L, mediaStream.getStreamPrint().getSize());
+    assertEquals(STREAM_ID, mediaStream.getId());
   }
 }

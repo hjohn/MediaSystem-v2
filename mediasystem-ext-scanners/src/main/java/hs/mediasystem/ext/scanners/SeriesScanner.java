@@ -82,7 +82,7 @@ public class SeriesScanner implements Scanner {
 
           List<BasicStream> children = scanSerie(path);
 
-          results.add(new BasicStream(MediaType.of("SERIE"), uri, streamPrint, attributes, children));
+          results.add(new BasicStream(MediaType.of("SERIE"), uri, streamPrint.getId(), attributes, children));
 
           WORKLOAD.complete();
         }
@@ -139,7 +139,7 @@ public class SeriesScanner implements Scanner {
           Attribute.CHILD_TYPE, type == null ? null : type.toString()
         );
 
-        results.add(new BasicStream(MediaType.of("EPISODE"), new StringURI(path.toUri()), streamPrint, attributes, Collections.emptyList()));
+        results.add(new BasicStream(MediaType.of("EPISODE"), new StringURI(path.toUri()), streamPrint.getId(), attributes, Collections.emptyList()));
       }
     }
     catch(RuntimeException | IOException e) {

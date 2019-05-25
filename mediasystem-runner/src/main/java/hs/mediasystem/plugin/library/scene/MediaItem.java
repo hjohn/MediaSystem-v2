@@ -11,7 +11,8 @@ import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.mediamanager.MediaService;
 import hs.mediasystem.scanner.api.BasicStream;
-import hs.mediasystem.scanner.api.StreamPrint;
+import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.scanner.api.StreamPrintProvider;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,22 +40,23 @@ public class MediaItem<T extends MediaDescriptor> {
   public static class Factory {
     @Inject private StreamStateService streamStateService;
     @Inject private MediaService mediaService;
+    @Inject private StreamPrintProvider streamPrintProvider;
 
     public <T extends MediaDescriptor> MediaItem<T> create(T descriptor, MediaItem<?> parent) {
       Release release = getRelease(descriptor);
       Set<BasicStream> streams = release == null ? Collections.emptySet() : mediaService.findStreams(release.getIdentifier());
       List<BasicStream> sortedStreams = streams.stream()
-        .sorted(Comparator.<BasicStream, Long>comparing(s -> s.getStreamPrint().getSize(), Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
+        .sorted(Comparator.<BasicStream, Long>comparing(s -> streamPrintProvider.get(s.getId()).getSize(), Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
         .collect(Collectors.toList());
 
-      StreamPrint streamPrint = sortedStreams.isEmpty() ? null : sortedStreams.get(0).getStreamPrint();
+      StreamID streamId = sortedStreams.isEmpty() ? null : sortedStreams.get(0).getId();
 
       return new MediaItem<>(
         descriptor,
         parent,
         sortedStreams,
-        streamPrint == null ? new SimpleBooleanProperty() : streamStateService.watchedProperty(streamPrint),
-        streamPrint == null ? null : streamStateService.getLastWatchedTime(streamPrint)
+        streamId == null ? new SimpleBooleanProperty() : streamStateService.watchedProperty(streamId),
+        streamId == null ? null : streamStateService.getLastWatchedTime(streamId)
       );
     }
   }

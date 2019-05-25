@@ -1,7 +1,6 @@
 package hs.mediasystem.db;
 
 import hs.mediasystem.scanner.api.StreamID;
-import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.NamedThreadFactory;
 
 import java.util.HashMap;
@@ -27,14 +26,14 @@ public class StreamStateProvider {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T getOrDefault(StreamPrint streamPrint, String key, T defaultValue) {
-    StreamState streamState = getStreamState(streamPrint);
+  public <T> T getOrDefault(StreamID streamId, String key, T defaultValue) {
+    StreamState streamState = getStreamState(streamId);
 
     return (T)streamState.getProperties().getOrDefault(key, defaultValue);
   }
 
-  public void put(StreamPrint streamPrint, String key, Object value) {
-    StreamState streamState = getStreamState(streamPrint);
+  public void put(StreamID streamId, String key, Object value) {
+    StreamState streamState = getStreamState(streamId);
 
     streamState.getProperties().put(key, value);
 
@@ -44,7 +43,7 @@ public class StreamStateProvider {
     EXECUTOR.execute(() -> store.store(copy));
   }
 
-  private StreamState getStreamState(StreamPrint streamPrint) {
-    return streamStates.computeIfAbsent(streamPrint.getId(), k -> new StreamState(streamPrint.getId(), new HashMap<>()));
+  private StreamState getStreamState(StreamID streamId) {
+    return streamStates.computeIfAbsent(streamId, k -> new StreamState(streamId, new HashMap<>()));
   }
 }
