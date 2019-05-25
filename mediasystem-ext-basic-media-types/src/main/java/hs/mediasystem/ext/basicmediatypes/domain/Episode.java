@@ -11,7 +11,7 @@ public class Episode extends Release {
   private final List<PersonRole> personRoles;
   private final Duration duration;
 
-  public Episode(ProductionIdentifier identifier, Details details, Reception reception, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
+  public Episode(EpisodeIdentifier identifier, Details details, Reception reception, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
     super(identifier, details, reception);
 
     this.seasonNumber = seasonNumber;

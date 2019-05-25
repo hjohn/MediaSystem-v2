@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
+import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
@@ -81,7 +82,7 @@ public class TmdbQueryService extends AbstractQueryService<Serie> {
     int episodeNumber = node.get("episode_number").asInt();
 
     return new Episode(
-      new ProductionIdentifier(DataSources.TMDB_EPISODE, parentId + "/" + seasonNumber + "/" + episodeNumber),
+      new EpisodeIdentifier(DataSources.TMDB_EPISODE, parentId + "/" + seasonNumber + "/" + episodeNumber),
       new Details(
         node.get("name").asText(),
         node.get("overview").asText(),

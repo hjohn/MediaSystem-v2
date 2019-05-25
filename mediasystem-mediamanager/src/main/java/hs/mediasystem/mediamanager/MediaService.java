@@ -7,6 +7,7 @@ import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
+import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie.State;
@@ -41,7 +42,7 @@ public class MediaService {
 
   public Set<BasicStream> findStreams(Identifier identifier) {
     if(identifier.getDataSource().equals(LOCAL_RELEASE)) {
-      BasicStream stream = store.findStream(new StreamID(Integer.parseInt(identifier.getId())));
+      BasicStream stream = store.findStream(new StreamID(Integer.parseInt(identifier.substring(7).getId())));
 
       return stream == null ? Collections.emptySet() : Collections.singleton(stream);
     }
@@ -104,7 +105,7 @@ public class MediaService {
         String subtitle = stream.getAttributes().get(Attribute.SUBTITLE);
 
         extras.add(new Episode(
-          new ProductionIdentifier(LOCAL_RELEASE, "" + stream.getId().asInt()),
+          new EpisodeIdentifier(LOCAL_RELEASE, "parent/" + stream.getId().asInt()),
           new Details(
             stream.getAttributes().get(Attribute.TITLE) + (subtitle == null ? "" : ": " + subtitle),
             null,

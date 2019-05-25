@@ -18,6 +18,10 @@ public class Identifier {
     this.id = id;
   }
 
+  public Identifier getRootIdentifier() {
+    return null;
+  }
+
   public DataSource getDataSource() {
     return dataSource;
   }
