@@ -16,6 +16,7 @@ import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -32,7 +33,13 @@ public class VideoDatabase {
   @Inject private List<Top100QueryService> top100QueryServices;
 
   public List<PersonRole> queryRoles(Identifier identifier) {
-    return rolesQueryServices.get(0).query(identifier);
+    for(RolesQueryService rolesQueryService : rolesQueryServices) {
+      if(rolesQueryService.getDataSourceName().equals(identifier.getDataSource().getName())) {
+        return rolesQueryService.query(identifier);
+      }
+    }
+
+    return Collections.emptyList();
   }
 
   public List<VideoLink> queryVideoLinks(ProductionIdentifier identifier) {
