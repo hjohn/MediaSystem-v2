@@ -13,7 +13,7 @@ public class HttpImageURIHandler implements ImageURIHandler {
 
   @Override
   public ImageHandle handle(ImageURI uri) {
-    if(uri.getUri().startsWith("http:") || uri.getUri().startsWith("https:")) {
+    if(uri.getUri().startsWith("http:") || uri.getUri().startsWith("https:") || uri.getUri().startsWith("file:")) {
       try {
         return new HttpImageHandle(uri.toURL());
       }
