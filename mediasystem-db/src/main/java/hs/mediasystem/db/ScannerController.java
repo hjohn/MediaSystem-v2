@@ -19,7 +19,7 @@ public class ScannerController {
   private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("ScannerController"));
   private static final Logger LOGGER = Logger.getLogger(ScannerController.class.getName());
 
-  @Inject private MediaManagerUpdater mediaManagerUpdater;
+  @Inject private StreamCacheUpdateService updateService;
   @Inject private ImportSourceProvider importSourceProvider;
 
   @PostConstruct
@@ -52,7 +52,7 @@ public class ScannerController {
           }
         }
 
-        mediaManagerUpdater.update(source.getId(), results);
+        updateService.update(source.getId(), results);
       }
       catch(Throwable t) {
         LOGGER.severe("Exception while running Scanner: " + scannerName + ": " + Throwables.formatAsOneLine(t));

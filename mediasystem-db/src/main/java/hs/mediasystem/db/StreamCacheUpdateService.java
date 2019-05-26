@@ -22,10 +22,10 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class MediaManagerUpdater {
-  private static final Logger LOGGER = Logger.getLogger(MediaManagerUpdater.class.getName());
+public class StreamCacheUpdateService {
+  private static final Logger LOGGER = Logger.getLogger(StreamCacheUpdateService.class.getName());
   private static final LinkedBlockingQueue<Runnable> QUEUE = new LinkedBlockingQueue<>();
-  private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, QUEUE, new NamedThreadFactory("MediaManagerUpdater", Thread.NORM_PRIORITY - 2, true));
+  private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, QUEUE, new NamedThreadFactory("StreamCacheUpdateService", Thread.NORM_PRIORITY - 2, true));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Downloading Metadata");
 
   @Inject private LocalMediaIdentificationService identificationService;
@@ -71,7 +71,7 @@ public class MediaManagerUpdater {
 
     reidentifyThread.setDaemon(true);
     reidentifyThread.setPriority(Thread.NORM_PRIORITY - 2);
-    reidentifyThread.setName("MediaManagerUpdater-Reidentifier");
+    reidentifyThread.setName("StreamCacheUpdateService-Reidentifier");
     reidentifyThread.start();
   }
 

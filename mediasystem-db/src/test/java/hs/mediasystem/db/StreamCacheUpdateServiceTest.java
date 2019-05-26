@@ -26,10 +26,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-public class MediaManagerUpdaterTest {
+public class StreamCacheUpdateServiceTest {
   @Mock private DatabaseStreamStore streamStore;
   @Mock private LocalMediaIdentificationService identificationService;
-  @InjectMocks private MediaManagerUpdater updater;
+  @InjectMocks private StreamCacheUpdateService updater;
 
   @BeforeEach
   public void before() {
