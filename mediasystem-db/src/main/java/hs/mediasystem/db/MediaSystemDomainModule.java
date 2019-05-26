@@ -18,10 +18,8 @@ import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.scanner.api.MediaType;
-import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.StringURI;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,20 +32,6 @@ public class MediaSystemDomainModule extends SimpleModule {
       @Override
       public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException {
         return Identifier.fromString(key);
-      }
-    });
-
-    addSerializer(StreamID.class, new JsonSerializer<StreamID>() {
-      @Override
-      public void serialize(StreamID value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        gen.writeString("" + value.asInt());
-      }
-    });
-
-    addDeserializer(StreamID.class, new JsonDeserializer<StreamID>() {
-      @Override
-      public StreamID deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        return new StreamID(Integer.parseInt(p.getText()));
       }
     });
 
@@ -76,34 +60,6 @@ public class MediaSystemDomainModule extends SimpleModule {
       @Override
       public DataSource deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         return DataSource.fromString(p.getText());
-      }
-    });
-
-    addSerializer(ImageURI.class, new JsonSerializer<ImageURI>() {
-      @Override
-      public void serialize(ImageURI value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        gen.writeString(value.toString());
-      }
-    });
-
-    addDeserializer(ImageURI.class, new JsonDeserializer<ImageURI>() {
-      @Override
-      public ImageURI deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        return new ImageURI(p.getText());
-      }
-    });
-
-    addSerializer(StringURI.class, new JsonSerializer<StringURI>() {
-      @Override
-      public void serialize(StringURI value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        gen.writeString(value.toString());
-      }
-    });
-
-    addDeserializer(StringURI.class, new JsonDeserializer<StringURI>() {
-      @Override
-      public StringURI deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        return new StringURI(p.getText());
       }
     });
   }

@@ -28,6 +28,7 @@ public class CachedDescriptorCodec {
       .setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
       .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
       .registerModule(new ParameterNamesModule(Mode.PROPERTIES))
+      .registerModule(new BasicDataTypesModule())
       .registerModule(new MediaSystemDomainModule())
       .registerModule(new JavaTimeModule());
   }

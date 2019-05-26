@@ -27,6 +27,7 @@ public class CachedStreamCodec {
       .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
       .registerModule(new ParameterNamesModule(Mode.PROPERTIES))
       .registerModule(new JavaTimeModule())
+      .registerModule(new BasicDataTypesModule())
       .registerModule(new MediaSystemDomainModule());
   }
 
