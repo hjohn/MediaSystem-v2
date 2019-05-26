@@ -2,7 +2,7 @@ package hs.mediasystem.runner.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import hs.mediasystem.db.Image;
+import hs.mediasystem.db.ImageRecord;
 import hs.mediasystem.db.ImageStore;
 import hs.mediasystem.util.PriorityRateLimiter;
 
@@ -56,7 +56,7 @@ public class DatabaseResponseCache extends ResponseCache {
       return null;
     }
 
-    Image image = store.findImageByURL(uri.toURL()).orElse(null);
+    ImageRecord image = store.findImageByURL(uri.toURL()).orElse(null);
     int timeOut = Integer.parseInt(requestHeaders.getOrDefault("!time-out", DEFAULT_TIME_OUT).get(0));
     String safeURL = Optional.ofNullable(requestHeaders.getOrDefault("!safe-url", DEFAULT_NULL).get(0)).orElse(uri.toURL().toString());
 

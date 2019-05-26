@@ -8,7 +8,7 @@ import hs.database.core.DatabaseObject;
 import java.time.LocalDateTime;
 
 @Table(name = "images")
-public class Image extends DatabaseObject {
+public class ImageRecord extends DatabaseObject {
 
   @Id(generated = false)
   @Column
@@ -23,14 +23,14 @@ public class Image extends DatabaseObject {
   @Column
   private byte[] image;
 
-  public Image(String url, byte[] data) {
+  public ImageRecord(String url, byte[] data) {
     this.url = url;
     this.creationTime = LocalDateTime.now();
     this.accessTime = creationTime;
     this.image = data;
   }
 
-  public Image() {
+  public ImageRecord() {
   }
 
   public String getUrl() {

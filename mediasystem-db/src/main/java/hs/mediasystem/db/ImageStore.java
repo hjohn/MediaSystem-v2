@@ -18,12 +18,12 @@ public class ImageStore {
   @Inject private Database database;
 
   public byte[] findByURL(URL url) {
-    return findImageByURL(url).map(Image::getImage).orElse(null);
+    return findImageByURL(url).map(ImageRecord::getImage).orElse(null);
   }
 
-  public Optional<Image> findImageByURL(URL url) {
+  public Optional<ImageRecord> findImageByURL(URL url) {
     try(Transaction tx = database.beginTransaction()) {
-      Image image = tx.selectUnique(Image.class, "url = ?", url.toExternalForm());
+      ImageRecord image = tx.selectUnique(ImageRecord.class, "url = ?", url.toExternalForm());
 
       if(image == null) {
         return Optional.empty();
@@ -40,10 +40,10 @@ public class ImageStore {
 
   public void store(URL url, byte[] data) {
     try(Transaction tx = database.beginTransaction()) {
-      Image image = tx.selectUnique(Image.class, "url = ?", url.toExternalForm());
+      ImageRecord image = tx.selectUnique(ImageRecord.class, "url = ?", url.toExternalForm());
 
       if(image == null) {
-        tx.insert(new Image(url.toExternalForm(), data));
+        tx.insert(new ImageRecord(url.toExternalForm(), data));
       }
       else {
         image.setCreationTime(LocalDateTime.now());
