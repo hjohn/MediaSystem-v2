@@ -1,6 +1,6 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.mediamanager.LocalMediaManager;
+import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
 import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 public class MediaManagerUpdaterTest {
   @Mock private DatabaseStreamStore streamStore;
-  @Mock private LocalMediaManager localMediaManager;
+  @Mock private LocalMediaIdentificationService identificationService;
   @InjectMocks private MediaManagerUpdater updater;
 
   @BeforeEach
@@ -47,8 +47,8 @@ public class MediaManagerUpdaterTest {
     Thread.sleep(100);  // Part of calls is async
 
     verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
-    verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
-    verifyNoMoreInteractions(localMediaManager);
+    verify(identificationService).incrementallyUpdateStream(stream1.getId());
+    verifyNoMoreInteractions(identificationService);
   }
 
   @Test
@@ -67,8 +67,8 @@ public class MediaManagerUpdaterTest {
 
     verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
     verify(streamStore).remove(new StreamID(20));
-    verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
-    verifyNoMoreInteractions(localMediaManager);
+    verify(identificationService).incrementallyUpdateStream(stream1.getId());
+    verifyNoMoreInteractions(identificationService);
   }
 
   @Test
@@ -86,8 +86,8 @@ public class MediaManagerUpdaterTest {
     Thread.sleep(100);  // Part of calls is async
 
     verify(streamStore).add(eq(1), argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
-    verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
-    verifyNoMoreInteractions(localMediaManager);
+    verify(identificationService).incrementallyUpdateStream(stream1.getId());
+    verifyNoMoreInteractions(identificationService);
   }
 
   private static BasicStream basicStream(int identifier, String uri, String title, List<BasicStream> childStreams) {

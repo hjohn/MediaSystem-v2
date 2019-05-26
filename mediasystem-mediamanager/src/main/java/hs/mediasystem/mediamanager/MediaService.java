@@ -38,7 +38,7 @@ public class MediaService {
 
   @Inject private BasicStreamStore streamStore;  // Only stores top level items, not children
   @Inject private DescriptorStore descriptorStore;
-  @Inject private LocalMediaManager localMediaManager;  // TODO doesn't belong here
+  @Inject private LocalMediaIdentificationService identificationService;  // TODO doesn't belong here
   @Inject private StreamMetaDataProvider metaDataProvider;
   @Inject private EpisodeMatcher episodeMatcher;  // May need further generalization
 
@@ -88,7 +88,7 @@ public class MediaService {
   }
 
   public MediaIdentification reidentify(StreamID streamId) {
-    return localMediaManager.reidentifyStream(streamId);
+    return identificationService.reidentifyStream(streamId);
   }
 
   public <D extends MediaDescriptor> List<D> findAllByType(MediaType type, List<String> dataSourceNames) {

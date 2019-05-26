@@ -1,6 +1,6 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.mediamanager.LocalMediaManager;
+import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Exceptional;
@@ -28,7 +28,7 @@ public class MediaManagerUpdater {
   private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, QUEUE, new NamedThreadFactory("MediaManagerUpdater", Thread.NORM_PRIORITY - 2, true));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Downloading Metadata");
 
-  @Inject private LocalMediaManager localMediaManager;
+  @Inject private LocalMediaIdentificationService identificationService;
   @Inject private DatabaseStreamStore streamStore;
 
   @PostConstruct
@@ -80,10 +80,10 @@ public class MediaManagerUpdater {
     EXECUTOR.execute(() -> {
       try {
         if(incremental) {
-          localMediaManager.incrementallyUpdateStream(streamId);
+          identificationService.incrementallyUpdateStream(streamId);
         }
         else {
-          localMediaManager.updateStream(streamId);
+          identificationService.updateStream(streamId);
         }
 
         streamStore.markEnriched(streamId);

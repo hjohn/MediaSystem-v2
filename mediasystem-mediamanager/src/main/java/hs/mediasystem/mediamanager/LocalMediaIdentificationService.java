@@ -36,8 +36,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class LocalMediaManager {
-  private static final Logger LOGGER = Logger.getLogger(LocalMediaManager.class.getName());
+public class LocalMediaIdentificationService {
+  private static final Logger LOGGER = Logger.getLogger(LocalMediaIdentificationService.class.getName());
 
   @Inject private List<IdentificationService> identificationServices;
   @Inject private List<QueryService<?>> queryServices;

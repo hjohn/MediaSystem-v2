@@ -41,7 +41,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class LocalMediaManagerTest {
+public class LocalMediaIdentificationServiceTest {
   private static final StreamID STREAM_ID = new StreamID(999);
   private static final StreamSource STREAM_SOURCE_MOVIE = new StreamSource(new StreamTags(Set.of("A", "B")), List.of("D1", "D2", "D5", "D6"));
   private static final StreamSource STREAM_SOURCE_EP = new StreamSource(new StreamTags(Set.of("A", "B")), List.of("D3", "D4"));
@@ -69,7 +69,7 @@ public class LocalMediaManagerTest {
   @Mock private BasicStreamStore streamStore;
   @Mock private DescriptorStore descriptorStore;
 
-  private LocalMediaManager db;
+  private LocalMediaIdentificationService db;
 
   @Before
   public void before() throws Exception {
@@ -102,7 +102,7 @@ public class LocalMediaManagerTest {
     injector.registerInstance(streamStore);
     injector.registerInstance(descriptorStore);
 
-    this.db = injector.getInstance(LocalMediaManager.class);
+    this.db = injector.getInstance(LocalMediaIdentificationService.class);
   }
 
   @Test
