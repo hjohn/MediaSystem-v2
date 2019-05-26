@@ -147,51 +147,6 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
     StackPane pane = new StackPane(gp);
     BooleanProperty busy = new SimpleBooleanProperty();
 
-    /*
-    Timeline timeline2 = new Timeline(5,
-      new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
-        private long busyTime;
-        private long idleTime;
-        private long progressStartTask;
-        private long startTask;
-
-        @Override
-        public void handle(ActionEvent e) {
-          long[] counts = LocalMediaManager.getTaskCounts();
-          long completedCount = counts[0];
-          long totalCount = counts[1];
-          long currentTimeMillis = System.currentTimeMillis();
-
-          if(completedCount != totalCount && busyTime == 0) {
-            busyTime = currentTimeMillis;
-            idleTime = 0;
-            startTask = completedCount;
-          }
-          if(completedCount == totalCount && idleTime == 0) {
-            idleTime = currentTimeMillis;
-            busyTime = 0;
-          }
-          if(busyTime != 0 && !busy.get() && currentTimeMillis - busyTime > 10000) {
-            busy.set(true);
-            progressStartTask = startTask;
-          }
-          if(idleTime != 0 && busy.get() && currentTimeMillis - idleTime > 10000) {
-            busy.set(false);
-          }
-          if(busy.get()) {
-            long total = totalCount - progressStartTask;
-            long diff = totalCount - completedCount;
-
-            progressTextProperty.set(String.format("%d of %d tasks left...", diff, total));
-
-            pb.setProgress((total - diff) / (double)total);
-          }
-        }
-      }),
-      new KeyFrame(Duration.seconds(0.2))
-    );
-*/
-
     Timeline timeline = new Timeline(5,
       new KeyFrame(Duration.seconds(0), new EventHandler<ActionEvent>() {
         private final Map<Workload, WorkloadProperties> knownWorkloads = new HashMap<>();
