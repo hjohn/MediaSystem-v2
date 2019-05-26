@@ -10,18 +10,15 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.StringURI;
@@ -30,13 +27,27 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class RecordGroupModule extends SimpleModule {
+public class MediaSystemDomainModule extends SimpleModule {
 
-  public RecordGroupModule() {
+  public MediaSystemDomainModule() {
     addKeyDeserializer(Identifier.class, new KeyDeserializer() {
       @Override
       public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException {
         return Identifier.fromString(key);
+      }
+    });
+
+    addSerializer(StreamID.class, new JsonSerializer<StreamID>() {
+      @Override
+      public void serialize(StreamID value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        gen.writeString("" + value.asInt());
+      }
+    });
+
+    addDeserializer(StreamID.class, new JsonDeserializer<StreamID>() {
+      @Override
+      public StreamID deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        return new StreamID(Integer.parseInt(p.getText()));
       }
     });
 
@@ -99,12 +110,6 @@ public class RecordGroupModule extends SimpleModule {
 
   @Override
   public void setupModule(SetupContext context) {
-    registerSubtypes(
-      new NamedType(Movie.class, "Movie"),
-      new NamedType(Serie.class, "Serie"),
-      new NamedType(Episode.class, "Episode")
-    );
-
     super.setupModule(context);
 
     context.setMixInAnnotations(Attributes.class, AttributesMixIn.class);
@@ -119,7 +124,7 @@ public class RecordGroupModule extends SimpleModule {
     }
   }
 
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
+  @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
   static class MediaDescriptorMixIn {
   }
 

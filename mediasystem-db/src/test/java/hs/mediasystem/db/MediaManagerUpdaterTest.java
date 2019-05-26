@@ -1,9 +1,6 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.ext.basicmediatypes.MediaStream;
 import hs.mediasystem.mediamanager.LocalMediaManager;
-import hs.mediasystem.mediamanager.StreamSource;
-import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
@@ -12,12 +9,10 @@ import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -33,11 +27,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class MediaManagerUpdaterTest {
-  private static final StreamSource STREAM_SOURCE = new StreamSource(new StreamTags(Set.of("A", "B")), List.of("TMDB"));
-
+  @Mock private DatabaseStreamStore streamStore;
   @Mock private LocalMediaManager localMediaManager;
-  @Mock private DatabaseLocalMediaStore mediaStore;
-  @Mock private LocalMediaCodec localMediaCodec;
   @InjectMocks private MediaManagerUpdater updater;
 
   @BeforeEach
@@ -49,113 +40,52 @@ public class MediaManagerUpdaterTest {
   public void shouldAddMedia() throws InterruptedException {
     BasicStream stream1 = basicStream(1234, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
 
-    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
+    updater.update(1, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(localMediaManager).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")), eq(STREAM_SOURCE), any());
+    verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
   }
 
   @Test
   public void shouldAddAndRemoveMedia() throws InterruptedException {
-    when(mediaStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(123, new LocalMedia())));
-    when(localMediaCodec.toMediaStream(any(LocalMedia.class))).thenReturn(new MediaStream(
-      basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica"),
-      null,
-      null,
-      new HashMap<>()
-    ));
+    when(streamStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(
+      new StreamID(20), basicStream(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
+    )));
 
-    BasicStream stream1 = basicStream(1234, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica");
+    BasicStream stream1 = basicStream(21, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica");
 
-    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
+    updater.update(1, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(localMediaManager).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")), eq(STREAM_SOURCE), any());
-    verify(localMediaManager).remove(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
-    verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
-    verifyNoMoreInteractions(localMediaManager);
-  }
-
-  @Test
-  public void shouldReplaceExistingMediaIfUnableToDecode() throws InterruptedException {
-    when(mediaStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(123, new LocalMedia())));
-
-    BasicStream stream1 = basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
-
-    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
-      stream1
-    ))));
-
-    Thread.sleep(100);  // Part of calls is async
-
-    verify(localMediaManager).put(argThat(ms -> ms.getUri().toString().equals("/home/user/Battlestar%20Galactica")), eq(STREAM_SOURCE), any());
-    verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
-    verifyNoMoreInteractions(localMediaManager);
-  }
-
-  @Test
-  public void shouldUndeleteExistingMediaIfWasDeleted() throws InterruptedException {
-    LocalMedia localMedia = new LocalMedia();
-    LocalMedia otherLocalMedia = new LocalMedia();
-
-    localMedia.setDeleteTime(LocalDateTime.now());
-
-    BasicStream basicStream = basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
-    MediaStream existingMediaStream = new MediaStream(
-      basicStream,
-      null,
-      null,
-      new HashMap<>()
-    );
-
-    when(mediaStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(123, localMedia)));
-    when(localMediaCodec.toMediaStream(localMedia)).thenReturn(existingMediaStream);
-    when(localMediaCodec.toLocalMedia(1, null, existingMediaStream)).thenReturn(otherLocalMedia);
-
-    BasicStream stream1 = basicStream;
-
-    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
-      stream1
-    ))));
-
-    Thread.sleep(100);  // Part of calls is async
-
-    verify(mediaStore).store(otherLocalMedia);
-    verify(localMediaManager).put(stream1, STREAM_SOURCE, Set.of());
+    verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
+    verify(streamStore).remove(new StreamID(20));
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
   }
 
   @Test
   public void shouldReplaceExistingMediaIfAttributesDiffer() throws InterruptedException {
-    LocalMedia localMedia = new LocalMedia();
-    MediaStream existingMediaStream = new MediaStream(
-      basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica v1"),
-      null,
-      null,
-      new HashMap<>()
-    );
-
-    when(mediaStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(123, localMedia)));
-    when(localMediaCodec.toMediaStream(localMedia)).thenReturn(existingMediaStream);
+    when(streamStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(
+      new StreamID(123), basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
+    )));
 
     BasicStream stream1 = basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica v2");
 
-    updater.update(1, STREAM_SOURCE, List.of(Exceptional.of(List.of(
+    updater.update(1, List.of(Exceptional.of(List.of(
       stream1
     ))));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(localMediaManager).put(argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")), eq(STREAM_SOURCE), any());
+    verify(streamStore).add(eq(1), argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
     verify(localMediaManager).incrementallyUpdateStream(stream1.getId());
     verifyNoMoreInteractions(localMediaManager);
   }

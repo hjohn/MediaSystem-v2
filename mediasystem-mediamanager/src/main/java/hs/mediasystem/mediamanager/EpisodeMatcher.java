@@ -1,7 +1,5 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
@@ -23,7 +21,7 @@ import javax.inject.Singleton;
 public class EpisodeMatcher {
 
   @SuppressWarnings("static-method")
-  public Tuple2<Identification, List<Episode>> attemptMatch(Serie serie, Identification serieIdentification, Attributes attributes) {
+  public List<Episode> attemptMatch(Serie serie, Attributes attributes) {
     String sequence = attributes.get(Attribute.SEQUENCE);
     String typeString = attributes.get(Attribute.CHILD_TYPE);
     ChildType type = typeString == null ? null : ChildType.valueOf(typeString);
@@ -32,7 +30,7 @@ public class EpisodeMatcher {
       List<Episode> list = attemptMatch(serie, sequence);  // This will also match specials of the TMDB supported form, with season 0 and an episode number
 
       if(!list.isEmpty()) {
-        return Tuple.of(new Identification(MatchType.DERIVED, 1.0, serieIdentification.getCreationTime()), list);
+        return list;
       }
     }
 
@@ -40,8 +38,7 @@ public class EpisodeMatcher {
       Tuple2<Double, Episode> match = attemptSpecialsMatch(serie, attributes.get(Attribute.TITLE), attributes.get(Attribute.SUBTITLE), sequence);
 
       if(match != null) {
-        // System.out.println("Found for " + attributes);
-        return Tuple.of(new Identification(MatchType.NAME, match.a, serieIdentification.getCreationTime()), Collections.singletonList(match.b));
+        return Collections.singletonList(match.b);
       }
     }
 
@@ -86,17 +83,11 @@ public class EpisodeMatcher {
     double bestMatch = 0;
 
     if(season != null) {
-//      List<List<String>> powerSet = powerSet(Stream.of(title, alternativeTitle, subtitle).filter(Objects::nonNull).filter(s -> !s.isEmpty()).collect(Collectors.toList()));
-
       for(String joinedString : combinations(title, subtitle, sequence)) {
 
         for(Episode episode : season.getEpisodes()) {
           String name = episode.getDetails().getName();
           double match = WeightedNgramDistance.calculate(name, joinedString);
-
-//          if(match > 0.1) {
-//            System.out.printf("%5.3f%% for '" + joinedString + "' vs '" + name + "'\n", match);
-//          }
 
           if(match > 0.5 && match > bestMatch) {
             bestMatch = match;

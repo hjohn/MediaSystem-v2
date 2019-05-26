@@ -10,6 +10,7 @@ import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.DatabaseStreamPrintProvider;
+import hs.mediasystem.db.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.domain.PlayerFactory;
 import hs.mediasystem.runner.expose.Annotations;
@@ -62,6 +63,8 @@ public class MediaSystemConfigurer {
 
     Path root = Paths.get("plugins");
 
+    pluginManager.loadPluginAndScan("hs.mediasystem.db", "hs.mediasystem.mediamanager");
+
     if(Files.exists(root)) {
       Files.find(root, 1, (p, a) -> !p.equals(root)).forEach(p -> {
         try {
@@ -91,7 +94,8 @@ public class MediaSystemConfigurer {
       );
     }
 
-    injector.getInstance(CollectionLocationManager.class);  // Triggers background thread
+    injector.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
+    injector.getInstance(ScannerController.class);       // Triggers background thread
     injector.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
 
 //    try {
@@ -188,7 +192,7 @@ public class MediaSystemConfigurer {
     }});
   }
 
-  private static ConnectionPoolDataSource configureDataSource(Section section)  {
+  private static ConnectionPoolDataSource configureDataSource(Section section) {
     try {
       Class.forName(section.get("driverClass"));
       Properties properties = new Properties();

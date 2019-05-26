@@ -1,6 +1,7 @@
 package hs.mediasystem.db;
 
 import hs.mediasystem.db.streamids.DatabaseStreamIdStore;
+import hs.mediasystem.db.streamids.StreamIdRecord;
 import hs.mediasystem.db.uris.DatabaseUriStore;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrint;
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -55,7 +58,16 @@ class DatabaseStreamPrintProviderTest {
   @BeforeEach
   void beforeEach() throws IOException {
     when(uriStore.findAll(any(), any())).thenReturn(new HashMap<>(Map.of(existingFile.toUri().toString(), existingFileStreamPrint.getId())));
-    when(idStore.findAll(any(), any())).thenReturn(new HashMap<>(Map.of(existingFileStreamPrint.getId(), existingFileStreamPrint)));
+    doAnswer(invocation -> {
+      Consumer<StreamIdRecord> consumer = invocation.getArgument(0);
+      consumer.accept(new StreamIdRecord() {{
+        setId(existingFileStreamPrint.getId().asInt());
+        setHash(existingFileHash);
+        setSize(15L);
+        setLastModificationTime(1201);
+      }});
+      return null;
+    }).when(idStore).forEach(any());
 
     PostConstructCaller.call(provider);
 

@@ -57,7 +57,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
         mediaItem = mediaItemFactory.create(videoDatabase.queryProduction(mediaItem.getProduction().getIdentifier()), mediaItem.getParent());
       }
       else if(mediaItem.getData() instanceof Serie) {
-        mediaItem = mediaItemFactory.create(mediaService.toLocalSerie(mediaItem.getStream(), (Serie)mediaItem.getData()), mediaItem.getParent());
+        mediaItem = mediaItemFactory.create(mediaService.toLocalSerie((Serie)mediaItem.getData()), mediaItem.getParent());
       }
 
       return new ProductionPresentation(
@@ -109,6 +109,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   private final EpisodesPresentation episodesPresentation; // prevent gc
 
+  @SuppressWarnings("unchecked")
   private ProductionPresentation(
     Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider,
     VideoDatabase videoDatabase,

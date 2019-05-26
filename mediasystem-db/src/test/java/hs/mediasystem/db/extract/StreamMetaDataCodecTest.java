@@ -9,7 +9,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.VideoStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.StringURI;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -55,7 +54,7 @@ class StreamMetaDataCodecTest {
     assertEquals(Duration.ofSeconds(999), metaData.getDuration());
     assertEquals("title", metaData.getVideoStreams().get(0).getTitle());
     assertEquals("mp3", metaData.getAudioStreams().get(0).getCodec());
-    assertEquals(new StringURI("localdb://12345/1"), metaData.getSnapshots().get(0).getImageUri());
+    assertEquals(new ImageURI("localdb://12345/1"), metaData.getSnapshots().get(0).getImageUri());
   }
 
 }

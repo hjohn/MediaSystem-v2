@@ -41,11 +41,12 @@ public class LocalMediaManager {
 
   @Inject private List<IdentificationService> identificationServices;
   @Inject private List<QueryService<?>> queryServices;
-  @Inject private StreamStore store;  // Modifications require synchronization
+
+  @Inject private BasicStreamStore streamStore;
+  @Inject private DescriptorStore descriptorStore;
 
   private final Map<DataSource, IdentificationService> identificationServicesByDataSource = new HashMap<>();
   private final Map<DataSource, QueryService<MediaDescriptor>> queryServicesByDataSource = new HashMap<>();
-  private final List<LocalMediaListener> localMediaListeners = new ArrayList<>();
   private final AutoReentrantLock storeConsistencyLock = new AutoReentrantLock();
 
   @PostConstruct
@@ -67,26 +68,6 @@ public class LocalMediaManager {
     }
   }
 
-  public void put(BasicStream stream, StreamSource source, Set<Tuple3<Identifier, Identification, MediaDescriptor>> descriptors) {
-    try(Key key = storeConsistencyLock.lock()) {
-      store.put(stream, source, descriptors);
-    }
-  }
-
-  public void remove(BasicStream stream) {
-    try(Key key = storeConsistencyLock.lock()) {
-      store.remove(stream);
-    }
-  }
-
-  public void addListener(LocalMediaListener listener) {
-    localMediaListeners.add(listener);
-  }
-
-  public void removeListener(LocalMediaListener listener) {
-    localMediaListeners.remove(listener);
-  }
-
   public MediaIdentification incrementallyUpdateStream(StreamID streamId) {
     return enrichMediaStream(streamId, Mode.INCREMENTAL);
   }
@@ -99,18 +80,25 @@ public class LocalMediaManager {
     return enrichMediaStream(streamId, Mode.REPLACE);
   }
 
+  private Map<Identifier, Tuple2<Identification, MediaDescriptor>> findDescriptorsAndIdentifications(StreamID streamId) {
+    Map<Identifier, Identification> identifications = streamStore.findIdentifications(streamId);
+
+    return identifications.entrySet().stream()
+      .collect(Collectors.toMap(Map.Entry::getKey, e -> Tuple.of(e.getValue(), descriptorStore.get(e.getKey()))));
+  }
+
   // Method may block
   private MediaIdentification identify(StreamID streamId, boolean incremental) {
     try(Key key = storeConsistencyLock.lock()) {
-      BasicStream stream = store.findStream(streamId);
+      BasicStream stream = streamStore.findStream(streamId);
 
       if(stream == null) {
         throw new IllegalArgumentException("No matching stream found for streamId: " + streamId);
       }
 
-      StreamSource streamSource = store.findStreamSource(streamId);
+      StreamSource streamSource = streamStore.findStreamSource(streamId);
 
-      Map<Identifier, Tuple2<Identification, MediaDescriptor>> records = store.findDescriptorsAndIdentifications(stream.getId());
+      Map<Identifier, Tuple2<Identification, MediaDescriptor>> records = findDescriptorsAndIdentifications(stream.getId());
       MediaType type = stream.getType();
 
       // Get old identifications with missing descriptors (queries), but skip if there is no matching query service anyway:
@@ -205,7 +193,7 @@ public class LocalMediaManager {
   }
 
   private Set<Tuple3<Identifier, Identification, MediaDescriptor>> createMergedRecords(BasicStream stream, Set<Tuple3<Identifier, Identification, MediaDescriptor>> records) {
-    Map<Identifier, Tuple2<Identification, MediaDescriptor>> originalRecords = store.findDescriptorsAndIdentifications(stream.getId());
+    Map<Identifier, Tuple2<Identification, MediaDescriptor>> originalRecords = findDescriptorsAndIdentifications(stream.getId());
 
     for(Tuple3<Identifier, Identification, MediaDescriptor> record : records) {
       Tuple2<Identification, MediaDescriptor> original = originalRecords.get(record.a);
@@ -241,7 +229,6 @@ public class LocalMediaManager {
   // Blocks
   private MediaIdentification enrichMediaStream(StreamID streamId, Mode mode) {
     MediaIdentification mediaIdentification = identify(streamId, mode == Mode.INCREMENTAL);
-    BasicStream stream = mediaIdentification.getStream();
 
     try(Key key = storeConsistencyLock.lock()) {
       boolean hasExceptions = mediaIdentification.getResults().stream().filter(Exceptional::isException).findAny().isPresent();
@@ -251,11 +238,15 @@ public class LocalMediaManager {
           mediaIdentification.getResults().stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toSet()) :
           createMergedRecords(mediaIdentification.getStream(), mediaIdentification.getResults().stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toSet()));
 
-      store.update(stream, records);
+      streamStore.putIdentifications(streamId, records.stream().collect(Collectors.toMap(t -> t.a, t -> t.b)));
+
+      for(Tuple3<Identifier, Identification, MediaDescriptor> record : records) {
+        if(record.c != null) {
+          descriptorStore.add(record.c);
+        }
+      }
 
       key.earlyUnlock();
-
-      localMediaListeners.stream().forEach(l -> l.mediaUpdated(stream, records));
 
       logEnrichmentResult(mode, mediaIdentification);
 

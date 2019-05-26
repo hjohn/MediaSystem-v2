@@ -9,8 +9,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.db.ScanResultSupplier;
-import hs.mediasystem.db.ScannerController;
+import hs.mediasystem.db.ImportSource;
+import hs.mediasystem.db.ImportSourceProvider;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.scanner.api.Scanner;
@@ -39,7 +39,7 @@ public class CollectionLocationManager {
     .registerModule(new ParameterNamesModule(Mode.PROPERTIES));
 
   @Inject private List<Scanner> scanners;
-  @Inject private ScannerController scannerController;
+  @Inject private ImportSourceProvider importSourceProvider;
 
   private List<CollectionDefinition> collectionDefinitions = new ArrayList<>();
   private List<ImportDefinition> importDefinitions = new ArrayList<>();
@@ -68,7 +68,7 @@ public class CollectionLocationManager {
       throw new IllegalStateException("Error parsing " + file, e);
     }
 
-    List<ScanResultSupplier> suppliers = new ArrayList<>();
+    List<ImportSource> sources = new ArrayList<>();
 
     for(ImportDefinition definition : importDefinitions) {
       String type = definition.getType() + "Scanner";
@@ -79,12 +79,12 @@ public class CollectionLocationManager {
             .map(s -> Paths.get(s))
             .collect(Collectors.toList());
 
-          suppliers.add(new ScanResultSupplier(scanner, definition.getId(), paths, new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification() == null ? Collections.emptyList() : List.of(definition.getIdentification()))));
+          sources.add(new ImportSource(scanner, definition.getId(), paths, new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification() == null ? Collections.emptyList() : List.of(definition.getIdentification()))));
         }
       }
     }
 
-    scannerController.setSuppliers(suppliers);
+    importSourceProvider.set(sources);
   }
 
   public List<CollectionDefinition> getCollectionDefinitions(String type) {

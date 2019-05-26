@@ -192,7 +192,7 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
             markedIds.removeAll(idsToUnmark);
           }
 
-          // streamIdStore.pruneNotSeenSince("3 months");
+          // TODO streamIdStore.pruneNotSeenSince("3 months");
           // ...delete from StreamPrints etc.
           // Might be better to only prune on startup
         }
