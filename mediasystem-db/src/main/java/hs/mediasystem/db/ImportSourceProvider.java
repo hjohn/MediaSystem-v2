@@ -12,15 +12,15 @@ import javax.inject.Singleton;
 @Singleton
 public class ImportSourceProvider {
   private List<ImportSource> importSources = List.of();
-  private Map<Integer, ImportSource> importSourcesByScannerId = Map.of();
+  private Map<Integer, ImportSource> importSourcesById = Map.of();
 
   public synchronized void set(List<ImportSource> importSources) {
     this.importSources = Collections.unmodifiableList(new ArrayList<>(importSources));
-    this.importSourcesByScannerId = Collections.unmodifiableMap(importSources.stream().collect(Collectors.toMap(ImportSource::getId, Function.identity())));
+    this.importSourcesById = Collections.unmodifiableMap(importSources.stream().collect(Collectors.toMap(ImportSource::getId, Function.identity())));
   }
 
-  public synchronized ImportSource getStreamSource(int scannerId) {
-    return importSourcesByScannerId.get(scannerId);
+  public synchronized ImportSource getStreamSource(int importSourceId) {
+    return importSourcesById.get(importSourceId);
   }
 
   public synchronized List<ImportSource> getImportSources() {

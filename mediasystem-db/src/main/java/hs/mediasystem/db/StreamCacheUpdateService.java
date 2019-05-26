@@ -94,13 +94,13 @@ public class StreamCacheUpdateService {
     });
   }
 
-  public synchronized void update(long scannerId, List<Exceptional<List<BasicStream>>> rootResults) {
+  public synchronized void update(long importSourceId, List<Exceptional<List<BasicStream>>> rootResults) {
     for(int rootResultIdx = 0; rootResultIdx < rootResults.size(); rootResultIdx++) {
       Exceptional<List<BasicStream>> rootResult = rootResults.get(rootResultIdx);
 
       if(rootResult.isPresent()) {
-        int scannerAndRootId = (int)scannerId + rootResultIdx * 65536;
-        Map<StreamID, BasicStream> existingStreams = streamStore.findByScannerId(scannerAndRootId);  // Returns all active streams (not deleted)
+        int scannerAndRootId = (int)importSourceId + rootResultIdx * 65536;
+        Map<StreamID, BasicStream> existingStreams = streamStore.findByImportSourceId(scannerAndRootId);  // Returns all active streams (not deleted)
 
         for(BasicStream scannedStream : rootResult.get()) {
           try {

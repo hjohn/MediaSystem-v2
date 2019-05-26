@@ -4,13 +4,13 @@ import java.time.Instant;
 
 public class CachedStream {
   private final IdentifiedStream stream;
-  private final int scannerId;
+  private final int importSourceId;
   private final Instant lastEnrichTime;
   private final Instant nextEnrichTime;
 
-  public CachedStream(IdentifiedStream stream, int scannerId, Instant lastEnrichTime, Instant nextEnrichTime) {
+  public CachedStream(IdentifiedStream stream, int importSourceId, Instant lastEnrichTime, Instant nextEnrichTime) {
     this.stream = stream;
-    this.scannerId = scannerId;
+    this.importSourceId = importSourceId;
     this.lastEnrichTime = lastEnrichTime;
     this.nextEnrichTime = nextEnrichTime;
   }
@@ -19,8 +19,8 @@ public class CachedStream {
     return stream;
   }
 
-  public int getScannerId() {
-    return scannerId;
+  public int getImportSourceId() {
+    return importSourceId;
   }
 
   public Instant getLastEnrichTime() {

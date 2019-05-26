@@ -63,12 +63,12 @@ class DatabaseStreamsStoreTest {
     }
 
     @Test
-    void findByScannerIdShouldFindStreams() {
-      assertEquals(2, store.findByScannerId(1).size());
-      assertEquals(1, store.findByScannerId(2).size());
-      assertEquals(stream1, store.findByScannerId(1).get(streamId1));
-      assertEquals(stream2, store.findByScannerId(2).get(streamId2));
-      assertEquals(stream3, store.findByScannerId(1).get(streamId3));
+    void findByImportSourceIdShouldFindStreams() {
+      assertEquals(2, store.findByImportSourceId(1).size());
+      assertEquals(1, store.findByImportSourceId(2).size());
+      assertEquals(stream1, store.findByImportSourceId(1).get(streamId1));
+      assertEquals(stream2, store.findByImportSourceId(2).get(streamId2));
+      assertEquals(stream3, store.findByImportSourceId(1).get(streamId3));
     }
 
     @Nested
@@ -79,11 +79,11 @@ class DatabaseStreamsStoreTest {
       }
 
       @Test
-      void findByScannerIdShouldFindLessStreams() {
-        assertEquals(1, store.findByScannerId(1).size());
-        assertEquals(1, store.findByScannerId(2).size());
-        assertEquals(stream1, store.findByScannerId(1).get(streamId1));
-        assertEquals(stream2, store.findByScannerId(2).get(streamId2));
+      void findByImportSourceIdShouldFindLessStreams() {
+        assertEquals(1, store.findByImportSourceId(1).size());
+        assertEquals(1, store.findByImportSourceId(2).size());
+        assertEquals(stream1, store.findByImportSourceId(1).get(streamId1));
+        assertEquals(stream2, store.findByImportSourceId(2).get(streamId2));
       }
 
       @Nested
@@ -94,12 +94,12 @@ class DatabaseStreamsStoreTest {
         }
 
         @Test
-        void findByScannerIdShouldFindAllStreams() {
-          assertEquals(2, store.findByScannerId(1).size());
-          assertEquals(1, store.findByScannerId(2).size());
-          assertEquals(stream1, store.findByScannerId(1).get(streamId1));
-          assertEquals(stream2, store.findByScannerId(2).get(streamId2));
-          assertEquals(stream3, store.findByScannerId(1).get(streamId3));
+        void findByImportSourceIdShouldFindAllStreams() {
+          assertEquals(2, store.findByImportSourceId(1).size());
+          assertEquals(1, store.findByImportSourceId(2).size());
+          assertEquals(stream1, store.findByImportSourceId(1).get(streamId1));
+          assertEquals(stream2, store.findByImportSourceId(2).get(streamId2));
+          assertEquals(stream3, store.findByImportSourceId(1).get(streamId3));
         }
       }
     }

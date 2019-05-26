@@ -53,7 +53,7 @@ public class StreamCacheUpdateServiceTest {
 
   @Test
   public void shouldAddAndRemoveMedia() throws InterruptedException {
-    when(streamStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(
+    when(streamStore.findByImportSourceId(1)).thenReturn(new HashMap<>(Map.of(
       new StreamID(20), basicStream(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
     )));
 
@@ -73,7 +73,7 @@ public class StreamCacheUpdateServiceTest {
 
   @Test
   public void shouldReplaceExistingMediaIfAttributesDiffer() throws InterruptedException {
-    when(streamStore.findByScannerId(1)).thenReturn(new HashMap<>(Map.of(
+    when(streamStore.findByImportSourceId(1)).thenReturn(new HashMap<>(Map.of(
       new StreamID(123), basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
     )));
 

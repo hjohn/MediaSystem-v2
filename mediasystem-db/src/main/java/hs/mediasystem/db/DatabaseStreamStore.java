@@ -60,9 +60,9 @@ public class DatabaseStreamStore implements BasicStreamStore {
     LOGGER.fine("Loaded " + cache.size() + " cached stream records, deleted " + badIds.size() + " bad ones");
   }
 
-  public synchronized Map<StreamID, BasicStream> findByScannerId(long scannerId) {
+  public synchronized Map<StreamID, BasicStream> findByImportSourceId(long importSourceId) {
     return cache.values().stream()
-      .filter(cs -> cs.getScannerId() == scannerId)
+      .filter(cs -> cs.getImportSourceId() == importSourceId)
       .map(CachedStream::getIdentifiedStream)
       .map(IdentifiedStream::getStream)
       .collect(Collectors.toMap(BasicStream::getId, Function.identity()));
@@ -79,7 +79,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
 
   private Stream<BasicStream> stream(MediaType type, String tag) {
     return cache.values().stream()
-      .filter(cs -> tag == null ? true : importSourceProvider.getStreamSource(cs.getScannerId() & 0xffff).getStreamSource().getTags().contains(tag))  // TODO performance here might suck somewhat
+      .filter(cs -> tag == null ? true : importSourceProvider.getStreamSource(cs.getImportSourceId() & 0xffff).getStreamSource().getTags().contains(tag))  // TODO performance here might suck somewhat
       .map(CachedStream::getIdentifiedStream)
       .map(IdentifiedStream::getStream)
       .filter(s -> s.getType().equals(type));
@@ -104,7 +104,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
 
   @Override
   public synchronized StreamSource findStreamSource(StreamID streamId) {
-    return importSourceProvider.getStreamSource(cache.get(streamId).getScannerId() & 0xffff).getStreamSource();
+    return importSourceProvider.getStreamSource(cache.get(streamId).getImportSourceId() & 0xffff).getStreamSource();
   }
 
   @Override
@@ -169,7 +169,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
 
     CachedStream newCS = new CachedStream(
       cs.getIdentifiedStream(),
-      cs.getScannerId(),
+      cs.getImportSourceId(),
       Instant.now(),
       nextEnrichTime
     );
@@ -185,7 +185,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     removeFromCache(streamId);
   }
 
-  public synchronized void add(int scannerId, BasicStream stream) {
+  public synchronized void add(int importSourceId, BasicStream stream) {
     CachedStream existingCS = cache.get(stream.getId());
 
     if(existingCS == null || !stream.equals(existingCS.getIdentifiedStream().getStream())) {
@@ -193,10 +193,10 @@ public class DatabaseStreamStore implements BasicStreamStore {
       CachedStream newCS;
 
       if(existingCS == null) {
-        newCS = new CachedStream(identifiedStream, scannerId, null, null);
+        newCS = new CachedStream(identifiedStream, importSourceId, null, null);
       }
       else {
-        newCS = new CachedStream(identifiedStream, scannerId, existingCS.getLastEnrichTime(), existingCS.getNextEnrichTime());
+        newCS = new CachedStream(identifiedStream, importSourceId, existingCS.getLastEnrichTime(), existingCS.getNextEnrichTime());
       }
 
       database.store(codec.toRecord(newCS));
@@ -213,7 +213,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     if(cs != null) {
       CachedStream newCS = new CachedStream(
         new IdentifiedStream(cs.getIdentifiedStream().getStream(), identifications),
-        cs.getScannerId(),
+        cs.getImportSourceId(),
         cs.getLastEnrichTime(),
         cs.getNextEnrichTime()
       );

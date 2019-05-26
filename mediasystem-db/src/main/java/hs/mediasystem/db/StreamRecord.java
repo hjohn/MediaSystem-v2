@@ -12,7 +12,7 @@ public class StreamRecord {
   private int streamId;
 
   @Column(name = "scanner_id")
-  private int scannerId;
+  private int importSourceId;
 
   @Column(name = "lastenrichtime")
   private Long lastEnrichTime;
@@ -31,12 +31,12 @@ public class StreamRecord {
     this.streamId = streamId;
   }
 
-  public int getScannerId() {
-    return scannerId;
+  public int getImportSourceId() {
+    return importSourceId;
   }
 
-  public void setScannerId(int scannerId) {
-    this.scannerId = scannerId;
+  public void setImportSourceId(int importSourceId) {
+    this.importSourceId = importSourceId;
   }
 
   public Long getLastEnrichTime() {
