@@ -60,7 +60,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     LOGGER.fine("Loaded " + cache.size() + " cached stream records, deleted " + badIds.size() + " bad ones");
   }
 
-  public synchronized Map<StreamID, BasicStream> findByImportSourceId(long importSourceId) {
+  synchronized Map<StreamID, BasicStream> findByImportSourceId(long importSourceId) {
     return cache.values().stream()
       .filter(cs -> cs.getImportSourceId() == importSourceId)
       .map(CachedStream::getIdentifiedStream)
@@ -118,7 +118,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     return cachedStream.getIdentifiedStream().getIdentifications();
   }
 
-  public synchronized Set<StreamID> findUnenrichedStreams() {
+  synchronized Set<StreamID> findUnenrichedStreams() {
     return cache.values().stream()
       .filter(cs -> cs.getLastEnrichTime() == null)
       .map(CachedStream::getIdentifiedStream)
@@ -127,7 +127,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
       .collect(Collectors.toSet());
   }
 
-  public synchronized Set<StreamID> findStreamsNeedingRefresh(int maximum) {
+  synchronized Set<StreamID> findStreamsNeedingRefresh(int maximum) {
     Instant now = Instant.now();
 
     return cache.values().stream()
@@ -139,7 +139,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
       .collect(Collectors.toSet());
   }
 
-  public void markEnriched(StreamID streamId) {
+  void markEnriched(StreamID streamId) {
     CachedStream cs = cache.get(streamId);
 
     if(cs == null) {
@@ -180,12 +180,12 @@ public class DatabaseStreamStore implements BasicStreamStore {
     database.store(codec.toRecord(newCS));
   }
 
-  public synchronized void remove(StreamID streamId) {
+  synchronized void remove(StreamID streamId) {
     database.delete(streamId.asInt());
     removeFromCache(streamId);
   }
 
-  public synchronized void add(int importSourceId, BasicStream stream) {
+  synchronized void add(int importSourceId, BasicStream stream) {
     CachedStream existingCS = cache.get(stream.getId());
 
     if(existingCS == null || !stream.equals(existingCS.getIdentifiedStream().getStream())) {
@@ -206,8 +206,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     }
   }
 
-  @Override
-  public synchronized void putIdentifications(StreamID streamId, Map<Identifier, Identification> identifications) {
+  synchronized void putIdentifications(StreamID streamId, Map<Identifier, Identification> identifications) {
     CachedStream cs = cache.get(streamId);
 
     if(cs != null) {

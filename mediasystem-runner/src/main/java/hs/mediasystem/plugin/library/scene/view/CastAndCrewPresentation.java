@@ -3,9 +3,9 @@ package hs.mediasystem.plugin.library.scene.view;
 import hs.mediasystem.db.SettingsStore;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.mediamanager.MediaService;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.runner.db.MediaService;
 
 import java.util.Comparator;
 import java.util.List;

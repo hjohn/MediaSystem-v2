@@ -1,5 +1,6 @@
-package hs.mediasystem.mediamanager;
+package hs.mediasystem.runner.db;
 
+import hs.mediasystem.db.StreamCacheUpdateService;
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
@@ -10,6 +11,12 @@ import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Snapshot;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
+import hs.mediasystem.mediamanager.BasicStreamStore;
+import hs.mediasystem.mediamanager.DescriptorStore;
+import hs.mediasystem.mediamanager.EpisodeMatcher;
+import hs.mediasystem.mediamanager.LocalSerie;
+import hs.mediasystem.mediamanager.MediaIdentification;
+import hs.mediasystem.mediamanager.StreamMetaDataProvider;
 import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
@@ -30,7 +37,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-// TODO move to front-end code?
 @Singleton
 public class MediaService {
   private static final DataSource LOCAL_RELEASE = DataSource.instance(MediaType.of("RELEASE"), "LOCAL");
@@ -38,7 +44,7 @@ public class MediaService {
 
   @Inject private BasicStreamStore streamStore;  // Only stores top level items, not children
   @Inject private DescriptorStore descriptorStore;
-  @Inject private LocalMediaIdentificationService identificationService;  // TODO doesn't belong here
+  @Inject private StreamCacheUpdateService updateService;  // TODO doesn't belong here
   @Inject private StreamMetaDataProvider metaDataProvider;
   @Inject private EpisodeMatcher episodeMatcher;  // May need further generalization
 
@@ -88,7 +94,7 @@ public class MediaService {
   }
 
   public MediaIdentification reidentify(StreamID streamId) {
-    return identificationService.reidentifyStream(streamId);
+    return updateService.reidentifyStream(streamId);
   }
 
   public <D extends MediaDescriptor> List<D> findAllByType(MediaType type, List<String> dataSourceNames) {

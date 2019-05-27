@@ -1,6 +1,8 @@
 package hs.mediasystem.db;
 
 import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
+import hs.mediasystem.mediamanager.StreamSource;
+import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
@@ -13,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -31,14 +35,20 @@ public class StreamCacheUpdateServiceTest {
   @Mock private LocalMediaIdentificationService identificationService;
   @InjectMocks private StreamCacheUpdateService updater;
 
+  private final List<String> allowedDataSources = List.of("TMDB");
+
   @BeforeEach
   public void before() {
     MockitoAnnotations.initMocks(this);
+
+    when(streamStore.findStreamSource(any(StreamID.class))).thenReturn(new StreamSource(new StreamTags(Set.of("A")), allowedDataSources));
   }
 
   @Test
   public void shouldAddMedia() throws InterruptedException {
     BasicStream stream1 = basicStream(1234, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
+
+    when(streamStore.findStream(new StreamID(1234))).thenReturn(stream1);
 
     updater.update(1, List.of(Exceptional.of(List.of(
       stream1
@@ -47,7 +57,7 @@ public class StreamCacheUpdateServiceTest {
     Thread.sleep(100);  // Part of calls is async
 
     verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
-    verify(identificationService).incrementallyUpdateStream(stream1.getId());
+    verify(identificationService).identify(stream1, allowedDataSources);
     verifyNoMoreInteractions(identificationService);
   }
 
@@ -59,6 +69,8 @@ public class StreamCacheUpdateServiceTest {
 
     BasicStream stream1 = basicStream(21, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica");
 
+    when(streamStore.findStream(new StreamID(21))).thenReturn(stream1);
+
     updater.update(1, List.of(Exceptional.of(List.of(
       stream1
     ))));
@@ -67,7 +79,7 @@ public class StreamCacheUpdateServiceTest {
 
     verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
     verify(streamStore).remove(new StreamID(20));
-    verify(identificationService).incrementallyUpdateStream(stream1.getId());
+    verify(identificationService).identify(stream1, allowedDataSources);
     verifyNoMoreInteractions(identificationService);
   }
 
@@ -79,6 +91,8 @@ public class StreamCacheUpdateServiceTest {
 
     BasicStream stream1 = basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica v2");
 
+    when(streamStore.findStream(new StreamID(123))).thenReturn(stream1);
+
     updater.update(1, List.of(Exceptional.of(List.of(
       stream1
     ))));
@@ -86,7 +100,7 @@ public class StreamCacheUpdateServiceTest {
     Thread.sleep(100);  // Part of calls is async
 
     verify(streamStore).add(eq(1), argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
-    verify(identificationService).incrementallyUpdateStream(stream1.getId());
+    verify(identificationService).identify(stream1, allowedDataSources);
     verifyNoMoreInteractions(identificationService);
   }
 

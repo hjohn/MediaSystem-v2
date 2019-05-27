@@ -3,8 +3,8 @@ package hs.mediasystem.plugin.library.scene.view;
 import hs.mediasystem.db.SettingsStore;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.mediamanager.MediaService;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.NaturalLanguage;
 

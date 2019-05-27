@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 
 public interface BasicStreamStore {
-  void putIdentifications(StreamID streamId, Map<Identifier, Identification> identifications);
 
   /*
    * Look up functions

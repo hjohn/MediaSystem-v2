@@ -2,9 +2,9 @@ package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.db.SettingsStore;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.mediamanager.MediaService;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.presentation.AbstractPresentation;
+import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.scanner.api.BasicStream;
 
 import java.util.Comparator;

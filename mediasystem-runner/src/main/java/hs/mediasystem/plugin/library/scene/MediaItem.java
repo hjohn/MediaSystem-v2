@@ -9,7 +9,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Release;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.mediamanager.MediaService;
+import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrintProvider;
