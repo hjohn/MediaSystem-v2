@@ -33,7 +33,17 @@ public class TmdbQueryService extends AbstractQueryService<Movie> {
 
     if(imdbId != null) {
       Identifier newIdentifier = new Identifier(DataSources.IMDB_MOVIE, imdbId);
+
       newIdentifications.put(newIdentifier, new Identification(MatchType.DERIVED, 1.0, Instant.now()));
+    }
+
+    JsonNode collectionPath = node.path("belongs_to_collection");
+
+    if(collectionPath.isObject()) {
+      newIdentifications.put(
+        new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText()),
+        new Identification(MatchType.DERIVED, 1.0, Instant.now())
+      );
     }
 
     Movie movie = objectFactory.toMovie(node);
