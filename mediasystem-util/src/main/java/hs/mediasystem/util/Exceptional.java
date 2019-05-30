@@ -98,17 +98,16 @@ public final class Exceptional<T> {
   }
 
   /**
-   * If a value is present, returns an {@code Optional} describing the value,
-   * otherwise returns an {@code Optional} produced by the supplying function.
+   * If a value is present, returns an {@code Exceptional} describing the value,
+   * otherwise returns an {@code Exceptional} produced by the supplying function.
    *
-   * @param supplier the supplying function that produces an {@code Optional}
+   * @param supplier the supplying function that produces an {@code Exceptional}
    *        to be returned
-   * @return returns an {@code Optional} describing the value of this
-   *         {@code Optional}, if a value is present, otherwise an
-   *         {@code Optional} produced by the supplying function.
+   * @return returns an {@code Exceptional} describing the value of this
+   *         {@code Exceptional}, if a value is present, otherwise an
+   *         {@code Exceptional} produced by the supplying function.
    * @throws NullPointerException if the supplying function is {@code null} or
    *         produces a {@code null} result
-   * @since 9
    */
   public Exceptional<T> or(Supplier<? extends Exceptional<? extends T>> supplier) {
       Objects.requireNonNull(supplier);
@@ -132,6 +131,23 @@ public final class Exceptional<T> {
     return other.get();
   }
 
+  /**
+    * If a value is present, returns an {@code Exceptional} describing (as if by
+    * {@link #ofNullable}) the result of applying the given mapping function to
+    * the value, otherwise returns an empty {@code Exceptional}.
+    *
+    * <p>If the mapping function returns a {@code null} result then this method
+    * returns an empty {@code Exceptional}.
+    *
+    * @param mapper the mapping function to apply to a value, if present
+    * @param <U> The type of the value returned from the mapping function
+    * @return an {@code Exceptional} describing the result of applying a mapping
+    *         function to the value of this {@code Exceptional}, if a value is
+    *         present, otherwise an empty {@code Exceptional}; if the mapping
+    *         function throws an exception, returns an {@code Exceptional} with
+    *         the exception.
+    * @throws NullPointerException if the mapping function is {@code null}
+    */
   public <U> Exceptional<U> map(Function<? super T, ? extends U> mapper) {
     Objects.requireNonNull(mapper);
 
