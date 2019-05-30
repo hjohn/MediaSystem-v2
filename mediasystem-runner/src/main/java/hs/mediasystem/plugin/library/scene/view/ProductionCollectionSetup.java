@@ -26,7 +26,7 @@ public class ProductionCollectionSetup extends AbstractSetup<Production, Product
 
   @Override
   public ObservableList<MediaItem<Production>> getItems(ProductionCollectionPresentation presentation) {
-    return FXCollections.observableList(presentation.productionCollection.getProductions().stream()
+    return FXCollections.observableList(presentation.productionCollection.getItems().stream()
       .map(p -> mediaItemFactory.create(p, null))
       .collect(Collectors.toList()));
   }
