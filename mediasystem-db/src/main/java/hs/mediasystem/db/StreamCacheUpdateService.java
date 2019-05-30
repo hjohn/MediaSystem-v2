@@ -3,15 +3,19 @@ package hs.mediasystem.db;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.IdentifierCollection;
+import hs.mediasystem.ext.basicmediatypes.services.QueryService.Result;
 import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
 import hs.mediasystem.mediamanager.MediaIdentification;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.AutoReentrantLock;
 import hs.mediasystem.util.AutoReentrantLock.Key;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.NamedThreadFactory;
+import hs.mediasystem.util.RuntimeIOException;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.Tuple;
 import hs.mediasystem.util.Tuple.Tuple2;
@@ -19,8 +23,10 @@ import hs.mediasystem.util.Tuple.Tuple3;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -106,12 +112,8 @@ public class StreamCacheUpdateService {
 
           MediaIdentification mediaIdentification = identificationService.identify(stream, source.getDataSourceNames());
 
-          try(Key key2 = storeConsistencyLock.lock()) {
-            updateCacheWithIdentification(mediaIdentification, incremental, false);
-
-            streamStore.markEnriched(streamId);
-          }
-
+          fetchAndStoreCollectionDescriptors(mediaIdentification);
+          updateCacheWithIdentification(mediaIdentification, incremental, false);
           logEnrichmentResult(mediaIdentification, incremental);
         }
       }
@@ -119,6 +121,22 @@ public class StreamCacheUpdateService {
         WORKLOAD.complete();
       }
     });
+  }
+
+  private void fetchAndStoreCollectionDescriptors(MediaIdentification mediaIdentification) {
+    mediaIdentification.getResults().stream()
+      .flatMap(Exceptional::ignoreAllAndStream)
+      .filter(r -> r.a.getDataSource().getType().equals(MediaType.of("COLLECTION")))
+      .map(IdentifierCollection.class::cast)
+      .map(IdentifierCollection::getItems)
+      .flatMap(Collection::stream)
+      .filter(identifier -> descriptorStore.get(identifier) == null)
+      .forEach(identifier -> {
+        identificationService.query(identifier)
+          .handle(RuntimeIOException.class, e -> LOGGER.warning("Exception while fetching descriptor for " + identifier + ": " + Throwables.formatAsOneLine(e)))
+          .map(Result::getMediaDescriptor)
+          .ifPresent(descriptorStore::add);
+      });
   }
 
   public synchronized void update(long importSourceId, List<Exceptional<List<BasicStream>>> rootResults) {
@@ -177,6 +195,7 @@ public class StreamCacheUpdateService {
 
       MediaIdentification mediaIdentification = identificationService.identify(stream, source.getDataSourceNames());
 
+      fetchAndStoreCollectionDescriptors(mediaIdentification);
       updateCacheWithIdentification(mediaIdentification, false, true);
       logEnrichmentResult(mediaIdentification, false);
 
@@ -209,20 +228,26 @@ public class StreamCacheUpdateService {
 
   private void updateCacheWithIdentification(MediaIdentification mediaIdentification, boolean incremental, boolean replace) {
     try(Key key = storeConsistencyLock.lock()) {
+      StreamID streamId = mediaIdentification.getStream().getId();
       boolean hasExceptions = mediaIdentification.getResults().stream().filter(Exceptional::isException).findAny().isPresent();
 
+      // Create final records to store:
       Set<Tuple3<Identifier, Identification, MediaDescriptor>> records =
         replace || (!incremental && !hasExceptions) ?
           mediaIdentification.getResults().stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toSet()) :
           createMergedRecords(mediaIdentification.getStream(), mediaIdentification.getResults().stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toSet()));
 
-      streamStore.putIdentifications(mediaIdentification.getStream().getId(), records.stream().collect(Collectors.toMap(t -> t.a, t -> t.b)));
+      // Store identifiers with stream:
+      streamStore.putIdentifications(streamId, records.stream().collect(Collectors.toMap(t -> t.a, t -> t.b)));
 
-      for(Tuple3<Identifier, Identification, MediaDescriptor> record : records) {
-        if(record.c != null) {
-          descriptorStore.add(record.c);
-        }
-      }
+      // Store descriptors in descriptor store:
+      records.stream()
+        .map(r -> r.c)
+        .filter(Objects::nonNull)
+        .forEach(descriptorStore::add);
+
+      // Mark enriched
+      streamStore.markEnriched(streamId);
     }
   }
 
