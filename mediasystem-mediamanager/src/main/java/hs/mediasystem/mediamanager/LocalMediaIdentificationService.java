@@ -124,4 +124,9 @@ public class LocalMediaIdentificationService {
       .map(e -> e.map(t -> Tuple.of(t.a, t.b, t.c == null ? null : t.c.getMediaDescriptor())))
       .collect(Collectors.toSet());
   }
+
+  public Exceptional<Result<MediaDescriptor>> query(Identifier identifier) {
+    return Exceptional.ofNullable(queryServicesByDataSource.get(identifier.getDataSource()))
+      .map(qs -> qs.query(identifier));
+  }
 }
