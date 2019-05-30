@@ -47,7 +47,7 @@ public class TheMovieDatabase {
       return getURL(new URL("http://api.themoviedb.org/" + query + "?api_key=" + apiKey + sb.toString()));
     }
     catch(RuntimeIOException | IOException e) {
-      throw new RuntimeException("While executing query: " + query + "; parameters=" + Arrays.toString(parameters), e);
+      throw new RuntimeIOException("While executing query: " + query + "; parameters=" + Arrays.toString(parameters), e);
     }
   }
 
