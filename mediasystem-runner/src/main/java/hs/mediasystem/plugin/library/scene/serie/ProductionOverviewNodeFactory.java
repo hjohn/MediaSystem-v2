@@ -438,7 +438,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
             Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.rootItem)),
             Buttons.create("Recommendations", e -> navigateToRecommendations(e))
           );
-          if(presentation.rootItem.getData() instanceof Movie && ((Movie)presentation.rootItem.getData()).getCollection() != null) {
+          if(presentation.rootItem.getData() instanceof Movie && ((Movie)presentation.rootItem.getData()).getCollectionDetails() != null) {
             hbox.getChildren().add(Buttons.create("Collection", e -> navigateToCollection(e)));
           }
           break;
@@ -465,7 +465,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       @SuppressWarnings("unchecked")
       MediaItem<Movie> movieItem = (MediaItem<Movie>)presentation.rootItem;
 
-      PresentationLoader.navigate(event, () -> productionCollectionPresentationFactory.create(movieItem.getData().getCollection().getIdentifier()));
+      PresentationLoader.navigate(event, () -> productionCollectionPresentationFactory.create(movieItem.getData().getCollectionDetails().getIdentifier()));
     }
 
     private void navigateToRecommendations(ActionEvent event) {

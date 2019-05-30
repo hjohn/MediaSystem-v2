@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
@@ -43,14 +43,18 @@ public class ObjectFactory {
     Number runtime = node.path("runtime").numberValue();
 
     JsonNode collectionPath = node.path("belongs_to_collection");
-    ProductionCollection chronology = null;
+    CollectionDetails collectionDetails = null;
 
     if(collectionPath.isObject()) {
-      chronology = new ProductionCollection(
-        new Identifier(DataSources.TMDB_CHRONOLOGY, collectionPath.path("id").asText()),
-        collectionPath.path("name").asText(),
-        tmdb.createImageURI(collectionPath.path("poster_path").textValue(), "original"),
-        tmdb.createImageURI(collectionPath.path("backdrop_path").textValue(), "original")
+      collectionDetails = new CollectionDetails(
+        new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText()),
+        new Details(
+          collectionPath.path("name").asText(),
+          null,
+          null,
+          tmdb.createImageURI(collectionPath.path("poster_path").textValue(), "original"),
+          tmdb.createImageURI(collectionPath.path("backdrop_path").textValue(), "original")
+        )
       );
     }
 
@@ -65,7 +69,7 @@ public class ObjectFactory {
       node.path("popularity").doubleValue(),
       node.path("tagline").textValue(),
       toMovieState(node.path("status").textValue()),
-      chronology
+      collectionDetails
     );
   }
 

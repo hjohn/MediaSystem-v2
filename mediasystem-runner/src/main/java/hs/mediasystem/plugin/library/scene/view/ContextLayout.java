@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
+import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
@@ -97,10 +98,11 @@ public class ContextLayout {
 
   public BasePanel create(ProductionCollection collection) {
     BasePanel panel = new BasePanel();
+    Details details = collection.getCollectionDetails().getDetails();
 
-    panel.title.set(collection.getName());
-    panel.overview.set(collection.getOverview());
-    panel.imageURI.set(collection.getImage());
+    panel.title.set(details.getName());
+    panel.overview.set(details.getDescription());
+    panel.imageURI.set(details.getImage());
 
     return panel;
   }

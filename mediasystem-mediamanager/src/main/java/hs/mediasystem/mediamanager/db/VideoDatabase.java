@@ -1,7 +1,9 @@
 package hs.mediasystem.mediamanager.db;
 
 import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.VideoLink;
+import hs.mediasystem.ext.basicmediatypes.domain.IdentifierCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
@@ -15,9 +17,12 @@ import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
+import hs.mediasystem.mediamanager.DescriptorStore;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -31,6 +36,7 @@ public class VideoDatabase {
   @Inject private List<PersonalProfileQueryService> personalProfileQueryServices;
   @Inject private List<ProductionCollectionQueryService> productionCollectionQueryServices;
   @Inject private List<Top100QueryService> top100QueryServices;
+  @Inject private DescriptorStore descriptorStore;
 
   public List<PersonRole> queryRoles(Identifier identifier) {
     for(RolesQueryService rolesQueryService : rolesQueryServices) {
@@ -66,6 +72,22 @@ public class VideoDatabase {
   }
 
   public ProductionCollection queryProductionCollection(Identifier identifier) {
+    MediaDescriptor mediaDescriptor = descriptorStore.get(identifier);
+
+    if(mediaDescriptor instanceof IdentifierCollection) {  // If cached, get it from cache instead
+      IdentifierCollection identifierCollection = (IdentifierCollection)mediaDescriptor;
+
+      return new ProductionCollection(
+        identifierCollection.getCollectionDetails(),
+        identifierCollection.getItems().stream()
+          .map(descriptorStore::get)
+          .filter(Objects::nonNull)
+          .filter(Production.class::isInstance)
+          .map(Production.class::cast)
+          .collect(Collectors.toList())
+      );
+    }
+
     return productionCollectionQueryServices.get(0).query(identifier);
   }
 

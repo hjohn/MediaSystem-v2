@@ -2,9 +2,10 @@ package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.db.SettingsStore;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
+import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -36,7 +37,7 @@ public abstract class AbstractCollectionSetup<T extends MediaDescriptor, P exten
   protected void configureCellFactory(MediaGridViewCellFactory<T> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
-    cellFactory.setSideBarCenterBindProvider(item -> new SimpleStringProperty(Optional.ofNullable(item.getData()).filter(Movie.class::isInstance).map(Movie.class::cast).map(Movie::getCollection).map(ProductionCollection::getName).orElse("")));
+    cellFactory.setSideBarCenterBindProvider(item -> new SimpleStringProperty(Optional.ofNullable(item.getData()).filter(Movie.class::isInstance).map(Movie.class::cast).map(Movie::getCollectionDetails).map(CollectionDetails::getDetails).map(Details::getName).orElse("")));
     cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
   }

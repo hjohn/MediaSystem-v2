@@ -15,11 +15,11 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.ImageURI;
 
 import java.io.IOException;
 import java.util.List;
@@ -86,8 +86,8 @@ public class MediaSystemDomainModule extends SimpleModule {
 
   static class ProductionCollectionMixin extends ProductionCollection {
     @JsonCreator
-    protected ProductionCollectionMixin(boolean complete, Identifier identifier, String name, String overview, ImageURI image, ImageURI backdrop, List<Production> productions) {
-      super(complete, identifier, name, overview, image, backdrop, productions);
+    protected ProductionCollectionMixin(boolean complete, CollectionDetails collectionDetails, List<Production> productions) {
+      super(complete, collectionDetails, productions);
     }
   }
 }
