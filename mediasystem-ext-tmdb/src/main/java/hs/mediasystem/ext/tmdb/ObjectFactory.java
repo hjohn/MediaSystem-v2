@@ -47,7 +47,7 @@ public class ObjectFactory {
 
     if(collectionPath.isObject()) {
       chronology = new ProductionCollection(
-        new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText()),
+        new Identifier(DataSources.TMDB_CHRONOLOGY, collectionPath.path("id").asText()),
         collectionPath.path("name").asText(),
         tmdb.createImageURI(collectionPath.path("poster_path").textValue(), "original"),
         tmdb.createImageURI(collectionPath.path("backdrop_path").textValue(), "original")

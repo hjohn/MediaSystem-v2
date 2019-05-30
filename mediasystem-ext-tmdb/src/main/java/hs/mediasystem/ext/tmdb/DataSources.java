@@ -15,6 +15,6 @@ public class DataSources {
 
   public static final DataSource TMDB_PERSON = DataSource.instance(MediaType.of("PERSON"), "TMDB");
   public static final DataSource TMDB_CREDIT = DataSource.instance(MediaType.of("CREDIT"), "TMDB");
-  public static final DataSource TMDB_COLLECTION = DataSource.instance(MediaType.of("CHRONOLOGY"), "TMDB");
+  public static final DataSource TMDB_CHRONOLOGY = DataSource.instance(MediaType.of("CHRONOLOGY"), "TMDB");
   public static final DataSource TMDB_KEYWORD = DataSource.instance(MediaType.of("KEYWORD"), "TMDB");
 }

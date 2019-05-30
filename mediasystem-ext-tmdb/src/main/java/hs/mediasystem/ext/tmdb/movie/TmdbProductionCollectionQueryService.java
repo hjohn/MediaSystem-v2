@@ -27,7 +27,7 @@ public class TmdbProductionCollectionQueryService implements ProductionCollectio
     node.path("parts").forEach(p -> productions.add(objectFactory.toProduction(p, DataSources.TMDB_MOVIE)));
 
     return new ProductionCollection(
-      new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText()),
+      new Identifier(DataSources.TMDB_CHRONOLOGY, node.path("id").asText()),
       node.path("name").asText(),
       node.path("overview").asText(),
       tmdb.createImageURI(node.path("poster_path").textValue(), "original"),
