@@ -48,7 +48,7 @@ public class DatabaseDescriptorStore implements DescriptorStore {
     LOGGER.fine("Loaded " + cache.size() + " cached descriptor records, deleted " + badIds.size() + " bad ones");
   }
 
-  void add(MediaDescriptor descriptor) {
+  synchronized void add(MediaDescriptor descriptor) {
     CachedDescriptor cachedDescriptor = new CachedDescriptor(Instant.now(), descriptor);
 
     database.store(codec.toRecord(cachedDescriptor));
@@ -57,7 +57,7 @@ public class DatabaseDescriptorStore implements DescriptorStore {
   }
 
   @Override
-  public MediaDescriptor get(Identifier identifier) {
+  public synchronized MediaDescriptor get(Identifier identifier) {
     CachedDescriptor cd = cache.get(identifier);
 
     return cd == null ? null : cd.getDescriptor();
