@@ -42,7 +42,7 @@ import javax.inject.Singleton;
 public class StreamCacheUpdateService {
   private static final Logger LOGGER = Logger.getLogger(StreamCacheUpdateService.class.getName());
   private static final LinkedBlockingQueue<Runnable> QUEUE = new LinkedBlockingQueue<>();
-  private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, QUEUE, new NamedThreadFactory("StreamCacheUpdateService", Thread.NORM_PRIORITY - 2, true));
+  private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, QUEUE, new NamedThreadFactory("StreamCacheUpdateSvc", Thread.NORM_PRIORITY - 2, true));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Downloading Metadata");
 
   @Inject private LocalMediaIdentificationService identificationService;
@@ -126,7 +126,8 @@ public class StreamCacheUpdateService {
   private void fetchAndStoreCollectionDescriptors(MediaIdentification mediaIdentification) {
     mediaIdentification.getResults().stream()
       .flatMap(Exceptional::ignoreAllAndStream)
-      .filter(r -> r.a.getDataSource().getType().equals(MediaType.of("COLLECTION")))
+      .filter(t -> t.a.getDataSource().getType().equals(MediaType.of("COLLECTION")))
+      .map(t -> t.c)
       .map(IdentifierCollection.class::cast)
       .map(IdentifierCollection::getItems)
       .flatMap(Collection::stream)
