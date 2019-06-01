@@ -18,6 +18,7 @@ public class MediaItemTagManager {
     MediaItemTagManager mediaItemTagManager = new MediaItemTagManager();
 
     mediaItemTagManager.of(null).tag(Tags.WATCHED).set(true);
+    @SuppressWarnings("unused")
     boolean b = mediaItemTagManager.of(null).tag(Tags.WATCHED).get();
   }
 

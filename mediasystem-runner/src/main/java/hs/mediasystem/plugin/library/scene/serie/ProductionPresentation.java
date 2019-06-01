@@ -126,7 +126,6 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     this.episodesPresentation = rootItem.getData() instanceof Serie ? episodesPresentationProvider.get().set((MediaItem<Serie>)rootItem) : null;
     this.episodeItems = episodesPresentation == null ? null : episodesPresentation.episodeItems;
 
-    @SuppressWarnings("unchecked")
     Val<MediaItem<?>> episodeOrMovieItem = episodeItems == null ? Val.constant(rootItem) : (Val<MediaItem<?>>)(Val<?>)Val.wrap(episodeItem);
 
     this.play = playActionFactory.create(episodeOrMovieItem);

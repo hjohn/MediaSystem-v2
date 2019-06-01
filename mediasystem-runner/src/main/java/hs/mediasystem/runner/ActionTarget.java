@@ -77,7 +77,10 @@ public class ActionTarget {
 
     if(exposedControl instanceof ExposedMethod) {
       if(action.equals("trigger")) {
-        return ((ExposedMethod<Object, Object>)exposedControl).call(parent, event);
+        @SuppressWarnings("unchecked")
+        ExposedMethod<Object, Object> exposedMethod = (ExposedMethod<Object, Object>)exposedControl;
+
+        return exposedMethod.call(parent, event);
       }
 
       throw new IllegalStateException("Unknown action '" + action + "' for: " + this);

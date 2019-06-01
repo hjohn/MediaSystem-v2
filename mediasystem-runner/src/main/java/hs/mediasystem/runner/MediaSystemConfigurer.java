@@ -2,7 +2,6 @@ package hs.mediasystem.runner;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
-import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.DatabaseStreamPrintProvider;
 import hs.mediasystem.db.ScannerController;
@@ -77,10 +76,9 @@ public class MediaSystemConfigurer {
       pluginManager.loadPluginAndScan(URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-scanners/target/classes/").toURL());
       pluginManager.loadPluginAndScan(URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-tmdb/target/classes/").toURL());
       pluginManager.loadPluginAndScan(URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-local/target/classes/").toURL());
-      Plugin p = pluginManager.loadPluginAndScan(
+      pluginManager.loadPluginAndScan(
         URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/classes/").toURL(),
         new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/dependencies-only.jar")
-  //      URI.create("file://P/Dev/Workspaces/workspace-java8/mediasystem-ext-vlc/target/dependencies-only.jar").toURL()
       );
     }
 

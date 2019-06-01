@@ -142,7 +142,7 @@ public class ActionTargetProviderTest {
       stopCalled.set(true);
     }
 
-    public void stop2(Event event) {
+    public void stop2(@SuppressWarnings("unused") Event event) {
       stop2Called.set(true);
     }
 
