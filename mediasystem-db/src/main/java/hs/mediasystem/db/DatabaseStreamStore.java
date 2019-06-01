@@ -94,7 +94,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
   @Override
   public synchronized Map<BasicStream, Map<Identifier, Identification>> findIdentifiersByStreams(MediaType type, String tag) {
     return stream(type, tag)
-      .collect(Collectors.toMap(Function.identity(), s -> findIdentifications(s.getId())));
+      .collect(Collectors.toMap(Function.identity(), s -> findIdentifications(s.getId(), type)));
   }
 
   @Override
@@ -105,6 +105,16 @@ public class DatabaseStreamStore implements BasicStreamStore {
   @Override
   public synchronized StreamSource findStreamSource(StreamID streamId) {
     return importSourceProvider.getStreamSource(cache.get(streamId).getImportSourceId() & 0xffff).getStreamSource();
+  }
+
+  public synchronized Map<Identifier, Identification> findIdentifications(StreamID streamId, MediaType mediaType) {
+    CachedStream cachedStream = cache.get(streamId);
+
+    if(cachedStream == null) {
+      return null;
+    }
+
+    return cachedStream.getIdentifiedStream().getIdentifications().entrySet().stream().filter(e -> e.getKey().getDataSource().getType().equals(mediaType)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   @Override
