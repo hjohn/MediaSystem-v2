@@ -28,9 +28,9 @@ public class TmdbCollectionQueryService extends AbstractQueryService<IdentifierC
   @Override
   public Result<IdentifierCollection> query(Identifier identifier) {
     JsonNode node = tmdb.query("3/collection/" + identifier.getId());
-    List<Identifier> productions = new ArrayList<>();
+    List<Identifier> items = new ArrayList<>();
 
-    node.path("parts").forEach(p -> productions.add(
+    node.path("parts").forEach(p -> items.add(
       new ProductionIdentifier(DataSources.TMDB_MOVIE, p.path("id").asText())
     ));
 
@@ -45,7 +45,7 @@ public class TmdbCollectionQueryService extends AbstractQueryService<IdentifierC
           tmdb.createImageURI(node.path("backdrop_path").textValue(), "original")
         )
       ),
-      productions
+      items
     ));
   }
 }
