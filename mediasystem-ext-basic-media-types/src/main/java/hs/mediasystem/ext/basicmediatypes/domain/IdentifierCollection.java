@@ -6,8 +6,8 @@ import java.util.List;
 
 public class IdentifierCollection extends AbstractCollection<Identifier> {
 
-  public IdentifierCollection(CollectionDetails collectionDetails, List<Identifier> identifiers) {
-    super(collectionDetails, identifiers);
+  public IdentifierCollection(CollectionDetails collectionDetails, List<Identifier> items) {
+    super(collectionDetails, items);
   }
 
 }

@@ -9,8 +9,8 @@ import java.util.List;
 public class ProductionCollection extends AbstractCollection<Production> implements Partial {
   private final boolean complete;
 
-  protected ProductionCollection(boolean complete, CollectionDetails collectionDetails, List<Production> productions) {
-    super(collectionDetails, productions);
+  protected ProductionCollection(boolean complete, CollectionDetails collectionDetails, List<Production> items) {
+    super(collectionDetails, items);
 
     this.complete = complete;
   }
