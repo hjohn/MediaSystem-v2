@@ -34,8 +34,6 @@ public class MovieCollectionPresentation extends GridViewPresentation<Movie> {
     new Filter<>("released-recently", mi -> Optional.ofNullable(mi.getProduction().getDate()).filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
-  public final ObservableList<MediaItem<Movie>> items;
-
   @Singleton
   public static class Factory {
     @Inject private MediaService mediaService;
@@ -55,8 +53,6 @@ public class MovieCollectionPresentation extends GridViewPresentation<Movie> {
   }
 
   protected MovieCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ObservableList<MediaItem<Movie>> items) {
-    super(settingsStore, mediaService, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED));
-
-    this.items = items;
+    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED));
   }
 }

@@ -13,6 +13,10 @@ import hs.mediasystem.util.NaturalLanguage;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -37,18 +41,27 @@ public class PersonParticipationsPresentation extends GridViewPresentation<Produ
     @Inject private MediaService mediaService;
     @Inject private VideoDatabase videoDatabase;
     @Inject private SettingsStore settingsStore;
+    @Inject private MediaItem.Factory mediaItemFactory;
 
     public PersonParticipationsPresentation create(Person person) {
+      PersonalProfile personalProfile = videoDatabase.queryPersonalProfile(person.getIdentifier());
+      ObservableList<MediaItem<ProductionRole>> items = FXCollections.observableList(personalProfile.getProductionRoles().stream().map(this::wrap).collect(Collectors.toList()));
+
       return new PersonParticipationsPresentation(
         settingsStore,
         mediaService,
-        videoDatabase.queryPersonalProfile(person.getIdentifier())
+        personalProfile,
+        items
       );
+    }
+
+    private MediaItem<ProductionRole> wrap(ProductionRole data) {
+      return mediaItemFactory.create(data, null);
     }
   }
 
-  protected PersonParticipationsPresentation(SettingsStore settingsStore, MediaService mediaService, PersonalProfile personalProfile) {
-    super(settingsStore, mediaService, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+  protected PersonParticipationsPresentation(SettingsStore settingsStore, MediaService mediaService, PersonalProfile personalProfile, ObservableList<MediaItem<ProductionRole>> items) {
+    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
 
     this.personalProfile = personalProfile;
   }

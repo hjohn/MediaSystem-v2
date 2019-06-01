@@ -1,10 +1,8 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.scanner.api.MediaType;
 
-import javafx.collections.ObservableList;
 import javafx.scene.Node;
 
 import javax.inject.Singleton;
@@ -15,11 +13,6 @@ public class SerieCollectionSetup extends AbstractCollectionSetup<Serie, SerieCo
 
   public SerieCollectionSetup() {
     super(SERIE);
-  }
-
-  @Override
-  protected ObservableList<MediaItem<Serie>> getItems(SerieCollectionPresentation presentation) {
-    return presentation.items;
   }
 
   @Override

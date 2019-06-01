@@ -32,6 +32,7 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
   public final ObservableList<StateFilter> availableStateFilters = FXCollections.observableArrayList();
 
   public final Var<MediaItem<?>> selectedItem = Var.newSimpleVar(null);
+  public final ObservableList<MediaItem<T>> items;
 
   private final MediaService mediaService;
 
@@ -39,8 +40,9 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     ALL, AVAILABLE, UNWATCHED
   }
 
-  protected GridViewPresentation(SettingsStore settingsStore, MediaService mediaService, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
+  protected GridViewPresentation(SettingsStore settingsStore, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
     this.mediaService = mediaService;
+    this.items = items;
 
     this.availableSortOrders.setAll(sortOrders);
     this.availableFilters.setAll(filters);

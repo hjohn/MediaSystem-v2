@@ -36,8 +36,6 @@ public class SerieCollectionPresentation extends GridViewPresentation<Serie> {
     new Filter<>("watched-recently", mi -> Optional.ofNullable(mi.lastWatchedTime.get()).filter(d -> d.isAfter(LocalDateTime.now().minusYears(2))).isPresent())
   );
 
-  public final ObservableList<MediaItem<Serie>> items;
-
   @Singleton
   public static class Factory {
     @Inject private MediaService mediaService;
@@ -57,8 +55,6 @@ public class SerieCollectionPresentation extends GridViewPresentation<Serie> {
   }
 
   protected SerieCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ObservableList<MediaItem<Serie>> items) {
-    super(settingsStore, mediaService, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED));
-
-    this.items = items;
+    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED));
   }
 }

@@ -13,6 +13,10 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -36,18 +40,26 @@ public class ProductionCollectionPresentation extends GridViewPresentation<Produ
     @Inject private MediaService mediaService;
     @Inject private VideoDatabase videoDatabase;
     @Inject private SettingsStore settingsStore;
+    @Inject private MediaItem.Factory mediaItemFactory;
 
     public ProductionCollectionPresentation create(Identifier collectionIdentifier) {
+      ProductionCollection productionCollection = videoDatabase.queryProductionCollection(collectionIdentifier);
+
+      ObservableList<MediaItem<Production>> items = FXCollections.observableList(productionCollection.getItems().stream()
+        .map(p -> mediaItemFactory.create(p, null))
+        .collect(Collectors.toList()));
+
       return new ProductionCollectionPresentation(
         settingsStore,
         mediaService,
-        videoDatabase.queryProductionCollection(collectionIdentifier)
+        productionCollection,
+        items
       );
     }
   }
 
-  protected ProductionCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ProductionCollection productionCollection) {
-    super(settingsStore, mediaService, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+  protected ProductionCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ProductionCollection productionCollection, ObservableList<MediaItem<Production>> items) {
+    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
 
     this.productionCollection = productionCollection;
   }

@@ -8,10 +8,7 @@ import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.Node;
 
 import javax.inject.Inject;
@@ -22,14 +19,6 @@ public class ProductionCollectionSetup extends AbstractSetup<Production, Product
   @Inject private ContextLayout contextLayout;
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
-  @Inject private MediaItem.Factory mediaItemFactory;
-
-  @Override
-  public ObservableList<MediaItem<Production>> getItems(ProductionCollectionPresentation presentation) {
-    return FXCollections.observableList(presentation.productionCollection.getItems().stream()
-      .map(p -> mediaItemFactory.create(p, null))
-      .collect(Collectors.toList()));
-  }
 
   @Override
   protected void configureCellFactory(MediaGridViewCellFactory<Production> cellFactory) {

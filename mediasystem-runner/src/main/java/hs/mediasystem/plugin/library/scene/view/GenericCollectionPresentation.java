@@ -17,8 +17,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 public class GenericCollectionPresentation extends GridViewPresentation<Production> {
-  public final ObservableList<MediaItem<Production>> items;
-
   private static final List<SortOrder<Production>> SORT_ORDERS = List.of(
     new SortOrder<Production>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())),
     new SortOrder<Production>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL)))
@@ -40,8 +38,6 @@ public class GenericCollectionPresentation extends GridViewPresentation<Producti
   }
 
   protected GenericCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ObservableList<MediaItem<Production>> items) {
-    super(settingsStore, mediaService, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
-
-    this.items = items;
+    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
   }
 }

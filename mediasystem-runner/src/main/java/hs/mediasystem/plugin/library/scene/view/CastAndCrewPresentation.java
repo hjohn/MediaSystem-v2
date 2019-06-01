@@ -11,12 +11,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javafx.collections.FXCollections;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 public class CastAndCrewPresentation extends GridViewPresentation<PersonRole> {
   public final MediaItem<?> mediaItem;
-  public final List<MediaItem<PersonRole>> participants;
 
   private static final List<SortOrder<PersonRole>> SORT_ORDERS = List.of(
     new SortOrder<PersonRole>("best", Comparator.comparing(mediaItem -> mediaItem.getData().getOrder()))
@@ -48,9 +49,8 @@ public class CastAndCrewPresentation extends GridViewPresentation<PersonRole> {
   }
 
   protected CastAndCrewPresentation(SettingsStore settingsStore, MediaService mediaService, MediaItem<?> mediaItem, List<MediaItem<PersonRole>> participants) {
-    super(settingsStore, mediaService, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL));
+    super(settingsStore, mediaService, FXCollections.observableList(participants), SORT_ORDERS, FILTERS, List.of(StateFilter.ALL));
 
     this.mediaItem = mediaItem;
-    this.participants = participants;
   }
 }

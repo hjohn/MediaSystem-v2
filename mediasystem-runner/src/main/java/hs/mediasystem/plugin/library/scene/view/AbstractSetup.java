@@ -93,7 +93,7 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
       areaPane.add(Area.CONTEXT_PANEL, contextPanel);
     }
 
-    ObservableList<MediaItem<T>> unsortedItems = getItems(presentation);
+    ObservableList<MediaItem<T>> unsortedItems = presentation.items;
 
     FilteredList<MediaItem<T>> filteredList = setupFiltering(presentation, unsortedItems, listView);
     SortedList<MediaItem<T>> sortedList = setupSorting(presentation, filteredList);
@@ -300,7 +300,6 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
 
   protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation);
   protected abstract void configureCellFactory(MediaGridViewCellFactory<T> cellFactory);
-  protected abstract ObservableList<MediaItem<T>> getItems(P presentation);
 
   protected void configureGridView(@SuppressWarnings("unused") MediaGridView<MediaItem<T>> gridView) {
   }

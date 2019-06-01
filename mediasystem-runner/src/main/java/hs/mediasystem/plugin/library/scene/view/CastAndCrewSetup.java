@@ -6,8 +6,6 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.Node;
 
 import javax.inject.Inject;
@@ -18,11 +16,6 @@ public class CastAndCrewSetup extends AbstractSetup<PersonRole, CastAndCrewPrese
   @Inject private ContextLayout contextLayout;
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private PersonParticipationsPresentation.Factory personParticipationsPresentationFactory;
-
-  @Override
-  public ObservableList<MediaItem<PersonRole>> getItems(CastAndCrewPresentation presentation) {
-    return FXCollections.observableList(presentation.participants);
-  }
 
   @Override
   protected void configureCellFactory(MediaGridViewCellFactory<PersonRole> cellFactory) {
