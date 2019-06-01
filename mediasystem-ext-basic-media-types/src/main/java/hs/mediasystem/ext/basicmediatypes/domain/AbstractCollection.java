@@ -15,9 +15,16 @@ public abstract class AbstractCollection<T> implements MediaDescriptor {
     if(collectionDetails == null) {
       throw new IllegalArgumentException("collectionDetails cannot be null");
     }
+    if(items == null || items.isEmpty()) {
+      throw new IllegalArgumentException("items cannot be null or empty");
+    }
 
     this.collectionDetails = collectionDetails;
     this.items = Collections.unmodifiableList(new ArrayList<>(items));
+
+    if(items.contains(null)) {
+      throw new IllegalArgumentException("items cannot contain nulls");
+    }
   }
 
   @Override
