@@ -1,11 +1,10 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;
 
-public class Release implements MediaDescriptor {
+public class Release implements DetailedMediaDescriptor {
   private final ProductionIdentifier identifier;
   private final Details details;
   private final Reception reception;
@@ -28,6 +27,7 @@ public class Release implements MediaDescriptor {
     return identifier;
   }
 
+  @Override
   public Details getDetails() {
     return details;
   }
