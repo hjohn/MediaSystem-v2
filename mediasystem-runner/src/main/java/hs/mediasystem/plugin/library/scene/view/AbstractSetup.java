@@ -4,8 +4,6 @@ import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
-import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.StateFilter;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.ResourceManager;
@@ -17,7 +15,7 @@ import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.Labels;
 
-import java.util.function.Predicate;
+import java.util.Objects;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -29,8 +27,6 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
@@ -76,8 +72,6 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
       }
     });
 
-    configureGridView(listView);
-
     areaPane.add(Area.CENTER, listView);
 
     MediaGridViewCellFactory<T> cellFactory = new MediaGridViewCellFactory<>();
@@ -93,40 +87,35 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
       areaPane.add(Area.CONTEXT_PANEL, contextPanel);
     }
 
-    ObservableList<MediaItem<T>> unsortedItems = presentation.items;
-
-    FilteredList<MediaItem<T>> filteredList = setupFiltering(presentation, unsortedItems, listView);
-    SortedList<MediaItem<T>> sortedList = setupSorting(presentation, filteredList);
-
-    listView.setItems(sortedList);
+    listView.setItems(presentation.items);
     listView.setCellFactory(cellFactory);
     listView.requestFocus();
 
-    setupStatusBar(areaPane, presentation, sortedList, unsortedItems);
+    setupStatusBar(areaPane, presentation, presentation.items, presentation.inputItems);
 
-    String selectedId = getSelectedId(presentation);
-    int selectedIndex = 0;
+    listView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> presentation.selectItem(current));
 
-    if(selectedId != null) {
-      ObservableList<MediaItem<T>> items = listView.getItems();
+    EventStreams.changesOf(presentation.selectedItem)
+      .conditionOnShowing(listView)
+      .observe(c -> {
+        updateSelectedItem(listView, presentation, c.getNewValue());
+      });
 
-      for(int i = 0; i < items.size(); i++) {
-        MediaItem<T> mediaItem = items.get(i);
+    updateSelectedItem(listView, presentation, presentation.selectedItem.getValue());
+  }
 
-        if(mediaItem.getId().equals(selectedId)) {
-          selectedIndex = i;
-          break;
-        }
-      }
+  private void updateSelectedItem(MediaGridView<MediaItem<T>> listView, P presentation, MediaItem<T> selectedItem) {
+    if(Objects.equals(selectedItem, listView.getSelectionModel().getSelectedItem())) {
+      return;
+    }
+
+    int selectedIndex = presentation.items.indexOf(selectedItem);
+
+    if(selectedIndex == -1) {
+      selectedIndex = 0;
     }
 
     listView.getSelectionModel().select(selectedIndex);
-
-    presentation.selectedItem.bind(listView.getSelectionModel().selectedItemProperty());
-  }
-
-  protected String getSelectedId(P presentation) {
-    return presentation.selectedItem.getValue() != null ? presentation.selectedItem.getValue().getId() : null;
   }
 
   public Node createView(P presentation) {
@@ -260,49 +249,8 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
     }
   }
 
-  private FilteredList<MediaItem<T>> setupFiltering(P presentation, ObservableList<MediaItem<T>> items, MediaGridView<MediaItem<T>> listView) {
-    FilteredList<MediaItem<T>> filteredList = new FilteredList<>(items);
-
-    EventStreams.merge(EventStreams.invalidationsOf(presentation.filter), EventStreams.invalidationsOf(presentation.stateFilter))
-      .withDefaultEvent(null)
-      .conditionOnShowing(listView)
-      .observe(e -> {
-        MediaItem<T> selectedItem = listView.getSelectionModel().getSelectedItem();
-        @SuppressWarnings("unchecked")
-        Predicate<MediaItem<?>> predicate = (Predicate<MediaItem<?>>)(Predicate<?>)presentation.filter.getValue().predicate;
-
-        if(presentation.stateFilter.getValue() == StateFilter.UNWATCHED) {  // Exclude viewed and not in collection?
-          predicate = predicate.and(mi -> mi.mediaStatus.get() == MediaStatus.AVAILABLE);
-        }
-        if(presentation.stateFilter.getValue() == StateFilter.AVAILABLE) {  // Exclude not in collection?
-          predicate = predicate.and(mi -> mi.mediaStatus.get() != MediaStatus.UNAVAILABLE);
-        }
-
-        filteredList.setPredicate(predicate);  // Triggers clearing of selected index
-
-        listView.getSelectionModel().select(selectedItem);
-
-        if(listView.getSelectionModel().isEmpty()) {
-          listView.getSelectionModel().select(0);
-        }
-      });
-
-    return filteredList;
-  }
-
-  private SortedList<MediaItem<T>> setupSorting(P presentation, FilteredList<MediaItem<T>> filteredList) {
-    SortedList<MediaItem<T>> sortedList = new SortedList<>(filteredList);
-
-    sortedList.comparatorProperty().bind(Binds.monadic(presentation.sortOrder).map(so -> so.comparator));
-
-    return sortedList;
-  }
-
   protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation);
   protected abstract void configureCellFactory(MediaGridViewCellFactory<T> cellFactory);
-
-  protected void configureGridView(@SuppressWarnings("unused") MediaGridView<MediaItem<T>> gridView) {
-  }
 
   protected Node createContextPanel(@SuppressWarnings("unused") P presentation) {
     return null;

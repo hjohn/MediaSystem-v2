@@ -3,9 +3,11 @@ package hs.mediasystem.plugin.library.scene.view;
 import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.util.javafx.Binds;
 
 import java.util.Comparator;
 import java.util.List;
@@ -14,9 +16,13 @@ import java.util.function.Predicate;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 
+import org.reactfx.EventStreams;
+import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPresentation {
@@ -31,9 +37,13 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
   public final Var<StateFilter> stateFilter = Var.newSimpleVar(StateFilter.ALL);
   public final ObservableList<StateFilter> availableStateFilters = FXCollections.observableArrayList();
 
-  public final Var<MediaItem<?>> selectedItem = Var.newSimpleVar(null);
-  public final ObservableList<MediaItem<T>> items;
+  private final Var<MediaItem<T>> internalSelectedItem = Var.newSimpleVar(null);
 
+  public final Val<MediaItem<T>> selectedItem = internalSelectedItem;
+  public final ObservableList<MediaItem<T>> inputItems;
+  public final FilteredList<MediaItem<T>> items;
+
+  private final SortedList<MediaItem<T>> sortedItems;
   private final MediaService mediaService;
 
   public enum StateFilter {
@@ -42,7 +52,9 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
 
   protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
     this.mediaService = mediaService;
-    this.items = items;
+    this.inputItems = items;
+    this.sortedItems = new SortedList<>(items);  // Sorting first, so we can determine close neighbours when filtering changes
+    this.items = new FilteredList<>(sortedItems);
 
     this.availableSortOrders.setAll(sortOrders);
     this.availableFilters.setAll(filters);
@@ -55,6 +67,13 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     this.sortOrder.addListener(obs -> settingsSource.storeIntSetting("sort-order", sortOrders.indexOf(sortOrder.getValue())));
     this.filter.addListener(obs -> settingsSource.storeIntSetting("filter", availableFilters.indexOf(filter.getValue())));
     this.stateFilter.addListener(obs -> settingsSource.storeIntSetting("state-filter", availableStateFilters.indexOf(stateFilter.getValue())));
+
+    setupLastSelectedTracking(settingsSource);
+    setupSortingAndFiltering();
+  }
+
+  public void selectItem(MediaItem<T> item) {
+    internalSelectedItem.setValue(item);
   }
 
   public BooleanProperty watchedProperty() {
@@ -90,6 +109,94 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
       // 3) Remember, task method may be called async...
     }
 
+    return null;
+  }
+
+  private void setupLastSelectedTracking(SettingsSource settingsSource) {
+    String selectedId = settingsSource.getSetting("last-selected");
+
+    if(selectedId != null) {
+      for(int i = 0; i < inputItems.size(); i++) {
+        MediaItem<T> mediaItem = inputItems.get(i);
+
+        if(mediaItem.getId().equals(selectedId)) {
+          internalSelectedItem.setValue(mediaItem);
+          break;
+        }
+      }
+    }
+
+    selectedItem.addListener((obs, old, current) -> {
+      if(current != null) {
+        settingsSource.storeSetting("last-selected", current.getId());
+      }
+    });
+  }
+
+  private void setupSortingAndFiltering() {
+    sortedItems.comparatorProperty().bind(Binds.monadic(sortOrder).map(so -> so.comparator));
+
+    EventStreams.merge(
+        EventStreams.invalidationsOf(filter),
+        EventStreams.invalidationsOf(stateFilter)
+      )
+      .withDefaultEvent(null)
+      .observe(e -> {
+        Predicate<MediaItem<T>> predicate = filter.getValue().predicate;
+
+        if(stateFilter.getValue() == StateFilter.UNWATCHED) {  // Exclude viewed and not in collection?
+          predicate = predicate.and(mi -> mi.mediaStatus.get() == MediaStatus.AVAILABLE);
+        }
+        if(stateFilter.getValue() == StateFilter.AVAILABLE) {  // Exclude not in collection?
+          predicate = predicate.and(mi -> mi.mediaStatus.get() != MediaStatus.UNAVAILABLE);
+        }
+
+        // Before setting the new filter, first determine which item to select based on what
+        // is currently available:
+        MediaItem<T> itemToSelect = findBestItemToSelect(predicate);
+
+        items.setPredicate(predicate);
+
+        if(itemToSelect == null && !sortedItems.isEmpty()) {
+          itemToSelect = sortedItems.get(0);
+        }
+
+        selectItem(itemToSelect);
+      });
+  }
+
+  private MediaItem<T> findBestItemToSelect(Predicate<MediaItem<T>> predicate) {
+    MediaItem<T> item = selectedItem.getValue();
+
+    // Find an item as close as possible to the current selected item (including
+    // itself) based on the current sort order:
+
+    int previousIndex = sortedItems.indexOf(item);
+    int nextIndex = previousIndex + 1;  // Causes it to prefer selecting an item with a higher index when distance to a lower or higher matching item is equal
+
+    while(previousIndex >= 0 || nextIndex < sortedItems.size()) {
+      if(previousIndex >= 0) {
+        MediaItem<T> candidate = sortedItems.get(previousIndex);
+
+        if(predicate.test(candidate)) {
+          return candidate;
+        }
+      }
+
+      if(nextIndex < sortedItems.size()) {
+        MediaItem<T> candidate = sortedItems.get(nextIndex);
+
+        if(predicate.test(candidate)) {
+          return candidate;
+        }
+      }
+
+      previousIndex--;
+      nextIndex++;
+    }
+
+    // Uh-oh, no item with current filter would also match the new filter; use
+    // null to signal to caller it should select item 0.
     return null;
   }
 
