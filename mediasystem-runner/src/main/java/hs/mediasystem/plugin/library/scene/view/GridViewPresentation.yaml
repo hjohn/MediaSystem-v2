@@ -16,10 +16,15 @@ stateFilter:
   all: "-"
   available: In Collection
   unwatched: Not Watched
+group:
+  none: "-"
+  grouped: "By Collection"
+  ungrouped: "-"
 header:
   order: ORDER
   filter: FILTER
   stateFilter: STATE
+  group: GROUPING
 status-message:
   unfiltered: Showing %d items
   filtered: Showing %d out of %d items
@@ -34,9 +39,12 @@ action-target:
   stateFilter:
     order: 3
     label: State
-  watched:
+  group:
     order: 4
+    label: Grouping
+  watched:
+    order: 5
     label: Watched
   reidentify:
-    order: 5
+    order: 6
     label: Reidentify Media

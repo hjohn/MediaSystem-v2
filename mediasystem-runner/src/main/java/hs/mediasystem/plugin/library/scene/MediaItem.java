@@ -2,9 +2,12 @@ package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.DetailedMediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Release;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
@@ -19,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -72,6 +76,7 @@ public class MediaItem<T extends MediaDescriptor> {
   public final StringProperty productionTitle = new SimpleStringProperty();
   public final StringProperty productionYearRange = new SimpleStringProperty();
   public final StringProperty personName = new SimpleStringProperty();
+  public final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
   public final ObjectBinding<MediaStatus> mediaStatus;
   public final ObjectProperty<LocalDateTime> lastWatchedTime = new SimpleObjectProperty<>();
 
@@ -99,6 +104,10 @@ public class MediaItem<T extends MediaDescriptor> {
 
       @Override
       protected MediaStatus computeValue() {
+        if(MediaItem.this.getData() instanceof ProductionCollection) {
+          return MediaStatus.AVAILABLE;
+        }
+
         return MediaItem.this.streams.isEmpty() ? MediaStatus.UNAVAILABLE :
                    MediaItem.this.watched.get() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE;
       }
@@ -106,11 +115,41 @@ public class MediaItem<T extends MediaDescriptor> {
 
     this.missing = mediaStatus.isEqualTo(MediaStatus.UNAVAILABLE);
 
-    Release release = getRelease();
+    Details details = getDetails();
 
-    if(release != null) {
-      productionTitle.set(release.getName());
-      productionYearRange.set(createYearRange(release));
+    if(details != null) {
+      productionTitle.set(details.getName());
+
+      if(getData() instanceof ProductionCollection) {
+        ProductionCollection productionCollection = (ProductionCollection)getData();
+
+        // Grabs non-future date, but if there is none such date, grabs the highest future date
+        productionCollection.getItems().stream()
+          .map(Production::getDetails)
+          .map(Details::getDate)
+          .filter(Objects::nonNull)
+          .filter(d -> d.isBefore(LocalDate.now()))
+          .max(Comparator.naturalOrder())
+          .ifPresentOrElse(
+            date::set,
+            () -> productionCollection.getItems().stream()
+                    .map(Production::getDetails)
+                    .map(Details::getDate)
+                    .filter(Objects::nonNull)
+                    .max(Comparator.naturalOrder())
+                    .ifPresent(date::set)
+          );
+      }
+      else {
+        date.set(details.getDate());
+      }
+
+      if(getData() instanceof Serie) {
+        productionYearRange.set(createSerieYearRange((Serie)getData()));
+      }
+      else {
+        productionYearRange.set(Optional.ofNullable(date.get()).map(LocalDate::getYear).map(Object::toString).orElse(""));
+      }
     }
 
     Person person = getPerson();
@@ -127,27 +166,21 @@ public class MediaItem<T extends MediaDescriptor> {
     }
   }
 
-  private static String createYearRange(Release release) {
-    if(release instanceof Serie) {
-      Serie serie = (Serie)release;
-
-      if(serie.getDate() == null) {
-        return "";
-      }
-
-      String year = "" + serie.getDate().getYear();
-
-      if(serie.getState() == Serie.State.ENDED && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != serie.getDate().getYear()) {
-        year += " - " + serie.getLastAirDate().getYear();
-      }
-      else if(serie.getState() == Serie.State.CONTINUING) {
-        year += " -";
-      }
-
-      return year;
+  private static String createSerieYearRange(Serie serie) {
+    if(serie.getDate() == null) {
+      return "";
     }
 
-    return Optional.ofNullable(release.getDate()).map(LocalDate::getYear).map(Object::toString).orElse("");
+    String year = "" + serie.getDate().getYear();
+
+    if(serie.getState() == Serie.State.ENDED && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != serie.getDate().getYear()) {
+      year += " - " + serie.getLastAirDate().getYear();
+    }
+    else if(serie.getState() == Serie.State.CONTINUING) {
+      year += " -";
+    }
+
+    return year;
   }
 
   /**
@@ -205,6 +238,10 @@ public class MediaItem<T extends MediaDescriptor> {
     return wrappedObject;
   }
 
+  public Details getDetails() {
+    return getDetails(wrappedObject);
+  }
+
   public Production getProduction() {
     return getProduction(wrappedObject);
   }
@@ -221,6 +258,10 @@ public class MediaItem<T extends MediaDescriptor> {
   private static Production getProduction(Object wrappedObject) {
     return wrappedObject instanceof Production ? (Production)wrappedObject :
            wrappedObject instanceof ProductionRole ? ((ProductionRole)wrappedObject).getProduction() : null;
+  }
+
+  private static Details getDetails(Object wrappedObject) {
+    return wrappedObject instanceof DetailedMediaDescriptor ? ((DetailedMediaDescriptor)wrappedObject).getDetails() : null;
   }
 
   public Role getRole() {

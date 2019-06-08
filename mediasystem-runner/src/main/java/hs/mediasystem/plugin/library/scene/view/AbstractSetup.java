@@ -247,6 +247,10 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
       gridPane.at(2, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.stateFilter"), "header"), Labels.create("remote-shortcut, yellow")));
       gridPane.at(2, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.name().toLowerCase())).orElse("Unknown")));
     }
+    if(presentation.availableGroups.size() > 1) {
+      gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.group"), "header"), Labels.create("remote-shortcut, blue")));
+      gridPane.at(3, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.group).map(g -> RESOURCES.getText("group", g.resourceKey)).orElse("Unknown")));
+    }
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation);

@@ -44,6 +44,9 @@ public class ContextLayout {
     if(data instanceof Episode) {
       return create((Episode)data, mediaItem.getParent().productionTitle.get());
     }
+    if(data instanceof ProductionCollection) {
+      return create((ProductionCollection)data);
+    }
     if(mediaItem.getProduction() != null) {
       return create(mediaItem.getProduction());
     }

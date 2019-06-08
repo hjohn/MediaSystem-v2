@@ -37,6 +37,9 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
   public final Var<StateFilter> stateFilter = Var.newSimpleVar(StateFilter.ALL);
   public final ObservableList<StateFilter> availableStateFilters = FXCollections.observableArrayList();
 
+  public final Var<Filter<T>> group = Var.newSimpleVar(null);
+  public final ObservableList<Filter<T>> availableGroups = FXCollections.observableArrayList();
+
   private final Var<MediaItem<T>> internalSelectedItem = Var.newSimpleVar(null);
 
   public final Val<MediaItem<T>> selectedItem = internalSelectedItem;
@@ -50,7 +53,7 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     ALL, AVAILABLE, UNWATCHED
   }
 
-  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
+  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters, List<Filter<T>> groups) {
     this.mediaService = mediaService;
     this.inputItems = items;
     this.sortedItems = new SortedList<>(items);  // Sorting first, so we can determine close neighbours when filtering changes
@@ -59,17 +62,24 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     this.availableSortOrders.setAll(sortOrders);
     this.availableFilters.setAll(filters);
     this.availableStateFilters.setAll(stateFilters);
+    this.availableGroups.setAll(groups);
 
     this.sortOrder.setValue(sortOrders.get(settingsSource.getIntSettingOrDefault("sort-order", 0, 0, sortOrders.size() - 1)));
     this.filter.setValue(filters.get(settingsSource.getIntSettingOrDefault("filter", 0, 0, filters.size() - 1)));
     this.stateFilter.setValue(stateFilters.get(settingsSource.getIntSettingOrDefault("state-filter", 0, 0, stateFilters.size() - 1)));
+    this.group.setValue(groups.get(settingsSource.getIntSettingOrDefault("group", 0, 0, groups.size() - 1)));
 
     this.sortOrder.addListener(obs -> settingsSource.storeIntSetting("sort-order", sortOrders.indexOf(sortOrder.getValue())));
     this.filter.addListener(obs -> settingsSource.storeIntSetting("filter", availableFilters.indexOf(filter.getValue())));
     this.stateFilter.addListener(obs -> settingsSource.storeIntSetting("state-filter", availableStateFilters.indexOf(stateFilter.getValue())));
+    this.group.addListener(obs -> settingsSource.storeIntSetting("group", availableGroups.indexOf(group.getValue())));
 
     setupLastSelectedTracking(settingsSource);
     setupSortingAndFiltering();
+  }
+
+  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
+    this(settingsSource, mediaService, items, sortOrders, filters, stateFilters, List.of(new Filter<T>("none", mi -> true)));
   }
 
   public void selectItem(MediaItem<T> item) {
@@ -138,11 +148,13 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
 
     EventStreams.merge(
         EventStreams.invalidationsOf(filter),
-        EventStreams.invalidationsOf(stateFilter)
+        EventStreams.invalidationsOf(stateFilter),
+        EventStreams.invalidationsOf(group)
       )
       .withDefaultEvent(null)
       .observe(e -> {
         Predicate<MediaItem<T>> predicate = filter.getValue().predicate;
+        Predicate<MediaItem<T>> groupingPredicate = group.getValue().predicate;
 
         if(stateFilter.getValue() == StateFilter.UNWATCHED) {  // Exclude viewed and not in collection?
           predicate = predicate.and(mi -> mi.mediaStatus.get() == MediaStatus.AVAILABLE);
@@ -150,6 +162,8 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
         if(stateFilter.getValue() == StateFilter.AVAILABLE) {  // Exclude not in collection?
           predicate = predicate.and(mi -> mi.mediaStatus.get() != MediaStatus.UNAVAILABLE);
         }
+
+        predicate = predicate.and(groupingPredicate);
 
         // Before setting the new filter, first determine which item to select based on what
         // is currently available:
