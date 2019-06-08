@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.config;
 
 import hs.database.core.ConnectionPool;
 import hs.database.core.SimpleConnectionPoolDataSource;
@@ -19,7 +19,7 @@ import javax.sql.ConnectionPoolDataSource;
 public class DatabaseConfigurer {
   private static final Logger LOGGER = Logger.getLogger(DatabaseConfigurer.class.getName());
 
-  public static void configureDatabase(Injector injector, Section databaseIniSection) {
+  public static void configure(Injector injector, Section databaseIniSection) {
     if(databaseIniSection == null) {
       try {
         Class.forName("org.apache.derby.jdbc.EmbeddedDriver");

@@ -4,6 +4,7 @@ import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.mediasystem.db.streamids.DatabaseStreamIdStore;
 import hs.mediasystem.db.uris.DatabaseUriStore;
+import hs.mediasystem.runner.config.DatabaseConfigurer;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.MediaHash;
 import hs.mediasystem.util.StringURI;
@@ -28,7 +29,7 @@ public class HashUpdater {
     Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
 
     Ini ini = new Ini(new File("mediasystem.ini"));
-    DatabaseConfigurer.configureDatabase(injector, ini.getSection("database"));
+    DatabaseConfigurer.configure(injector, ini.getSection("database"));
 
     DatabaseStreamIdStore store = injector.getInstance(DatabaseStreamIdStore.class);
     DatabaseUriStore uriStore = injector.getInstance(DatabaseUriStore.class);

@@ -3,6 +3,10 @@ package hs.mediasystem.runner;
 import hs.ddif.core.Injector;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.plugin.rootmenu.StartupLocationSetting;
+import hs.mediasystem.runner.config.BasicSetup;
+import hs.mediasystem.runner.config.DatabaseConfigurer;
+import hs.mediasystem.runner.config.LoggingConfigurer;
+import hs.mediasystem.runner.config.MediaSystemConfigurer;
 import hs.mediasystem.runner.util.DefaultSceneManager;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.ini.Ini;
@@ -44,11 +48,14 @@ public class FrontEndRunner extends Application {
 
   @Override
   public void start(Stage primaryStage) throws Exception {
-    Injector injector = MediaSystemConfigurer.start();
+    LoggingConfigurer.configure();
 
-    injector.registerInstance(injector);  // Register injector with itself
-
+    Injector injector = BasicSetup.create();
     Ini ini = injector.getInstance(Ini.class);
+
+    DatabaseConfigurer.configure(injector, ini.getSection("database"));
+    MediaSystemConfigurer.configure(injector);
+
     Section generalSection = ini.getSection("general");
     int screenNumber = generalSection == null ? 0 : Integer.parseInt(generalSection.getDefault("screen", "0"));
 

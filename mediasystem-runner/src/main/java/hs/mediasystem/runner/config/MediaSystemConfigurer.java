@@ -1,19 +1,16 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.config;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.DatabaseStreamPrintProvider;
 import hs.mediasystem.db.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.domain.PlayerFactory;
+import hs.mediasystem.runner.CollectionLocationManager;
 import hs.mediasystem.runner.expose.Annotations;
 import hs.mediasystem.runner.util.DatabaseResponseCache;
 import hs.mediasystem.util.ini.Ini;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.ResponseCache;
@@ -23,32 +20,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class MediaSystemConfigurer {
-  private static final Logger LOGGER = Logger.getLogger(MediaSystemConfigurer.class.getName());
 
-  public static Injector start() throws SecurityException, IOException {
-    configureLogging();
-
-    LOGGER.info("Java version: " + System.getProperty("java.version"));
-
-    Injector injector = createInjector();
-
-    Ini ini = createIni();
-
-    injector.registerInstance(ini);
-
-    DatabaseConfigurer.configureDatabase(injector, ini.getSection("database"));
-
+  public static Injector configure(Injector injector) throws SecurityException, IOException {
     configureResponseCache(injector);
 
     injector.register(DatabaseStreamPrintProvider.class);
 
     PluginManager pluginManager = new PluginManager(injector);
-
     Path root = Paths.get("plugins");
 
     pluginManager.loadPluginAndScan("hs.mediasystem.db", "hs.mediasystem.mediamanager");
@@ -92,33 +73,14 @@ public class MediaSystemConfigurer {
 //    catch(ClassNotFoundException e) {
 //      throw new RuntimeException(e);
 //    }
-    injector.getInstance(PlayerFactory.class).create(ini);
+    injector.getInstance(PlayerFactory.class).create(injector.getInstance(Ini.class));
 
     Annotations.initialize();
 
     return injector;
   }
 
-  private static void configureLogging() throws SecurityException, IOException {
-    try(FileInputStream stream = new FileInputStream("logging.properties")) {
-      LogManager.getLogManager().readConfiguration(stream);
-    }
-    catch(FileNotFoundException e) {
-      System.out.println("[INFO] File 'logging.properties' not found, using defaults");
-    }
-
-    LOGGER.info("Logging configured");
-  }
-
   private static void configureResponseCache(Injector injector) {
     ResponseCache.setDefault(injector.getInstance(DatabaseResponseCache.class));
-  }
-
-  private static Injector createInjector() {
-    return new Injector(new JustInTimeDiscoveryPolicy());
-  }
-
-  private static Ini createIni() {
-    return new Ini(new File("mediasystem.ini"));
   }
 }
