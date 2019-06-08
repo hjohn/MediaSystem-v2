@@ -14,7 +14,6 @@ import hs.mediasystem.util.javafx.StringBinding;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.ScaledImageView;
 
-import javafx.animation.Animation.Status;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -26,14 +25,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.effect.Blend;
@@ -131,7 +126,6 @@ public class PlaybackOverlayPane extends StackPane {
         getChildren().add(new VBox() {{
           final StringBinding serieName = MapBindings.get(PlaybackOverlayPane.this.presentation).then("parentMediaItem").then("release").then("name").asStringBinding();
           final StringBinding title = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("release").then("name").asStringBinding();
-          final StringProperty subtitle = new SimpleStringProperty(); //MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("production").then("subtitle").asStringBinding();  // "subtitle" TODO
 
           HBox.setHgrow(this, Priority.ALWAYS);
           getChildren().add(new Label() {{
@@ -142,7 +136,7 @@ public class PlaybackOverlayPane extends StackPane {
           }});
           getChildren().add(new Label() {{
             setWrapText(true);
-            textProperty().bind(Bindings.when(serieName.isNotNull()).then(title).otherwise(subtitle));
+            textProperty().bind(Bindings.when(serieName.isNotNull()).then(title).otherwise(new SimpleStringProperty()));
             getStyleClass().add("video-subtitle");
           }});
         }});
@@ -237,75 +231,5 @@ public class PlaybackOverlayPane extends StackPane {
         }
       }
     });
-  }
-
-  // FIXME seems unused
-  public void addOSD(final Node node) {  // id of node is used to distinguish same items
-    String id = node.getId();
-
-    for(Node child : playbackStateOverlay.getChildren()) {
-      if(id.equals(child.getId())) {
-        Timeline timeline = (Timeline)child.getUserData();
-
-        if(timeline.getStatus() == Status.RUNNING) {
-          timeline.playFromStart();
-        }
-        return;
-      }
-    }
-
-    final StackPane stackPane = new StackPane() {{
-      getChildren().add(node);
-      setPrefWidth(playbackStateOverlay.getWidth() - playbackStateOverlay.getInsets().getLeft() - playbackStateOverlay.getInsets().getRight());
-    }};
-
-    node.opacityProperty().set(0);
-
-    final Group group = new Group(stackPane);
-    group.setId(node.getId());
-    stackPane.setScaleY(0.0);
-
-    final EventHandler<ActionEvent> shrinkFinished = new EventHandler<>() {
-      @Override
-      public void handle(ActionEvent event) {
-        playbackStateOverlay.getChildren().remove(group);
-      }
-    };
-
-    final Timeline shrinkTimeline = new Timeline(
-      new KeyFrame(Duration.seconds(0.25), shrinkFinished, new KeyValue(stackPane.scaleYProperty(), 0))
-    );
-
-    final EventHandler<ActionEvent> fadeInOutFinished = new EventHandler<>() {
-      @Override
-      public void handle(ActionEvent event) {
-        group.setId(null);
-        shrinkTimeline.play();
-      }
-    };
-
-    final Timeline fadeInOutTimeline = new Timeline(
-      new KeyFrame(Duration.seconds(0.5), new KeyValue(node.opacityProperty(), 1.0)),
-      new KeyFrame(Duration.seconds(2.5), new KeyValue(node.opacityProperty(), 1.0)),
-      new KeyFrame(Duration.seconds(3.0), fadeInOutFinished, new KeyValue(node.opacityProperty(), 0.0))
-    );
-
-
-    EventHandler<ActionEvent> expansionFinished = new EventHandler<>() {
-      @Override
-      public void handle(ActionEvent event) {
-        fadeInOutTimeline.play();
-      }
-    };
-
-    Timeline expansionTimeline = new Timeline(
-      new KeyFrame(Duration.seconds(0.25), expansionFinished, new KeyValue(stackPane.scaleYProperty(), 1.0))
-    );
-
-    group.setUserData(fadeInOutTimeline);
-
-    playbackStateOverlay.getChildren().add(group);
-
-    expansionTimeline.play();
   }
 }

@@ -93,7 +93,6 @@ public class RootMenuScenePlugin implements NodeFactory<MenuPresentation> {
     protected void layoutChildren() {
       super.layoutChildren();
 
-      double iw = imageLabel.prefWidth(-1);
       double ih = imageLabel.prefHeight(-1);
 
       double w = getWidth();

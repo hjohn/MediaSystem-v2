@@ -8,11 +8,6 @@ import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,29 +63,5 @@ public class FrontEndRunner extends Application {
     injector.getInstance(RootPresentationHandler.class);
 
     sceneManager.getRootPane().fireEvent(NavigateEvent.to(startupLocationSetting.get()));
-  }
-
-  private static void loadPlugins(final Injector injector) throws IOException {
-    PluginManager pluginManager = new PluginManager(injector);
-
-    Path pluginsPath = Paths.get("plugins");
-
-    if(Files.isDirectory(pluginsPath)) {
-      Files.find(pluginsPath, 10, (p, bfa) -> bfa.isRegularFile()).forEach(p -> {
-        try {
-          LOGGER.info("Loading plugin: " + p);
-          pluginManager.loadPluginAndScan(p.toUri().toURL());
-        }
-        catch(Exception e) {
-          throw new IllegalStateException(e);
-        }
-      });
-    }
-    else {
-//      pluginManager.loadPluginAndScan(new File("../mediasystem-ext-player-vlc/target/mediasystem-ext-player-vlc-1.0.0-SNAPSHOT.jar").toURI().toURL());
-//      pluginManager.loadPluginAndScan(new File("../mediasystem-ext-all/target/mediasystem-ext-all-1.0.0-SNAPSHOT.jar").toURI().toURL());
-      pluginManager.loadPluginAndScan(new File("P:\\Dev\\git\\MediaSystem\\mediasystem-ext-player-vlc\\target\\classes").toURI().toURL());
-      pluginManager.loadPluginAndScan(new File("P:\\Dev\\git\\MediaSystem\\mediasystem-ext-all\\target\\classes").toURI().toURL());
-    }
   }
 }
