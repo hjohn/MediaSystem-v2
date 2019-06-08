@@ -43,9 +43,10 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
   private final Var<MediaItem<T>> internalSelectedItem = Var.newSimpleVar(null);
 
   public final Val<MediaItem<T>> selectedItem = internalSelectedItem;
-  public final ObservableList<MediaItem<T>> inputItems;
   public final FilteredList<MediaItem<T>> items;
+  public final Val<Integer> totalItemCount;
 
+  private final ObservableList<MediaItem<T>> inputItems;
   private final SortedList<MediaItem<T>> sortedItems;
   private final MediaService mediaService;
 
@@ -58,6 +59,7 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     this.inputItems = items;
     this.sortedItems = new SortedList<>(items);  // Sorting first, so we can determine close neighbours when filtering changes
     this.items = new FilteredList<>(sortedItems);
+    this.totalItemCount = Val.create(() -> (int)items.stream().filter(group.getValue().predicate).count(), items, group);
 
     this.availableSortOrders.setAll(sortOrders);
     this.availableFilters.setAll(filters);

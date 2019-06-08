@@ -40,6 +40,7 @@ import javafx.util.Duration;
 import javax.inject.Inject;
 
 import org.reactfx.EventStreams;
+import org.reactfx.value.Val;
 
 public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridViewPresentation<T>> implements NodeFactory<P> {
   private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
@@ -91,7 +92,7 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
     listView.setCellFactory(cellFactory);
     listView.requestFocus();
 
-    setupStatusBar(areaPane, presentation, presentation.items, presentation.inputItems);
+    setupStatusBar(areaPane, presentation);
 
     listView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> presentation.selectItem(current));
 
@@ -229,8 +230,11 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
     return areaPane;
   }
 
-  private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation<T> presentation, ObservableList<MediaItem<T>> filteredItems, ObservableList<MediaItem<T>> originalItems) {
-    StringBinding binding = Bindings.createStringBinding(() -> String.format(filteredItems.size() == originalItems.size() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), filteredItems.size(), originalItems.size()), filteredItems, originalItems);
+  private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation<T> presentation) {
+    ObservableList<MediaItem<T>> items = presentation.items;
+    Val<Integer> totalItemCount = presentation.totalItemCount;
+
+    StringBinding binding = Bindings.createStringBinding(() -> String.format(items.size() == totalItemCount.getValue() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), items.size(), totalItemCount.getValue()), items, totalItemCount);
     GridPane gridPane = new GridPane();
     VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
 
