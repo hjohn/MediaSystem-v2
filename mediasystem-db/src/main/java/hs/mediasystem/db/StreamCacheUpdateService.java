@@ -68,7 +68,7 @@ public class StreamCacheUpdateService {
   private void initializePeriodicEnrichThread() {
     Thread reidentifyThread = new Thread(() -> {
       try {
-        Thread.sleep(10000);
+        Thread.sleep(300000);  // Initial delay, to avoid triggering immediately on restart
       }
       catch(InterruptedException e1) {
         // Ignore
