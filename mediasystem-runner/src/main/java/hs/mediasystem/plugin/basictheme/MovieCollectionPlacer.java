@@ -5,7 +5,7 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.view.MovieCollectionSetup;
-import hs.mediasystem.plugin.movies.videolibbaroption.MovieCollectionPresentation;
+import hs.mediasystem.plugin.movies.menu.MovieCollectionPresentation;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.Binds;

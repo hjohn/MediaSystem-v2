@@ -1,8 +1,6 @@
 package hs.mediasystem.plugin.rootmenu;
 
-import hs.mediasystem.plugin.movies.videolibbaroption.MovieLibrary;
 import hs.mediasystem.presentation.Presentation;
-import hs.mediasystem.runner.util.ResourceManager;
 
 import java.util.Collections;
 import java.util.List;
@@ -76,29 +74,5 @@ public class MenuPresentation implements Presentation {
 
   public MenuPresentation(List<Menu> menus) {
     this.menus = Collections.unmodifiableList(menus);
-  }
-
-  public MenuPresentation() {  // FIXME remove
-
-
-    this(createSampleMenu());
-  }
-
-  private static List<Menu> createSampleMenu() {
-    return List.of(
-      new Menu("", ResourceManager.getImage(MovieLibrary.class, "image"), List.of(
-        new MenuItem("Main Collection", null, null),
-        new MenuItem("Top 100", null, null)
-      )),
-      new Menu("", ResourceManager.getImage(MovieLibrary.class, "image"), List.of(
-        new MenuItem("TV Shows", null, null),
-        new MenuItem("Anime", null, null),
-        new MenuItem("Cartoons", null, null),
-        new MenuItem("Workouts", null, null)
-      )),
-      new Menu("", ResourceManager.getImage(MovieLibrary.class, "image"), List.of(
-        new MenuItem("Settings", null, null)
-      ))
-    );
   }
 }

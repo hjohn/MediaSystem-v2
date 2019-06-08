@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.series.videolibbaroption;
+package hs.mediasystem.plugin.series.menu;
 
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionPresentation;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;

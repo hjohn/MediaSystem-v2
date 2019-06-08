@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.settings.rootmenu;
+package hs.mediasystem.plugin.settings.menu;
 
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;

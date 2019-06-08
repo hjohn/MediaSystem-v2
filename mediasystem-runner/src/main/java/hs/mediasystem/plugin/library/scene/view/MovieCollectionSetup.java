@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.domain.DetailedMediaDescriptor;
-import hs.mediasystem.plugin.movies.videolibbaroption.MovieCollectionPresentation;
+import hs.mediasystem.plugin.movies.menu.MovieCollectionPresentation;
 
 import javafx.scene.Node;
 

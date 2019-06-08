@@ -21,7 +21,7 @@ import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsSetup;
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.view.SerieCollectionSetup;
-import hs.mediasystem.plugin.movies.videolibbaroption.MovieCollectionPresentation;
+import hs.mediasystem.plugin.movies.menu.MovieCollectionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackLayout;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation;

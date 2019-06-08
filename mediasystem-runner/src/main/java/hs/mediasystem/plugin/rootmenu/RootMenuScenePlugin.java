@@ -4,7 +4,6 @@ import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.runner.PluginBase;
 import hs.mediasystem.util.FocusEvent;
 import hs.mediasystem.util.javafx.control.Buttons;
 
@@ -31,10 +30,6 @@ import org.reactfx.value.Var;
 
 @Singleton
 public class RootMenuScenePlugin implements NodeFactory<MenuPresentation> {
-
-  public interface MenuPlugin extends PluginBase {  // FIXME remove
-    Node getNode();
-  }
 
   @Override
   public Node create(MenuPresentation presentation) {

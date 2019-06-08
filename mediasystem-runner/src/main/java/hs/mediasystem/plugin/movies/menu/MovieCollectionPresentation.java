@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.movies.videolibbaroption;
+package hs.mediasystem.plugin.movies.menu;
 
 import hs.mediasystem.db.SettingsSourceFactory;
 import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
