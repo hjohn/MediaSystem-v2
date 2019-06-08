@@ -173,7 +173,7 @@ public class MediaItem<T extends MediaDescriptor> {
 
     String year = "" + serie.getDate().getYear();
 
-    if(serie.getState() == Serie.State.ENDED && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != serie.getDate().getYear()) {
+    if((serie.getState() == Serie.State.CANCELED || serie.getState() == Serie.State.ENDED) && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != serie.getDate().getYear()) {
       year += " - " + serie.getLastAirDate().getYear();
     }
     else if(serie.getState() == Serie.State.CONTINUING) {
