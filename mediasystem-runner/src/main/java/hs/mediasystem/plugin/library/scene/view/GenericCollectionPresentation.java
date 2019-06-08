@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.db.SettingsSourceFactory;
+import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.runner.db.MediaService;
@@ -30,14 +31,14 @@ public class GenericCollectionPresentation extends GridViewPresentation<Producti
   @Singleton
   public static class Factory {
     @Inject private MediaService mediaService;
-    @Inject private SettingsStore settingsStore;
+    @Inject private SettingsSourceFactory settingsSourceFactory;
 
-    public GenericCollectionPresentation create(ObservableList<MediaItem<Production>> items) {
-      return new GenericCollectionPresentation(settingsStore, mediaService, items);
+    public GenericCollectionPresentation create(ObservableList<MediaItem<Production>> items, String settingPostFix) {
+      return new GenericCollectionPresentation(settingsSourceFactory.of(SYSTEM_PREFIX + "Generic:" + settingPostFix), mediaService, items);
     }
   }
 
-  protected GenericCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ObservableList<MediaItem<Production>> items) {
-    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+  protected GenericCollectionPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<Production>> items) {
+    super(settingsSource, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
   }
 }

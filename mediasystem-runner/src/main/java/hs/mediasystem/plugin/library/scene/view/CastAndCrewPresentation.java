@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.db.SettingsSourceFactory;
+import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
@@ -34,11 +35,11 @@ public class CastAndCrewPresentation extends GridViewPresentation<PersonRole> {
     @Inject private MediaService mediaService;
     @Inject private VideoDatabase videoDatabase;
     @Inject private MediaItem.Factory mediaItemFactory;
-    @Inject private SettingsStore settingsStore;
+    @Inject private SettingsSourceFactory settingsSourceFactory;
 
     public CastAndCrewPresentation create(MediaItem<?> mediaItem) {
       return new CastAndCrewPresentation(
-        settingsStore,
+        settingsSourceFactory.of(SYSTEM_PREFIX + "CastAndCrew"),
         mediaService,
         mediaItem,
         videoDatabase.queryRoles(mediaItem.getRelease().getIdentifier()).stream()
@@ -48,8 +49,8 @@ public class CastAndCrewPresentation extends GridViewPresentation<PersonRole> {
     }
   }
 
-  protected CastAndCrewPresentation(SettingsStore settingsStore, MediaService mediaService, MediaItem<?> mediaItem, List<MediaItem<PersonRole>> participants) {
-    super(settingsStore, mediaService, FXCollections.observableList(participants), SORT_ORDERS, FILTERS, List.of(StateFilter.ALL));
+  protected CastAndCrewPresentation(SettingsSource settingsSource, MediaService mediaService, MediaItem<?> mediaItem, List<MediaItem<PersonRole>> participants) {
+    super(settingsSource, mediaService, FXCollections.observableList(participants), SORT_ORDERS, FILTERS, List.of(StateFilter.ALL));
 
     this.mediaItem = mediaItem;
   }

@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.db.SettingsSourceFactory;
+import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
@@ -40,7 +41,7 @@ public class PersonParticipationsPresentation extends GridViewPresentation<Produ
   public static class Factory {
     @Inject private MediaService mediaService;
     @Inject private VideoDatabase videoDatabase;
-    @Inject private SettingsStore settingsStore;
+    @Inject private SettingsSourceFactory settingsSourceFactory;
     @Inject private MediaItem.Factory mediaItemFactory;
 
     public PersonParticipationsPresentation create(Person person) {
@@ -48,7 +49,7 @@ public class PersonParticipationsPresentation extends GridViewPresentation<Produ
       ObservableList<MediaItem<ProductionRole>> items = FXCollections.observableList(personalProfile.getProductionRoles().stream().map(this::wrap).collect(Collectors.toList()));
 
       return new PersonParticipationsPresentation(
-        settingsStore,
+        settingsSourceFactory.of(SYSTEM_PREFIX + "Roles"),
         mediaService,
         personalProfile,
         items
@@ -60,8 +61,8 @@ public class PersonParticipationsPresentation extends GridViewPresentation<Produ
     }
   }
 
-  protected PersonParticipationsPresentation(SettingsStore settingsStore, MediaService mediaService, PersonalProfile personalProfile, ObservableList<MediaItem<ProductionRole>> items) {
-    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+  protected PersonParticipationsPresentation(SettingsSource settingsSource, MediaService mediaService, PersonalProfile personalProfile, ObservableList<MediaItem<ProductionRole>> items) {
+    super(settingsSource, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
 
     this.personalProfile = personalProfile;
   }

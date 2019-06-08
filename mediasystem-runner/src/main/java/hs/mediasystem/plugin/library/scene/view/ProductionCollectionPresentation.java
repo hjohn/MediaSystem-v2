@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.db.SettingsSourceFactory;
+import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
@@ -39,7 +40,7 @@ public class ProductionCollectionPresentation extends GridViewPresentation<Produ
   public static class Factory {
     @Inject private MediaService mediaService;
     @Inject private VideoDatabase videoDatabase;
-    @Inject private SettingsStore settingsStore;
+    @Inject private SettingsSourceFactory settingsSourceFactory;
     @Inject private MediaItem.Factory mediaItemFactory;
 
     public ProductionCollectionPresentation create(Identifier collectionIdentifier) {
@@ -50,7 +51,7 @@ public class ProductionCollectionPresentation extends GridViewPresentation<Produ
         .collect(Collectors.toList()));
 
       return new ProductionCollectionPresentation(
-        settingsStore,
+        settingsSourceFactory.of(SYSTEM_PREFIX + "Collection"),
         mediaService,
         productionCollection,
         items
@@ -58,8 +59,8 @@ public class ProductionCollectionPresentation extends GridViewPresentation<Produ
     }
   }
 
-  protected ProductionCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ProductionCollection productionCollection, ObservableList<MediaItem<Production>> items) {
-    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+  protected ProductionCollectionPresentation(SettingsSource settingsSource, MediaService mediaService, ProductionCollection productionCollection, ObservableList<MediaItem<Production>> items) {
+    super(settingsSource, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
 
     this.productionCollection = productionCollection;
   }

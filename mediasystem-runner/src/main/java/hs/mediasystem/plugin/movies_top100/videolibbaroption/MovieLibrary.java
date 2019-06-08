@@ -25,7 +25,7 @@ public class MovieLibrary implements VideoLibraryMenuPlugin.OptionPlugin {
 
   @Override
   public void onSelect(ActionEvent e) {
-    PresentationLoader.navigate(e, () -> factory.create(createProductionItems()));
+    PresentationLoader.navigate(e, () -> factory.create(createProductionItems(), "Movies"));
   }
 
   private ObservableList<MediaItem<Production>> createProductionItems() {

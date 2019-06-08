@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.db.SettingsSourceFactory;
+import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -38,11 +39,11 @@ public class RecommendationsPresentation extends GridViewPresentation<Production
     @Inject private MediaService mediaService;
     @Inject private VideoDatabase videoDatabase;
     @Inject private MediaItem.Factory mediaItemFactory;
-    @Inject private SettingsStore settingsStore;
+    @Inject private SettingsSourceFactory settingsSourceFactory;
 
     public RecommendationsPresentation create(MediaItem<?> mediaItem) {
       return new RecommendationsPresentation(
-        settingsStore,
+        settingsSourceFactory.of(SYSTEM_PREFIX + "Recommendations"),
         mediaService,
         mediaItem,
         FXCollections.observableList(videoDatabase.queryRecommendedProductions(mediaItem.getProduction().getIdentifier()).stream()
@@ -52,8 +53,8 @@ public class RecommendationsPresentation extends GridViewPresentation<Production
     }
   }
 
-  protected RecommendationsPresentation(SettingsStore settingsStore, MediaService mediaService, MediaItem<?> mediaItem, ObservableList<MediaItem<Production>> recommendations) {
-    super(settingsStore, mediaService, recommendations, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+  protected RecommendationsPresentation(SettingsSource settingsSource, MediaService mediaService, MediaItem<?> mediaItem, ObservableList<MediaItem<Production>> recommendations) {
+    super(settingsSource, mediaService, recommendations, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
 
     this.mediaItem = mediaItem;
   }

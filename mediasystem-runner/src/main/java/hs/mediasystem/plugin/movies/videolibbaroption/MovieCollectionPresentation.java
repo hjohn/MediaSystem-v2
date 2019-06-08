@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.movies.videolibbaroption;
 
-import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.db.SettingsSourceFactory;
+import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -38,10 +39,10 @@ public class MovieCollectionPresentation extends GridViewPresentation<Movie> {
   public static class Factory {
     @Inject private MediaService mediaService;
     @Inject private MediaItem.Factory mediaItemFactory;
-    @Inject private SettingsStore settingsStore;
+    @Inject private SettingsSourceFactory settingsSourceFactory;
 
     public MovieCollectionPresentation create() {
-      return new MovieCollectionPresentation(settingsStore, mediaService, createProductionItems(mediaService.findAllByType(MOVIE, List.of("TMDB", "LOCAL"))));
+      return new MovieCollectionPresentation(settingsSourceFactory.of(SYSTEM_PREFIX + "Movies"), mediaService, createProductionItems(mediaService.findAllByType(MOVIE, List.of("TMDB", "LOCAL"))));
     }
 
     private ObservableList<MediaItem<Movie>> createProductionItems(List<Movie> mediaSets) {
@@ -52,7 +53,7 @@ public class MovieCollectionPresentation extends GridViewPresentation<Movie> {
     }
   }
 
-  protected MovieCollectionPresentation(SettingsStore settingsStore, MediaService mediaService, ObservableList<MediaItem<Movie>> items) {
-    super(settingsStore, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED));
+  protected MovieCollectionPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<Movie>> items) {
+    super(settingsSource, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED));
   }
 }

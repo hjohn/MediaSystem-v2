@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
-import hs.mediasystem.db.SettingsStore;
+import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.presentation.AbstractPresentation;
@@ -20,7 +20,7 @@ import javafx.event.Event;
 import org.reactfx.value.Var;
 
 public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPresentation {
-  private static final String SYSTEM = "MediaSystem:Library:Presentation";
+  protected static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
 
   public final Var<SortOrder<T>> sortOrder = Var.newSimpleVar(null);
   public final ObservableList<SortOrder<T>> availableSortOrders = FXCollections.observableArrayList();
@@ -40,7 +40,7 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     ALL, AVAILABLE, UNWATCHED
   }
 
-  protected GridViewPresentation(SettingsStore settingsStore, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
+  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
     this.mediaService = mediaService;
     this.items = items;
 
@@ -48,15 +48,13 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     this.availableFilters.setAll(filters);
     this.availableStateFilters.setAll(stateFilters);
 
-    String settingName = getClass().getName();
+    this.sortOrder.setValue(sortOrders.get(settingsSource.getIntSettingOrDefault("sort-order", 0, 0, sortOrders.size() - 1)));
+    this.filter.setValue(filters.get(settingsSource.getIntSettingOrDefault("filter", 0, 0, filters.size() - 1)));
+    this.stateFilter.setValue(stateFilters.get(settingsSource.getIntSettingOrDefault("state-filter", 0, 0, stateFilters.size() - 1)));
 
-    this.sortOrder.setValue(sortOrders.get(settingsStore.getIntSettingOrDefault(SYSTEM, settingName + ":sort-order", 0, 0, sortOrders.size() - 1)));
-    this.filter.setValue(filters.get(settingsStore.getIntSettingOrDefault(SYSTEM, settingName + ":filter", 0, 0, filters.size() - 1)));
-    this.stateFilter.setValue(stateFilters.get(settingsStore.getIntSettingOrDefault(SYSTEM, settingName + ":state-filter", 0, 0, stateFilters.size() - 1)));
-
-    this.sortOrder.addListener(obs -> settingsStore.storeIntSetting(SYSTEM, settingName + ":sort-order", sortOrders.indexOf(sortOrder.getValue())));
-    this.filter.addListener(obs -> settingsStore.storeIntSetting(SYSTEM, settingName + ":filter", availableFilters.indexOf(filter.getValue())));
-    this.stateFilter.addListener(obs -> settingsStore.storeIntSetting(SYSTEM, settingName + ":state-filter", availableStateFilters.indexOf(stateFilter.getValue())));
+    this.sortOrder.addListener(obs -> settingsSource.storeIntSetting("sort-order", sortOrders.indexOf(sortOrder.getValue())));
+    this.filter.addListener(obs -> settingsSource.storeIntSetting("filter", availableFilters.indexOf(filter.getValue())));
+    this.stateFilter.addListener(obs -> settingsSource.storeIntSetting("state-filter", availableStateFilters.indexOf(stateFilter.getValue())));
   }
 
   public BooleanProperty watchedProperty() {
