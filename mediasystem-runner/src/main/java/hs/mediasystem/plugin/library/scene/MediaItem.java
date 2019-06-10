@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -122,33 +121,28 @@ public class MediaItem<T extends MediaDescriptor> {
 
       if(getData() instanceof ProductionCollection) {
         ProductionCollection productionCollection = (ProductionCollection)getData();
+        LocalDate first = productionCollection.getFirstReleaseDate();
+        LocalDate last = productionCollection.getLastReleaseDate();
+        LocalDate next = productionCollection.getNextReleaseDate();
 
-        // Grabs non-future date, but if there is none such date, grabs the highest future date
-        productionCollection.getItems().stream()
-          .map(Production::getDetails)
-          .map(Details::getDate)
-          .filter(Objects::nonNull)
-          .filter(d -> d.isBefore(LocalDate.now()))
-          .max(Comparator.naturalOrder())
-          .ifPresentOrElse(
-            date::set,
-            () -> productionCollection.getItems().stream()
-                    .map(Production::getDetails)
-                    .map(Details::getDate)
-                    .filter(Objects::nonNull)
-                    .max(Comparator.naturalOrder())
-                    .ifPresent(date::set)
-          );
+        if(first != null) {
+          LocalDate max = last != null ? last : next != null ? next : first;
+          int minYear = first.getYear();
+          int maxYear = max.getYear();
+
+          date.setValue(max);
+          productionYearRange.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
+        }
       }
       else {
         date.set(details.getDate());
-      }
 
-      if(getData() instanceof Serie) {
-        productionYearRange.set(createSerieYearRange((Serie)getData()));
-      }
-      else {
-        productionYearRange.set(Optional.ofNullable(date.get()).map(LocalDate::getYear).map(Object::toString).orElse(""));
+        if(getData() instanceof Serie) {
+          productionYearRange.set(createSerieYearRange((Serie)getData()));
+        }
+        else {
+          productionYearRange.set(Optional.ofNullable(date.get()).map(LocalDate::getYear).map(Object::toString).orElse(""));
+        }
       }
     }
 

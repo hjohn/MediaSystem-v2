@@ -20,6 +20,12 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.ScaledImageView;
 
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.ObjectProperty;
@@ -106,6 +112,46 @@ public class ContextLayout {
     panel.title.set(details.getName());
     panel.overview.set(details.getDescription());
     panel.imageURI.set(details.getImage());
+    panel.totalEntries.set("" + collection.getItems().size());
+
+    LocalDate first = collection.getFirstReleaseDate();
+    LocalDate last = collection.getLastReleaseDate();
+    LocalDate next = collection.getNextReleaseDate();
+
+    if(first != null) {
+      LocalDate max = last != null ? last : next != null ? next : first;
+      int minYear = first.getYear();
+      int maxYear = max.getYear();
+
+      panel.releaseDate.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
+    }
+
+    double totalRating = 0;
+    int count = 0;
+
+    for(Production production : collection.getItems()) {
+      Reception reception = production.getReception();
+
+      if(reception != null && reception.getVoteCount() > 0) {
+        totalRating += reception.getRating();
+        count++;
+      }
+    }
+
+    if(count != 0) {
+      panel.rating.set(String.format("%.1f", totalRating / count));
+    }
+
+    Map<String, Long> genreCounts = collection.getItems().stream()
+      .map(Production::getGenres)
+      .flatMap(Collection::stream)
+      .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+    panel.subtitle.set(genreCounts.entrySet().stream()
+      .sorted(Comparator.comparing(Map.Entry::getValue, Collections.reverseOrder()))
+      .map(Map.Entry::getKey)
+      .collect(Collectors.joining(" / "))
+    );
 
     return panel;
   }
@@ -146,6 +192,7 @@ public class ContextLayout {
     public final StringProperty biography = new SimpleStringProperty();
     public final StringProperty season = new SimpleStringProperty();
     public final StringProperty episodeNumber = new SimpleStringProperty();
+    public final StringProperty totalEntries = new SimpleStringProperty();
     public final StringProperty rating = new SimpleStringProperty();
     public final StringProperty overview = new SimpleStringProperty();
     public final ObjectProperty<ImageURI> imageURI = new SimpleObjectProperty<>();
@@ -190,6 +237,11 @@ public class ContextLayout {
         ),
         Containers.hbox(
           "hbox",
+          Containers.vbox(
+            totalEntries.isEmpty().not(),
+            Labels.create("TOTAL", "header", totalEntries.isEmpty().not()),
+            Labels.create("total-entries", totalEntries, totalEntries.isEmpty().not())
+          ),
           Containers.vbox(
             Labels.create("RELEASE DATE", "header", releaseDate.isEmpty().not()),
             Labels.create("release-date", releaseDate, releaseDate.isEmpty().not())
