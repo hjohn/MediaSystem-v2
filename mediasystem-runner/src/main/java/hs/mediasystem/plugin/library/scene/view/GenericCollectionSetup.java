@@ -9,8 +9,6 @@ import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.util.Optional;
 
-import javafx.scene.Node;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -29,10 +27,5 @@ public class GenericCollectionSetup extends AbstractSetup<Production, GenericCol
   @Override
   protected void onItemSelected(ItemSelectedEvent<MediaItem<Production>> event, GenericCollectionPresentation presentation) {
     PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem()));
-  }
-
-  @Override
-  public Node create(GenericCollectionPresentation presentation) {
-    return createView(presentation);
   }
 }

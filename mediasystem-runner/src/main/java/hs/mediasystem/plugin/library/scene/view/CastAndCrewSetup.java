@@ -34,9 +34,4 @@ public class CastAndCrewSetup extends AbstractSetup<PersonRole, CastAndCrewPrese
   protected void onItemSelected(ItemSelectedEvent<MediaItem<PersonRole>> event, CastAndCrewPresentation presentation) {
     PresentationLoader.navigate(event, () -> personParticipationsPresentationFactory.create(event.getItem().getPerson()));
   }
-
-  @Override
-  public Node create(CastAndCrewPresentation presentation) {
-    return createView(presentation);
-  }
 }

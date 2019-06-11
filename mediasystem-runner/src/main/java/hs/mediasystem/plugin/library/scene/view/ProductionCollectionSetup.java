@@ -37,9 +37,4 @@ public class ProductionCollectionSetup extends AbstractSetup<Production, Product
   protected void onItemSelected(ItemSelectedEvent<MediaItem<Production>> event, ProductionCollectionPresentation presentation) {
     PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem()));
   }
-
-  @Override
-  public Node create(ProductionCollectionPresentation presentation) {
-    return createView(presentation);
-  }
 }

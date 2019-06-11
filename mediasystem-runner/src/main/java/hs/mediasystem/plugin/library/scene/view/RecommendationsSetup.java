@@ -37,9 +37,4 @@ public class RecommendationsSetup extends AbstractSetup<Production, Recommendati
   protected void onItemSelected(ItemSelectedEvent<MediaItem<Production>> event, RecommendationsPresentation presentation) {
     PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem()));
   }
-
-  @Override
-  public Node create(RecommendationsPresentation presentation) {
-    return createView(presentation);
-  }
 }

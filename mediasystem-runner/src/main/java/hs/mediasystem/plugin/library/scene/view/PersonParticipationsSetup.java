@@ -57,9 +57,4 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
   protected void onItemSelected(ItemSelectedEvent<MediaItem<ProductionRole>> event, PersonParticipationsPresentation presentation) {
     PresentationLoader.navigate(event, () -> productionPresentationFactory.create(mediaItemFactory.create(event.getItem().getProduction(), null)));
   }
-
-  @Override
-  public Node create(PersonParticipationsPresentation presentation) {
-    return createView(presentation);
-  }
 }

@@ -119,7 +119,8 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
     listView.getSelectionModel().select(selectedIndex);
   }
 
-  public Node createView(P presentation) {
+  @Override
+  public Node create(P presentation) {
     AreaPane2<Area> areaPane = new AreaPane2<>() {
       StackPane leftOverlayPanel = new StackPane();
       StackPane rightOverlayPanel = new StackPane();
