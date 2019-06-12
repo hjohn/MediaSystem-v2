@@ -12,16 +12,12 @@ import hs.mediasystem.plugin.library.scene.view.CastAndCrewPresentation;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewSetup;
 import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.view.GenericCollectionSetup;
-import hs.mediasystem.plugin.library.scene.view.MovieCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsSetup;
 import hs.mediasystem.plugin.library.scene.view.ProductionCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.view.ProductionCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsSetup;
-import hs.mediasystem.plugin.library.scene.view.SerieCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.view.SerieCollectionSetup;
-import hs.mediasystem.plugin.movies.menu.MovieCollectionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackLayout;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation;
@@ -46,12 +42,6 @@ public class BasicTheme implements Theme {
 
   @Override
   public Class<? extends Presentation> findParent(Class<? extends Presentation> cls) {
-    if(cls == MovieCollectionPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == SerieCollectionPresentation.class) {
-      return LibraryPresentation.class;
-    }
     if(cls == GenericCollectionPresentation.class) {
       return LibraryPresentation.class;
     }
@@ -88,12 +78,6 @@ public class BasicTheme implements Theme {
 
   @SuppressWarnings("unchecked")
   private <P extends Presentation, T extends NodeFactory<P>> Class<T> findNodeFactory(Class<P> cls) {
-    if(cls == MovieCollectionPresentation.class) {
-      return (Class<T>)MovieCollectionSetup.class;
-    }
-    if(cls == SerieCollectionPresentation.class) {
-      return (Class<T>)SerieCollectionSetup.class;
-    }
     if(cls == GenericCollectionPresentation.class) {
       return (Class<T>)GenericCollectionSetup.class;
     }

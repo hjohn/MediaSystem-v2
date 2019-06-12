@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.basictheme;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
@@ -21,6 +21,6 @@ public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation,
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<MediaDescriptor> presentation) {
-    parentPresentation.backdrop.bind(Binds.monadic(presentation.selectedItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
+    parentPresentation.backdrop.bind(Binds.monadic(presentation.selectedItem).map(MediaItem::getDetails).map(Details::getBackdrop).map(imageHandleFactory::fromURI));
   }
 }
