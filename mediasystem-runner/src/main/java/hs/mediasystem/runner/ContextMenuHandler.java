@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -90,7 +91,13 @@ public class ContextMenuHandler {
       if(control.getType() == Type.LIST) {
         @SuppressWarnings("unchecked")
         ExposedProperty<P, Object> exposedControl = (ExposedProperty<P, Object>)actionTarget.getExposedControl();
-        ListSpinnerValueFactory<Object> valueFactory = new ListSpinnerValueFactory<>(exposedControl.getAllowedValues(parent));
+        ObservableList<Object> allowedValues = exposedControl.getAllowedValues(parent);
+
+        if(allowedValues.size() < 2) {
+          return null;  // Donot show control if there are only 0 or 1 options to choose from
+        }
+
+        ListSpinnerValueFactory<Object> valueFactory = new ListSpinnerValueFactory<>(allowedValues);
         Formatter<Object> formatter = exposedControl.getFormatter();
 
         valueFactory.setWrapAround(true);
