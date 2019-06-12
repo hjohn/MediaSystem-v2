@@ -54,7 +54,7 @@ public class RecommendationsPresentation extends GridViewPresentation<Production
   }
 
   protected RecommendationsPresentation(SettingsSource settingsSource, MediaService mediaService, MediaItem<?> mediaItem, ObservableList<MediaItem<Production>> recommendations) {
-    super(settingsSource, mediaService, recommendations, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+    super(settingsSource, mediaService, recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)));
 
     this.mediaItem = mediaItem;
   }

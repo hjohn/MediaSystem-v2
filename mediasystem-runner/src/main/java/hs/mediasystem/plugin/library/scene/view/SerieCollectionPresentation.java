@@ -56,6 +56,6 @@ public class SerieCollectionPresentation extends GridViewPresentation<Serie> {
   }
 
   protected SerieCollectionPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<Serie>> items) {
-    super(settingsSource, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED));
+    super(settingsSource, mediaService, items, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED)));
   }
 }

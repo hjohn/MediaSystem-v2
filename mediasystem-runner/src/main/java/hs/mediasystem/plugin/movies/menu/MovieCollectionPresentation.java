@@ -82,6 +82,6 @@ public class MovieCollectionPresentation extends GridViewPresentation<DetailedMe
   }
 
   protected MovieCollectionPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<DetailedMediaDescriptor>> items) {
-    super(settingsSource, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED), GROUPS);
+    super(settingsSource, mediaService, items, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED), GROUPS));
   }
 }

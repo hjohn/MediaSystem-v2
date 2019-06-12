@@ -50,7 +50,7 @@ public class CastAndCrewPresentation extends GridViewPresentation<PersonRole> {
   }
 
   protected CastAndCrewPresentation(SettingsSource settingsSource, MediaService mediaService, MediaItem<?> mediaItem, List<MediaItem<PersonRole>> participants) {
-    super(settingsSource, mediaService, FXCollections.observableList(participants), SORT_ORDERS, FILTERS, List.of(StateFilter.ALL));
+    super(settingsSource, mediaService, FXCollections.observableList(participants), new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL)));
 
     this.mediaItem = mediaItem;
   }

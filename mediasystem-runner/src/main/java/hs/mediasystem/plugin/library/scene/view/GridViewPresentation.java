@@ -54,34 +54,30 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     ALL, AVAILABLE, UNWATCHED
   }
 
-  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters, List<Filter<T>> groups) {
+  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, ViewOptions<T> viewOptions) {
     this.mediaService = mediaService;
     this.inputItems = items;
     this.sortedItems = new SortedList<>(items);  // Sorting first, so we can determine close neighbours when filtering changes
     this.items = new FilteredList<>(sortedItems);
     this.totalItemCount = Val.create(() -> (int)items.stream().filter(group.getValue().predicate).count(), items, group);
 
-    this.availableSortOrders.setAll(sortOrders);
-    this.availableFilters.setAll(filters);
-    this.availableStateFilters.setAll(stateFilters);
-    this.availableGroups.setAll(groups);
+    this.availableSortOrders.setAll(viewOptions.sortOrders);
+    this.availableFilters.setAll(viewOptions.filters);
+    this.availableStateFilters.setAll(viewOptions.stateFilters);
+    this.availableGroups.setAll(viewOptions.groups);
 
-    this.sortOrder.setValue(sortOrders.get(settingsSource.getIntSettingOrDefault("sort-order", 0, 0, sortOrders.size() - 1)));
-    this.filter.setValue(filters.get(settingsSource.getIntSettingOrDefault("filter", 0, 0, filters.size() - 1)));
-    this.stateFilter.setValue(stateFilters.get(settingsSource.getIntSettingOrDefault("state-filter", 0, 0, stateFilters.size() - 1)));
-    this.group.setValue(groups.get(settingsSource.getIntSettingOrDefault("group", 0, 0, groups.size() - 1)));
+    this.sortOrder.setValue(viewOptions.sortOrders.get(settingsSource.getIntSettingOrDefault("sort-order", 0, 0, viewOptions.sortOrders.size() - 1)));
+    this.filter.setValue(viewOptions.filters.get(settingsSource.getIntSettingOrDefault("filter", 0, 0, viewOptions.filters.size() - 1)));
+    this.stateFilter.setValue(viewOptions.stateFilters.get(settingsSource.getIntSettingOrDefault("state-filter", 0, 0, viewOptions.stateFilters.size() - 1)));
+    this.group.setValue(viewOptions.groups.get(settingsSource.getIntSettingOrDefault("group", 0, 0, viewOptions.groups.size() - 1)));
 
-    this.sortOrder.addListener(obs -> settingsSource.storeIntSetting("sort-order", sortOrders.indexOf(sortOrder.getValue())));
+    this.sortOrder.addListener(obs -> settingsSource.storeIntSetting("sort-order", availableSortOrders.indexOf(sortOrder.getValue())));
     this.filter.addListener(obs -> settingsSource.storeIntSetting("filter", availableFilters.indexOf(filter.getValue())));
     this.stateFilter.addListener(obs -> settingsSource.storeIntSetting("state-filter", availableStateFilters.indexOf(stateFilter.getValue())));
     this.group.addListener(obs -> settingsSource.storeIntSetting("group", availableGroups.indexOf(group.getValue())));
 
     setupLastSelectedTracking(settingsSource);
     setupSortingAndFiltering();
-  }
-
-  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
-    this(settingsSource, mediaService, items, sortOrders, filters, stateFilters, List.of(new Filter<T>("none", mi -> true)));
   }
 
   public void selectItem(MediaItem<T> item) {
@@ -233,6 +229,24 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     public Filter(String resourceKey, Predicate<MediaItem<T>> predicate) {
       this.resourceKey = resourceKey;
       this.predicate = predicate;
+    }
+  }
+
+  public static class ViewOptions<T extends MediaDescriptor> {
+    final List<SortOrder<T>> sortOrders;
+    final List<Filter<T>> filters;
+    final List<StateFilter> stateFilters;
+    final List<Filter<T>> groups;
+
+    public ViewOptions(List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters, List<Filter<T>> groups) {
+      this.sortOrders = sortOrders;
+      this.filters = filters;
+      this.stateFilters = stateFilters;
+      this.groups = groups;
+    }
+
+    public ViewOptions(List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<StateFilter> stateFilters) {
+      this(sortOrders, filters, stateFilters, List.of(new Filter<T>("none", mi -> true)));
     }
   }
 }

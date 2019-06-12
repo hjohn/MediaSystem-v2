@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.basictheme;
 
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
@@ -15,11 +16,11 @@ import javax.inject.Singleton;
 
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = GenericCollectionSetup.class)
-public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation, GenericCollectionSetup> {
+public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation<MediaDescriptor>, GenericCollectionSetup> {
   @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
-  protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation presentation) {
+  protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<MediaDescriptor> presentation) {
     parentPresentation.backdrop.bind(Binds.monadic(presentation.selectedItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
   }
 }

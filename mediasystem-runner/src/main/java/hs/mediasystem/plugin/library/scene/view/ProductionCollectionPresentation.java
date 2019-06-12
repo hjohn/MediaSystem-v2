@@ -60,7 +60,7 @@ public class ProductionCollectionPresentation extends GridViewPresentation<Produ
   }
 
   protected ProductionCollectionPresentation(SettingsSource settingsSource, MediaService mediaService, ProductionCollection productionCollection, ObservableList<MediaItem<Production>> items) {
-    super(settingsSource, mediaService, items, SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED));
+    super(settingsSource, mediaService, items, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)));
 
     this.productionCollection = productionCollection;
   }
