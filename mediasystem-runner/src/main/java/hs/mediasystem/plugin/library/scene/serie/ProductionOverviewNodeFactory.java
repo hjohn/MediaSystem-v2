@@ -474,7 +474,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
   }
 
   private static String createSeasonEpisodeText(MediaItem<Episode> mediaItem) {
-    return mediaItem.getData().getSeasonNumber() == 0 ? "Special" : "Season " + mediaItem.getData().getSeasonNumber() + ", Episode " + mediaItem.getData().getNumber();
+    int seasonNumber = mediaItem.getData().getSeasonNumber();
+
+    return seasonNumber == 0 ? "Special"
+        : seasonNumber == -1 ? "Extra"
+                             : "Season " + seasonNumber + ", Episode " + mediaItem.getData().getNumber();
   }
 
   private static Button create(String title, String subtitle, EventHandler<ActionEvent> eventHandler) {
