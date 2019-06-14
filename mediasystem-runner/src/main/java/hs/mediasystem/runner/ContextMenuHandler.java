@@ -1,14 +1,14 @@
 package hs.mediasystem.runner;
 
 import hs.mediasystem.framework.actions.Formatter;
+import hs.mediasystem.framework.expose.AbstractExposedNumericProperty;
+import hs.mediasystem.framework.expose.AbstractExposedProperty;
 import hs.mediasystem.framework.expose.ExposedBooleanProperty;
 import hs.mediasystem.framework.expose.ExposedControl;
 import hs.mediasystem.framework.expose.ExposedDoubleProperty;
 import hs.mediasystem.framework.expose.ExposedListProperty;
 import hs.mediasystem.framework.expose.ExposedLongProperty;
 import hs.mediasystem.framework.expose.ExposedMethod;
-import hs.mediasystem.framework.expose.AbstractExposedNumericProperty;
-import hs.mediasystem.framework.expose.AbstractExposedProperty;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
@@ -50,9 +50,10 @@ import org.reactfx.value.Var;
 public class ContextMenuHandler {
   @Inject private ActionTargetProvider actionTargetProvider;
 
-  // TODO Properties may be null (if not applicable)
-  // TODO Grouping
-  // TODO Tabbing
+  /*
+   * In future, can add support for grouping certain options, and
+   * spreading the options accross tabs.
+   */
 
   public void handle(KeyEvent event, List<Presentation> activePresentations) {
     GridPane gridPane = new GridPane();

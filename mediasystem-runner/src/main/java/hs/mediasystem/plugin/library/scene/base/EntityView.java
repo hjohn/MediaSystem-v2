@@ -50,7 +50,7 @@ public class EntityView extends StackPane {
   public void setCenter(Node node) {
     center.getChildren().setAll(node);
   }
-  
+
   public void setStatusArea(Node node) {
     if(node == null) {
       statusArea.getChildren().clear();
@@ -63,7 +63,13 @@ public class EntityView extends StackPane {
   @Override
   public void requestFocus() {
     if(defaultInputFocus.get() != null) {
-      Platform.runLater(() -> defaultInputFocus.get().requestFocus());  // TODO make null check part of this
+      Platform.runLater(() -> {
+        Node node = defaultInputFocus.get();
+
+        if(node != null) {
+          node.requestFocus();
+        }
+      });
     }
   }
 }

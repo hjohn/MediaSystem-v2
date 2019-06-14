@@ -15,6 +15,6 @@ public class StartupLocationSetting implements Supplier<Presentation> {
 
   @Override
   public Presentation get() {
-    return factory.create();  // TODO needs to be configurable
+    return factory.create();
   }
 }
