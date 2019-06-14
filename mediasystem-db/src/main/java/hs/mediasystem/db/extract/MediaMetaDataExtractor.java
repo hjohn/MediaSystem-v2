@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 public class MediaMetaDataExtractor {
   private static final Logger LOGGER = Logger.getLogger(MediaMetaDataExtractor.class.getName());
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Extracting Metadata");
+  private static final long HOUR = 60 * 60 * 1000;
 
   @Inject private DatabaseUriStore uriStore;
   @Inject private DatabaseStreamMetaDataStore metaDataStore;
@@ -47,7 +48,7 @@ public class MediaMetaDataExtractor {
   private void extractThread() {
     for(;;) {
       try {
-        Thread.sleep(10000 * 100); // FIXME
+        Thread.sleep(HOUR);
 
         try(Stream<Integer> stream = metaDataStore.streamUnindexedStreamIds()) {
           List<Integer> streamIds = stream.collect(Collectors.toList());
@@ -66,7 +67,7 @@ public class MediaMetaDataExtractor {
           }
         }
 
-        Thread.sleep(60 * 1000 * 1000);
+        Thread.sleep(6 * HOUR);
       }
       catch(Exception e) {
         LOGGER.warning("Exception while extracting local metadata: " + Throwables.formatAsOneLine(e));
