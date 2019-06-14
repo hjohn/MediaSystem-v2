@@ -12,6 +12,8 @@ import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.root.RootPresentation;
 import hs.mediasystem.runner.util.ResourceManager;
 
+import org.reactfx.value.Val;
+
 public class Annotations {
 
   public static void initialize() {
@@ -51,7 +53,7 @@ public class Annotations {
 
     Expose.longProperty(PlayerPresentation::positionControl)
       .of(PlayerPresentation.class)
-      .range(0, 2000000, 3)
+      .range((PlayerPresentation p) -> Val.constant(Long.valueOf(0)), (PlayerPresentation p) -> p.lengthProperty(), 3)
       .as("position");
 
     Expose.longProperty(PlayerPresentation::volumeControl)

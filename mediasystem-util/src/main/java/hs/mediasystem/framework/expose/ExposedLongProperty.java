@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.function.Function;
 
 import javafx.beans.property.Property;
+import javafx.beans.value.ObservableValue;
 
 import org.reactfx.value.Val;
 
@@ -25,8 +26,16 @@ public class ExposedLongProperty<P> extends AbstractExposedNumericProperty<P, Lo
 
   public class RangeBuilder {
     public RangeBuilder range(long min, long max, long step) {
-      ExposedLongProperty.this.min = p -> Val.constant(Long.valueOf(min));
-      ExposedLongProperty.this.max = p -> Val.constant(Long.valueOf(max));
+      ExposedLongProperty.this.min = p -> Val.constant(min);
+      ExposedLongProperty.this.max = p -> Val.constant(max);
+      ExposedLongProperty.this.step = Long.valueOf(step);
+
+      return this;
+    }
+
+    public RangeBuilder range(Function<P, ObservableValue<Long>> min, Function<P, ObservableValue<Long>> max, long step) {
+      ExposedLongProperty.this.min = min;
+      ExposedLongProperty.this.max = max;
       ExposedLongProperty.this.step = Long.valueOf(step);
 
       return this;
