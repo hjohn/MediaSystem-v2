@@ -29,7 +29,5 @@ public interface ExposedControl<P> {
 
   String getName();
   Class<P> getDeclaringClass();
-  Type getType();
-  Class<?> getProvidedType();
 }
 

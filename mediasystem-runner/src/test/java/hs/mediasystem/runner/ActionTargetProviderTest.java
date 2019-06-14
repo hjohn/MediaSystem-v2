@@ -45,7 +45,7 @@ public class ActionTargetProviderTest {
       .range(0.0, 2.0, 0.1)
       .as("brightness");
 
-    Expose.objectProperty(TestRoot::player)
+    Expose.nodeProperty(TestRoot::player)
       .of(TestRoot.class)
       .provides(TestPlayer.class)
       .as("player");
@@ -54,8 +54,6 @@ public class ActionTargetProviderTest {
       .of(TestPlayer.class)
       .range(0, 100, 1)
       .as("position");
-
-    // TODO add range tests
   }
 
   @After
@@ -128,6 +126,34 @@ public class ActionTargetProviderTest {
     positionActionTarget.doAction("add(11)", root, new Event(Event.ANY));
 
     assertEquals(12L, positionActionTarget.getProperty(root).getValue());
+  }
+
+  @Test
+  public void shouldRespectRange() {
+    List<ActionTarget> actionTargets = provider.getActionTargets(TestRoot.class);
+
+    ActionTarget volumeActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("volume")).findFirst().orElse(null);
+    ActionTarget brightnessActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("brightness")).findFirst().orElse(null);
+
+    TestRoot root = new TestRoot();
+
+    volumeActionTarget.doAction("add(1)", root, new Event(Event.ANY));
+    brightnessActionTarget.doAction("add(3.0)", root, new Event(Event.ANY));
+
+    assertEquals(100L, volumeActionTarget.getProperty(root).getValue());
+    assertEquals(2.0, brightnessActionTarget.getProperty(root).getValue());
+
+    volumeActionTarget.doAction("add(-50)", root, new Event(Event.ANY));
+    brightnessActionTarget.doAction("add(-1.0)", root, new Event(Event.ANY));
+
+    assertEquals(50L, volumeActionTarget.getProperty(root).getValue());
+    assertEquals(1.0, brightnessActionTarget.getProperty(root).getValue());
+
+    volumeActionTarget.doAction("subtract(60)", root, new Event(Event.ANY));
+    brightnessActionTarget.doAction("subtract(3.0)", root, new Event(Event.ANY));
+
+    assertEquals(0L, volumeActionTarget.getProperty(root).getValue());
+    assertEquals(0.0, brightnessActionTarget.getProperty(root).getValue());
   }
 
   private static class TestRoot {

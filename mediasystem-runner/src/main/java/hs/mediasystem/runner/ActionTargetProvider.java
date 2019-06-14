@@ -1,8 +1,9 @@
 package hs.mediasystem.runner;
 
+import hs.mediasystem.framework.expose.AbstractExposedProperty;
 import hs.mediasystem.framework.expose.ExposedControl;
 import hs.mediasystem.framework.expose.ExposedMethod;
-import hs.mediasystem.framework.expose.ExposedProperty;
+import hs.mediasystem.framework.expose.ExposedNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +12,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ActionTargetProvider {
-// TODO just roll this into Expose2
+
   public List<ActionTarget> getActionTargets(Class<?> rootClass) {
     return createActionTargets(rootClass, new ArrayList<>());
   }
@@ -23,11 +24,9 @@ public class ActionTargetProvider {
       for(ExposedControl<?> exposedControl : ExposedControl.find(rootClass)) {
         currentPath.add(exposedControl);
 
-        if(exposedControl instanceof ExposedProperty) {
-          ExposedProperty<?, ?> exposedProperty = (ExposedProperty<?, ?>)exposedControl;
-
-          if(exposedProperty.isProvidingSubType()) {
-            actionTargets.addAll(createActionTargets(exposedProperty.getProvidedType(), currentPath));
+        if(exposedControl instanceof AbstractExposedProperty) {
+          if(exposedControl instanceof ExposedNode) {
+            actionTargets.addAll(createActionTargets(((ExposedNode<?, ?>)exposedControl).getProvidedType(), currentPath));
           }
           else {
             actionTargets.add(new ActionTarget(currentPath));

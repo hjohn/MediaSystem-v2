@@ -1,10 +1,14 @@
 package hs.mediasystem.runner;
 
 import hs.mediasystem.framework.actions.Formatter;
+import hs.mediasystem.framework.expose.ExposedBooleanProperty;
 import hs.mediasystem.framework.expose.ExposedControl;
-import hs.mediasystem.framework.expose.ExposedControl.Type;
+import hs.mediasystem.framework.expose.ExposedDoubleProperty;
+import hs.mediasystem.framework.expose.ExposedListProperty;
+import hs.mediasystem.framework.expose.ExposedLongProperty;
 import hs.mediasystem.framework.expose.ExposedMethod;
-import hs.mediasystem.framework.expose.ExposedProperty;
+import hs.mediasystem.framework.expose.AbstractExposedNumericProperty;
+import hs.mediasystem.framework.expose.AbstractExposedProperty;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
@@ -87,10 +91,10 @@ public class ContextMenuHandler {
     P parent = (P)actionTarget.findDirectParentFromRoot(root);
     ExposedControl<?> control = actionTarget.getExposedControl();
 
-    if(control instanceof ExposedProperty) {
-      if(control.getType() == Type.LIST) {
+    if(control instanceof AbstractExposedProperty) {
+      if(control instanceof ExposedListProperty) {
         @SuppressWarnings("unchecked")
-        ExposedProperty<P, Object> exposedControl = (ExposedProperty<P, Object>)actionTarget.getExposedControl();
+        ExposedListProperty<P, Object> exposedControl = (ExposedListProperty<P, Object>)actionTarget.getExposedControl();
         ObservableList<Object> allowedValues = exposedControl.getAllowedValues(parent);
 
         if(allowedValues.size() < 2) {
@@ -125,8 +129,8 @@ public class ContextMenuHandler {
         return spinner;
       }
 
-      if(control.getType() == Type.NUMERIC) {
-        if(control.getProvidedType().equals(Long.class)) {
+      if(control instanceof AbstractExposedNumericProperty) {
+        if(control instanceof ExposedLongProperty) {
           return createSlider(
             actionTarget,
             parent,
@@ -135,7 +139,7 @@ public class ContextMenuHandler {
           );
         }
 
-        if(control.getProvidedType().equals(Double.class)) {
+        if(control instanceof ExposedDoubleProperty) {
           return createSlider(
             actionTarget,
             parent,
@@ -145,9 +149,9 @@ public class ContextMenuHandler {
         }
       }
 
-      if(control.getType() == Type.BOOLEAN) {
+      if(control instanceof ExposedBooleanProperty) {
         @SuppressWarnings("unchecked")
-        ExposedProperty<P, Boolean> exposedControl = (ExposedProperty<P, Boolean>)actionTarget.getExposedControl();
+        ExposedBooleanProperty<P> exposedControl = (ExposedBooleanProperty<P>)actionTarget.getExposedControl();
 
         CheckBox checkBox = new CheckBox();
 
@@ -216,7 +220,7 @@ public class ContextMenuHandler {
 
   private static <P, T extends Number> Node createSlider(ActionTarget actionTarget, P parent, Function<Number, T> fromNumber, Function<T, Number> toNumber) {
     @SuppressWarnings("unchecked")
-    ExposedProperty<P, T> exposedProperty = (ExposedProperty<P, T>)actionTarget.getExposedControl();
+    AbstractExposedNumericProperty<P, T> exposedProperty = (AbstractExposedNumericProperty<P, T>)actionTarget.getExposedControl();
     ObservableValue<? extends Number> min = exposedProperty.getMin(parent);
     ObservableValue<? extends Number> max = exposedProperty.getMax(parent);
     double step = exposedProperty.getStep().doubleValue();

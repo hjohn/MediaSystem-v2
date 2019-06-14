@@ -28,27 +28,27 @@ public class Expose {
     return new ExposedMethod<>(consumer).new ActionParentBuilder();
   }
 
-  public static <P, T> ExposedProperty<P, T>.ObjectParentBuilder objectProperty(Function<P, Property<T>> function) {
-    return new ExposedProperty<>(function).new ObjectParentBuilder();
+  public static <P, T> ExposedNode<P, T>.ParentBuilder nodeProperty(Function<P, Property<T>> function) {
+    return new ExposedNode<>(function).new ParentBuilder();
   }
 
-  public static <P> ExposedProperty<P, Boolean>.BooleanParentBuilder booleanProperty(Function<P, Property<Boolean>> function) {
-    return new ExposedProperty<>(function).new BooleanParentBuilder();
+  public static <P> ExposedBooleanProperty<P>.ParentBuilder booleanProperty(Function<P, Property<Boolean>> function) {
+    return new ExposedBooleanProperty<>(function).new ParentBuilder();
   }
 
-  public static <P> ExposedProperty<P, Long>.LongParentBuilder longProperty(Function<P, Property<Long>> function) {
-    return new ExposedProperty<>(function).new LongParentBuilder();
+  public static <P> ExposedLongProperty<P>.ParentBuilder longProperty(Function<P, Property<Long>> function) {
+    return new ExposedLongProperty<>(function).new ParentBuilder();
   }
 
-  public static <P> ExposedProperty<P, Double>.DoubleParentBuilder doubleProperty(Function<P, Property<Double>> function) {
-    return new ExposedProperty<>(function).new DoubleParentBuilder();
+  public static <P> ExposedDoubleProperty<P>.ParentBuilder doubleProperty(Function<P, Property<Double>> function) {
+    return new ExposedDoubleProperty<>(function).new ParentBuilder();
   }
 
-  public static <P> ExposedProperty<P, Number>.NumberParentBuilder numberProperty(Function<P, Property<Number>> function) {
-    return new ExposedProperty<>(function).new NumberParentBuilder();
+  public static <P> ExposedNumberProperty<P>.ParentBuilder numberProperty(Function<P, Property<Number>> function) {
+    return new ExposedNumberProperty<>(function).new ParentBuilder();
   }
 
-  public static <P, T> ExposedProperty<P, T>.ListParentBuilder listProperty(Function<P, Property<T>> function) {
-    return new ExposedProperty<>(function).new ListParentBuilder();
+  public static <P, T> ExposedListProperty<P, T>.ParentBuilder listProperty(Function<P, Property<T>> function) {
+    return new ExposedListProperty<>(function).new ParentBuilder();
   }
 }

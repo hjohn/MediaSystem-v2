@@ -17,15 +17,9 @@ public class ExposedMethod<P, V> extends AbstractExposedControl<P> {
     return function.apply(parent, event);
   }
 
-  @Override
-  public Class<?> getProvidedType() {
-    return null;
-  }
-
   public class ActionParentBuilder {
     public NameBuilder of(Class<? super P> cls) {
       ExposedMethod.this.cls = cls;
-      ExposedMethod.this.type = Type.METHOD;
 
       return new NameBuilder();
     }

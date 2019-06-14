@@ -44,7 +44,7 @@ public class Annotations {
       .of(PlaybackOverlayPresentation.class)
       .as("overlayVisible");
 
-    Expose.objectProperty((PlaybackOverlayPresentation p) -> p.playerPresentation)
+    Expose.nodeProperty((PlaybackOverlayPresentation p) -> p.playerPresentation)
       .of(PlaybackOverlayPresentation.class)
       .provides(PlayerPresentation.class)
       .as("player");

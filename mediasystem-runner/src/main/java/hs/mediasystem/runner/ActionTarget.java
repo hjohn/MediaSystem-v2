@@ -1,13 +1,20 @@
 package hs.mediasystem.runner;
 
+import hs.mediasystem.framework.expose.AbstractExposedProperty;
+import hs.mediasystem.framework.expose.ExposedBooleanProperty;
 import hs.mediasystem.framework.expose.ExposedControl;
+import hs.mediasystem.framework.expose.ExposedDoubleProperty;
+import hs.mediasystem.framework.expose.ExposedListProperty;
+import hs.mediasystem.framework.expose.ExposedLongProperty;
 import hs.mediasystem.framework.expose.ExposedMethod;
-import hs.mediasystem.framework.expose.ExposedProperty;
+import hs.mediasystem.framework.expose.ExposedNode;
+import hs.mediasystem.framework.expose.ExposedNumberProperty;
 import hs.mediasystem.runner.util.ResourceManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,8 +29,47 @@ import javafx.event.Event;
  */
 public class ActionTarget {
   private static final Logger LOGGER = Logger.getLogger(ActionTarget.class.getName());
+  private static final Pattern NUMERIC_PROPERTY_PATTERN = Pattern.compile("([a-zA-Z]+)\\s*(?:\\((.+)\\))?");
+
+  private static final Map<Class<?>, Map<String, TaskHandler<?>>> TASK_HANDLERS = Map.of(
+    ExposedMethod.class, Map.of(
+      "trigger", (ActionEvent<ExposedMethod<Object, Object>> e) -> e.exposedProperty.call(e.parent, e.event)
+    )
+  );
+
+  private static final Map<Class<?>, Map<String, VoidHandler<?, ?>>> VOID_HANDLERS = Map.of(
+    ExposedLongProperty.class, Map.of(
+      "add", (ActionEvent<ExposedLongProperty<Object>> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() + Long.parseLong(e.parameter))),
+      "subtract", (ActionEvent<ExposedLongProperty<Object>> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() - Long.parseLong(e.parameter)))
+    ),
+    ExposedDoubleProperty.class, Map.of(
+      "add", (ActionEvent<ExposedDoubleProperty<Object>> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() + Double.parseDouble(e.parameter))),
+      "subtract", (ActionEvent<ExposedDoubleProperty<Object>> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() - Double.parseDouble(e.parameter)))
+    ),
+    ExposedNumberProperty.class, Map.of(
+      "add", (ActionEvent<ExposedNumberProperty<Object>> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() + Double.parseDouble(e.parameter))),
+      "subtract", (ActionEvent<ExposedNumberProperty<Object>> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() - Double.parseDouble(e.parameter)))
+    ),
+    ExposedBooleanProperty.class, Map.of(
+      "toggle", (ActionEvent<ExposedBooleanProperty<Object>> e, Property<Boolean> p) -> p.setValue(!p.getValue())
+    ),
+    ExposedListProperty.class, Map.of(
+      "next", (ActionEvent<ExposedListProperty<Object, Object>> e, Property<Object> p) -> {
+        List<Object> list = e.exposedProperty.getAllowedValues(e.parent);
+        int currentIndex = list.indexOf(p.getValue()) + 1;
+
+        if(currentIndex >= list.size()) {
+          currentIndex = 0;
+        }
+
+        p.setValue(list.get(currentIndex));
+      }
+    )
+  );
 
   private final List<ExposedControl<?>> path;
+  private final Map<String, TaskHandler<?>> taskHandlersByAction;
+  private final Map<String, VoidHandler<?, ?>> voidHandlersByAction;
 
   public ActionTarget(List<ExposedControl<?>> path) {
     if(path == null || path.isEmpty()) {
@@ -31,6 +77,54 @@ public class ActionTarget {
     }
 
     this.path = Collections.unmodifiableList(new ArrayList<>(path));
+    this.taskHandlersByAction = TASK_HANDLERS.get(getExposedControl().getClass());
+    this.voidHandlersByAction = VOID_HANDLERS.get(getExposedControl().getClass());
+
+    if(taskHandlersByAction == null && voidHandlersByAction == null) {
+      throw new IllegalStateException("Unhandled target type: " + getExposedControl() + "; for: " + this);
+    }
+  }
+
+  private static long clamp(ActionEvent<ExposedLongProperty<Object>> event, long newValue) {
+    long minValue = event.exposedProperty.getMin(event.parent).getValue();
+    long maxValue = event.exposedProperty.getMax(event.parent).getValue();
+
+    if(newValue < minValue) {
+      newValue = minValue;
+    }
+    else if(newValue > maxValue) {
+      newValue = maxValue;
+    }
+
+    return newValue;
+  }
+
+  private static double clamp(ActionEvent<ExposedDoubleProperty<Object>> event, double newValue) {
+    double minValue = event.exposedProperty.getMin(event.parent).getValue();
+    double maxValue = event.exposedProperty.getMax(event.parent).getValue();
+
+    if(newValue < minValue) {
+      newValue = minValue;
+    }
+    else if(newValue > maxValue) {
+      newValue = maxValue;
+    }
+
+    return newValue;
+  }
+
+  private static double clampNumber(ActionEvent<ExposedNumberProperty<Object>> event, double newValue) {
+    double minValue = event.exposedProperty.getMin(event.parent).getValue().doubleValue();
+    double maxValue = event.exposedProperty.getMax(event.parent).getValue().doubleValue();
+
+    if(newValue < minValue) {
+      newValue = minValue;
+    }
+    else if(newValue > maxValue) {
+      newValue = maxValue;
+    }
+
+    return newValue;
   }
 
   public List<ExposedControl<?>> getPath() {
@@ -69,131 +163,53 @@ public class ActionTarget {
    * @param event an {@link Event}
    */
   public Task<Object> doAction(String action, Object root, Event event) {
-    @SuppressWarnings("unchecked")
-    ExposedControl<Object> exposedControl = (ExposedControl<Object>)path.get(path.size() - 1);
     Object parent = findDirectParentFromRoot(root);
+    ExposedControl<?> exposedControl = getExposedControl();
 
     LOGGER.fine("Doing '" + action + "' for '" + exposedControl.getName() + "' of " + parent);
 
-    if(exposedControl instanceof ExposedMethod) {
-      if(action.equals("trigger")) {
+    Matcher matcher = NUMERIC_PROPERTY_PATTERN.matcher(action);
+
+    if(matcher.matches()) {
+      ActionEvent<Object> actionEvent = new ActionEvent<>(parent, event, matcher.group(2), exposedControl);
+
+      if(taskHandlersByAction != null) {
         @SuppressWarnings("unchecked")
-        ExposedMethod<Object, Object> exposedMethod = (ExposedMethod<Object, Object>)exposedControl;
+        TaskHandler<Object> handler = (TaskHandler<Object>)taskHandlersByAction.get(matcher.group(1));
 
-        return exposedMethod.call(parent, event);
-      }
-
-      throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
-    }
-    else if(exposedControl instanceof ExposedProperty) {
-      @SuppressWarnings("unchecked")
-      ExposedProperty<Object, ?> exposedProperty = (ExposedProperty<Object, ?>)exposedControl;
-      Class<?> providedType = exposedProperty.getProvidedType();
-
-      if(providedType == null) {
-        if(action.equals("next")) {
-          @SuppressWarnings("unchecked")
-          List<Object> list = (List<Object>)exposedProperty.getAllowedValues(parent);
-          @SuppressWarnings("unchecked")
-          Property<Object> property = (Property<Object>)exposedProperty.getProperty(parent);
-          int currentIndex = list.indexOf(property.getValue());
-
-          currentIndex++;
-
-          if(currentIndex >= list.size()) {
-            currentIndex = 0;
-          }
-
-          property.setValue(list.get(currentIndex));
-        }
-        else {
-          throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
+        if(handler != null) {
+          return handler.handle(actionEvent);
         }
       }
-      else if(Number.class.isAssignableFrom(providedType)) {
-        Matcher matcher = PATTERN.matcher(action);
 
-        if(matcher.matches()) {
-          if(matcher.group(1).equals("add")) {
-            if(exposedProperty.getProvidedType().equals(Long.class)) {
-              @SuppressWarnings("unchecked")
-              Property<Long> property = (Property<Long>)exposedProperty.getProperty(parent);
+      if(voidHandlersByAction != null) {
+        @SuppressWarnings("unchecked")
+        VoidHandler<Object, Object> handler = (VoidHandler<Object, Object>)voidHandlersByAction.get(matcher.group(1));
 
-              property.setValue(property.getValue() + Long.parseLong(matcher.group(2).trim()));
-            }
-            else if(exposedProperty.getProvidedType().equals(Number.class)) {
-              @SuppressWarnings("unchecked")
-              Property<Number> property = (Property<Number>)exposedProperty.getProperty(parent);
+        if(handler != null) {
+          if(exposedControl instanceof AbstractExposedProperty) {
+            @SuppressWarnings("unchecked")
+            AbstractExposedProperty<Object, Object> abstractExposedProperty = (AbstractExposedProperty<Object, Object>)exposedControl;
 
-              property.setValue(property.getValue().doubleValue() + Double.parseDouble(matcher.group(2).trim()));
-            }
-            else if(exposedProperty.getProvidedType().equals(Double.class)) {
-              @SuppressWarnings("unchecked")
-              Property<Double> property = (Property<Double>)exposedProperty.getProperty(parent);
-
-              property.setValue(property.getValue() + Double.parseDouble(matcher.group(2).trim()));
-            }
-            else {
-              throw new IllegalStateException("Unknown action '" + action + "' for type: " + exposedProperty.getProvidedType() + "; for: " + this);
-            }
-          }
-          else if(matcher.group(1).equals("subtract")) {
-            if(exposedProperty.getProvidedType().equals(Long.class)) {
-              @SuppressWarnings("unchecked")
-              Property<Long> property = (Property<Long>)exposedProperty.getProperty(parent);
-
-              property.setValue(property.getValue() - Long.parseLong(matcher.group(2).trim()));
-            }
-            else if(exposedProperty.getProvidedType().equals(Number.class)) {
-              @SuppressWarnings("unchecked")
-              Property<Number> property = (Property<Number>)exposedProperty.getProperty(parent);
-
-              property.setValue(property.getValue().doubleValue() - Double.parseDouble(matcher.group(2).trim()));
-            }
-            else if(exposedProperty.getProvidedType().equals(Double.class)) {
-              @SuppressWarnings("unchecked")
-              Property<Double> property = (Property<Double>)exposedProperty.getProperty(parent);
-
-              property.setValue(property.getValue() - Double.parseDouble(matcher.group(2).trim()));
-            }
-            else {
-              throw new IllegalStateException("Unknown action '" + action + "' for type: " + exposedProperty.getProvidedType() + "; for: " + this);
-            }
+            handler.handle(actionEvent, abstractExposedProperty.getProperty(parent));
           }
           else {
-            throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
+            handler.handle(actionEvent, null);
           }
-        }
-      }
-      else if(Boolean.class.isAssignableFrom(providedType)) {
-        if(action.equals("toggle")) {
-          @SuppressWarnings("unchecked")
-          Property<Boolean> property = (Property<Boolean>)exposedProperty.getProperty(parent);
 
-          property.setValue(!property.getValue());
+          return null;
         }
-        else {
-          throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
-        }
-      }
-      else {
-        throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
       }
     }
-    else {
-      throw new IllegalStateException("Unhandled target type: " + exposedControl + "; for: " + this);
-    }
 
-    return null;
+    throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
   }
-
-  private static final Pattern PATTERN = Pattern.compile("(add|subtract)\\s*(?:\\((.+)\\))?");
 
   @SuppressWarnings("unchecked")
   public <T> Property<T> getProperty(Object root) {
     Object parent = findDirectParentFromRoot(root);
 
-    return ((ExposedProperty<Object, T>)path.get(path.size() - 1)).getProperty(parent);
+    return ((AbstractExposedProperty<Object, T>)path.get(path.size() - 1)).getProperty(parent);
   }
 
   public ExposedControl<?> getExposedControl() {
@@ -207,12 +223,12 @@ public class ActionTarget {
       @SuppressWarnings("unchecked")
       ExposedControl<Object> pathMember = (ExposedControl<Object>)path.get(i);
 
-      if(pathMember instanceof ExposedMethod || ((ExposedProperty<?, ?>)pathMember).getProvidedType() == null) {
+      if(!(pathMember instanceof ExposedNode)) {
         throw new IllegalStateException("Bad path to property; \"" + pathMember.getName() + "\" does not have child properties; target: " + this);
       }
 
       @SuppressWarnings("unchecked")
-      Property<Object> property = ((ExposedProperty<Object, Object>)pathMember).getProperty(parent);
+      Property<Object> property = ((AbstractExposedProperty<Object, Object>)pathMember).getProperty(parent);
 
       if(property == null) {
         throw new IllegalStateException("\"" + pathMember.getName() + "\" was not set; target: " + this);
@@ -227,5 +243,27 @@ public class ActionTarget {
   @Override
   public String toString() {
     return path.get(0).getDeclaringClass().getName() + "::" + path.stream().map(ExposedControl::getName).collect(Collectors.joining("::"));
+  }
+
+  private interface VoidHandler<T, U> {
+    void handle(ActionEvent<T> event, Property<U> property);
+  }
+
+  private interface TaskHandler<T> {
+    Task<Object> handle(ActionEvent<T> event);
+  }
+
+  class ActionEvent<T> {
+    Object parent;
+    Event event;
+    String parameter;
+    T exposedProperty;
+
+    ActionEvent(Object parent, Event event, String parameter, T exposedProperty) {
+      this.parent = parent;
+      this.event = event;
+      this.parameter = parameter;
+      this.exposedProperty = exposedProperty;
+    }
   }
 }
