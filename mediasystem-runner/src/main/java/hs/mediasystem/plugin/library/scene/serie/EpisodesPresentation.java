@@ -12,6 +12,7 @@ import hs.mediasystem.scanner.api.BasicStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -81,7 +82,7 @@ public class EpisodesPresentation extends AbstractPresentation {
       break;
     }
 
-    ObservableSet<EventStream<Change<Boolean>>> set = FXCollections.observableSet(Collections.emptySet());
+    ObservableSet<EventStream<Change<Boolean>>> set = FXCollections.observableSet(new HashSet<>());
 
     for(MediaItem<Episode> episodeItem : internalEpisodeItems) {
       set.add(EventStreams.changesOf(episodeItem.missing));
