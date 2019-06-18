@@ -268,15 +268,21 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
     ViewPort viewPort = viewPortFactory.create(presentation, n -> {
 
       /*
-       * Special functionality for a background node:
+       * Special functionality for a background node; note that it is possible
+       * to have a null background node when native tricks are used to display
+       * the background; in those cases the overlayed scene still needs to be
+       * made transparent and the clock hidden.
        */
 
-      Object backgroundNode = n.getProperties().get("background");
+      if(n.getProperties().containsKey("background")) {
+        Object backgroundNode = n.getProperties().get("background");
 
-      if(backgroundNode != null) {
-        backgroundNodeActive = true;
+        if(backgroundNode != null) {
+          backgroundNodeActive = true;
 
-        sceneManager.setPlayerRoot(backgroundNode);
+          sceneManager.setPlayerRoot(backgroundNode);
+        }
+
         sceneManager.fillProperty().set(Color.TRANSPARENT);
 
         presentation.clockVisible.set(false);
