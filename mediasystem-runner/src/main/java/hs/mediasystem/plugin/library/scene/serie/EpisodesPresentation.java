@@ -20,6 +20,7 @@ import javafx.collections.ObservableSet;
 
 import javax.inject.Inject;
 
+import org.reactfx.Change;
 import org.reactfx.EventStream;
 import org.reactfx.EventStreams;
 import org.reactfx.value.Var;
@@ -80,7 +81,7 @@ public class EpisodesPresentation extends AbstractPresentation {
       break;
     }
 
-    ObservableSet<EventStream<?>> set = FXCollections.observableSet();
+    ObservableSet<EventStream<Change<Boolean>>> set = FXCollections.observableSet(Collections.emptySet());
 
     for(MediaItem<Episode> episodeItem : internalEpisodeItems) {
       set.add(EventStreams.changesOf(episodeItem.missing));
