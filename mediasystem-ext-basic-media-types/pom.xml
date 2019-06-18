@@ -54,26 +54,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
       </plugin>
-
-      <plugin>
-        <groupId>com.googlecode.addjars-maven-plugin</groupId>
-        <artifactId>addjars-maven-plugin</artifactId>
-        <version>1.0.2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>add-jars</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>${basedir}/lib</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
