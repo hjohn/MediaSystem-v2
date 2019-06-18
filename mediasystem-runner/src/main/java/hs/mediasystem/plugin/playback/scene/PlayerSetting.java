@@ -18,6 +18,12 @@ public class PlayerSetting implements Supplier<PlayerPresentation> {
 
   @Override
   public PlayerPresentation get() {
-    return playerFactoriesProvider.get().get(0).create(ini);
+    String factoryClassName = ini.getSection("general").getDefault("player.factoryClass", "hs.mediasystem.ext.vlc.NativeWindowVLCPlayerFactory");
+
+    return playerFactoriesProvider.get().stream()
+      .filter(f -> f.getClass().getName().equals(factoryClassName))
+      .findFirst()
+      .map(f -> f.create(ini))
+      .orElse(null);
   }
 }

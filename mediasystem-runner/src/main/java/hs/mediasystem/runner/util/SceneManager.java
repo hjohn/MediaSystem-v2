@@ -14,4 +14,5 @@ public interface SceneManager {
 
   int getScreenNumber();
   void setScreenNumber(int screenNumber);
+  void display();
 }

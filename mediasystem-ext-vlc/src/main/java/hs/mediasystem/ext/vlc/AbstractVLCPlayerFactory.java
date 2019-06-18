@@ -2,9 +2,10 @@ package hs.mediasystem.ext.vlc;
 
 import com.sun.jna.NativeLibrary;
 
+import hs.mediasystem.domain.PlayerWindowIdSupplier;
+import hs.mediasystem.domain.PlayerFactory;
 import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.ext.vlc.VLCPlayer.Mode;
-import hs.mediasystem.domain.PlayerFactory;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 
@@ -16,10 +17,12 @@ import java.util.List;
 public abstract class AbstractVLCPlayerFactory implements PlayerFactory {
   private final String name;
   private final Mode mode;
+  private final PlayerWindowIdSupplier supplier;
 
-  public AbstractVLCPlayerFactory(String name, Mode mode) {
+  public AbstractVLCPlayerFactory(String name, Mode mode, PlayerWindowIdSupplier supplier) {
     this.name = name;
     this.mode = mode;
+    this.supplier = supplier;
   }
 
   @Override
@@ -45,7 +48,7 @@ public abstract class AbstractVLCPlayerFactory implements PlayerFactory {
       }
     }
 
-    return new VLCPlayer(mode, args.toArray(new String[args.size()]));
+    return new VLCPlayer(mode, supplier, args.toArray(new String[args.size()]));
   }
 
   @Override

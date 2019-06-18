@@ -7,7 +7,7 @@ import hs.mediasystem.runner.config.BasicSetup;
 import hs.mediasystem.runner.config.DatabaseConfigurer;
 import hs.mediasystem.runner.config.LoggingConfigurer;
 import hs.mediasystem.runner.config.MediaSystemConfigurer;
-import hs.mediasystem.runner.util.DefaultSceneManager;
+import hs.mediasystem.runner.util.FXSceneManager;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
@@ -53,15 +53,14 @@ public class FrontEndRunner extends Application {
     Injector injector = BasicSetup.create();
     Ini ini = injector.getInstance(Ini.class);
 
-    DatabaseConfigurer.configure(injector, ini.getSection("database"));
-    MediaSystemConfigurer.configure(injector);
-
     Section generalSection = ini.getSection("general");
     int screenNumber = generalSection == null ? 0 : Integer.parseInt(generalSection.getDefault("screen", "0"));
-
-    SceneManager sceneManager = new DefaultSceneManager("MediaSystem", screenNumber);
+    SceneManager sceneManager = new FXSceneManager("MediaSystem", screenNumber);
 
     injector.registerInstance(sceneManager);
+
+    DatabaseConfigurer.configure(injector, ini.getSection("database"));
+    MediaSystemConfigurer.configure(injector);
 
     new PluginManager(injector).loadPluginAndScan("hs.mediasystem");
 
@@ -69,6 +68,7 @@ public class FrontEndRunner extends Application {
 
     injector.getInstance(RootPresentationHandler.class);
 
+    sceneManager.display();
     sceneManager.getRootPane().fireEvent(NavigateEvent.to(startupLocationSetting.get()));
   }
 }

@@ -6,6 +6,7 @@ import hs.mediasystem.domain.AudioTrack;
 import hs.mediasystem.domain.PlayerEvent;
 import hs.mediasystem.domain.PlayerEvent.Type;
 import hs.mediasystem.domain.PlayerPresentation;
+import hs.mediasystem.domain.PlayerWindowIdSupplier;
 import hs.mediasystem.domain.Subtitle;
 import hs.mediasystem.framework.actions.controls.DecimalControl;
 import hs.mediasystem.framework.actions.controls.IntegerControl;
@@ -16,7 +17,6 @@ import hs.mediasystem.util.javafx.beans.Accessor;
 import hs.mediasystem.util.javafx.beans.BeanBooleanProperty;
 import hs.mediasystem.util.javafx.control.ResizableWritableImageView;
 
-import java.awt.Canvas;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -55,10 +55,11 @@ import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
 import uk.co.caprica.vlcj.player.direct.RenderCallback;
 import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
+import uk.co.caprica.vlcj.player.embedded.videosurface.windows.WindowsVideoSurfaceAdapter;
 
 public class VLCPlayer implements PlayerPresentation {
   public enum Mode {
-    SEPERATE_WINDOW, CANVAS
+    CANVAS, WID
   }
 
   private final MediaPlayer mediaPlayer;
@@ -67,7 +68,7 @@ public class VLCPlayer implements PlayerPresentation {
 
   private volatile boolean videoOutputStarted;
 
-  public VLCPlayer(Mode mode, String... args) {
+  public VLCPlayer(Mode mode, PlayerWindowIdSupplier supplier, String... args) {
     List<String> arguments = new ArrayList<>(Arrays.asList(args));
 
     arguments.add("--no-plugins-cache");
@@ -84,14 +85,17 @@ public class VLCPlayer implements PlayerPresentation {
 
     MediaPlayerFactory factory = new MediaPlayerFactory(arguments);
 
-    if(mode == Mode.SEPERATE_WINDOW) {
+    if(mode == Mode.WID) {
       EmbeddedMediaPlayer mp = factory.newEmbeddedMediaPlayer();
 
-      Canvas canvas = new Canvas();
+      mp.setVideoSurface(new DeferredComponentIdVideoSurface(new WindowsVideoSurfaceAdapter()) {
+        @Override
+        protected long getComponentId() {
+          return supplier.getWindowId();
+        }
+      });
 
-      mp.setVideoSurface(factory.newVideoSurface(canvas));
-
-      this.canvas = canvas;
+      this.canvas = null;
       this.mediaPlayer = mp;
     }
     else {

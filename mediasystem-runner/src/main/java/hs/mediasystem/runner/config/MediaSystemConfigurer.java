@@ -5,11 +5,9 @@ import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.DatabaseStreamPrintProvider;
 import hs.mediasystem.db.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
-import hs.mediasystem.domain.PlayerFactory;
 import hs.mediasystem.runner.CollectionLocationManager;
 import hs.mediasystem.runner.expose.Annotations;
 import hs.mediasystem.runner.util.DatabaseResponseCache;
-import hs.mediasystem.util.ini.Ini;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -66,14 +64,6 @@ public class MediaSystemConfigurer {
     injector.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
     injector.getInstance(ScannerController.class);       // Triggers background thread
     injector.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
-
-//    try {
-//      p.getClassLoader().loadClass("com.sun.jna.NativeLibrary");
-//    }
-//    catch(ClassNotFoundException e) {
-//      throw new RuntimeException(e);
-//    }
-    injector.getInstance(PlayerFactory.class).create(injector.getInstance(Ini.class));
 
     Annotations.initialize();
 
