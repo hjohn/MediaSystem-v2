@@ -1,6 +1,5 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.actions.Formatter;
 import hs.mediasystem.framework.expose.AbstractExposedNumericProperty;
 import hs.mediasystem.framework.expose.AbstractExposedProperty;
 import hs.mediasystem.framework.expose.ExposedBooleanProperty;
@@ -9,6 +8,7 @@ import hs.mediasystem.framework.expose.ExposedDoubleProperty;
 import hs.mediasystem.framework.expose.ExposedListProperty;
 import hs.mediasystem.framework.expose.ExposedLongProperty;
 import hs.mediasystem.framework.expose.ExposedMethod;
+import hs.mediasystem.framework.expose.Formatter;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;

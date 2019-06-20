@@ -36,15 +36,15 @@ public class PlayerBindings {
   public final BooleanBinding paused;
 
   public PlayerBindings(final ObjectProperty<PlayerPresentation> player) {
-    position = Val.flatMap(player, PlayerPresentation::positionControl).orElseConst(0L);
+    position = Val.flatMap(player, PlayerPresentation::positionProperty).orElseConst(0L);
     length = Val.flatMap(player, PlayerPresentation::lengthProperty).orElseConst(1000L);
-    volume = Val.flatMap(player, PlayerPresentation::volumeControl).orElseConst(100L);
-    rate = Val.flatMap(player, PlayerPresentation::rateControl).orElseConst(1.0);
-    audioDelay = Val.flatMap(player, PlayerPresentation::audioDelayControl).orElseConst(0L);
-    subtitleDelay = Val.flatMap(player, PlayerPresentation::subtitleDelayControl).orElseConst(0L);
-    brightness = Val.flatMap(player, PlayerPresentation::brightnessControl).orElseConst(1.0);
-    audioTrack = Val.flatMap(player, PlayerPresentation::audioTrackControl);
-    subtitle = Val.flatMap(player, PlayerPresentation::subtitleControl);
+    volume = Val.flatMap(player, PlayerPresentation::volumeProperty).orElseConst(100L);
+    rate = Val.flatMap(player, PlayerPresentation::rateProperty).orElseConst(1.0);
+    audioDelay = Val.flatMap(player, PlayerPresentation::audioDelayProperty).orElseConst(0L);
+    subtitleDelay = Val.flatMap(player, PlayerPresentation::subtitleDelayProperty).orElseConst(0L);
+    brightness = Val.flatMap(player, PlayerPresentation::brightnessProperty).orElseConst(1.0);
+    audioTrack = Val.flatMap(player, PlayerPresentation::audioTrackProperty);
+    subtitle = Val.flatMap(player, PlayerPresentation::subtitleProperty);
     muted = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "muted"));
     paused = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "paused"));
 

@@ -1,13 +1,11 @@
 package hs.mediasystem.domain;
 
-import hs.mediasystem.framework.actions.controls.DecimalControl;
-import hs.mediasystem.framework.actions.controls.IntegerControl;
-import hs.mediasystem.framework.actions.controls.ListControl;
-
 import java.nio.file.Path;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.Property;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 
 import org.reactfx.value.Val;
@@ -33,14 +31,14 @@ public interface PlayerPresentation {
    *
    * @return the position of the stream in milliseconds
    */
-  IntegerControl positionControl();
+  Property<Long> positionProperty();
 
   /**
    * Returns the current volume in percent.
    *
    * @return the current volume in percent
    */
-  IntegerControl volumeControl();
+  Property<Long> volumeProperty();
 
   BooleanProperty mutedProperty();
 
@@ -51,7 +49,7 @@ public interface PlayerPresentation {
    *
    * @return the current subtitle delay in milliseconds
    */
-  IntegerControl subtitleDelayControl();
+  Property<Long> subtitleDelayProperty();
 
   /**
    * Returns the current subtitle.  Will return a Subtitle.DISABLED when not showing any
@@ -59,30 +57,32 @@ public interface PlayerPresentation {
    *
    * @return the current subtitle
    */
-  ListControl<Subtitle> subtitleControl();
+  Property<Subtitle> subtitleProperty();
+  ObservableList<Subtitle> subtitles();
 
   /**
    * Returns the current rate of playback as factor of normal speed.
    *
    * @return the current rate of playback
    */
-  DecimalControl rateControl();
+  Property<Double> rateProperty();
 
   /**
    * Returns the audio delay, in milliseconds.
    *
    * @return the audio delay, in milliseconds
    */
-  IntegerControl audioDelayControl();
+  Property<Long> audioDelayProperty();
 
-  ListControl<AudioTrack> audioTrackControl();
+  Property<AudioTrack> audioTrackProperty();
+  ObservableList<AudioTrack> audioTracks();
 
   /**
    * Returns the brightness as a float between 0 and 2, with 1 being normal.
    *
    * @return the brightness
    */
-  DecimalControl brightnessControl();
+  Property<Double> brightnessProperty();
 
   Object getDisplayComponent();
 

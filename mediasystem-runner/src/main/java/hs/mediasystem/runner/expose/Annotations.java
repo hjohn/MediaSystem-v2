@@ -51,12 +51,12 @@ public class Annotations {
       .provides(PlayerPresentation.class)
       .as("player");
 
-    Expose.longProperty(PlayerPresentation::positionControl)
+    Expose.longProperty(PlayerPresentation::positionProperty)
       .of(PlayerPresentation.class)
       .range((PlayerPresentation p) -> Val.constant(Long.valueOf(0)), (PlayerPresentation p) -> p.lengthProperty(), 3)
       .as("position");
 
-    Expose.longProperty(PlayerPresentation::volumeControl)
+    Expose.longProperty(PlayerPresentation::volumeProperty)
       .of(PlayerPresentation.class)
       .range(0, 100, 5)
       .as("volume");
@@ -69,34 +69,34 @@ public class Annotations {
       .of(PlayerPresentation.class)
       .as("paused");
 
-    Expose.longProperty(PlayerPresentation::subtitleDelayControl)
+    Expose.longProperty(PlayerPresentation::subtitleDelayProperty)
       .of(PlayerPresentation.class)
       .range(-60000, 60000, 100)
       .format(v -> v == 0 ? "None" :
             v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0))
       .as("subtitleDelay");
 
-    Expose.doubleProperty(PlayerPresentation::rateControl)
+    Expose.doubleProperty(PlayerPresentation::rateProperty)
       .of(PlayerPresentation.class)
       .range(0.1, 1.9, 0.1)
       .format(v -> v.floatValue() == 1.0f ? "Standard" : String.format("%+.0f%%", (v.floatValue() - 1) * 100))
       .as("rate");
 
-    Expose.doubleProperty(PlayerPresentation::brightnessControl)
+    Expose.doubleProperty(PlayerPresentation::brightnessProperty)
       .of(PlayerPresentation.class)
       .range(0.0, 2.0, 0.01)
       .format(v -> v.floatValue() == 1.0f ? "Standard" : String.format("%+.0f%%", (v.floatValue() - 1) * 100))
       .as("brightness");
 
-    Expose.listProperty(PlayerPresentation::subtitleControl)
+    Expose.listProperty(PlayerPresentation::subtitleProperty)
       .of(PlayerPresentation.class)
-      .allowedValues(p -> p.subtitleControl().getAllowedValues())
+      .allowedValues(p -> p.subtitles())
       .format(Subtitle::getDescription)
       .as("subtitle");
 
-    Expose.listProperty(PlayerPresentation::audioTrackControl)
+    Expose.listProperty(PlayerPresentation::audioTrackProperty)
       .of(PlayerPresentation.class)
-      .allowedValues(p -> p.audioTrackControl().getAllowedValues())
+      .allowedValues(p -> p.audioTracks())
       .format(AudioTrack::getDescription)
       .as("audioTrack");
 

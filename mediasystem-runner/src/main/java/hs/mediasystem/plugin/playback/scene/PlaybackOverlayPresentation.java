@@ -56,7 +56,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
   private void postConstruct() {
     this.playerPresentation.set(playerSetting.get());
 
-    this.playerPresentation.get().positionControl().addListener(new ChangeListener<Number>() {
+    this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
       private long totalTimeViewed;
       private long timeViewedSinceLastSkip;
 
@@ -110,7 +110,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
           if(timeViewedSinceLastSkip > 30 * 1000) {
             int resumePosition = 0;
-            long position = player.positionControl().getValue();
+            long position = player.positionProperty().getValue();
 
             if(position > 30 * 1000 && position < length * 9 / 10) {
               resumePosition = (int)(position / 1000) - 10;

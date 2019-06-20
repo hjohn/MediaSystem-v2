@@ -1,7 +1,5 @@
 package hs.mediasystem.framework.expose;
 
-import hs.mediasystem.framework.actions.Formatter;
-
 import java.util.ArrayList;
 import java.util.function.Function;
 

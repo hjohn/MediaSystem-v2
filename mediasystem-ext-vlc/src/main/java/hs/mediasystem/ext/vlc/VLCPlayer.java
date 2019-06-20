@@ -8,10 +8,6 @@ import hs.mediasystem.domain.PlayerEvent.Type;
 import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.domain.PlayerWindowIdSupplier;
 import hs.mediasystem.domain.Subtitle;
-import hs.mediasystem.framework.actions.controls.DecimalControl;
-import hs.mediasystem.framework.actions.controls.IntegerControl;
-import hs.mediasystem.framework.actions.controls.ListControl;
-import hs.mediasystem.framework.actions.controls.ValueRestrictions;
 import hs.mediasystem.util.javafx.Events;
 import hs.mediasystem.util.javafx.beans.Accessor;
 import hs.mediasystem.util.javafx.beans.BeanBooleanProperty;
@@ -31,6 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -148,12 +145,6 @@ public class VLCPlayer implements PlayerPresentation {
       this.canvas = canvas;
       this.mediaPlayer = mp;
     }
-
-    position = new IntegerControl(
-      0L,
-      new ValueRestrictions<>(Val.<Long>constant(0L), Val.map(lengthProperty(), (Long v) -> v - 1000), 100L),
-      v -> "ms: " + v
-    );
 
     SuspendableEventStream<Change<Long>> positionChanges = EventStreams.changesOf(position).suppressible();
 
@@ -283,41 +274,10 @@ public class VLCPlayer implements PlayerPresentation {
       }
     });
 
-    volume = new IntegerControl(
-      100L,
-      new ValueRestrictions<>(0L, 100L, 5L),
-      v -> String.format("%d%%", v)
-    );
     volume.addListener((obs, old, value) -> mediaPlayer.setVolume(value.intValue()));
-
-    audioDelay = new IntegerControl(
-      0L,
-      new ValueRestrictions<>(-60000L, 60000L, 100L),
-      v -> v == 0 ? "None" :
-           v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0)
-    );
     audioDelay.addListener((obs, old, value) -> mediaPlayer.setAudioDelay(value * 1000));
-
-    subtitleDelay = new IntegerControl(
-      0L,
-      new ValueRestrictions<>(-60000L, 60000L, 100L),
-      v -> v == 0 ? "None" :
-           v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0)
-    );
     subtitleDelay.addListener((obs, old, value) -> mediaPlayer.setSpuDelay(-value * 1000));
-
-    rate = new DecimalControl(
-      1.0,
-      new ValueRestrictions<>(0.1, 1.9, 0.1),
-      v -> v.floatValue() == 1.0f ? "Standard" : String.format("%+.0f%%", (v.floatValue() - 1) * 100)
-    );
     rate.addListener((obs, old, value) -> mediaPlayer.setRate(value.floatValue()));
-
-    brightness = new DecimalControl(
-      1.0,
-      new ValueRestrictions<>(0.0, 2.0, 0.01),
-      v -> v.floatValue() == 1.0f ? "Standard" : String.format("%+.0f%%", (v.floatValue() - 1) * 100)
-    );
     brightness.addListener((obs, old, value) -> mediaPlayer.setBrightness(value.floatValue()));
 
     mutedProperty = new BeanBooleanProperty(new Accessor<Boolean>() {
@@ -490,29 +450,31 @@ public class VLCPlayer implements PlayerPresentation {
   private final Var<Long> length = Var.newSimpleVar(null);
   @Override public Val<Long> lengthProperty() { return length.orElseConst(1000L); }
 
-  private final IntegerControl position;
-  @Override public IntegerControl positionControl() { return position; }
+  private final Property<Long> position = Var.newSimpleVar(0L);
+  @Override public Property<Long> positionProperty() { return position; }
 
-  private final IntegerControl volume;
-  @Override public IntegerControl volumeControl() { return volume; }
+  private final Property<Long> volume = Var.newSimpleVar(100L);
+  @Override public Property<Long> volumeProperty() { return volume; }
 
-  private final IntegerControl audioDelay;
-  @Override public IntegerControl audioDelayControl() { return audioDelay; }
+  private final Property<Long> audioDelay = Var.newSimpleVar(0L);
+  @Override public Property<Long> audioDelayProperty() { return audioDelay; }
 
-  private final DecimalControl rate;
-  @Override public DecimalControl rateControl() { return rate; }
+  private final Property<Double> rate = Var.newSimpleVar(1.0);
+  @Override public Property<Double> rateProperty() { return rate; }
 
-  private final DecimalControl brightness;
-  @Override public DecimalControl brightnessControl() { return brightness; }
+  private final Property<Double> brightness = Var.newSimpleVar(1.0);
+  @Override public Property<Double> brightnessProperty() { return brightness; }
 
-  private final ListControl<Subtitle> subtitle = new ListControl<>(Subtitle.DISABLED, subtitles, s -> s.getDescription());
-  @Override public ListControl<Subtitle> subtitleControl() { return subtitle; }
+  private final Var<Subtitle> subtitle = Var.newSimpleVar(Subtitle.DISABLED);
+  @Override public Property<Subtitle> subtitleProperty() { return subtitle; }
+  @Override public ObservableList<Subtitle> subtitles() { return FXCollections.unmodifiableObservableList(subtitles); }
 
-  private final ListControl<AudioTrack> audioTrack = new ListControl<>(AudioTrack.NO_AUDIO_TRACK, audioTracks, a -> a.getDescription());
-  @Override public ListControl<AudioTrack> audioTrackControl() { return audioTrack; }
+  private final Var<AudioTrack> audioTrack = Var.newSimpleVar(AudioTrack.NO_AUDIO_TRACK);
+  @Override public Property<AudioTrack> audioTrackProperty() { return audioTrack; }
+  @Override public ObservableList<AudioTrack> audioTracks() { return FXCollections.unmodifiableObservableList(audioTracks); }
 
-  private final IntegerControl subtitleDelay;
-  @Override public IntegerControl subtitleDelayControl() { return subtitleDelay; }
+  private final Property<Long> subtitleDelay = Var.newSimpleVar(0L);
+  @Override public Property<Long> subtitleDelayProperty() { return subtitleDelay; }
 
   private final BooleanProperty mutedProperty;
   @Override public BooleanProperty mutedProperty() { return mutedProperty; }
