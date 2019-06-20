@@ -56,7 +56,7 @@ public class MediaSystemConfigurer {
       pluginManager.loadPluginAndScan(URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-tmdb/target/classes/").toURL());
       pluginManager.loadPluginAndScan(URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-local/target/classes/").toURL());
       pluginManager.loadPluginAndScan(
-        URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/classes/").toURL(),
+        URI.create("file:/P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/classes/").toURL(),
         new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/dependencies-only.jar")
       );
     }
