@@ -26,10 +26,6 @@
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-swing</artifactId>
-    </dependency>
     
     <!-- For PostConstruct annotation -->
     <dependency>

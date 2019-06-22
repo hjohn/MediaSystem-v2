@@ -1,10 +1,6 @@
 package hs.mediasystem.util.javafx;
 
-import java.util.concurrent.CountDownLatch;
-
-import javafx.embed.swing.JFXPanel;
-
-import javax.swing.SwingUtilities;
+import javafx.application.Platform;
 
 import org.junit.Rule;
 import org.junit.rules.TestRule;
@@ -48,28 +44,11 @@ public class JavaFXRunningRule implements TestRule {
     @Override
     public void evaluate() throws Throwable {
       if(!jfxIsSetup) {
-        setupJavaFX();
+        Platform.startup(() -> {});
         jfxIsSetup = true;
       }
 
       evaluateStatement(statement);
-    }
-
-    protected void setupJavaFX() throws InterruptedException {
-      long timeMillis = System.currentTimeMillis();
-      final CountDownLatch latch = new CountDownLatch(1);
-      SwingUtilities.invokeLater(new Runnable() {
-        @SuppressWarnings("unused")
-        @Override
-        public void run() {
-          // initializes JavaFX environment
-          new JFXPanel();
-          latch.countDown();
-        }
-      });
-      System.out.println("javafx initialising...");
-      latch.await();
-      System.out.println("javafx is initialised in " + (System.currentTimeMillis() - timeMillis) + "ms");
     }
   }
 }

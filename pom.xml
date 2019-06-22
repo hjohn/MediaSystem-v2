@@ -51,11 +51,6 @@
         <classifier>mac</classifier>
       </dependency>
       <dependency>
-        <groupId>org.openjfx</groupId>
-        <artifactId>javafx-swing</artifactId>
-        <version>${version.javafx}</version>
-      </dependency>
-      <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
         <version>${version.jackson}</version>
