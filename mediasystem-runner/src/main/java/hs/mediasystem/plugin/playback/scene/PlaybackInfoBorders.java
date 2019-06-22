@@ -53,6 +53,7 @@ public class PlaybackInfoBorders extends StackPane {
       getStyleClass().add("position");
       GridPane.setHalignment(this, HPos.LEFT);
       GridPane.setValignment(this, VPos.BOTTOM);
+      visibleProperty().bind(playerBindings.length.map(l -> l != 0));
       textProperty().bind(Bindings.concat(playerBindings.formattedPosition, " / ", playerBindings.formattedLength));
     }};
 
