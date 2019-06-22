@@ -1,14 +1,16 @@
 package hs.mediasystem.ext.mpv;
 
+import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
 import com.sun.jna.win32.StdCallLibrary;
 
 import java.util.List;
+import java.util.Map;
 
 public interface MPV extends StdCallLibrary {
-  MPV INSTANCE = Native.load("lib/mpv-1.dll", MPV.class);
+  MPV INSTANCE = Native.load("lib/mpv-1.dll", MPV.class, Map.of(Library.OPTION_STRING_ENCODING, "UTF-8"));
 
   /*
    * Event ID's

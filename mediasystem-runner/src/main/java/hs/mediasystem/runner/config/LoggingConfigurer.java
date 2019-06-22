@@ -3,6 +3,7 @@ package hs.mediasystem.runner.config;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -19,5 +20,6 @@ public class LoggingConfigurer {
 
     LOGGER.info("Logging configured");
     LOGGER.info("Java version: " + System.getProperty("java.version"));
+    LOGGER.info("Default encoding: " + Charset.defaultCharset());
   }
 }
