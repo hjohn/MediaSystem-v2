@@ -11,6 +11,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.jackson>2.9.9</version.jackson>
+    <version.javafx>11.0.2</version.javafx>
   </properties>
 
   <modules>
@@ -29,12 +30,30 @@
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-controls</artifactId>
-        <version>11.0.2</version>
+        <version>${version.javafx}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-graphics</artifactId>
+        <version>${version.javafx}</version>
+        <classifier>win</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-graphics</artifactId>
+        <version>${version.javafx}</version>
+        <classifier>linux</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-graphics</artifactId>
+        <version>${version.javafx}</version>
+        <classifier>mac</classifier>
       </dependency>
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-swing</artifactId>
-        <version>11.0.2</version>
+        <version>${version.javafx}</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>

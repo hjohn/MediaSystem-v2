@@ -17,6 +17,22 @@
       <artifactId>mediasystem-runner</artifactId>
       <version>2.0.0-SNAPSHOT</version>
     </dependency>
+    
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics </artifactId>
+      <classifier>win</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics </artifactId>
+      <classifier>linux</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics </artifactId>
+      <classifier>mac</classifier>
+    </dependency>
   </dependencies>
 
   <build>
@@ -33,7 +49,7 @@
   						<shadedArtifactAttached>true</shadedArtifactAttached>
   						<transformers>
   							<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-  								<mainClass>hs.mediasystem.runner.FrontEndRunner</mainClass>
+  								<mainClass>hs.mediasystem.runner.NonJavaFXFrontEndRunner</mainClass>
   							</transformer>
   						</transformers>
   					</configuration>
