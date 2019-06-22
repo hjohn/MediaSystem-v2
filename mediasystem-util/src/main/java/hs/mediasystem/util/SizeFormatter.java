@@ -118,54 +118,6 @@ public class SizeFormatter {
     }
   }
 
-  private static class DoubleFormat implements Format<Double> {
-    private final String formatString;
-    private final double cutOff;
-    private final double divisor;
-    private final DoubleFormat[] formats;
-
-    public DoubleFormat(String formatString, double divisor, double cutOff) {
-      this.formatString = formatString;
-      this.cutOff = cutOff;
-      this.divisor = divisor;
-      this.formats = null;
-    }
-
-    public DoubleFormat(String formatString, double divisor) {
-      this(formatString, divisor, -1);
-    }
-
-    public DoubleFormat(String formatString, double cutOff, DoubleFormat... formats) {
-      this.formatString = formatString;
-      this.cutOff = cutOff;
-      this.divisor = 1;
-      this.formats = formats;
-    }
-
-    @Override
-    public boolean isApplicable(Double number) {
-      return cutOff < 0 || number < cutOff * divisor - divisor / 2;
-    }
-
-    @Override
-    public String format(Double number) {
-      if(formats == null) {
-        return String.format(formatString, number / divisor);
-      }
-
-      String[] args = new String[formats.length];
-      double n = number;
-
-      for(int i = 0; i < formats.length; i++) {
-        double mod = i == formats.length - 1 ? 0 : n % formats[i].divisor;
-        args[i] = formats[i].format(n - mod);
-        n = mod;
-      }
-
-      return String.format(formatString, (Object[])args);
-    }
-  }
-
   public static class AutoDoubleFormat implements Format<Double> {
     private static final String[] extensions = new String[] {" y", " z", " a", " f", " p", " n", " μ", " m", "", " k", " M", " G", " T", " P", " E", " Z", " Y"};
 

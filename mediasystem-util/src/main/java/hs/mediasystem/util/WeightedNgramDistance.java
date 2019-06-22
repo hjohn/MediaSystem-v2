@@ -47,7 +47,6 @@ public class WeightedNgramDistance {
 
   private static List<Set<String>> ngramList(String s) {
     List<Set<String>> ngramList = new ArrayList<>();
-    String[] parts = s.split(" ");
 
     for(int len = 1; len <= s.length(); len++) {
       Set<String> ngrams = new HashSet<>();
@@ -56,15 +55,9 @@ public class WeightedNgramDistance {
       for(int j = 0; j <= s.length() - len; j++) {
         String ngram = s.substring(j, j + len);
 
-//        if(!ngram.contains(" ")) {
-          ngrams.add(ngram);
-//        }
+        ngrams.add(ngram);
       }
 
-      // 'len' length word groups
-//      for(int j = 0; j <= parts.length - len; j++) {
-//        ngrams.add(Arrays.stream(parts).skip(j).limit(len).collect(Collectors.joining(" ")));
-//      }
 
       ngramList.add(ngrams);
     }
