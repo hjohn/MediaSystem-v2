@@ -448,7 +448,7 @@ public class VLCPlayer implements PlayerPresentation {
   }
 
   private final Var<Long> length = Var.newSimpleVar(null);
-  @Override public Val<Long> lengthProperty() { return length.orElseConst(1000L); }
+  @Override public Val<Long> lengthProperty() { return length.orElseConst(0L); }
 
   private final Property<Long> position = Var.newSimpleVar(0L);
   @Override public Property<Long> positionProperty() { return position; }
