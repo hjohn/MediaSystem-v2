@@ -1,14 +1,23 @@
 package hs.mediasystem.util;
 
+import java.text.Collator;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.Set;
 
 public class NaturalLanguage {
+  private static final Collator COLLATOR;
+
+  static {
+    COLLATOR = Collator.getInstance(Locale.US);
+    COLLATOR.setStrength(Collator.PRIMARY);
+  }
+
   public static final Comparator<String> ALPHABETICAL = (a, b) -> {
-    int result = stripArticle(a).compareToIgnoreCase(stripArticle(b));
+    int result = COLLATOR.compare(stripArticle(a), stripArticle(b));
 
     if(result == 0) {
-      result = getArticle(a).compareToIgnoreCase(getArticle(b));
+      result = COLLATOR.compare(getArticle(a), getArticle(b));
     }
 
     return result;
