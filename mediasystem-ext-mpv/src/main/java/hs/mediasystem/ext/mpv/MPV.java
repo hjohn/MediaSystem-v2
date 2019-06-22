@@ -15,8 +15,9 @@ public interface MPV extends StdCallLibrary {
   /*
    * Event ID's
    */
-  int MPV_EVENT_END_FILE = 7;
-  int MPV_EVENT_FILE_LOADED = 8;
+  int MPV_EVENT_START_FILE = 6;   // Notification before playback start of a file (before the file is loaded).
+  int MPV_EVENT_END_FILE = 7;     // Notification after playback end (after the file was unloaded).
+  int MPV_EVENT_FILE_LOADED = 8;  // Notification when the file has been loaded (headers were read etc.), and decoding starts.
   int MPV_EVENT_IDLE = 11;
   int MPV_EVENT_TICK = 14;
 

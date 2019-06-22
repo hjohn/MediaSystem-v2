@@ -231,12 +231,15 @@ public class MPVPlayer implements PlayerPresentation {
           Platform.runLater(() -> positionChanges.suspendWhile(() -> position.setValue((long)(Double.valueOf(timePos) * 1000))));
         }
       }
+      else if(event.event_id == MPV.MPV_EVENT_START_FILE) {
+        LOGGER.fine("Event MPV_EVENT_START_FILE");
+
+        isPlaying.set(true);
+      }
       else if(event.event_id == MPV.MPV_EVENT_FILE_LOADED) {
         LOGGER.fine("Event MPV_EVENT_FILE_LOADED");
 
         String durationText = getProperty("duration");
-
-        isPlaying.set(true);
 
         if(durationText != null) {
           Platform.runLater(() -> duration.setValue((long)(Double.valueOf(durationText) * 1000)));
