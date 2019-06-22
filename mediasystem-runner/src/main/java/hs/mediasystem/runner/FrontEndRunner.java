@@ -55,7 +55,8 @@ public class FrontEndRunner extends Application {
 
     Section generalSection = ini.getSection("general");
     int screenNumber = generalSection == null ? 0 : Integer.parseInt(generalSection.getDefault("screen", "0"));
-    SceneManager sceneManager = new FXSceneManager("MediaSystem", screenNumber);
+    boolean alwaysOnTop = generalSection == null ? true : Boolean.parseBoolean(generalSection.getDefault("alwaysOnTop", "true"));
+    SceneManager sceneManager = new FXSceneManager("MediaSystem", screenNumber, alwaysOnTop);
 
     injector.registerInstance(sceneManager);
 

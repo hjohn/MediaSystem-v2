@@ -51,7 +51,7 @@ public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
 
   private int screenNumber;
 
-  public FXSceneManager(String title, int initialScreenNumber) {
+  public FXSceneManager(String title, int initialScreenNumber, boolean alwaysOnTop) {
     this.title = title;
     this.screenNumber = initialScreenNumber;
 
@@ -61,7 +61,7 @@ public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
     mainStagePane.setBackground(Background.EMPTY);
 
     mainStage = new Stage(StageStyle.UNDECORATED);
-    mainStage.setAlwaysOnTop(true);
+    mainStage.setAlwaysOnTop(alwaysOnTop);
     mainStage.setTitle(title);
     mainStage.setScene(emptyScene);
 
