@@ -112,8 +112,12 @@ public class MPVPlayer implements PlayerPresentation {
 
   @Override
   public void play(String uriString, long positionInMillis) {
+
+    // Reset some properties
     audioTracks.setAll(AudioTrack.NO_AUDIO_TRACK);
     subtitles.setAll(Subtitle.DISABLED);
+    audioTrack.setValue(AudioTrack.NO_AUDIO_TRACK);
+    subtitle.setValue(Subtitle.DISABLED);
 
     URI uri = URI.create(uriString);
     String decodedUri = uri.getScheme().equalsIgnoreCase("file") ? Paths.get(uri).toString() : uri.toString();
