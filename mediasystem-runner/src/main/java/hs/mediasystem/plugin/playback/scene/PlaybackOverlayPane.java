@@ -99,7 +99,7 @@ public class PlaybackOverlayPane extends StackPane {
     overlayVisible.addListener(new ChangeListener<Boolean>() {
       @Override
       public void changed(ObservableValue<? extends Boolean> observableValue, Boolean old, Boolean current) {
-        borders.setLabelVisible(current.booleanValue());
+        borders.clockAndPositionVisible.setValue(current.booleanValue());
       }
     });
 

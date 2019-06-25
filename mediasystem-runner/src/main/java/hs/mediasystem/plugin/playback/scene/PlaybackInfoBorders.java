@@ -33,9 +33,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
+
 public class PlaybackInfoBorders extends StackPane {
   private final ObjectProperty<MediaItem<?>> media = new SimpleObjectProperty<>();
   public ObjectProperty<MediaItem<?>> mediaProperty() { return media; }
+
+  public final Var<Boolean> clockAndPositionVisible = Var.newSimpleVar(true);
 
   private final StringProperty formattedTime = new SimpleStringProperty();
 
@@ -53,7 +58,7 @@ public class PlaybackInfoBorders extends StackPane {
       getStyleClass().add("position");
       GridPane.setHalignment(this, HPos.LEFT);
       GridPane.setValignment(this, VPos.BOTTOM);
-      visibleProperty().bind(playerBindings.length.map(l -> l != 0));
+      visibleProperty().bind(Val.combine(playerBindings.length.map(l -> l != 0), clockAndPositionVisible, (a, b) -> a && b));
       textProperty().bind(Bindings.concat(playerBindings.formattedPosition, " / ", playerBindings.formattedLength));
     }};
 
@@ -61,6 +66,7 @@ public class PlaybackInfoBorders extends StackPane {
       getStyleClass().add("time");
       GridPane.setHalignment(this, HPos.RIGHT);
       GridPane.setValignment(this, VPos.BOTTOM);
+      visibleProperty().bind(clockAndPositionVisible);
       textProperty().bind(formattedTime);
     }};
 
@@ -236,15 +242,6 @@ public class PlaybackInfoBorders extends StackPane {
         }
       }});
     }};
-  }
-
-  public boolean isLabelVisible() {
-    return timeLabel.isVisible();
-  }
-
-  public void setLabelVisible(boolean visible) {
-    timeLabel.setVisible(visible);
-    positionLabel.setVisible(visible);
   }
 
   public static class FirstChangeFilter<T> implements ChangeListener<T> {
