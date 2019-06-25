@@ -218,6 +218,10 @@ public class StreamCacheUpdateService {
       Tuple2<Identification, MediaDescriptor> original = originalRecords.get(record.a);
 
       if(original == null || original.b == null || record.c != null) {
+        Identifier identifier = record.a;
+
+        // Only one record should be present per datasource, so remove corresponding one from original records if a new record was supplied from the same datasource:
+        originalRecords.keySet().removeIf(i -> i.getDataSource().equals(identifier.getDataSource()));
         originalRecords.put(record.a, Tuple.of(record.b, record.c));
       }
     }
