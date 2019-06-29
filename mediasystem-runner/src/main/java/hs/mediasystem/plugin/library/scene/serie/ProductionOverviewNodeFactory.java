@@ -33,6 +33,8 @@ import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.StarRating;
+import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
+import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -228,7 +230,10 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         gridView.visibleColumns.set(3);
         gridView.setOrientation(Orientation.HORIZONTAL);
         gridView.onItemSelected.set(e -> presentation.toEpisodeState());
+        gridView.pageByGroup.set(true);
+        gridView.showHeaders.set(false);
         gridView.scrollBarVisible.set(false);
+        gridView.groupDisplayMode.set(GroupDisplayMode.FOCUSED);
 
         cellFactory.setTitleBindProvider(item -> item.productionTitle);
         cellFactory.setSideBarTopLeftBindProvider(item -> new SimpleStringProperty((item.getData().getSeasonNumber() == 0 ? "Special " : "Ep. ") + item.getData().getNumber()));
@@ -249,7 +254,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         VBox.setVgrow(gridView, Priority.ALWAYS);
 
         Set<Integer> knownSeasons = new HashSet<>();
-        List<Integer> jumpPoints = new ArrayList<>();
+        List<Group> groups = new ArrayList<>();
         List<Entry> entries = new ArrayList<>();
         Map<Integer, Integer> seasonNumberToIndex = new HashMap<>();
 
@@ -258,7 +263,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           int seasonNumber = episode.getData().getSeasonNumber();
 
           if(!knownSeasons.contains(seasonNumber)) {
-            jumpPoints.add(i);
+            groups.add(new Group(seasonNumber == 0 ? "Specials" : seasonNumber == -1 ? "Extras" : "Season " + seasonNumber, i));
             knownSeasons.add(seasonNumber);
 
             Entry entry;
@@ -291,7 +296,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         seasonsBar.setPrefWidth(1);
         seasonsBar.entries.setValue(entries);
 
-        gridView.jumpPoints.set(jumpPoints);
+        gridView.groups.set(groups);
         gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(current.getData().getSeasonNumber())));
 
         box.getChildren().addAll(seasonsBar, gridView);

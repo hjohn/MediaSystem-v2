@@ -1,7 +1,8 @@
-package hs.mediasystem.util.javafx.control;
+package hs.mediasystem.util.javafx.control.gridlistviewskin;
+
+import hs.mediasystem.util.javafx.control.VerticalLabel;
 
 import java.util.ArrayDeque;
-import java.util.Collections;
 import java.util.List;
 
 import javafx.animation.AnimationTimer;
@@ -19,7 +20,9 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
+import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollBar;
@@ -28,13 +31,46 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 public class GridListViewSkin implements Skin<ListView<?>> {
   public final IntegerProperty visibleColumns = new SimpleIntegerProperty(4);
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
-  public final ObjectProperty<List<Integer>> jumpPoints = new SimpleObjectProperty<>();
+  public final ObjectProperty<List<Group>> groups = new SimpleObjectProperty<>();
   public final BooleanProperty scrollBarVisible = new SimpleBooleanProperty(true);
+
+  /**
+   * Show the headers in between groups.
+   */
+  public final BooleanProperty showHeaders = new SimpleBooleanProperty(true);
+
+  /**
+   * When true, skipping to the next page will instead skip to the end of the
+   * current group, or to the start of the next group if already at the end.
+   * Skipping to the previous page will skip to the start of the current group
+   * or to the start of the previous group if already at the start.
+   */
+  public final BooleanProperty pageByGroup = new SimpleBooleanProperty(true);
+
+  public enum GroupDisplayMode {
+
+    /**
+     * No special scrolling is performed to display the current group.
+     */
+    NONE,
+
+    /**
+     * Scrolls as much as possible of the current group into view when switching
+     * groups.
+     */
+    FOCUSED
+  }
+
+  /**
+   * The {@link GroupDisplayMode}.
+   */
+  public final ObjectProperty<GroupDisplayMode> groupDisplayMode = new SimpleObjectProperty<>(GroupDisplayMode.NONE);
 
   private final DoubleProperty scrollPosition = new SimpleDoubleProperty();  // In rows
   private final ArrayDeque<ListCell<?>> cells = new ArrayDeque<>();
@@ -49,12 +85,14 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   private BorderPane skin;
   private Region content;
 
+  private GroupManager gm;
+  private boolean vertical;
+
   public GridListViewSkin(ListView<?> skinnable) {
     this.skinnable = skinnable;
 
-    getSkinnable().addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
-    getSkinnable().getSelectionModel().selectedIndexProperty().addListener(this::animateWhenSelectedChanges);
-
+    skinnable.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
+    skinnable.getSelectionModel().selectedIndexProperty().addListener(this::animateWhenSelectedChanges);
     skinnable.getSelectionModel().selectedItemProperty().addListener(obs -> skin.requestLayout());   // Calls layout when focused cell changes (to make sure it is at the top)
 
     this.content = new Region() {
@@ -90,7 +128,6 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
       @Override
       protected void layoutChildren() {
-        boolean vertical = getSkinnable().getOrientation() == Orientation.VERTICAL;
         int lines = vertical ? visibleColumns.get() : visibleRows.get();
         int firstIndex = (int)(scrollPosition.get()) * lines;
 
@@ -110,12 +147,19 @@ public class GridListViewSkin implements Skin<ListView<?>> {
         int index = firstIndexInDeque;
         setClip(new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight()));  // Needed to clip off cells while scrolling
 
-        if(vertical) {
-          double y = (-scrollPosition.get() * cellHeight - cellHeight) % cellHeight + insets.getTop();
+        for(ListCell<?> cell : cells) {
+          int viewIndex = gm.toViewIndex(index++);
 
-          for(ListCell<?> cell : cells) {
-            if(index >= firstIndex) {
-              int column = index % visibleColumns.get();
+          if(viewIndex >= firstIndex) {
+            if(vertical) {
+              int column = viewIndex % visibleColumns.get();
+              int row = viewIndex / visibleColumns.get();
+
+              double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
+
+              if(y >= h) {
+                break;
+              }
 
               if(cell.isFocused()) {
                 focusedCell = cell;
@@ -125,25 +169,16 @@ public class GridListViewSkin implements Skin<ListView<?>> {
               }
 
               layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
-
-              if(column == visibleColumns.get() - 1) {
-                y += cellHeight;
-
-                if(y >= h) {
-                  break;
-                }
-              }
             }
+            else {
+              int column = viewIndex / visibleRows.get();
+              int row = viewIndex % visibleRows.get();
 
-            index++;
-          }
-        }
-        else {
-          double x = (-scrollPosition.get() * cellWidth - cellWidth) % cellWidth + insets.getLeft();
+              double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
 
-          for(ListCell<?> cell : cells) {
-            if(index >= firstIndex) {
-              int row = index % visibleRows.get();
+              if(x >= w) {
+                break;
+              }
 
               if(cell.isFocused()) {
                 focusedCell = cell;
@@ -153,22 +188,68 @@ public class GridListViewSkin implements Skin<ListView<?>> {
               }
 
               layoutInArea(cell, x, row * cellHeight + insets.getTop(), cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
+            }
+          }
+        }
 
-              if(row == visibleRows.get() - 1) {
-                x += cellWidth;
+        // Focused cell is added last, so it appears on top of all the others:
+        if(focusedCell != null) {
+          getChildren().add(focusedCell);
+        }
+
+        if(showHeaders.get() && groups.get() != null) {
+          List<Group> list = groups.get();
+
+          for(int i = 0; i < list.size(); i++) {
+            int groupStartIndex = list.get(i).getPosition();
+
+            if(i + 1 >= list.size() || gm.viewIndexOfGroup(i + 1) > firstIndex) {
+              int viewIndex = gm.toViewIndex(groupStartIndex);
+
+              if(vertical) {
+                int row = viewIndex / visibleColumns.get();
+                double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
+
+                if(y < insets.getTop()) {  // Stick header to top if in the middle of a group
+                  y = insets.getTop();
+                }
+
+                if(y >= h) {
+                  break;
+                }
+
+                Label section = new Label(groups.get().get(i).getTitle());
+                StackPane stackPane = new StackPane(section);
+
+                stackPane.getStyleClass().addAll("group-heading", "horizontal");
+
+                getChildren().add(stackPane);
+
+                layoutInArea(stackPane, insets.getLeft(), y, w, cellHeight, 0, section.getInsets(), true, false, HPos.CENTER, VPos.TOP);
+              }
+              else {
+                int column = viewIndex / visibleRows.get();
+                double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
+
+                if(x < insets.getLeft()) {  // Stick header to left if in the middle of a group
+                  x = insets.getLeft();
+                }
 
                 if(x >= w) {
                   break;
                 }
+
+                VerticalLabel section = new VerticalLabel(VerticalDirection.UP, groups.get().get(i).getTitle());
+                StackPane stackPane = new StackPane(section);
+
+                stackPane.getStyleClass().addAll("group-heading", "vertical");
+
+                getChildren().add(stackPane);
+
+                layoutInArea(stackPane, x, insets.getTop(), cellWidth, h, 0, section.getInsets(), false, true, HPos.LEFT, VPos.CENTER);
               }
             }
-
-            index++;
           }
-        }
-
-        if(focusedCell != null) {
-          getChildren().add(focusedCell);
         }
       }
 
@@ -220,7 +301,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     };
 
     scrollBar.orientationProperty().bind(skinnable.orientationProperty());
-    getSkinnable().orientationProperty().addListener(obs -> relayout());
+    skinnable.orientationProperty().addListener(obs -> relayout());
     scrollBarVisible.addListener(obs -> relayout());
 
     visibleRows.addListener(obs -> content.requestLayout());
@@ -230,10 +311,10 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     InvalidationListener updateScrollBarListener = this::updateScrollBar;
 
     scrollPosition.addListener(updateScrollBarListener);
-    getSkinnable().getItems().addListener(updateScrollBarListener);
-    getSkinnable().getItems().addListener((Observable obs) -> content.requestLayout());  // When filter is removed, new items may appear/disappear without selected index changing, so must update in that case as well
+    skinnable.getItems().addListener(updateScrollBarListener);
+    skinnable.getItems().addListener((Observable obs) -> content.requestLayout());  // When filter is removed, new items may appear/disappear without selected index changing, so must update in that case as well
 
-    getSkinnable().itemsProperty().addListener((obs, old, current) -> {
+    skinnable.itemsProperty().addListener((obs, old, current) -> {
       if(old != null) {
         old.removeListener(updateScrollBarListener);
       }
@@ -243,9 +324,23 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       }
     });
 
+    skinnable.orientationProperty().addListener(obs -> updateProperties());
+    visibleColumns.addListener(obs -> updateProperties());
+    visibleRows.addListener(obs -> updateProperties());
+    groups.addListener(obs -> updateProperties());
+
     skin = new BorderPane();
 
+    updateProperties();
     relayout();
+  }
+
+  private void updateProperties() {
+    vertical = skinnable.getOrientation() == Orientation.VERTICAL;
+    gm = new GroupManager(
+      groups.get() == null ? new int[] {} : groups.get().stream().mapToInt(Group::getPosition).toArray(),
+      vertical ? visibleColumns.get() : visibleRows.get()
+    );
   }
 
   private void relayout() {
@@ -254,7 +349,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     skin.setCenter(content);
 
     if(scrollBarVisible.get()) {
-      if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
+      if(vertical) {
         skin.setRight(scrollBar);
       }
       else {
@@ -266,21 +361,19 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   }
 
   private void updateScrollBar(@SuppressWarnings("unused") Observable obs) {
-    int lineCount = getSkinnable().getOrientation() == Orientation.VERTICAL ? getRowCount() : getColumnCount();
-    int visibleLines = getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleRows.get() : visibleColumns.get();
-    List<Integer> jumpPoints = this.jumpPoints.get();
+    int lineCount = gm.getViewRowNumber(skinnable.getItems().size() - 1) + 1;
+    int visibleLines = vertical ? visibleRows.get() : visibleColumns.get();
+    List<Group> groups = this.groups.get();
 
-    if(jumpPoints != null) {
-      // Adjust line count in case jump point is near end:
-      int lastJumpPoint = jumpPoints.get(jumpPoints.size() - 1);
+    if(groups != null) {
+      // Adjust line count in case last group is near end:
+      int lastGroupIndex = groups.get(groups.size() - 1).getPosition();
       int totalItems = getSkinnable().getItems().size();
-      int itemsVisibleAtLastJumpPoint = totalItems - lastJumpPoint;
-      int perpendicularLines = getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get();
-      int linesOccupiedAtLastJumpPoint = (itemsVisibleAtLastJumpPoint + perpendicularLines - 1) / perpendicularLines;
+      int itemsVisibleInLastGroup = totalItems - lastGroupIndex;
+      int linesOccupiedInLastGroup = (itemsVisibleInLastGroup + gm.getWidth() - 1) / gm.getWidth();
 
-      //System.out.println("itemsVis = " + itemsVisibleAtLastJumpPoint + "; linesOccu = " + linesOccupiedAtLastJumpPoint + "; x = " + perpendicularLines);
-      if(linesOccupiedAtLastJumpPoint < visibleLines) {
-        lineCount += visibleLines - linesOccupiedAtLastJumpPoint;
+      if(linesOccupiedInLastGroup < visibleLines) {
+        lineCount += visibleLines - linesOccupiedInLastGroup;
       }
     }
 
@@ -292,14 +385,6 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     scrollBar.setVisibleAmount((double)visibleLines / lineCount * max);
   }
 
-  private int getColumnCount() {
-    return (getSkinnable().getItems().size() + visibleRows.get() - 1) / visibleRows.get();
-  }
-
-  private int getRowCount() {
-    return (getSkinnable().getItems().size() + visibleColumns.get() - 1) / visibleColumns.get();
-  }
-
   private AnimationTimer animationTimer = new AnimationTimer() {
     private long lastUpdate;
     private boolean active;
@@ -307,25 +392,25 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     @Override
     public void handle(long now) {
       double pos = scrollPosition.get();
-      double targetPos = firstVisibleIndex / (getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get());
+      double targetPos = gm.getViewRowNumber(firstVisibleIndex);
 
       if(lastUpdate != 0) {
         long dt = now - lastUpdate;
 
         if(pos != targetPos) {
-          // target rate should be something like 1% of distance per 4ms
-          // ..but not smaller than 1/20th of a row
-          // ..but not bigger than the distance still left
 
-          //double x = 400_000_000.0 / dt;
+          /*
+           * Target scroll rate is intended to be something like 1% of the distance to
+           * scroll per frame (4ms), but at least 1/50th of a row, but no bigger than
+           * the distance still left.
+           */
+
           double scrollFraction = dt * 0.000000005;  // fraction = 0.000000005/ns = 0.005/ms = 5/sec = 500% of distance scrolled/sec
           double sign = pos < targetPos ? 1 : -1;
           double distance = Math.abs(targetPos - pos);
           double delta = distance * Math.pow(scrollFraction, 0.6);
 
           delta = Math.min(Math.max(delta, 1.0 / 50), distance);
-
-//          System.out.println("pos = " + pos + ", firstVisibleIndex = " + firstVisibleIndex + ", target = " + targetPos + ", delta = " + delta + ", distance = " + distance + ", fraction = " + scrollFraction + ", dt = " + dt);
 
           scrollPosition.set(pos + delta * sign);
         }
@@ -361,67 +446,48 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
   private void animateWhenSelectedChanges(@SuppressWarnings("unused") Observable obs) {
     int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
-    int visibleItems = visibleColumns.get() * visibleRows.get();
+    int length = vertical ? visibleRows.get() : visibleColumns.get();
+    int visibleItems = gm.countViewItems(firstVisibleIndex, length);
+    int originalFirstVisibleIndex = firstVisibleIndex;
+    boolean scrollBackwards = selectedIndex < firstVisibleIndex;
 
-    if(selectedIndex >= firstVisibleIndex + visibleItems || selectedIndex < firstVisibleIndex) {
-      if(getSkinnable().getOrientation() == Orientation.VERTICAL) {
-        int maxVisibleIndex = Math.max(getSkinnable().getItems().size(), (getRowCount() - visibleRows.get()) * visibleColumns.get());  // ensures a full page will be visible at bottom of list
+    if(selectedIndex >= firstVisibleIndex + visibleItems || scrollBackwards) {  // Is new selected index outside visual area?
+      int maxLineIndex = gm.getViewRowNumber(skinnable.getItems().size() - 1);
 
-        if(selectedIndex < firstVisibleIndex) {
-          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleColumns.get()));
-        }
-        else {
-          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleColumns.get()) - visibleColumns.get() * (visibleRows.get() - 1));
-        }
-      }
-      else {
-        int maxVisibleIndex = Math.max(getSkinnable().getItems().size(), (getColumnCount() - visibleColumns.get()) * visibleRows.get());  // ensures a full page will be visible at bottom of list
+      int maxViewIndex = Math.max(0, gm.modelIndexOfViewRow(maxLineIndex - length + 1));  // ensures a full page will be visible at bottom of list
+      int viewRowNumber = gm.getViewRowNumber(selectedIndex);
 
-        if(selectedIndex < firstVisibleIndex) {
-          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleRows.get()));
-        }
-        else {
-          firstVisibleIndex = Math.min(maxVisibleIndex, selectedIndex - (selectedIndex % visibleRows.get()) - visibleRows.get() * (visibleColumns.get() - 1));
-        }
-      }
-
-      // Adjust firstVisibleIndex so a jump point is not visible:
-      if(jumpPoints.get() != null) {
-        int index = Collections.binarySearch(jumpPoints.get(), firstVisibleIndex);
-
-        if(index < 0) {
-          index = -index - 1;
-        }
-
-        if(index < jumpPoints.get().size()) {
-          int jumpPoint = jumpPoints.get().get(index);
-
-          if(selectedIndex < jumpPoint) {
-            firstVisibleIndex = Math.min(firstVisibleIndex, jumpPoint - visibleItems);
-          }
-          else {
-            firstVisibleIndex = Math.max(firstVisibleIndex, jumpPoint);
-          }
-        }
-      }
-
-      animationTimer.start();
-//      if(scrollTimeline != null) {
-//        scrollTimeline.stop();
-//      }
-//
-//      scrollTimeline = new Timeline(
-//        new KeyFrame(Duration.ZERO, new KeyValue(scrollPosition, scrollPosition.get())),
-//        new KeyFrame(Duration.seconds(0.3), new KeyValue(scrollPosition, firstVisibleIndex / visibleColumns.get(), Interpolator.LINEAR))
-//      );
-//
-//      scrollTimeline.play();
+      firstVisibleIndex = Math.min(
+        maxViewIndex,
+        gm.modelIndexOfViewRow(viewRowNumber - (scrollBackwards ? 0 : length - 1))
+      );
     }
 
-    System.out.println(">>> SELECTED " + selectedIndex + "... first=" + firstVisibleIndex + "; scrollp = " + scrollPosition.get() + "; first=" + firstTime);
+    if(groups.get() != null && groupDisplayMode.get() == GroupDisplayMode.FOCUSED) {
+      // First move up so next group (if any) is no longer visible:
+      int selectedItemGroupIndex = gm.groupNumber(selectedIndex);
+
+      if(selectedItemGroupIndex + 1 < groups.get().size()) {
+        int nextGroupStart = gm.modelIndexOfGroup(selectedItemGroupIndex + 1);
+        int startRow = gm.getViewRowNumber(nextGroupStart) - length;
+
+        firstVisibleIndex = Math.max(0, Math.min(firstVisibleIndex, gm.modelIndexOfViewRow(startRow)));
+      }
+
+      // Then move down so first visible index is part of current group (if it is not):
+      int firstVisibleGroupIndex = gm.groupNumber(firstVisibleIndex);
+
+      if(firstVisibleGroupIndex < selectedItemGroupIndex) {
+        firstVisibleIndex = gm.modelIndexOfGroup(selectedItemGroupIndex);  // Move forward so first visible index is part of same group as selected index
+      }
+    }
+
+    if(originalFirstVisibleIndex != firstVisibleIndex) {
+      animationTimer.start();
+    }
 
     if(firstTime) {
-      scrollPosition.set(firstVisibleIndex / (getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : visibleRows.get()));
+      scrollPosition.set(firstVisibleIndex / gm.getWidth());
       firstTime = false;
     }
   }
@@ -430,20 +496,20 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
 
     if(e.getCode().isNavigationKey()) {
-      int rowSize = getSkinnable().getOrientation() == Orientation.VERTICAL ? visibleColumns.get() : 1;
-      int columnSize = getSkinnable().getOrientation() == Orientation.VERTICAL ? 1 : visibleRows.get();
+      int rowSize = vertical ? visibleColumns.get() : 1;
+      int columnSize = vertical ? 1 : visibleRows.get();
 
       if(KeyCode.LEFT == e.getCode()) {
-        selectedIndex -= columnSize;
+        selectedIndex = gm.toModelIndexSmart(gm.toViewIndex(selectedIndex) - columnSize);
       }
       else if(KeyCode.RIGHT == e.getCode()) {
-        selectedIndex += columnSize;
+        selectedIndex = vertical ? selectedIndex + 1 : gm.toModelIndexSmart(gm.toViewIndex(selectedIndex) + columnSize);
       }
       else if(KeyCode.UP == e.getCode()) {
-        selectedIndex -= rowSize;
+        selectedIndex = gm.toModelIndexSmart(gm.toViewIndex(selectedIndex) - rowSize);
       }
       else if(KeyCode.DOWN == e.getCode()) {
-        selectedIndex += rowSize;
+        selectedIndex = vertical ? gm.toModelIndexSmart(gm.toViewIndex(selectedIndex) + rowSize) : selectedIndex + 1;
       }
       else if(KeyCode.HOME == e.getCode()) {
         selectedIndex = 0;
@@ -452,42 +518,34 @@ public class GridListViewSkin implements Skin<ListView<?>> {
         selectedIndex = getSkinnable().getItems().size() - 1;
       }
       else if(KeyCode.PAGE_UP == e.getCode()) {
-        if(jumpPoints.get() != null) {
-          int index = Collections.binarySearch(jumpPoints.get(), selectedIndex);
+        if(pageByGroup.get() && groups.get() != null) {
+          int currentGroupIndex = gm.groupNumber(selectedIndex);
 
-          if(index < 0) {
-            index = -index - 1;
+          if(gm.modelIndexOfGroup(currentGroupIndex) == selectedIndex) {  // At first item?
+            currentGroupIndex--;
           }
 
-          index--;
-
-          if(index < 0) {
-            index = 0;
+          if(currentGroupIndex >= 0) {
+            selectedIndex = groups.get().get(currentGroupIndex).getPosition();
           }
-
-          selectedIndex = jumpPoints.get().get(index);
         }
         else {
-          selectedIndex -= visibleColumns.get() * visibleRows.get();
+          selectedIndex = gm.toModelIndexSmart(gm.toViewIndex(selectedIndex) - visibleColumns.get() * visibleRows.get());
         }
       }
       else if(KeyCode.PAGE_DOWN == e.getCode()) {
-        if(jumpPoints.get() != null) {
-          int index = Collections.binarySearch(jumpPoints.get(), selectedIndex);
+        if(pageByGroup.get() && groups.get() != null) {
+          int currentGroupIndex = gm.groupNumber(selectedIndex) + 1;
 
-          if(index < 0) {
-            index = -index - 1;
+          if(currentGroupIndex < groups.get().size()) {
+            selectedIndex = groups.get().get(currentGroupIndex).getPosition();
           }
           else {
-            index++;
-          }
-
-          if(index < jumpPoints.get().size()) {
-            selectedIndex = jumpPoints.get().get(index);
+            selectedIndex = skinnable.getItems().size() - 1;
           }
         }
         else {
-          selectedIndex += visibleColumns.get() * visibleRows.get();
+          selectedIndex = gm.toModelIndexSmart(gm.toViewIndex(selectedIndex) + visibleColumns.get() * visibleRows.get());
         }
       }
 
