@@ -22,18 +22,23 @@ public class VerticalLabel extends Pane {
   private final InternalLabel label = new InternalLabel();
   private final VerticalDirection direction;
 
-  public VerticalLabel(VerticalDirection direction) {
+  public VerticalLabel(VerticalDirection direction, String text) {
     this.direction = direction;
     this.label.getTransforms().add(new Rotate(direction == VerticalDirection.DOWN ? 90 : -90, 0, 0));
-    
+
     /*
      * Add label as managed control, even though most of the methods of Parent are overriden here,
      * like computeXXX and layoutChildren.  Having the control managed will propagate any needed
      * layout changes up to this Pane, so it can be resized accordingly when for example the Label's
      * text changes.
      */
-    
+
+    this.label.setText(text);
     this.getChildren().add(label);
+  }
+
+  public VerticalLabel(VerticalDirection direction) {
+    this(direction, "");
   }
 
   @Override
