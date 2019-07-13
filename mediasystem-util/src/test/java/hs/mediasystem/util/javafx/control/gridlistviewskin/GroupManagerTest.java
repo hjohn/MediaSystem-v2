@@ -9,6 +9,15 @@ public class GroupManagerTest {
   private final GroupManager manager4 = new GroupManager(new int[] {0, 7, 9, 13, 14}, 4);
 
   @Test
+  public void shouldReturnCorrectGroupIndex() {
+    GroupManager gm = new GroupManager(new int[] {0}, 3);
+
+    for(int i = 0; i < 100; i++) {
+      assertEquals("testing " + i, 0, gm.groupNumber(i));
+    }
+  }
+
+  @Test
   public void shouldHandleEmptyJumpPointList() {
     GroupManager gm = new GroupManager(new int[] {}, 4);
 

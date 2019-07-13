@@ -37,8 +37,13 @@ import javafx.scene.shape.Rectangle;
 public class GridListViewSkin implements Skin<ListView<?>> {
   public final IntegerProperty visibleColumns = new SimpleIntegerProperty(4);
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
-  public final ObjectProperty<List<Group>> groups = new SimpleObjectProperty<>();
   public final BooleanProperty scrollBarVisible = new SimpleBooleanProperty(true);
+
+  /**
+   * Defines where groups start and their title, leave <code>null</code> for no
+   * groups.
+   */
+  public final ObjectProperty<List<Group>> groups = new SimpleObjectProperty<>();
 
   /**
    * Show the headers in between groups.
@@ -253,9 +258,9 @@ public class GridListViewSkin implements Skin<ListView<?>> {
         }
       }
 
-      private void manageCells(int firstIndex) {
+      private void manageCells(int firstIndex) {  // this is a view index
         int cellsPerPage = visibleColumns.get() * visibleRows.get();
-        int firstIndexToCache = firstIndex - pagesToCache * cellsPerPage;
+        int firstIndexToCache = gm.toModelIndexSmart(firstIndex - pagesToCache * cellsPerPage);
         int requiredFirstIndexInDeque = Math.max(0, firstIndexToCache);
         int requiredLastIndexInDeque = Math.min(firstIndexToCache + (pagesToCache * 2 + 1) * cellsPerPage, getSkinnable().getItems().size());  // exclusive
 
