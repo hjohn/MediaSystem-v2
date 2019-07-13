@@ -32,6 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -41,6 +44,7 @@ import javax.inject.Singleton;
 public class MediaService {
   private static final DataSource LOCAL_RELEASE = DataSource.instance(MediaType.of("RELEASE"), "LOCAL");
   private static final Set<BasicStream> EMPTY_SET = Collections.emptySet();
+  private static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
 
   @Inject private BasicStreamStore streamStore;  // Only stores top level items, not children
   @Inject private DescriptorStore descriptorStore;
@@ -48,7 +52,17 @@ public class MediaService {
   @Inject private StreamMetaDataProvider metaDataProvider;
   @Inject private EpisodeMatcher episodeMatcher;  // May need further generalization
 
+  /**
+   * Cache containing matches of child identifiers to their streams (for each parent/root identifier).
+   * This needs to be flushed periodically as streams can change.  This is no issue as it is mainly
+   * to avoid recreating this map every time when many lookups are happening to match a child identifier
+   * to its corresponding stream.
+   */
   private final Map<Identifier, Map<Identifier, Set<BasicStream>>> streamsByChildIdentifierByRootIdentifier = new HashMap<>();
+
+  public MediaService() {
+    EXECUTOR_SERVICE.scheduleWithFixedDelay(() -> clearCaches(), 2, 5, TimeUnit.MINUTES);
+  }
 
   public Set<BasicStream> findStreams(Identifier identifier) {
     Identifier rootIdentifier = identifier.getRootIdentifier();
@@ -60,37 +74,45 @@ public class MediaService {
     return streamStore.findStreams(identifier);
   }
 
+  private void clearCaches() {
+    synchronized(streamsByChildIdentifierByRootIdentifier) {
+      streamsByChildIdentifierByRootIdentifier.clear();
+    }
+  }
+
   private Map<Identifier, Set<BasicStream>> getChildIdentifierToStreamMap(Identifier rootIdentifier) {
-    return streamsByChildIdentifierByRootIdentifier.computeIfAbsent(rootIdentifier, k -> {
-      Map<Identifier, Set<BasicStream>> episodeIdentifierToStreams = new LinkedHashMap<>();
-      Serie serie = (Serie)descriptorStore.get(rootIdentifier);
+    synchronized(streamsByChildIdentifierByRootIdentifier) {
+      return streamsByChildIdentifierByRootIdentifier.computeIfAbsent(rootIdentifier, k -> {
+        Map<Identifier, Set<BasicStream>> episodeIdentifierToStreams = new LinkedHashMap<>();
+        Serie serie = (Serie)descriptorStore.get(rootIdentifier);
 
-      if(serie != null) {
-        for(BasicStream parentStream : streamStore.findStreams(rootIdentifier)) {
-          List<BasicStream> sortedChildStreams = parentStream.getChildren().stream()
-            .sorted((a, b) -> a.getAttributes().<String>get(Attribute.TITLE).compareTo(b.getAttributes().get(Attribute.TITLE)))
-            .collect(Collectors.toList());
+        if(serie != null) {
+          for(BasicStream parentStream : streamStore.findStreams(rootIdentifier)) {
+            List<BasicStream> sortedChildStreams = parentStream.getChildren().stream()
+              .sorted((a, b) -> a.getAttributes().<String>get(Attribute.TITLE).compareTo(b.getAttributes().get(Attribute.TITLE)))
+              .collect(Collectors.toList());
 
-          for(BasicStream childStream : sortedChildStreams) {
-            Attributes attributes = childStream.getAttributes();
+            for(BasicStream childStream : sortedChildStreams) {
+              Attributes attributes = childStream.getAttributes();
 
-            if(!"EXTRA".equals(attributes.get(Attribute.CHILD_TYPE))) {
-              List<Episode> result = episodeMatcher.attemptMatch(serie, attributes);
+              if(!"EXTRA".equals(attributes.get(Attribute.CHILD_TYPE))) {
+                List<Episode> result = episodeMatcher.attemptMatch(serie, attributes);
 
-              if(result != null) {
-                result.forEach(e -> episodeIdentifierToStreams.computeIfAbsent(e.getIdentifier(), k2 -> new HashSet<>()).add(childStream));
-                continue;
+                if(result != null) {
+                  result.forEach(e -> episodeIdentifierToStreams.computeIfAbsent(e.getIdentifier(), k2 -> new HashSet<>()).add(childStream));
+                  continue;
+                }
               }
-            }
 
-            // It was identified as an Extra, or did not match any episode, in which case convert it to an Extra:
-            episodeIdentifierToStreams.computeIfAbsent(createLocalId(serie, childStream), k2 -> new HashSet<>()).add(childStream);
+              // It was identified as an Extra, or did not match any episode, in which case convert it to an Extra:
+              episodeIdentifierToStreams.computeIfAbsent(createLocalId(serie, childStream), k2 -> new HashSet<>()).add(childStream);
+            }
           }
         }
-      }
 
-      return episodeIdentifierToStreams;
-    });
+        return episodeIdentifierToStreams;
+      });
+    }
   }
 
   public MediaIdentification reidentify(StreamID streamId) {
