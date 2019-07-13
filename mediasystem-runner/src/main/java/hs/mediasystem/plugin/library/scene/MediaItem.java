@@ -19,11 +19,14 @@ import hs.mediasystem.scanner.api.StreamPrintProvider;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javafx.beans.binding.BooleanExpression;
@@ -76,6 +79,7 @@ public class MediaItem<T extends MediaDescriptor> {
   public final StringProperty productionYearRange = new SimpleStringProperty();
   public final StringProperty personName = new SimpleStringProperty();
   public final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
+  public final ObjectProperty<List<String>> genres = new SimpleObjectProperty<>();
   public final ObjectBinding<MediaStatus> mediaStatus;
   public final ObjectProperty<LocalDateTime> lastWatchedTime = new SimpleObjectProperty<>();
 
@@ -133,9 +137,29 @@ public class MediaItem<T extends MediaDescriptor> {
           date.setValue(max);
           productionYearRange.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
         }
+
+        Map<String, Long> genreCounts = productionCollection.getItems().stream()
+          .map(Production::getGenres)
+          .flatMap(Collection::stream)
+          .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        genres.setValue(genreCounts.entrySet().stream()
+          .sorted(Comparator.comparing(Map.Entry::getValue, Collections.reverseOrder()))
+          .map(Map.Entry::getKey)
+          .collect(Collectors.toList())
+        );
       }
       else {
         date.set(details.getDate());
+
+        Production production = getProduction();
+
+        if(production != null) {
+          genres.setValue(production.getGenres());
+        }
+        else {
+          genres.setValue(Collections.emptyList());
+        }
 
         if(getData() instanceof Serie) {
           productionYearRange.set(createSerieYearRange((Serie)getData()));
