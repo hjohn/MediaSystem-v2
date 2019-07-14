@@ -37,9 +37,29 @@ import javax.inject.Singleton;
 public class MoviesPlugin implements Plugin {
   private static final MediaType MOVIE = MediaType.of("MOVIE");
 
+  private static SortOrder<DetailedMediaDescriptor> ALPHABETICALLY = new SortOrder<>(
+    "alpha",
+    Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL))
+  );
+
+  private static SortOrder<DetailedMediaDescriptor> BY_RELEASE_DATE = new SortOrder<>(
+    "release-date",
+    Comparator.comparing((MediaItem<DetailedMediaDescriptor> mi) -> mi.date.get(), Comparator.nullsLast(Comparator.naturalOrder())).reversed(),
+    mi -> List.of("" + mi.date.getValue().getYear()),
+    true
+  );
+
+  private static SortOrder<DetailedMediaDescriptor> BY_GENRE = new SortOrder<>(
+    "genre",
+    Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL)),
+    mi -> mi.genres.getValue(),
+    false
+  );
+
   private static final List<SortOrder<DetailedMediaDescriptor>> SORT_ORDERS = List.of(
-    new SortOrder<>("alpha", Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL))),
-    new SortOrder<>("release-date", Comparator.comparing((MediaItem<DetailedMediaDescriptor> mi) -> mi.date.get(), Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+    ALPHABETICALLY,
+    BY_RELEASE_DATE,
+    BY_GENRE
   );
 
   private static final List<Filter<DetailedMediaDescriptor>> FILTERS = List.of(
