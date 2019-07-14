@@ -8,10 +8,17 @@ import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.util.javafx.Binds;
+import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
@@ -43,11 +50,14 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
   private final Var<MediaItem<T>> internalSelectedItem = Var.newSimpleVar(null);
 
   public final Val<MediaItem<T>> selectedItem = internalSelectedItem;
-  public final FilteredList<MediaItem<T>> items;
+  public final ObservableList<MediaItem<T>> items = FXCollections.observableArrayList();
+  public final ObservableList<Group> groups = FXCollections.observableArrayList();
   public final Val<Integer> totalItemCount;
+  public final Val<Integer> visibleUniqueItemCount;
 
   private final ObservableList<MediaItem<T>> inputItems;
   private final SortedList<MediaItem<T>> sortedItems;
+  private final FilteredList<MediaItem<T>> filteredItems;
   private final MediaService mediaService;
 
   public enum StateFilter {
@@ -58,8 +68,9 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     this.mediaService = mediaService;
     this.inputItems = items;
     this.sortedItems = new SortedList<>(items);  // Sorting first, so we can determine close neighbours when filtering changes
-    this.items = new FilteredList<>(sortedItems);
+    this.filteredItems = new FilteredList<>(sortedItems);
     this.totalItemCount = Val.create(() -> (int)items.stream().filter(group.getValue().predicate).count(), items, group);
+    this.visibleUniqueItemCount = Val.create(() -> (int)items.stream().filter(createFilterPredicate()).count(), items, group, filter, stateFilter);
 
     this.availableSortOrders.setAll(viewOptions.sortOrders);
     this.availableFilters.setAll(viewOptions.filters);
@@ -78,6 +89,53 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
 
     setupLastSelectedTracking(settingsSource);
     setupSortingAndFiltering();
+  }
+
+  private void updateFinalItemsAndGrouping() {
+    items.clear();
+    groups.clear();
+
+    SortOrder<T> order = sortOrder.getValue();
+
+    if(order.grouper == null) {
+      items.addAll(filteredItems);
+    }
+    else {
+      Map<Comparable<Object>, List<MediaItem<T>>> groupedElements = group(filteredItems, order.grouper);
+      Comparator<Entry<Comparable<Object>, List<MediaItem<T>>>> comparator = Comparator.comparing(Map.Entry::getKey);
+
+      if(order.reverseGroupOrder) {
+        comparator = comparator.reversed();
+      }
+
+      List<Entry<Comparable<Object>, List<MediaItem<T>>>> list = groupedElements.entrySet().stream()
+        .sorted(comparator)
+        .collect(Collectors.toList());
+
+      List<Group> newGroups = new ArrayList<>();
+      int position = 0;
+
+      for(Entry<Comparable<Object>, List<MediaItem<T>>> e : list) {
+        newGroups.add(new Group(e.getKey().toString().toUpperCase(), position));
+
+        items.addAll(e.getValue());
+        position += e.getValue().size();
+      }
+
+      groups.addAll(newGroups);
+    }
+  }
+
+  private static <E, G extends Comparable<G>> Map<Comparable<Object>, List<E>> group(List<E> elements, Function<E, List<Comparable<Object>>> grouper) {
+    Map<Comparable<Object>, List<E>> groupedElements = new HashMap<>();
+
+    for(E e : elements) {
+      for(Comparable<Object> group : grouper.apply(e)) {
+        groupedElements.computeIfAbsent(group, k -> new ArrayList<>()).add(e);
+      }
+    }
+
+    return groupedElements;
   }
 
   public void selectItem(MediaItem<T> item) {
@@ -141,33 +199,39 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     });
   }
 
+  private Predicate<MediaItem<T>> createFilterPredicate() {
+    Predicate<MediaItem<T>> predicate = filter.getValue().predicate;
+    Predicate<MediaItem<T>> groupingPredicate = group.getValue().predicate;
+
+    if(stateFilter.getValue() == StateFilter.UNWATCHED) {  // Exclude viewed and not in collection?
+      predicate = predicate.and(mi -> mi.mediaStatus.get() == MediaStatus.AVAILABLE);
+    }
+    if(stateFilter.getValue() == StateFilter.AVAILABLE) {  // Exclude not in collection?
+      predicate = predicate.and(mi -> mi.mediaStatus.get() != MediaStatus.UNAVAILABLE);
+    }
+
+    return predicate.and(groupingPredicate);
+  }
+
   private void setupSortingAndFiltering() {
     sortedItems.comparatorProperty().bind(Binds.monadic(sortOrder).map(so -> so.comparator));
 
     EventStreams.merge(
+        EventStreams.invalidationsOf(sortOrder),
         EventStreams.invalidationsOf(filter),
         EventStreams.invalidationsOf(stateFilter),
         EventStreams.invalidationsOf(group)
       )
       .withDefaultEvent(null)
       .observe(e -> {
-        Predicate<MediaItem<T>> predicate = filter.getValue().predicate;
-        Predicate<MediaItem<T>> groupingPredicate = group.getValue().predicate;
-
-        if(stateFilter.getValue() == StateFilter.UNWATCHED) {  // Exclude viewed and not in collection?
-          predicate = predicate.and(mi -> mi.mediaStatus.get() == MediaStatus.AVAILABLE);
-        }
-        if(stateFilter.getValue() == StateFilter.AVAILABLE) {  // Exclude not in collection?
-          predicate = predicate.and(mi -> mi.mediaStatus.get() != MediaStatus.UNAVAILABLE);
-        }
-
-        predicate = predicate.and(groupingPredicate);
+        Predicate<MediaItem<T>> predicate = createFilterPredicate();
 
         // Before setting the new filter, first determine which item to select based on what
         // is currently available:
         MediaItem<T> itemToSelect = findBestItemToSelect(predicate);
 
-        items.setPredicate(predicate);
+        filteredItems.setPredicate(predicate);
+        updateFinalItemsAndGrouping();
 
         if(itemToSelect == null && !sortedItems.isEmpty()) {
           itemToSelect = sortedItems.get(0);
@@ -215,10 +279,19 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
   public static class SortOrder<T extends MediaDescriptor> {
     public final String resourceKey;
     public final Comparator<MediaItem<T>> comparator;
+    public final Function<MediaItem<T>, List<Comparable<Object>>> grouper;
+    public final boolean reverseGroupOrder;
 
-    public SortOrder(String resourceKey, Comparator<MediaItem<T>> comparator) {
+    @SuppressWarnings("unchecked")
+    public <G extends Comparable<G>> SortOrder(String resourceKey, Comparator<MediaItem<T>> comparator, Function<MediaItem<T>, List<G>> grouper, boolean reverseGroupOrder) {
       this.resourceKey = resourceKey;
       this.comparator = comparator;
+      this.grouper = (Function<MediaItem<T>, List<Comparable<Object>>>)(Function<?, ?>)grouper;
+      this.reverseGroupOrder = reverseGroupOrder;
+    }
+
+    public SortOrder(String resourceKey, Comparator<MediaItem<T>> comparator) {
+      this(resourceKey, comparator, null, false);
     }
   }
 

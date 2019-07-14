@@ -4,12 +4,55 @@
 {
   -fx-padding: 6;
 
+  .group-heading {
+    @c1: rgba(255, 255, 255, 85%);
+    @c2: fade(@text-accent-highlight, 70%);
+    
+    &.horizontal {
+      -fx-background-color: linear-gradient(to right, transparent 0%, @c2 18%, transparent 48%, transparent),
+                            linear-gradient(to right, transparent 0%, @c2 6%, @c2 35%, transparent 98%, transparent);
+      -fx-background-insets: 6 0 6 0, 7 0 7 -20;
+      -fx-translate-y: -8;
+      -fx-alignment: top-right;
+      -fx-border-color: linear-gradient(to right, transparent 0%, transparent 50%, @c1 93%, @c1 99%, transparent);
+      -fx-border-insets: 0 0 0 -20;
+      -fx-padding: -5 0 -4 0;
+      
+      .label {
+        -fx-label-padding: 0 30 0 0;
+      }
+    }
+    
+    &.vertical {
+      -fx-background-color: linear-gradient(to top, transparent 0%, @c2 18%, transparent 48%, transparent),
+                            linear-gradient(to top, transparent 0%, @c2 6%, @c2 35%, transparent 98%, transparent);
+      -fx-background-insets: 0 6 0 6, -20 7 0 7;
+                            
+      -fx-translate-x: -8;
+      -fx-alignment: top-left;
+      -fx-border-color: linear-gradient(to top, transparent 0%, transparent 50%, @c1 93%, @c1 99%, transparent);
+      -fx-border-insets: 0 0 -20 0;
+      -fx-padding: 0 -4 0 -4;
+      
+      .label {
+        -fx-label-padding: 0 10 0 0;
+      }
+    }
+    
+    .label {
+      -fx-font-size: 16px;
+      -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 6, 0.3, 0, 0);
+      .black;
+      .text-fill-accent-highlight;
+    }    
+  }
+
   .list-cell {
-    -fx-padding: 2;
+    -fx-padding: 4;
     
     .container-box
     {
-      -fx-padding: 6;
+      -fx-padding: 4 6 4 6;
       
       -fx-background-insets: 2;
       -fx-background-radius: 8;

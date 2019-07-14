@@ -14,6 +14,7 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.Labels;
+import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 
 import java.util.Objects;
 
@@ -61,6 +62,10 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
   public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
     MediaGridView<MediaItem<T>> listView = new MediaGridView<>();
 
+    listView.setOrientation(Orientation.VERTICAL);
+    listView.pageByGroup.set(true);
+    listView.groupDisplayMode.set(GroupDisplayMode.FOCUSED);
+
     listView.getStyleClass().add("glass-pane");
     listView.onItemSelected.set(e -> onItemSelected(e, presentation));
     listView.getSelectionModel().selectedItemProperty().addListener((ov, old, current) -> {
@@ -87,6 +92,12 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
     if(contextPanel != null) {
       areaPane.add(Area.CONTEXT_PANEL, contextPanel);
     }
+
+    EventStreams.invalidationsOf(presentation.groups)
+      .withDefaultEvent(null)
+      .map(x -> presentation.groups)
+      .map(list -> list.isEmpty() ? null : list)
+      .feedTo(listView.groups);
 
     listView.setItems(presentation.items);
     listView.setCellFactory(cellFactory);
@@ -234,8 +245,9 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
   private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation<T> presentation) {
     ObservableList<MediaItem<T>> items = presentation.items;
     Val<Integer> totalItemCount = presentation.totalItemCount;
+    Val<Integer> visibleUniqueItemCount = presentation.visibleUniqueItemCount;
 
-    StringBinding binding = Bindings.createStringBinding(() -> String.format(items.size() == totalItemCount.getValue() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), items.size(), totalItemCount.getValue()), items, totalItemCount);
+    StringBinding binding = Bindings.createStringBinding(() -> String.format(items.size() == totalItemCount.getValue() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), visibleUniqueItemCount.getValue(), totalItemCount.getValue()), visibleUniqueItemCount, totalItemCount);
     GridPane gridPane = new GridPane();
     VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
 
