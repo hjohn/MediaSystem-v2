@@ -102,7 +102,7 @@ public class MoviesPlugin implements Plugin {
 
     items.addAll(groups);
 
-    return factory.create(items, "Movies", new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED), GROUPS));
+    return factory.create(items, "Movies", new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED), GROUPS), null);
   }
 
   private ObservableList<MediaItem<Movie>> createProductionItems(List<Movie> descriptors) {

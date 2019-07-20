@@ -16,7 +16,7 @@ import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation.State;
 import hs.mediasystem.plugin.library.scene.serie.SeasonBar.Entry;
 import hs.mediasystem.plugin.library.scene.view.CastAndCrewPresentation;
 import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
-import hs.mediasystem.plugin.library.scene.view.ProductionCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.view.ProductionCollectionFactory;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.TransitionPane;
@@ -75,7 +75,7 @@ import org.reactfx.value.Var;
 @Singleton
 public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPresentation> {
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private ProductionCollectionPresentation.Factory productionCollectionPresentationFactory;
+  @Inject private ProductionCollectionFactory productionCollectionFactory;
   @Inject private RecommendationsPresentation.Factory recommendationsPresentationFactory;
   @Inject private CastAndCrewPresentation.Factory castAndCrewPresentationFactory;
   @Inject private ShowInfoEventHandler showInfoEventHandler;
@@ -470,7 +470,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       @SuppressWarnings("unchecked")
       MediaItem<Movie> movieItem = (MediaItem<Movie>)presentation.rootItem;
 
-      PresentationLoader.navigate(event, () -> productionCollectionPresentationFactory.create(movieItem.getData().getCollectionDetails().getIdentifier()));
+      PresentationLoader.navigate(event, () -> productionCollectionFactory.create(movieItem.getData().getCollectionDetails().getIdentifier()));
     }
 
     private void navigateToRecommendations(ActionEvent event) {

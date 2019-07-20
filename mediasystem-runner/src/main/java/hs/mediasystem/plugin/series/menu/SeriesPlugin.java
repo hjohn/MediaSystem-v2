@@ -68,7 +68,8 @@ public class SeriesPlugin implements Plugin {
     return factory.create(
       createProductionItems(mediaService.findAllByType(SERIE, tag, List.of("TMDB", "LOCAL"))),
       "Series:" + tag,
-      new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED))
+      new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED)),
+      null
     );
   }
 

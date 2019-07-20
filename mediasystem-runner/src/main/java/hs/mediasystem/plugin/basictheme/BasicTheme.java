@@ -14,8 +14,6 @@ import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.view.GenericCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsSetup;
-import hs.mediasystem.plugin.library.scene.view.ProductionCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.view.ProductionCollectionSetup;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsSetup;
 import hs.mediasystem.plugin.playback.scene.PlaybackLayout;
@@ -57,9 +55,6 @@ public class BasicTheme implements Theme {
     if(cls == RecommendationsPresentation.class) {
       return LibraryPresentation.class;
     }
-    if(cls == ProductionCollectionPresentation.class) {
-      return LibraryPresentation.class;
-    }
     if(cls == PlaybackOverlayPresentation.class) {
       return RootPresentation.class;
     }
@@ -98,9 +93,6 @@ public class BasicTheme implements Theme {
     }
     if(cls == RecommendationsPresentation.class) {
       return (Class<T>)RecommendationsSetup.class;
-    }
-    if(cls == ProductionCollectionPresentation.class) {
-      return (Class<T>)ProductionCollectionSetup.class;
     }
     if(cls == PlaybackOverlayPresentation.class) {
       return (Class<T>)PlaybackLayout.class;

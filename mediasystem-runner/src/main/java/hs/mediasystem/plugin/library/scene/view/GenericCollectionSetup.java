@@ -14,6 +14,7 @@ import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import java.util.Optional;
 
 import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.Node;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -22,7 +23,8 @@ import javax.inject.Singleton;
 public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, GenericCollectionPresentation<MediaDescriptor>> {
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
-  @Inject private ProductionCollectionPresentation.Factory productionCollectPresentationFactory;
+  @Inject private ProductionCollectionFactory productionCollectionSupplier;
+  @Inject private ContextLayout contextLayout;
 
   @Override
   protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
@@ -44,10 +46,15 @@ public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, Gener
   @Override
   protected void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, GenericCollectionPresentation<MediaDescriptor> presentation) {
     if(event.getItem().getData() instanceof ProductionCollection) {
-      PresentationLoader.navigate(event, () -> productionCollectPresentationFactory.create(event.getItem().getData().getIdentifier()));
+      PresentationLoader.navigate(event, () -> productionCollectionSupplier.create(event.getItem().getData().getIdentifier()));
     }
     else {
       PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem()));
     }
+  }
+
+  @Override
+  protected Node createContextPanel(GenericCollectionPresentation<MediaDescriptor> presentation) {
+    return contextLayout.create(presentation.parentDescriptor);
   }
 }

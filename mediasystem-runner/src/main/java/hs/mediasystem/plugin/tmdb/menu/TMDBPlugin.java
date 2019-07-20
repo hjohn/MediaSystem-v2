@@ -48,10 +48,10 @@ public class TMDBPlugin implements Plugin {
   public Menu getMenu() {
     return new Menu("TMDB", ResourceManager.getImage(getClass(), "image"), List.of(
       new MenuItem("Top 100", null, () -> factory.create(
-        createProductionItems(), "Top100", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS)
+        createProductionItems(), "Top100", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
       )),
       new MenuItem("Recommendations", null, () -> factory.create(
-        createProductionItems(), "Recommended", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS)
+        createProductionItems(), "Recommended", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
       ))
     ));
   }
