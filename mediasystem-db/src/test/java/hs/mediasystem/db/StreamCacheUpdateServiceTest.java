@@ -72,7 +72,7 @@ public class StreamCacheUpdateServiceTest {
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
+    verify(streamStore).put(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
     verify(streamStore).putIdentifications(new StreamID(1234), Map.of(new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION));
     verifyZeroInteractions(descriptorStore);
   }
@@ -98,7 +98,7 @@ public class StreamCacheUpdateServiceTest {
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
+    verify(streamStore).put(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
     verify(streamStore).remove(new StreamID(20));
     verify(streamStore).putIdentifications(new StreamID(21), Map.of(new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION));
     verify(descriptorStore).add(movie);
@@ -127,7 +127,7 @@ public class StreamCacheUpdateServiceTest {
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(streamStore).add(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
+    verify(streamStore).put(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
 //    verify(streamStore).remove(new StreamID(20));
     verify(streamStore).putIdentifications(new StreamID(20), Map.of(new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION));
     verify(descriptorStore).add(movie);
@@ -152,7 +152,7 @@ public class StreamCacheUpdateServiceTest {
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(streamStore).add(eq(1), argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
+    verify(streamStore).put(eq(1), argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
     verify(streamStore).putIdentifications(new StreamID(123), Map.of(new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION));
     verifyZeroInteractions(descriptorStore);
   }

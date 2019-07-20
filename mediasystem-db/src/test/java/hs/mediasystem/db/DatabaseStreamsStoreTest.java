@@ -55,9 +55,9 @@ class DatabaseStreamsStoreTest {
     void beforeEach() {
       when(codec.toRecord(any(CachedStream.class))).thenReturn(new StreamRecord());
 
-      store.add(1, stream1);
-      store.add(2, stream2);
-      store.add(1, stream3);
+      store.put(1, stream1);
+      store.put(2, stream2);
+      store.put(1, stream3);
 
       verify(database, times(3)).store(any(StreamRecord.class));
     }
@@ -90,7 +90,7 @@ class DatabaseStreamsStoreTest {
       class AfterReaddingRemovedElement {
         @BeforeEach
         void beforeEach() {
-          store.add(1, stream3);
+          store.put(1, stream3);
         }
 
         @Test

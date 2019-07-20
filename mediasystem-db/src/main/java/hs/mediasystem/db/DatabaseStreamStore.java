@@ -195,25 +195,15 @@ public class DatabaseStreamStore implements BasicStreamStore {
     removeFromCache(streamId);
   }
 
-  synchronized void add(int importSourceId, BasicStream stream) {
+  synchronized void put(int importSourceId, BasicStream stream) {
     CachedStream existingCS = cache.get(stream.getId());
+    IdentifiedStream identifiedStream = new IdentifiedStream(stream, existingCS == null ? Collections.emptyMap() : existingCS.getIdentifiedStream().getIdentifications());
+    CachedStream newCS = new CachedStream(identifiedStream, importSourceId, null, null);
 
-    if(existingCS == null || !stream.equals(existingCS.getIdentifiedStream().getStream())) {
-      IdentifiedStream identifiedStream = new IdentifiedStream(stream, existingCS == null ? Collections.emptyMap() : existingCS.getIdentifiedStream().getIdentifications());
-      CachedStream newCS;
+    database.store(codec.toRecord(newCS));
 
-      if(existingCS == null) {
-        newCS = new CachedStream(identifiedStream, importSourceId, null, null);
-      }
-      else {
-        newCS = new CachedStream(identifiedStream, importSourceId, existingCS.getLastEnrichTime(), existingCS.getNextEnrichTime());
-      }
-
-      database.store(codec.toRecord(newCS));
-
-      removeFromCache(stream.getId());
-      putInCache(newCS);
-    }
+    removeFromCache(stream.getId());
+    putInCache(newCS);
   }
 
   synchronized void putIdentifications(StreamID streamId, Map<Identifier, Identification> identifications) {

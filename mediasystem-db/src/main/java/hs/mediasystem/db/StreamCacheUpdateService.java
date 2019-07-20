@@ -154,7 +154,7 @@ public class StreamCacheUpdateService {
 
             if(existingStream == null || !scannedStream.equals(existingStream)) {
               try(Key key = storeConsistencyLock.lock()) {
-                streamStore.add(scannerAndRootId, scannedStream);  // Adds as new or modify it
+                streamStore.put(scannerAndRootId, scannedStream);  // Adds as new or modify it
               }
 
               LOGGER.finer((existingStream == null ? "New stream found: " : "Existing stream modified: ") + scannedStream);
