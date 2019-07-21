@@ -27,10 +27,14 @@ public class ScannerController {
     EXECUTOR.scheduleWithFixedDelay(this::scanAll, 15, 5 * 60, TimeUnit.SECONDS);  // After 15 seconds, start scans with pauses of 5 minutes
   }
 
+  public void scanNow() {
+    EXECUTOR.execute(this::scanAll);
+  }
+
   /**
    * Executes scans for all current import sources.
    */
-  private void scanAll() {
+  private synchronized void scanAll() {
     List<ImportSource> sources = importSourceProvider.getImportSources();
 
     LOGGER.info("Initiating scan with " + sources.size() + " scanners...");
