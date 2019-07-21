@@ -32,9 +32,13 @@ public class Dialogs {
     show(event, "dialog", content);
   }
 
-  public static <T> Optional<T> show(Event event, Map<T, String> options) {
+  public static <T> Optional<T> show(Event event, Node content, Map<T, String> options) {
     DialogPane<T> dialogPane = new DialogPane<>();
     VBox vbox = new VBox();
+
+    if(content != null) {
+      vbox.getChildren().add(content);
+    }
 
     for(Map.Entry<T, String> option : options.entrySet()) {
       vbox.getChildren().add(Buttons.create(option.getValue(), e -> dialogPane.close(option.getKey())));
@@ -45,11 +49,20 @@ public class Dialogs {
     return Optional.ofNullable(dialogPane.showDialog(((Node)event.getTarget()).getScene(), true));
   }
 
-  public static Optional<Integer> show(Event event, String... options) {
+  public static <T> Optional<T> show(Event event, Map<T, String> options) {
+    return show(event, null, options);
+  }
+
+  public static Optional<Integer> show(Event event, Node content, String... options) {
     return show(
       event,
+      content,
       IntStream.range(0, options.length).boxed().collect(Collectors.toMap(Function.identity(), i -> options[i]))
     );
+  }
+
+  public static Optional<Integer> show(Event event, String... options) {
+    return show(event, null, options);
   }
 
   public static <T> Optional<T> showProgressDialog(Event event, Task<T> task) {
