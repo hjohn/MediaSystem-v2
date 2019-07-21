@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.rootmenu;
 
-import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.presentation.NodeFactory;
@@ -42,7 +41,7 @@ public class RootMenuScenePlugin implements NodeFactory<MenuPresentation> {
       MenuPane pane = new MenuPane(menu.getImage());
 
       for(MenuItem menuItem : menu.getMenuItems()) {
-        pane.getChildren().add(Buttons.create(menuItem.getTitle(), e -> PresentationLoader.navigate(e, menuItem.getPresentationSupplier())));
+        pane.getChildren().add(Buttons.create(menuItem.getTitle(), menuItem.getEventConsumer()::accept));
       }
 
       hbox.getChildren().add(pane);

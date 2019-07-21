@@ -1,12 +1,15 @@
 package hs.mediasystem.plugin.rootmenu;
 
+import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
 import hs.mediasystem.presentation.Presentation;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javafx.event.Event;
 import javafx.scene.image.Image;
 
 import javax.inject.Inject;
@@ -46,20 +49,24 @@ public class MenuPresentation implements Presentation {
   public static class MenuItem {
     private final String title;
     private final Image image;
-    private final Supplier<Presentation> presentationSupplier;
+    private final Consumer<Event> eventConsumer;
 
-    public MenuItem(String title, Image image, Supplier<Presentation> presentationSupplier) {
+    public MenuItem(String title, Image image, Consumer<Event> eventConsumer) {
       this.title = title;
       this.image = image;
-      this.presentationSupplier = presentationSupplier;
+      this.eventConsumer = eventConsumer;
+    }
+
+    public MenuItem(String title, Image image, Supplier<Presentation> presentationSupplier) {
+      this(title, image, e -> PresentationLoader.navigate(e, presentationSupplier));
     }
 
     public String getTitle() {
       return title;
     }
 
-    public Supplier<Presentation> getPresentationSupplier() {
-      return presentationSupplier;
+    public Consumer<Event> getEventConsumer() {
+      return eventConsumer;
     }
   }
 
