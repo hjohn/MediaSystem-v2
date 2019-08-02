@@ -10,6 +10,7 @@ import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Set;
 
 public class Productions {
 
@@ -20,7 +21,8 @@ public class Productions {
       new Reception(8, 12345),
       Arrays.asList("en"),
       Arrays.asList("Action", "Science-Fiction"),
-      20.0
+      20.0,
+      Set.of()
     );
   }
 }

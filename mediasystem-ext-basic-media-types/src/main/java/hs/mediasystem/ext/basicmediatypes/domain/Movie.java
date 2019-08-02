@@ -1,7 +1,10 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 
 public class Movie extends Production {
   public enum State {
@@ -16,8 +19,8 @@ public class Movie extends Production {
   private final State state;
   private final CollectionDetails collectionDetails;
 
-  public Movie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, List<String> languages, List<String> genres, List<Keyword> keywords, double popularity, String tagLine, State state, CollectionDetails collectionDetails) {
-    super(identifier, details, reception, languages, genres, popularity);
+  public Movie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, List<String> languages, List<String> genres, List<Keyword> keywords, double popularity, String tagLine, State state, CollectionDetails collectionDetails, Set<Identifier> relatedIdentifiers) {
+    super(identifier, details, reception, languages, genres, popularity, relatedIdentifiers);
 
     if(keywords == null) {
       throw new IllegalArgumentException("keywords cannot be null");

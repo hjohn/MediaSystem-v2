@@ -186,6 +186,7 @@ public class MediaService {
       serie.getLastAirDate(),
       serie.getPopularity(),
       serie.getSeasons(),
+      serie.getRelatedIdentifiers(),
       extras
     );
   }

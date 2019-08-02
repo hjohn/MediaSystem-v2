@@ -17,7 +17,9 @@ import hs.mediasystem.util.ImageURI;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -35,7 +37,8 @@ public class ObjectFactory {
       createReception(node),
       node.path("spoken_languages").findValuesAsText("name"),
       node.path("genres").findValuesAsText("name"),
-      node.path("popularity").doubleValue()
+      node.path("popularity").doubleValue(),
+      Set.of()
     );
   }
 
@@ -44,10 +47,13 @@ public class ObjectFactory {
 
     JsonNode collectionPath = node.path("belongs_to_collection");
     CollectionDetails collectionDetails = null;
+    Set<Identifier> relatedIdentifiers = new HashSet<>();
 
     if(collectionPath.isObject()) {
+      Identifier identifier = new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText());
+
       collectionDetails = new CollectionDetails(
-        new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText()),
+        identifier,
         new Details(
           collectionPath.path("name").asText(),
           null,
@@ -56,6 +62,14 @@ public class ObjectFactory {
           tmdb.createImageURI(collectionPath.path("backdrop_path").textValue(), "original")
         )
       );
+
+      relatedIdentifiers.add(identifier);
+    }
+
+    String imdbId = node.path("imdb_id").textValue();
+
+    if(imdbId != null) {
+      relatedIdentifiers.add(new Identifier(DataSources.IMDB_MOVIE, imdbId));
     }
 
     return new Movie(
@@ -69,7 +83,8 @@ public class ObjectFactory {
       node.path("popularity").doubleValue(),
       node.path("tagline").textValue(),
       toMovieState(node.path("status").textValue()),
-      collectionDetails
+      collectionDetails,
+      relatedIdentifiers
     );
   }
 
@@ -84,7 +99,8 @@ public class ObjectFactory {
       toSerieState(node.path("status").textValue()),
       parseDate(node.path("last_air_date").textValue()),
       node.path("popularity").doubleValue(),
-      seasons
+      seasons,
+      Set.of()
     );
   }
 

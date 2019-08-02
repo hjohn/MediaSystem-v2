@@ -1,9 +1,12 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class Serie extends Production {
   public enum State {
@@ -34,8 +37,8 @@ public class Serie extends Production {
    * @param popularity a popularity value
    * @param seasons the seasons this serie consists of, can be null if unknown (due to partial information) and can be empty (if known there are no seasons)
    */
-  public Serie(ProductionIdentifier identifier, Details details, Reception reception, List<String> languages, List<String> genres, List<Keyword> keywords, State state, LocalDate lastAirDate, double popularity, List<Season> seasons) {
-    super(identifier, details, reception, languages, genres, popularity);
+  public Serie(ProductionIdentifier identifier, Details details, Reception reception, List<String> languages, List<String> genres, List<Keyword> keywords, State state, LocalDate lastAirDate, double popularity, List<Season> seasons, Set<Identifier> relatedIdentifiers) {
+    super(identifier, details, reception, languages, genres, popularity, relatedIdentifiers);
 
     this.keywords = keywords;
     this.state = state;

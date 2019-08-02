@@ -1,6 +1,9 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
+
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents either a Movie, a TV Movie or an entire TV Series.
@@ -9,8 +12,9 @@ public class Production extends Release {
   private final List<String> languages;
   private final List<String> genres;
   private final double popularity;
+  private final Set<Identifier> relatedIdentifiers;
 
-  public Production(ProductionIdentifier identifier, Details details, Reception reception, List<String> languages, List<String> genres, double popularity) {
+  public Production(ProductionIdentifier identifier, Details details, Reception reception, List<String> languages, List<String> genres, double popularity, Set<Identifier> relatedIdentifiers) {
     super(identifier, details, reception);
 
     if(languages == null) {
@@ -23,6 +27,7 @@ public class Production extends Release {
     this.popularity = popularity;
     this.languages = languages;
     this.genres = genres;
+    this.relatedIdentifiers = Set.copyOf(relatedIdentifiers);
   }
 
   public List<String> getLanguages() {
@@ -35,6 +40,10 @@ public class Production extends Release {
 
   public double getPopularity() {
     return popularity;
+  }
+
+  public Set<Identifier> getRelatedIdentifiers() {
+    return relatedIdentifiers;
   }
 
   @Override

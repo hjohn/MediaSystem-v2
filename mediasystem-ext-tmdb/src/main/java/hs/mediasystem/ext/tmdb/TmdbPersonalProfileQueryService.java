@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -93,7 +94,8 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
       reception,
       Collections.emptyList(),
       genres,
-      node.path("popularity").doubleValue()
+      node.path("popularity").doubleValue(),
+      Set.of()
     );
 
     Identifier identifier = new Identifier(DataSources.TMDB_CREDIT, node.get("credit_id").asText());

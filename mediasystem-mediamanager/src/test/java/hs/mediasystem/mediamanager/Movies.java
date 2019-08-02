@@ -14,6 +14,7 @@ import hs.mediasystem.util.ImageURI;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Set;
 
 public class Movies {
   public static Movie create() {
@@ -32,7 +33,8 @@ public class Movies {
       99.0,
       "Skynet comes",
       State.RELEASED,
-      null
+      null,
+      Set.of()
     );
   }
 }
