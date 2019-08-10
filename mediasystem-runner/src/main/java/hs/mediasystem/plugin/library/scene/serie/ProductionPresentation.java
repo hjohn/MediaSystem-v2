@@ -236,12 +236,12 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     }
     if(rootItem.getData() instanceof Serie) {
       long totalWatched = episodeItems.stream()
-        .filter(i -> i.getData().getSeasonNumber() != 0)
+        .filter(i -> i.getData().getSeasonNumber() > 0)
         .filter(i -> i.watched.get())
         .count();
 
       long total = episodeItems.stream()
-        .filter(i -> i.getData().getSeasonNumber() != 0)
+        .filter(i -> i.getData().getSeasonNumber() > 0)
         .count();
 
       return totalWatched / (double)total;
@@ -253,12 +253,12 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   private double getMissingFraction() {
     if(rootItem.getData() instanceof Serie && !rootItem.watched.get() && !rootItem.missing.get()) {
       long totalMissingUnwatched = episodeItems.stream()
-        .filter(i -> i.getData().getSeasonNumber() != 0)
+        .filter(i -> i.getData().getSeasonNumber() > 0)
         .filter(i -> i.missing.get() && !i.watched.get())
         .count();
 
       long total = episodeItems.stream()
-        .filter(i -> i.getData().getSeasonNumber() != 0)
+        .filter(i -> i.getData().getSeasonNumber() > 0)
         .count();
 
       return totalMissingUnwatched / (double)total;
