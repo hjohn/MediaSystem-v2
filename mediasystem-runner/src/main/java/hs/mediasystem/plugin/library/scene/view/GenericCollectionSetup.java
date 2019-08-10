@@ -1,9 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -13,7 +11,6 @@ import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.util.Optional;
 
-import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.Node;
 
 import javax.inject.Inject;
@@ -30,15 +27,7 @@ public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, Gener
   protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
-    cellFactory.setSideBarCenterBindProvider(item -> new SimpleStringProperty(
-      Optional.ofNullable(item.getData())
-        .filter(Movie.class::isInstance)
-        .map(Movie.class::cast)
-        .map(Movie::getCollectionDetails)
-        .map(CollectionDetails::getDetails)
-        .map(Details::getName)
-        .orElse("")
-    ));
+    cellFactory.setSideBarCenterBindProvider(item -> item.collectionTitle);
     cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getDetails()).map(Details::getImage).map(imageHandleFactory::fromURI).orElse(null));
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
   }

@@ -6,9 +6,6 @@ import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.scanner.api.Attribute;
@@ -23,7 +20,6 @@ import hs.mediasystem.util.Tuple;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,9 +50,9 @@ public class LocalMediaIdentificationServiceTest {
   @Mock private IdentificationService idService5;
   @Mock private IdentificationService serieIdService;
   @Mock private IdentificationService episodeIdService;
-  @Mock private QueryService<Episode> queryService1;
-  @Mock private QueryService<Movie> queryServiceForDS1;
-  @Mock private QueryService<Movie> queryServiceForDS6;
+  @Mock private QueryService queryService1;
+  @Mock private QueryService queryServiceForDS1;
+  @Mock private QueryService queryServiceForDS6;
 
   private LocalMediaIdentificationService db;
 
@@ -107,31 +103,6 @@ public class LocalMediaIdentificationServiceTest {
     assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS1))));
     assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idService5))));
     assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier, identification, null))));
-  }
-
-  @Test
-  public void reidentifyShouldCreateIdentificationAndDescriptorAndRecursivelyAnotherDescriptor() {
-    Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
-    ProductionIdentifier identifier = new ProductionIdentifier(DATA_SOURCE_1, "12345");
-    ProductionIdentifier identifier2 = new ProductionIdentifier(DATA_SOURCE_6, "abcdef");
-    Identification identification = new Identification(MatchType.ID, 1.0, Instant.now());
-    Identification identification2 = new Identification(MatchType.ID, 1.0, Instant.now());
-    Movie movie1 = Movies.create(identifier);
-    Movie movie2 = Movies.create(identifier2);
-
-    BasicStream stream = createMovie("file://parent/test", attributes);
-
-    when(idServiceForDS1.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
-    when(queryServiceForDS1.query(identifier)).thenReturn(QueryService.Result.of(movie1, Map.of(identifier2, identification2, identifier, identification)));  // Also returns original identification which should be skipped
-    when(queryServiceForDS6.query(identifier2)).thenReturn(QueryService.Result.of(movie2, Map.of(identifier, identification)));  // Returns original identification which should be skipped
-
-    MediaIdentification mi = db.identify(stream, List.of("D1", "D2", "D5", "D6"));
-
-    assertEquals(4, mi.getResults().size());
-    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS2))));
-    assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idService5))));
-    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier, identification, movie1))));
-    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier2, identification2, movie2))));
   }
 
   @Test

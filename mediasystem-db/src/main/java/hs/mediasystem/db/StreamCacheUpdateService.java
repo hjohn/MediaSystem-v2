@@ -4,7 +4,7 @@ import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.IdentifierCollection;
-import hs.mediasystem.ext.basicmediatypes.services.QueryService.Result;
+import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
 import hs.mediasystem.mediamanager.MediaIdentification;
 import hs.mediasystem.mediamanager.StreamSource;
@@ -23,7 +23,6 @@ import hs.mediasystem.util.Tuple.Tuple3;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,6 +43,7 @@ public class StreamCacheUpdateService {
   private static final LinkedBlockingQueue<Runnable> QUEUE = new LinkedBlockingQueue<>();
   private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(10, 10, 0L, TimeUnit.MILLISECONDS, QUEUE, new NamedThreadFactory("StreamCacheUpdateSvc", Thread.NORM_PRIORITY - 2, true));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Downloading Metadata");
+  private static final MediaType COLLECTION_MEDIA_TYPE = MediaType.of("COLLECTION");
 
   @Inject private LocalMediaIdentificationService identificationService;
   @Inject private DatabaseStreamStore streamStore;
@@ -123,21 +123,42 @@ public class StreamCacheUpdateService {
     });
   }
 
+  /**
+   * Fetches all descriptors that are part of a collection, including descriptors that
+   * may not be in the local collection, and stores them in the descriptor store for
+   * fast access.
+   *
+   * @param mediaIdentification a {@link MediaIdentification} result to check for {@link Identifier}s of type COLLECTION.
+   */
   private void fetchAndStoreCollectionDescriptors(MediaIdentification mediaIdentification) {
+    // Production contains related Collection identifier which can be queried to get IdentifierCollection which in turn are each queried to get further Productions
     mediaIdentification.getResults().stream()
       .flatMap(Exceptional::ignoreAllAndStream)
-      .filter(t -> t.a.getDataSource().getType().equals(MediaType.of("COLLECTION")))
       .map(t -> t.c)
+      .map(Production.class::cast)
+      .forEach(p -> p.getRelatedIdentifiers().stream()
+        .filter(identifier -> identifier.getDataSource().getType().equals(COLLECTION_MEDIA_TYPE))  // After this filtering, stream consists of Collection type identifiers
+        .filter(identifier -> identifier.getDataSource().getName().equals(p.getIdentifier().getDataSource().getName()))  // Only Collection type identifiers of same data source as production that contained it
+        .forEach(this::fetchAndStoreCollectionItems)
+      );
+  }
+
+  private void fetchAndStoreCollectionItems(Identifier collectionIdentifier) {
+    identificationService.query(collectionIdentifier)
+      .handle(RuntimeIOException.class, e -> LOGGER.warning("Exception while fetching collection descriptor for " + collectionIdentifier + ": " + Throwables.formatAsOneLine(e)))
       .map(IdentifierCollection.class::cast)
-      .map(IdentifierCollection::getItems)
-      .flatMap(Collection::stream)
-      .filter(identifier -> descriptorStore.get(identifier) == null)
-      .forEach(identifier -> {
-        identificationService.query(identifier)
-          .handle(RuntimeIOException.class, e -> LOGGER.warning("Exception while fetching descriptor for " + identifier + ": " + Throwables.formatAsOneLine(e)))
-          .map(Result::getMediaDescriptor)
-          .ifPresent(descriptorStore::add);
+      .ifPresent(t -> {
+        fetchAndStoreCollectionItems(t);
+        descriptorStore.add(t);
       });
+  }
+
+  private void fetchAndStoreCollectionItems(IdentifierCollection identifierCollection) {
+    for(Identifier identifier : identifierCollection.getItems()) {
+      identificationService.query(identifier)
+        .handle(RuntimeIOException.class, e -> LOGGER.warning("Exception while fetching descriptor for " + identifier + ": " + Throwables.formatAsOneLine(e)))
+        .ifPresent(descriptorStore::add);
+    }
   }
 
   public synchronized void update(long importSourceId, List<Exceptional<List<BasicStream>>> rootResults) {
@@ -160,6 +181,47 @@ public class StreamCacheUpdateService {
               LOGGER.finer((existingStream == null ? "New stream found: " : "Existing stream modified: ") + scannedStream);
 
               asyncEnrichMediaStream(scannedStream.getId(), true);
+            }
+            else {  // Check if descriptor store contains the relevant descriptors
+              for(Identifier identifier : streamStore.findIdentifications(existingStream.getId()).keySet()) {
+                if(!identificationService.isQueryServiceAvailable(identifier.getDataSource())) {
+                  continue;
+                }
+
+                MediaDescriptor mediaDescriptor = descriptorStore.get(identifier);
+
+                if(mediaDescriptor == null) {
+                  // One or more descriptors are missing, enrich:
+                  LOGGER.warning("Existing stream is missing descriptors in cache (" + identifier + ") -> refetching: " + scannedStream);
+
+                  asyncEnrichMediaStream(scannedStream.getId(), true);
+                  break;
+                }
+                else if(mediaDescriptor instanceof Production) {
+                  Production production = (Production)mediaDescriptor;
+                  Identifier collectionIdentifier = production.getCollectionIdentifier().orElse(null);
+
+                  if(collectionIdentifier != null) {
+                    IdentifierCollection identifierCollection = (IdentifierCollection)descriptorStore.get(collectionIdentifier);
+
+                    if(identifierCollection == null) {
+                      LOGGER.warning("Existing stream is missing collection data in cache (" + collectionIdentifier + ") -> refetching: " + scannedStream);
+
+                      asyncEnrichMediaStream(scannedStream.getId(), true);
+                      break;
+                    }
+
+                    for(Identifier collectionItemIdentifier : identifierCollection.getItems()) {
+                      if(descriptorStore.get(collectionItemIdentifier) == null) {
+                        LOGGER.warning("Existing stream is missing collection items in cache (" + collectionItemIdentifier + " is missing, out of " + identifierCollection.getItems() + " from " + collectionIdentifier + ") -> refetching: " + scannedStream);
+
+                        asyncEnrichMediaStream(scannedStream.getId(), true);
+                        break;
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
           catch(Throwable t) {

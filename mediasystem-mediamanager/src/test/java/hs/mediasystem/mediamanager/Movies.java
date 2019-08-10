@@ -33,7 +33,6 @@ public class Movies {
       99.0,
       "Skynet comes",
       State.RELEASED,
-      null,
       Set.of()
     );
   }

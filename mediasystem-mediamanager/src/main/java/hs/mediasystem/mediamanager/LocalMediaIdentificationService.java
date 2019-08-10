@@ -6,7 +6,6 @@ import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
-import hs.mediasystem.ext.basicmediatypes.services.QueryService.Result;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.Exceptional;
@@ -14,8 +13,6 @@ import hs.mediasystem.util.Tuple;
 import hs.mediasystem.util.Tuple.Tuple2;
 import hs.mediasystem.util.Tuple.Tuple3;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,10 +31,10 @@ public class LocalMediaIdentificationService {
   private static final Logger LOGGER = Logger.getLogger(LocalMediaIdentificationService.class.getName());
 
   @Inject private List<IdentificationService> identificationServices;
-  @Inject private List<QueryService<?>> queryServices;
+  @Inject private List<QueryService> queryServices;
 
   private final Map<DataSource, IdentificationService> identificationServicesByDataSource = new HashMap<>();
-  private final Map<DataSource, QueryService<MediaDescriptor>> queryServicesByDataSource = new HashMap<>();
+  private final Map<DataSource, QueryService> queryServicesByDataSource = new HashMap<>();
 
   @PostConstruct
   private void postConstruct() {
@@ -49,11 +46,8 @@ public class LocalMediaIdentificationService {
       }
     }
 
-    for(QueryService<?> service : queryServices) {
-      @SuppressWarnings("unchecked")
-      QueryService<MediaDescriptor> castedService = (QueryService<MediaDescriptor>)service;
-
-      if(queryServicesByDataSource.put(service.getDataSource(), castedService) != null) {
+    for(QueryService service : queryServices) {
+      if(queryServicesByDataSource.put(service.getDataSource(), service) != null) {
         LOGGER.warning("Multiple query services available for datasource: " + service.getDataSource());
       }
     }
@@ -86,47 +80,26 @@ public class LocalMediaIdentificationService {
       ))
       .collect(Collectors.toList());
 
-    Set<DataSource> identifiedDataSources = new HashSet<>();
-    List<Exceptional<Tuple3<Identifier, Identification, Result<MediaDescriptor>>>> results = new ArrayList<>();
+    Set<Exceptional<Tuple3<Identifier, Identification, MediaDescriptor>>> results = new HashSet<>();
 
-    // Loop here as queries may return new Identifications that in turn require querying:
-    while(!identificationsToQuery.isEmpty()) {
-      identificationsToQuery
-        .forEach(identificationExceptional -> results.add(
-          identificationExceptional
-            .map((Tuple2<Identifier, Identification> t) -> queryServicesByDataSource.get(t.a.getDataSource()))
-            .map(qs -> qs.query(identificationExceptional.get().a))  // get() is safe here, won't get here if not present
-            .map(r -> Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, r))
-            .or(() -> Exceptional.of(Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, null)))
-      ));
+    identificationsToQuery
+      .forEach(identificationExceptional -> results.add(
+        identificationExceptional
+          .map((Tuple2<Identifier, Identification> t) -> queryServicesByDataSource.get(t.a.getDataSource()))
+          .map(qs -> qs.query(identificationExceptional.get().a))  // get() is safe here, won't get here if not present
+          .map(r -> Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, r))
+          .or(() -> Exceptional.of(Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, null)))
+    ));
 
-      // Update identifiedDataSources:
-      identificationsToQuery.forEach(exI -> exI.map(t -> t.a)
-        .map(Identifier::getDataSource)
-        .ignore(Throwable.class)
-        .ifPresent(identifiedDataSources::add)
-      );
-
-      // Check Results for new Identifications:
-      identificationsToQuery = results.stream()
-        .map(e -> e.map(t -> t.c))
-        .flatMap(Exceptional::ignoreAllAndStream)
-        .map(Result::getNewIdentifications)
-        .map(Map::entrySet)
-        .flatMap(Collection::stream)
-        .map(e -> Tuple.of(e.getKey(), e.getValue()))
-        .filter(t -> !identifiedDataSources.contains(t.a.getDataSource()))  // Don't identify ones that exist already (prevent id loops)
-        .map(Exceptional::of)
-        .collect(Collectors.toList());
-    }
-
-    return results.stream()
-      .map(e -> e.map(t -> Tuple.of(t.a, t.b, t.c == null ? null : t.c.getMediaDescriptor())))
-      .collect(Collectors.toSet());
+    return results;
   }
 
-  public Exceptional<Result<MediaDescriptor>> query(Identifier identifier) {
+  public Exceptional<MediaDescriptor> query(Identifier identifier) {
     return Exceptional.ofNullable(queryServicesByDataSource.get(identifier.getDataSource()))
       .map(qs -> qs.query(identifier));
+  }
+
+  public boolean isQueryServiceAvailable(DataSource dataSource) {
+    return queryServicesByDataSource.containsKey(dataSource);
   }
 }

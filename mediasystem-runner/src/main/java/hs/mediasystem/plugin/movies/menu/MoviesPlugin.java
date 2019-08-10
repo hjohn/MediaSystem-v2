@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.movies.menu;
 
-import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.DetailedMediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
@@ -23,7 +22,6 @@ import hs.mediasystem.util.NaturalLanguage;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -68,7 +66,7 @@ public class MoviesPlugin implements Plugin {
   );
 
   private static final List<Filter<DetailedMediaDescriptor>> GROUPS = List.of(
-    new Filter<>("grouped", mi -> mi.getData() instanceof Movie ? ((Movie)mi.getData()).getCollectionDetails() == null : true),
+    new Filter<>("grouped", mi -> mi.getData() instanceof Movie ? ((Movie)mi.getData()).getCollectionIdentifier().isEmpty() : true),
     new Filter<>("ungrouped", mi -> !(mi.getData() instanceof ProductionCollection))
   );
 
@@ -88,9 +86,7 @@ public class MoviesPlugin implements Plugin {
     ObservableList<MediaItem<Movie>> productionItems = createProductionItems(mediaService.findAllByType(MOVIE, List.of("TMDB", "LOCAL")));
 
     List<MediaItem<DetailedMediaDescriptor>> groups = productionItems.stream()
-      .map(mi -> mi.getData().getCollectionDetails())
-      .filter(Objects::nonNull)
-      .map(CollectionDetails::getIdentifier)
+      .flatMap(mi -> mi.getData().getCollectionIdentifier().stream())
       .distinct()
       .map(videoDatabase::queryProductionCollection)
       .map(DetailedMediaDescriptor.class::cast)

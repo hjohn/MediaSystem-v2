@@ -17,9 +17,8 @@ public class Movie extends Production {
   private final List<Keyword> keywords;
   private final String tagLine;
   private final State state;
-  private final CollectionDetails collectionDetails;
 
-  public Movie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, List<String> languages, List<String> genres, List<Keyword> keywords, double popularity, String tagLine, State state, CollectionDetails collectionDetails, Set<Identifier> relatedIdentifiers) {
+  public Movie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, List<String> languages, List<String> genres, List<Keyword> keywords, double popularity, String tagLine, State state, Set<Identifier> relatedIdentifiers) {
     super(identifier, details, reception, languages, genres, popularity, relatedIdentifiers);
 
     if(keywords == null) {
@@ -30,7 +29,6 @@ public class Movie extends Production {
     this.keywords = keywords;
     this.state = state;
     this.tagLine = tagLine;
-    this.collectionDetails = collectionDetails;
   }
 
   public Duration getRuntime() {
@@ -47,9 +45,5 @@ public class Movie extends Production {
 
   public String getTagLine() {
     return tagLine;
-  }
-
-  public CollectionDetails getCollectionDetails() {
-    return collectionDetails;
   }
 }

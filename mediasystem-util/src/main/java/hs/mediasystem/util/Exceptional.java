@@ -2,6 +2,7 @@ package hs.mediasystem.util;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -27,6 +28,10 @@ public final class Exceptional<T> {
 
   public static <T> Exceptional<T> of(T value) {
     return new Exceptional<>(Objects.requireNonNull(value), null);
+  }
+
+  public static <T> Exceptional<T> of(Optional<T> value) {
+    return new Exceptional<>(Objects.requireNonNull(value).orElse(null), null);
   }
 
   public static <T> Exceptional<T> ofNullableException(Throwable exception) {

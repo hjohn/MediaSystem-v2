@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
@@ -46,24 +45,10 @@ public class ObjectFactory {
     Number runtime = node.path("runtime").numberValue();
 
     JsonNode collectionPath = node.path("belongs_to_collection");
-    CollectionDetails collectionDetails = null;
     Set<Identifier> relatedIdentifiers = new HashSet<>();
 
     if(collectionPath.isObject()) {
-      Identifier identifier = new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText());
-
-      collectionDetails = new CollectionDetails(
-        identifier,
-        new Details(
-          collectionPath.path("name").asText(),
-          null,
-          null,
-          tmdb.createImageURI(collectionPath.path("poster_path").textValue(), "original"),
-          tmdb.createImageURI(collectionPath.path("backdrop_path").textValue(), "original")
-        )
-      );
-
-      relatedIdentifiers.add(identifier);
+      relatedIdentifiers.add(new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText()));
     }
 
     String imdbId = node.path("imdb_id").textValue();
@@ -83,7 +68,6 @@ public class ObjectFactory {
       node.path("popularity").doubleValue(),
       node.path("tagline").textValue(),
       toMovieState(node.path("status").textValue()),
-      collectionDetails,
       relatedIdentifiers
     );
   }

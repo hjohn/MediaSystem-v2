@@ -12,10 +12,12 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Release;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrintProvider;
+import hs.mediasystem.util.Exceptional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,6 +48,7 @@ public class MediaItem<T extends MediaDescriptor> {
   public static class Factory {
     @Inject private StreamStateService streamStateService;
     @Inject private MediaService mediaService;
+    @Inject private VideoDatabase videoDatabase;
     @Inject private StreamPrintProvider streamPrintProvider;
 
     public <T extends MediaDescriptor> MediaItem<T> create(T descriptor, MediaItem<?> parent) {
@@ -56,13 +59,24 @@ public class MediaItem<T extends MediaDescriptor> {
         .collect(Collectors.toList());
 
       StreamID streamId = sortedStreams.isEmpty() ? null : sortedStreams.get(0).getId();
+      String collectionTitle = null;
+
+      if(descriptor instanceof Production) {
+        collectionTitle = Exceptional.of(((Production)descriptor).getCollectionIdentifier())
+          .map(videoDatabase::queryProductionCollection)
+          .map(ProductionCollection::getDetails)
+          .map(Details::getName)
+          .ignore(Throwable.class)
+          .orElse(null);
+      }
 
       return new MediaItem<>(
         descriptor,
         parent,
         sortedStreams,
         streamId == null ? new SimpleBooleanProperty() : streamStateService.watchedProperty(streamId),
-        streamId == null ? null : streamStateService.getLastWatchedTime(streamId)
+        streamId == null ? null : streamStateService.getLastWatchedTime(streamId),
+        collectionTitle
       );
     }
   }
@@ -75,6 +89,7 @@ public class MediaItem<T extends MediaDescriptor> {
 
   public final BooleanProperty watched;
   public final BooleanExpression missing;
+  public final StringProperty collectionTitle = new SimpleStringProperty();
   public final StringProperty productionTitle = new SimpleStringProperty();
   public final StringProperty productionYearRange = new SimpleStringProperty();
   public final StringProperty personName = new SimpleStringProperty();
@@ -89,7 +104,7 @@ public class MediaItem<T extends MediaDescriptor> {
   private final String physicalId;
   private final MediaItem<?> parent;
 
-  private MediaItem(T wrappedObject, MediaItem<?> parent, List<BasicStream> streams, BooleanProperty watchedProperty, LocalDateTime lastWatchedTime) {
+  private MediaItem(T wrappedObject, MediaItem<?> parent, List<BasicStream> streams, BooleanProperty watchedProperty, LocalDateTime lastWatchedTime, String collectionTitle) {
     if(wrappedObject == null) {
       throw new IllegalArgumentException("wrappedObject cannot be null");
     }
@@ -99,6 +114,7 @@ public class MediaItem<T extends MediaDescriptor> {
     this.streams = streams;
     this.watched = watchedProperty;
     this.lastWatchedTime.set(lastWatchedTime);
+    this.collectionTitle.set(collectionTitle);
 
     this.mediaStatus = new ObjectBinding<>() {
       {

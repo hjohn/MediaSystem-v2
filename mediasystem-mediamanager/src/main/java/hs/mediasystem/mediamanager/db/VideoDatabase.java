@@ -31,7 +31,7 @@ import javax.inject.Singleton;
 public class VideoDatabase {
   @Inject private List<RolesQueryService> rolesQueryServices;
   @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
-  @Inject private List<QueryService<?>> queryServices;
+  @Inject private List<QueryService> queryServices;
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
   @Inject private List<PersonalProfileQueryService> personalProfileQueryServices;
   @Inject private List<ProductionCollectionQueryService> productionCollectionQueryServices;
@@ -54,9 +54,9 @@ public class VideoDatabase {
 
   @SuppressWarnings("unchecked")
   public <T extends Production> T queryProduction(ProductionIdentifier identifier) {
-    for(QueryService<?> queryService : queryServices) {
+    for(QueryService queryService : queryServices) {
       if(queryService.getDataSource().equals(identifier.getDataSource())) {
-        return (T)queryService.query(identifier).getMediaDescriptor();
+        return (T)queryService.query(identifier);
       }
     }
 

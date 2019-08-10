@@ -45,7 +45,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class LocalQueryService extends AbstractQueryService<Serie> {
+public class LocalQueryService extends AbstractQueryService {
   private static final Logger LOGGER = Logger.getLogger(LocalQueryService.class.getName());
   private static final DataSource SERIE = DataSource.instance(MediaType.of("SERIE"), "LOCAL");
   private static final DataSource SEASON = DataSource.instance(MediaType.of("SEASON"), "LOCAL");
@@ -65,7 +65,7 @@ public class LocalQueryService extends AbstractQueryService<Serie> {
   }
 
   @Override
-  public Result<Serie> query(Identifier identifier) {
+  public Serie query(Identifier identifier) {
     StreamID streamId = new StreamID(Integer.parseInt(identifier.getId()));
     BasicStream stream = streamStore.findStream(streamId);
     Map<Integer, List<Episode>> episodes = new HashMap<>();
@@ -110,7 +110,7 @@ public class LocalQueryService extends AbstractQueryService<Serie> {
 
     Description description = loadDescription(stream);
 
-    Serie serie = new Serie(
+    return new Serie(
       (ProductionIdentifier)identifier,
       new Details(
         description == null || description.getTitle() == null ? stream.getAttributes().get(Attribute.TITLE) : description.getTitle(),
@@ -129,8 +129,6 @@ public class LocalQueryService extends AbstractQueryService<Serie> {
       seasons,
       Set.of()
     );
-
-    return Result.of(serie);
   }
 
   private static Description loadDescription(BasicStream stream) {

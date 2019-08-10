@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-public class TmdbQueryService extends AbstractQueryService<Serie> {
+public class TmdbQueryService extends AbstractQueryService {
   @Inject private TheMovieDatabase tmdb;
   @Inject private PersonRoles personRoles;
   @Inject private ObjectFactory objectFactory;
@@ -34,7 +34,7 @@ public class TmdbQueryService extends AbstractQueryService<Serie> {
   }
 
   @Override
-  public Result<Serie> query(Identifier identifier) {
+  public Serie query(Identifier identifier) {
     JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "append_to_response", "keywords");  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
     List<JsonNode> seasons = new ArrayList<>();
 
@@ -42,12 +42,10 @@ public class TmdbQueryService extends AbstractQueryService<Serie> {
       seasons.add(tmdb.query("3/tv/" + identifier.getId() + "/season/" + season.get("season_number").asText()));
     }
 
-    Serie serie = objectFactory.toSerie(node, seasons.stream().map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
-
     // Popularity... Status... last air date ... inproduction field
     //['Returning Series', 'Planned', 'In Production', 'Ended', 'Canceled', 'Pilot']
 
-    return Result.of(serie);
+    return objectFactory.toSerie(node, seasons.stream().map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
   }
 
   private Season toSeason(JsonNode node, String parentId) {

@@ -1,14 +1,18 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.scanner.api.MediaType;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * Represents either a Movie, a TV Movie or an entire TV Series.
  */
 public class Production extends Release {
+  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
+
   private final List<String> languages;
   private final List<String> genres;
   private final double popularity;
@@ -44,6 +48,10 @@ public class Production extends Release {
 
   public Set<Identifier> getRelatedIdentifiers() {
     return relatedIdentifiers;
+  }
+
+  public Optional<Identifier> getCollectionIdentifier() {
+    return relatedIdentifiers.stream().filter(i -> i.getDataSource().getType().equals(COLLECTION)).findAny();
   }
 
   @Override

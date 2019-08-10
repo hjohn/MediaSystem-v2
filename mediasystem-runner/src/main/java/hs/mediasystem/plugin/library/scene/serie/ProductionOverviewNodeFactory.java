@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.serie;
 
+import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
@@ -443,8 +444,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
             Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.rootItem)),
             Buttons.create("Recommendations", e -> navigateToRecommendations(e))
           );
-          if(presentation.rootItem.getData() instanceof Movie && ((Movie)presentation.rootItem.getData()).getCollectionDetails() != null) {
-            hbox.getChildren().add(Buttons.create("Collection", e -> navigateToCollection(e)));
+          if(presentation.rootItem.getData() instanceof Production) {
+            ((Production)presentation.rootItem.getData()).getCollectionIdentifier()
+              .ifPresent(i -> {
+                hbox.getChildren().add(Buttons.create("Collection", e -> navigateToCollection(e, i)));
+              });
           }
           break;
         }
@@ -466,11 +470,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       PresentationLoader.navigate(event, () -> castAndCrewPresentationFactory.create(mediaItem));
     }
 
-    private void navigateToCollection(ActionEvent event) {
-      @SuppressWarnings("unchecked")
-      MediaItem<Movie> movieItem = (MediaItem<Movie>)presentation.rootItem;
-
-      PresentationLoader.navigate(event, () -> productionCollectionFactory.create(movieItem.getData().getCollectionDetails().getIdentifier()));
+    private void navigateToCollection(ActionEvent event, Identifier collectionIdentifier) {
+      PresentationLoader.navigate(event, () -> productionCollectionFactory.create(collectionIdentifier));
     }
 
     private void navigateToRecommendations(ActionEvent event) {

@@ -18,7 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class TmdbCollectionQueryService extends AbstractQueryService<IdentifierCollection> {
+public class TmdbCollectionQueryService extends AbstractQueryService {
   @Inject private TheMovieDatabase tmdb;
 
   public TmdbCollectionQueryService() {
@@ -26,7 +26,7 @@ public class TmdbCollectionQueryService extends AbstractQueryService<IdentifierC
   }
 
   @Override
-  public Result<IdentifierCollection> query(Identifier identifier) {
+  public IdentifierCollection query(Identifier identifier) {
     JsonNode node = tmdb.query("3/collection/" + identifier.getId());
     List<Identifier> items = new ArrayList<>();
 
@@ -34,7 +34,7 @@ public class TmdbCollectionQueryService extends AbstractQueryService<IdentifierC
       new ProductionIdentifier(DataSources.TMDB_MOVIE, p.path("id").asText())
     ));
 
-    return Result.of(new IdentifierCollection(
+    return new IdentifierCollection(
       new CollectionDetails(
         new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText()),
         new Details(
@@ -46,6 +46,6 @@ public class TmdbCollectionQueryService extends AbstractQueryService<IdentifierC
         )
       ),
       items
-    ));
+    );
   }
 }
