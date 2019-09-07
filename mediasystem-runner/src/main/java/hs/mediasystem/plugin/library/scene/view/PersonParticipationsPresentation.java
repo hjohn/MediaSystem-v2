@@ -62,7 +62,7 @@ public class PersonParticipationsPresentation extends GridViewPresentation<Produ
   }
 
   protected PersonParticipationsPresentation(SettingsSource settingsSource, MediaService mediaService, PersonalProfile personalProfile, ObservableList<MediaItem<ProductionRole>> items) {
-    super(settingsSource, mediaService, items, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)));
+    super(settingsSource, mediaService, items, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)), null);
 
     this.personalProfile = personalProfile;
   }

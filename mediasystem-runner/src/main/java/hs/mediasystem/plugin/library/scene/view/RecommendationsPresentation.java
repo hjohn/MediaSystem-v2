@@ -21,8 +21,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 public class RecommendationsPresentation extends GridViewPresentation<Production> {
-  public final MediaItem<?> mediaItem;
-
   private static final List<SortOrder<Production>> SORT_ORDERS = List.of(
     new SortOrder<Production>("best", null),
     new SortOrder<Production>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL))),
@@ -54,8 +52,6 @@ public class RecommendationsPresentation extends GridViewPresentation<Production
   }
 
   protected RecommendationsPresentation(SettingsSource settingsSource, MediaService mediaService, MediaItem<?> mediaItem, ObservableList<MediaItem<Production>> recommendations) {
-    super(settingsSource, mediaService, recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)));
-
-    this.mediaItem = mediaItem;
+    super(settingsSource, mediaService, recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)), mediaItem);
   }
 }

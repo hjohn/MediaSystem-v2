@@ -87,14 +87,22 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
 
     configureCellFactory(cellFactory);
 
-    Node contextPanel = createContextPanel(presentation);
+    EventStreams.invalidationsOf(presentation.contextItem)
+      .withDefaultEvent(null)
+      .conditionOnShowing(listView)
+      .observe(ci -> {
+        Node contextPanel = createContextPanel(presentation);
 
-    if(contextPanel != null) {
-      areaPane.add(Area.CONTEXT_PANEL, contextPanel);
-    }
+        areaPane.clear(Area.CONTEXT_PANEL);
+
+        if(contextPanel != null) {
+          areaPane.add(Area.CONTEXT_PANEL, contextPanel);
+        }
+      });
 
     EventStreams.invalidationsOf(presentation.groups)
       .withDefaultEvent(null)
+      .conditionOnShowing(listView)
       .map(x -> presentation.groups)
       .map(list -> list.isEmpty() ? null : list)
       .feedTo(listView.groups);
@@ -273,7 +281,9 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
   protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation);
   protected abstract void configureCellFactory(MediaGridViewCellFactory<T> cellFactory);
 
-  protected Node createContextPanel(@SuppressWarnings("unused") P presentation) {
-    return null;
+  protected Node createContextPanel(P presentation) {
+    MediaItem<?> mediaItem = presentation.contextItem.getValue();
+
+    return mediaItem == null ? null : contextLayout.create(mediaItem);
   }
 }

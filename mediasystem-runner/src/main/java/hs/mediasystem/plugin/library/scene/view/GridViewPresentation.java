@@ -35,6 +35,8 @@ import org.reactfx.value.Var;
 public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPresentation {
   protected static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
 
+  public final Var<MediaItem<?>> contextItem = Var.newSimpleVar(null);
+  
   public final Var<SortOrder<T>> sortOrder = Var.newSimpleVar(null);
   public final ObservableList<SortOrder<T>> availableSortOrders = FXCollections.observableArrayList();
 
@@ -64,14 +66,15 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     ALL, AVAILABLE, UNWATCHED
   }
 
-  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, ViewOptions<T> viewOptions) {
+  protected GridViewPresentation(SettingsSource settingsSource, MediaService mediaService, ObservableList<MediaItem<T>> items, ViewOptions<T> viewOptions, MediaItem<?> contextItem) {
     this.mediaService = mediaService;
     this.inputItems = items;
+    this.contextItem.setValue(contextItem);
     this.sortedItems = new SortedList<>(items);  // Sorting first, so we can determine close neighbours when filtering changes
     this.filteredItems = new FilteredList<>(sortedItems);
     this.totalItemCount = Val.create(() -> (int)items.stream().filter(group.getValue().predicate).count(), items, group);
     this.visibleUniqueItemCount = Val.create(() -> (int)items.stream().filter(createFilterPredicate()).count(), items, group, filter, stateFilter);
-
+    
     this.availableSortOrders.setAll(viewOptions.sortOrders);
     this.availableFilters.setAll(viewOptions.filters);
     this.availableStateFilters.setAll(viewOptions.stateFilters);

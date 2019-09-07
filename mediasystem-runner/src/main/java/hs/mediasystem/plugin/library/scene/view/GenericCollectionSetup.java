@@ -11,8 +11,6 @@ import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.util.Optional;
 
-import javafx.scene.Node;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -21,7 +19,6 @@ public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, Gener
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
   @Inject private ProductionCollectionFactory productionCollectionSupplier;
-  @Inject private ContextLayout contextLayout;
 
   @Override
   protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
@@ -40,10 +37,5 @@ public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, Gener
     else {
       PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem()));
     }
-  }
-
-  @Override
-  protected Node createContextPanel(GenericCollectionPresentation<MediaDescriptor> presentation) {
-    return contextLayout.create(presentation.parentDescriptor);
   }
 }
