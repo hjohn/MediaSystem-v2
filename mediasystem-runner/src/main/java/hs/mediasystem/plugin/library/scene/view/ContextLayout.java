@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.DetailedMediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
@@ -60,6 +61,9 @@ public class ContextLayout {
     if(mediaItem.getPerson() != null) {
       return create(mediaItem.getPerson());
     }
+    if(data instanceof DetailedMediaDescriptor) {
+      return create(((DetailedMediaDescriptor)data).getDetails());
+    }
 
     return null;
   }
@@ -72,55 +76,55 @@ public class ContextLayout {
     return null;
   }
 
-  public BasePanel create(Serie serie, int seasonNumber) {
+  public BasePanel create(Details details) {
     BasePanel panel = new BasePanel();
+
+    panel.title.set(details.getName());
+    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getDate()));
+    panel.overview.set(details.getDescription());
+    panel.imageURI.set(details.getImage());
+
+    return panel;
+  }
+
+  public BasePanel create(Serie serie, int seasonNumber) {
+    BasePanel panel = create(serie.getDetails());
 
     Release release = serie.findSeason(seasonNumber);
 
-    panel.title.set(serie.getName());
     panel.season.set(seasonNumber == 0 ? "Specials" : "" + seasonNumber);
-    panel.overview.set(release.getDescription());
-    panel.imageURI.set(release.getImage());
+
     setReception(panel.rating, release.getReception());
 
     return panel;
   }
 
   public BasePanel create(Episode episode, String groupTitle) {
-    BasePanel panel = new BasePanel();
+    BasePanel panel = create(episode.getDetails());
 
     panel.groupTitle.set(groupTitle);
     panel.season.set("" + episode.getSeasonNumber());
     panel.episodeNumber.set("" + episode.getNumber());
-    panel.title.set(episode.getName());
-    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(episode.getDate()));
-    panel.overview.set(episode.getDescription());
-    panel.imageURI.set(episode.getImage());
+
     setReception(panel.rating, episode.getReception());
 
     return panel;
   }
 
   public BasePanel create(Production production) {
-    BasePanel panel = new BasePanel();
+    BasePanel panel = create(production.getDetails());
 
-    panel.title.set(production.getName());
     panel.subtitle.set(production.getGenres().stream().collect(Collectors.joining(" / ")));
-    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(production.getDate()));
-    panel.overview.set(production.getDescription());
-    panel.imageURI.set(production.getImage());
+
     setReception(panel.rating, production.getReception());
 
     return panel;
   }
 
   public BasePanel create(ProductionCollection collection) {
-    BasePanel panel = new BasePanel();
     Details details = collection.getCollectionDetails().getDetails();
+    BasePanel panel = create(details);
 
-    panel.title.set(details.getName());
-    panel.overview.set(details.getDescription());
-    panel.imageURI.set(details.getImage());
     panel.totalEntries.set("" + collection.getItems().size());
 
     LocalDate first = collection.getFirstReleaseDate();
