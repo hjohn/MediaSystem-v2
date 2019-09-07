@@ -1,6 +1,7 @@
 package hs.mediasystem.util.javafx.control;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +53,7 @@ public class AreaPane2<T> extends StackPane {
   }
 
   public void clear(T area) {
-    List<Node> nodes = new ArrayList<>(addedNodes.get(area));
+    List<Node> nodes = new ArrayList<>(addedNodes.getOrDefault(area, Collections.emptyList()));
 
     for(Node node : nodes) {
       ((Pane)node.getParent()).getChildren().remove(node);
