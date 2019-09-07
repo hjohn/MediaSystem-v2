@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.DetailedMediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
@@ -61,11 +60,8 @@ public class ContextLayout {
     if(mediaItem.getPerson() != null) {
       return create(mediaItem.getPerson());
     }
-    if(data instanceof DetailedMediaDescriptor) {
-      return create(((DetailedMediaDescriptor)data).getDetails());
-    }
 
-    return null;
+    return create(mediaItem.getDetails());
   }
 
   public BasePanel create(MediaDescriptor descriptor) {

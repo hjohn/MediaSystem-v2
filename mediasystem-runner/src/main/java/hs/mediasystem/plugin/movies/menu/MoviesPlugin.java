@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.movies.menu;
 
-import hs.mediasystem.ext.basicmediatypes.domain.DetailedMediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
@@ -35,37 +35,37 @@ import javax.inject.Singleton;
 public class MoviesPlugin implements Plugin {
   private static final MediaType MOVIE = MediaType.of("MOVIE");
 
-  private static SortOrder<DetailedMediaDescriptor> ALPHABETICALLY = new SortOrder<>(
+  private static SortOrder<MediaDescriptor> ALPHABETICALLY = new SortOrder<>(
     "alpha",
     Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL))
   );
 
-  private static SortOrder<DetailedMediaDescriptor> BY_RELEASE_DATE = new SortOrder<>(
+  private static SortOrder<MediaDescriptor> BY_RELEASE_DATE = new SortOrder<>(
     "release-date",
-    Comparator.comparing((MediaItem<DetailedMediaDescriptor> mi) -> mi.date.get(), Comparator.nullsLast(Comparator.naturalOrder())).reversed(),
+    Comparator.comparing((MediaItem<MediaDescriptor> mi) -> mi.date.get(), Comparator.nullsLast(Comparator.naturalOrder())).reversed(),
     mi -> List.of("" + mi.date.getValue().getYear()),
     true
   );
 
-  private static SortOrder<DetailedMediaDescriptor> BY_GENRE = new SortOrder<>(
+  private static SortOrder<MediaDescriptor> BY_GENRE = new SortOrder<>(
     "genre",
     Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL)),
     mi -> mi.genres.getValue(),
     false
   );
 
-  private static final List<SortOrder<DetailedMediaDescriptor>> SORT_ORDERS = List.of(
+  private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
     ALPHABETICALLY,
     BY_RELEASE_DATE,
     BY_GENRE
   );
 
-  private static final List<Filter<DetailedMediaDescriptor>> FILTERS = List.of(
+  private static final List<Filter<MediaDescriptor>> FILTERS = List.of(
     new Filter<>("none", mi -> true),
     new Filter<>("released-recently", mi -> Optional.ofNullable(mi.date.get()).filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
-  private static final List<Filter<DetailedMediaDescriptor>> GROUPS = List.of(
+  private static final List<Filter<MediaDescriptor>> GROUPS = List.of(
     new Filter<>("grouped", mi -> mi.getData() instanceof Movie ? ((Movie)mi.getData()).getCollectionIdentifier().isEmpty() : true),
     new Filter<>("ungrouped", mi -> !(mi.getData() instanceof ProductionCollection))
   );
@@ -82,19 +82,19 @@ public class MoviesPlugin implements Plugin {
     ));
   }
 
-  private GenericCollectionPresentation<DetailedMediaDescriptor> createPresentation() {
+  private GenericCollectionPresentation<MediaDescriptor> createPresentation() {
     ObservableList<MediaItem<Movie>> productionItems = createProductionItems(mediaService.findAllByType(MOVIE, List.of("TMDB", "LOCAL")));
 
-    List<MediaItem<DetailedMediaDescriptor>> groups = productionItems.stream()
+    List<MediaItem<MediaDescriptor>> groups = productionItems.stream()
       .flatMap(mi -> mi.getData().getCollectionIdentifier().stream())
       .distinct()
       .map(videoDatabase::queryProductionCollection)
-      .map(DetailedMediaDescriptor.class::cast)
+      .map(MediaDescriptor.class::cast)
       .map(pc -> mediaItemFactory.create(pc, null))
       .collect(Collectors.toList());
 
     @SuppressWarnings("unchecked")
-    ObservableList<MediaItem<DetailedMediaDescriptor>> items = (ObservableList<MediaItem<DetailedMediaDescriptor>>)(ObservableList<?>)productionItems;
+    ObservableList<MediaItem<MediaDescriptor>> items = (ObservableList<MediaItem<MediaDescriptor>>)(ObservableList<?>)productionItems;
 
     items.addAll(groups);
 

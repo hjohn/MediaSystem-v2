@@ -2,7 +2,6 @@ package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.DetailedMediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
@@ -273,7 +272,7 @@ public class MediaItem<T extends MediaDescriptor> {
   }
 
   public Details getDetails() {
-    return getDetails(wrappedObject);
+    return wrappedObject.getDetails();
   }
 
   public Production getProduction() {
@@ -284,18 +283,14 @@ public class MediaItem<T extends MediaDescriptor> {
     return getRelease(wrappedObject);
   }
 
-  private static Release getRelease(Object wrappedObject) {
+  private static Release getRelease(MediaDescriptor wrappedObject) {
     return wrappedObject instanceof Release ? (Release)wrappedObject :
            wrappedObject instanceof ProductionRole ? ((ProductionRole)wrappedObject).getProduction() : null;
   }
 
-  private static Production getProduction(Object wrappedObject) {
+  private static Production getProduction(MediaDescriptor wrappedObject) {
     return wrappedObject instanceof Production ? (Production)wrappedObject :
            wrappedObject instanceof ProductionRole ? ((ProductionRole)wrappedObject).getProduction() : null;
-  }
-
-  private static Details getDetails(Object wrappedObject) {
-    return wrappedObject instanceof DetailedMediaDescriptor ? ((DetailedMediaDescriptor)wrappedObject).getDetails() : null;
   }
 
   public Role getRole() {

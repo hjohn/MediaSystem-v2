@@ -26,6 +26,11 @@ public class PersonRole implements MediaDescriptor {
     return role.getIdentifier();
   }
 
+  @Override
+  public Details getDetails() {
+    return person.getDetails();
+  }
+
   public Person getPerson() {
     return person;
   }

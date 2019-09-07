@@ -1,12 +1,13 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class AbstractCollection<T> implements DetailedMediaDescriptor {
+public abstract class AbstractCollection<T> implements MediaDescriptor {
   private final CollectionDetails collectionDetails;
   private final List<T> items;
 
