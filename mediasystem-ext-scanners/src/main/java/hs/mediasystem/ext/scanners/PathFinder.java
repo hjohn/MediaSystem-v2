@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 public class PathFinder {
-  private static final Pattern EXTENSION_PATTERN = Pattern.compile("(?i).+\\.(avi|flv|mkv|mov|mp4|mpg|mpeg)");
+  private static final Pattern EXTENSION_PATTERN = Pattern.compile("(?i).+\\.(avi|flv|mkv|mov|mp4|mpg|mpeg|ogm)");
   private static final Set<FileVisitOption> FOLLOW_LINKS = Set.of(FileVisitOption.FOLLOW_LINKS);
 
   private final int maxDepth;
