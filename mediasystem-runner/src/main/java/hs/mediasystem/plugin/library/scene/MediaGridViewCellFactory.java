@@ -186,7 +186,7 @@ public class MediaGridViewCellFactory<T extends MediaDescriptor> implements Call
      //   HBox.setHgrow(imageView, Priority.ALWAYS);
       }
 
-      private final VBox vbox = new VBox() {{
+      private final VBox vbox = Containers.vbox("cell-box", new VBox() {{
         getChildren().add(imageBox);
         getChildren().add(name);
         getChildren().add(detail);
@@ -210,7 +210,7 @@ public class MediaGridViewCellFactory<T extends MediaDescriptor> implements Call
           HBox.setHgrow(imageView, Priority.ALWAYS);
         //  this.setMaxHeight(1);
         }
-      }};
+      }});
 
       private final ChangeListener<? super MediaStatus> updateIndicatorListener = (obs, old, current) -> {
         switch(current == null ? MediaStatus.UNAVAILABLE : current) {
@@ -280,7 +280,7 @@ public class MediaGridViewCellFactory<T extends MediaDescriptor> implements Call
         super.updateItem(item, empty);
 
         if(!empty) {
-          setGraphic(Containers.vbox("cell-box", vbox));
+          setGraphic(vbox);
 
           name.textProperty().bind(titleBindProvider.apply(item));
           asyncImageProperty.imageHandleProperty().set(imageHandleExtractor.apply(item));
