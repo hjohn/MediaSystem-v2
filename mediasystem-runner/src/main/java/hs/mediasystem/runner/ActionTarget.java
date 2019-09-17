@@ -56,13 +56,16 @@ public class ActionTarget {
     ExposedListProperty.class, Map.of(
       "next", (ActionEvent<ExposedListProperty<Object, Object>> e, Property<Object> p) -> {
         List<Object> list = e.exposedProperty.getAllowedValues(e.parent);
-        int currentIndex = list.indexOf(p.getValue()) + 1;
 
-        if(currentIndex >= list.size()) {
-          currentIndex = 0;
+        if(!list.isEmpty()) {
+          int currentIndex = list.indexOf(p.getValue()) + 1;
+
+          if(currentIndex >= list.size()) {
+            currentIndex = 0;
+          }
+
+          p.setValue(list.get(currentIndex));
         }
-
-        p.setValue(list.get(currentIndex));
       }
     )
   );
