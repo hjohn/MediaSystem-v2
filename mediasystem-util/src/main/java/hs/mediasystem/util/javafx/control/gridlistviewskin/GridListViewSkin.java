@@ -3,6 +3,7 @@ package hs.mediasystem.util.javafx.control.gridlistviewskin;
 import hs.mediasystem.util.javafx.control.VerticalLabel;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.animation.AnimationTimer;
@@ -101,6 +102,90 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     skinnable.getSelectionModel().selectedItemProperty().addListener(obs -> skin.requestLayout());   // Calls layout when focused cell changes (to make sure it is at the top)
 
     this.content = new Region() {
+      private final Region groupHeaderPane = new Region() {
+
+        @Override
+        public void layoutChildren() {
+          getChildren().clear();
+
+          if(showHeaders.get() && groups.get() != null) {
+            int lines = vertical ? visibleColumns.get() : visibleRows.get();
+            int firstIndex = (int)(scrollPosition.get()) * lines;
+
+            Insets insets = getSkinnable().getInsets();
+
+            double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
+            double h = getSkinnable().getHeight() - insets.getTop() - insets.getBottom();
+
+            int cellWidth = (int)(w / visibleColumns.get());
+            int cellHeight = (int)(h / visibleRows.get());
+
+            List<Group> list = groups.get();
+
+            for(int i = 0; i < list.size(); i++) {
+              int groupStartIndex = list.get(i).getPosition();
+
+              if(i + 1 >= list.size() || gm.viewIndexOfGroup(i + 1) > firstIndex) {
+                int viewIndex = gm.toViewIndex(groupStartIndex);
+
+                if(vertical) {
+                  int row = viewIndex / visibleColumns.get();
+                  double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
+
+                  if(y < insets.getTop()) {  // Stick header to top if in the middle of a group
+                    y = insets.getTop();
+                  }
+
+                  if(y >= getSkinnable().getHeight()) {
+                    break;
+                  }
+
+                  Label section = new Label(groups.get().get(i).getTitle());
+                  StackPane stackPane = new StackPane(section);
+
+                  stackPane.getStyleClass().addAll("group-heading", "horizontal");
+
+                  getChildren().add(stackPane);
+                  stackPane.setVisible(true);
+                  stackPane.setManaged(true);
+
+                  layoutInArea(stackPane, insets.getLeft(), y, w, cellHeight, 0, section.getInsets(), true, false, HPos.CENTER, VPos.TOP);
+                }
+                else {
+                  int column = viewIndex / visibleRows.get();
+                  double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
+
+                  if(x < insets.getLeft()) {  // Stick header to left if in the middle of a group
+                    x = insets.getLeft();
+                  }
+
+                  if(x >= w) {
+                    break;
+                  }
+
+                  VerticalLabel section = new VerticalLabel(VerticalDirection.UP, groups.get().get(i).getTitle());
+                  StackPane stackPane = new StackPane(section);
+
+                  stackPane.getStyleClass().addAll("group-heading", "vertical");
+
+                  getChildren().add(stackPane);
+
+                  layoutInArea(stackPane, x, insets.getTop(), cellWidth, h, 0, section.getInsets(), false, true, HPos.LEFT, VPos.CENTER);
+                }
+              }
+            }
+          }
+        }
+      };
+
+      private Rectangle clip = null;
+
+      {
+        getChildren().add(groupHeaderPane);
+
+        groupHeaderPane.setViewOrder(-1);
+      }
+
       @Override
       protected double computeMinWidth(double height) {
         return 200;
@@ -145,15 +230,21 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
         int cellWidth = (int)(w / visibleColumns.get());
         int cellHeight = (int)(h / visibleRows.get());
-        ListCell<?> focusedCell = null;
-
-        getChildren().clear();
-
         int index = firstIndexInDeque;
-        setClip(new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight()));  // Needed to clip off cells while scrolling
+
+        if(clip == null || clip.getWidth() != getSkinnable().getWidth() || clip.getHeight() != getSkinnable().getHeight()) {
+          this.clip = new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight());
+
+          setClip(clip);  // Needed to clip off cells while scrolling
+          layoutInArea(groupHeaderPane, 0, 0, getSkinnable().getWidth(), getSkinnable().getHeight(), 0, Insets.EMPTY, true, true, HPos.CENTER, VPos.CENTER);
+        }
+
+        groupHeaderPane.requestLayout();
 
         for(ListCell<?> cell : cells) {
           int viewIndex = gm.toViewIndex(index++);
+
+          cell.setVisible(false);
 
           if(viewIndex >= firstIndex) {
             if(vertical) {
@@ -162,18 +253,10 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
               double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
 
-              if(y >= h) {
-                break;
+              if(y < getSkinnable().getHeight()) {
+                cell.setVisible(true);
+                layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
               }
-
-              if(cell.isFocused()) {
-                focusedCell = cell;
-              }
-              else {
-                getChildren().add(cell);
-              }
-
-              layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
             }
             else {
               int column = viewIndex / visibleRows.get();
@@ -181,77 +264,9 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
               double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
 
-              if(x >= w) {
-                break;
-              }
-
-              if(cell.isFocused()) {
-                focusedCell = cell;
-              }
-              else {
-                getChildren().add(cell);
-              }
-
-              layoutInArea(cell, x, row * cellHeight + insets.getTop(), cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
-            }
-          }
-        }
-
-        // Focused cell is added last, so it appears on top of all the others:
-        if(focusedCell != null) {
-          getChildren().add(focusedCell);
-        }
-
-        if(showHeaders.get() && groups.get() != null) {
-          List<Group> list = groups.get();
-
-          for(int i = 0; i < list.size(); i++) {
-            int groupStartIndex = list.get(i).getPosition();
-
-            if(i + 1 >= list.size() || gm.viewIndexOfGroup(i + 1) > firstIndex) {
-              int viewIndex = gm.toViewIndex(groupStartIndex);
-
-              if(vertical) {
-                int row = viewIndex / visibleColumns.get();
-                double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
-
-                if(y < insets.getTop()) {  // Stick header to top if in the middle of a group
-                  y = insets.getTop();
-                }
-
-                if(y >= h) {
-                  break;
-                }
-
-                Label section = new Label(groups.get().get(i).getTitle());
-                StackPane stackPane = new StackPane(section);
-
-                stackPane.getStyleClass().addAll("group-heading", "horizontal");
-
-                getChildren().add(stackPane);
-
-                layoutInArea(stackPane, insets.getLeft(), y, w, cellHeight, 0, section.getInsets(), true, false, HPos.CENTER, VPos.TOP);
-              }
-              else {
-                int column = viewIndex / visibleRows.get();
-                double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
-
-                if(x < insets.getLeft()) {  // Stick header to left if in the middle of a group
-                  x = insets.getLeft();
-                }
-
-                if(x >= w) {
-                  break;
-                }
-
-                VerticalLabel section = new VerticalLabel(VerticalDirection.UP, groups.get().get(i).getTitle());
-                StackPane stackPane = new StackPane(section);
-
-                stackPane.getStyleClass().addAll("group-heading", "vertical");
-
-                getChildren().add(stackPane);
-
-                layoutInArea(stackPane, x, insets.getTop(), cellWidth, h, 0, section.getInsets(), false, true, HPos.LEFT, VPos.CENTER);
+              if(x < w) {
+                cell.setVisible(true);
+                layoutInArea(cell, x, row * cellHeight + insets.getTop(), cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
               }
             }
           }
@@ -264,6 +279,31 @@ public class GridListViewSkin implements Skin<ListView<?>> {
         int requiredFirstIndexInDeque = Math.max(0, firstIndexToCache);
         int requiredLastIndexInDeque = Math.min(firstIndexToCache + (pagesToCache * 2 + 1) * cellsPerPage, getSkinnable().getItems().size());  // exclusive
 
+        /*
+         * To avoid creating new cells, always first remove cells that are not part of the new
+         * range before creating new ones.
+         */
+
+        // Remove cells from front of queue if needed:
+        while(firstIndexInDeque < requiredFirstIndexInDeque && !cells.isEmpty()) {
+          recycleCell(cells.removeFirst());
+          firstIndexInDeque++;
+        }
+
+        // Remove cells from end of queue if needed:
+        while(firstIndexInDeque + cells.size() > requiredLastIndexInDeque && !cells.isEmpty()) {
+          recycleCell(cells.removeLast());
+        }
+
+        /*
+         * If all cells were recycled, there was no overlap at all.  In this special
+         * case firstIndexInDeque will be reset to requiredFirstIndexInDeque.
+         */
+
+        if(cells.isEmpty()) {
+          GridListViewSkin.this.firstIndexInDeque = requiredFirstIndexInDeque;
+        }
+
         // Add cells to start of queue if needed
         while(firstIndexInDeque > requiredFirstIndexInDeque) {
           ListCell<?> cell = createCell();
@@ -272,34 +312,33 @@ public class GridListViewSkin implements Skin<ListView<?>> {
           cells.addFirst(cell);
         }
 
-        // Remove cells from front of queue if needed:
-        while(firstIndexInDeque < requiredFirstIndexInDeque && !cells.isEmpty()) {
-          cells.removeFirst().updateIndex(-1);
-          firstIndexInDeque++;
-        }
-
-        firstIndexInDeque = requiredFirstIndexInDeque;  // Sync index in case all cells were removed
-
         // Add cells to end of queue if needed:
-        while(firstIndexInDeque + cells.size() < requiredLastIndexInDeque) {
+        while(requiredFirstIndexInDeque + cells.size() < requiredLastIndexInDeque) {
           ListCell<?> cell = createCell();
 
-          cell.updateIndex(firstIndexInDeque + cells.size());
+          cell.updateIndex(requiredFirstIndexInDeque + cells.size());
           cells.addLast(cell);
-        }
-
-        // Remove cells from end of queue if needed:
-        while(firstIndexInDeque + cells.size() > requiredLastIndexInDeque && !cells.isEmpty()) {
-          cells.removeLast().updateIndex(-1);
         }
       }
 
+      private final List<ListCell<?>> recycledCells = new ArrayList<>();
+
+      private void recycleCell(ListCell<?> cell) {
+        recycledCells.add(cell);
+        cell.setVisible(false);  // Needed because cells on recycled list are still part of Children, but will not be made invisible in layoutChildren as they're not part of cells list
+      }
+
       private ListCell<?> createCell() {
+        if(!recycledCells.isEmpty()) {
+          return recycledCells.remove(recycledCells.size() - 1);
+        }
+
         @SuppressWarnings("unchecked")
         ListView<Object> listView = (ListView<Object>)getSkinnable();
         ListCell<Object> cell = listView.getCellFactory().call(listView);
 
         cell.updateListView(listView);
+        getChildren().add(cell);
 
         return cell;
       }
