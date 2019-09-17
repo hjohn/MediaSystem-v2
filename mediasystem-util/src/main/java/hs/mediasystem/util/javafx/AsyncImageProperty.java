@@ -34,8 +34,8 @@ import javafx.scene.image.Image;
  */
 public class AsyncImageProperty extends SimpleObjectProperty<Image> {
   private static final ScheduledExecutorService SCHEDULED_EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
-  private static final ThreadPoolExecutor SLOW_EXECUTOR = new ThreadPoolExecutor(2, 2, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty[S]", Thread.NORM_PRIORITY - 2, true));
-  private static final ThreadPoolExecutor FAST_EXECUTOR = new ThreadPoolExecutor(3, 3, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty[F]", Thread.NORM_PRIORITY - 2, true));
+  private static final ThreadPoolExecutor SLOW_EXECUTOR = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty[S]", Thread.MIN_PRIORITY, true));
+  private static final ThreadPoolExecutor FAST_EXECUTOR = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty[F]", Thread.MIN_PRIORITY, true));
 
   private static Executor JAVAFX_UPDATE_EXECUTOR = new Executor() {
     @Override
@@ -43,11 +43,6 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
       Platform.runLater(command);
     }
   };
-
-  static {
-    SLOW_EXECUTOR.allowCoreThreadTimeOut(true);
-    FAST_EXECUTOR.allowCoreThreadTimeOut(true);
-  }
 
   private final ObjectProperty<ImageHandle> imageHandle = new SimpleObjectProperty<>();
   public ObjectProperty<ImageHandle> imageHandleProperty() { return imageHandle; }
