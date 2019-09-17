@@ -48,6 +48,8 @@ public class FrontEndRunner extends Application {
 
   @Override
   public void start(Stage primaryStage) throws Exception {
+    Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+
     LoggingConfigurer.configure();
 
     Injector injector = BasicSetup.create();
