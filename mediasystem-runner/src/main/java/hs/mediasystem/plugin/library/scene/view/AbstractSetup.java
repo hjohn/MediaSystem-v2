@@ -279,7 +279,7 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
       gridPane.at(2, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.name().toLowerCase())).orElse("Unknown")));
     }
 
-    BooleanBinding visibility = Bindings.isNotEmpty(presentation.availableGroupings);
+    BooleanBinding visibility = Bindings.size(presentation.availableGroupings).greaterThan(1);
 
     gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.grouping"), "header", visibility), Labels.create("", "remote-shortcut, blue", visibility)));
     gridPane.at(3, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.grouping).map(g -> RESOURCES.getText("grouping", g.getClass().getSimpleName())).orElse("Unknown"), visibility));
