@@ -2,6 +2,7 @@ package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.db.SettingsSourceFactory;
 import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
@@ -25,10 +26,10 @@ import javax.inject.Singleton;
 public class PersonParticipationsPresentation extends GridViewPresentation<ProductionRole> {
   public final PersonalProfile personalProfile;
 
-  private static final List<SortOrder<ProductionRole>> SORT_ORDERS = List.of(
-    new SortOrder<>("popularity", Comparator.comparing((MediaItem<ProductionRole> mediaItem) -> mediaItem.getData().getPopularity()).reversed()),
-    new SortOrder<ProductionRole>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL))),
-    new SortOrder<ProductionRole>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed()))
+  private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
+    new SortOrder<>("popularity", Comparator.comparing((MediaItem<MediaDescriptor> mediaItem) -> ((ProductionRole)mediaItem.getData()).getPopularity()).reversed()),
+    new SortOrder<>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL))),
+    new SortOrder<>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed()))
   );
 
   private static final List<Filter<ProductionRole>> FILTERS = List.of(

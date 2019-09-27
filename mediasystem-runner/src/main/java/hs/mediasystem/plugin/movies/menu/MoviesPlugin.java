@@ -2,9 +2,7 @@ package hs.mediasystem.plugin.movies.menu;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
-import hs.mediasystem.mediamanager.db.VideoDatabase;
+import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
@@ -15,6 +13,11 @@ import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
 import hs.mediasystem.runner.db.MediaService;
+import hs.mediasystem.runner.grouping.CollectionGrouping;
+import hs.mediasystem.runner.grouping.GenreGrouping;
+import hs.mediasystem.runner.grouping.GroupDescriptor;
+import hs.mediasystem.runner.grouping.NoGrouping;
+import hs.mediasystem.runner.util.DelegatingComparator;
 import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.NaturalLanguage;
@@ -25,34 +28,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class MoviesPlugin implements Plugin {
   private static final MediaType MOVIE = MediaType.of("MOVIE");
+  private static final Comparator<MediaItem<MediaDescriptor>> RELEASE_DATE_COMPARATOR = Comparator.comparing((MediaItem<MediaDescriptor> mi) -> mi.date.get(), Comparator.nullsLast(Comparator.naturalOrder())).reversed();
+  private static final Comparator<MediaItem<MediaDescriptor>> ALPHA_COMPARATOR = Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL));
 
-  private static SortOrder<MediaDescriptor> ALPHABETICALLY = new SortOrder<>(
-    "alpha",
-    Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL))
-  );
+  private static SortOrder<MediaDescriptor> ALPHABETICALLY = new SortOrder<>("alpha", ALPHA_COMPARATOR);
 
   private static SortOrder<MediaDescriptor> BY_RELEASE_DATE = new SortOrder<>(
     "release-date",
-    Comparator.comparing((MediaItem<MediaDescriptor> mi) -> mi.date.get(), Comparator.nullsLast(Comparator.naturalOrder())).reversed(),
+    new DelegatingComparator<>(mi -> mi.getData() instanceof GroupDescriptor, ALPHA_COMPARATOR, RELEASE_DATE_COMPARATOR),
     mi -> List.of("" + mi.date.getValue().getYear()),
     true
   );
 
-  private static SortOrder<MediaDescriptor> BY_GENRE = new SortOrder<>(
-    "genre",
-    Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL)),
-    mi -> mi.genres.getValue(),
-    false
-  );
+  private static SortOrder<MediaDescriptor> BY_GENRE = new SortOrder<>("genre", ALPHA_COMPARATOR, mi -> mi.genres.getValue(), false);
 
   private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
     ALPHABETICALLY,
@@ -60,20 +54,16 @@ public class MoviesPlugin implements Plugin {
     BY_GENRE
   );
 
-  private static final List<Filter<MediaDescriptor>> FILTERS = List.of(
+  private static final List<Filter<Production>> FILTERS = List.of(
     new Filter<>("none", mi -> true),
     new Filter<>("released-recently", mi -> Optional.ofNullable(mi.date.get()).filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
-  );
-
-  private static final List<Filter<MediaDescriptor>> GROUPS = List.of(
-    new Filter<>("grouped", mi -> mi.getData() instanceof Movie ? ((Movie)mi.getData()).getCollectionIdentifier().isEmpty() : true),
-    new Filter<>("ungrouped", mi -> !(mi.getData() instanceof ProductionCollection))
   );
 
   @Inject private GenericCollectionPresentation.Factory factory;
   @Inject private MediaService mediaService;
   @Inject private MediaItem.Factory mediaItemFactory;
-  @Inject private VideoDatabase videoDatabase;
+  @Inject private GenreGrouping genreGrouper;
+  @Inject private CollectionGrouping collectionGrouper;
 
   @Override
   public Menu getMenu() {
@@ -82,26 +72,16 @@ public class MoviesPlugin implements Plugin {
     ));
   }
 
-  private GenericCollectionPresentation<MediaDescriptor> createPresentation() {
-    ObservableList<MediaItem<Movie>> productionItems = createProductionItems(mediaService.findAllByType(MOVIE, List.of("TMDB", "LOCAL")));
-
-    List<MediaItem<MediaDescriptor>> groups = productionItems.stream()
-      .flatMap(mi -> mi.getData().getCollectionIdentifier().stream())
-      .distinct()
-      .map(videoDatabase::queryProductionCollection)
-      .map(MediaDescriptor.class::cast)
-      .map(pc -> mediaItemFactory.create(pc, null))
-      .collect(Collectors.toList());
-
-    @SuppressWarnings("unchecked")
-    ObservableList<MediaItem<MediaDescriptor>> items = (ObservableList<MediaItem<MediaDescriptor>>)(ObservableList<?>)productionItems;
-
-    items.addAll(groups);
-
-    return factory.create(items, "Movies", new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED), GROUPS), null);
+  private GenericCollectionPresentation<Production> createPresentation() {
+    return factory.create(
+      createProductionItems(mediaService.findAllByType(MOVIE, List.of("TMDB", "LOCAL"))),
+      "Movies",
+      new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.UNWATCHED), List.of(collectionGrouper, genreGrouper, new NoGrouping<Production>())),
+      null
+    );
   }
 
-  private ObservableList<MediaItem<Movie>> createProductionItems(List<Movie> descriptors) {
-    return FXCollections.observableArrayList(descriptors.stream().map(d -> mediaItemFactory.create(d, null)).collect(Collectors.toList()));
+  private List<MediaItem<Production>> createProductionItems(List<Production> descriptors) {
+    return descriptors.stream().map(d -> mediaItemFactory.create(d, null)).collect(Collectors.toUnmodifiableList());
   }
 }

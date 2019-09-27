@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -18,7 +19,7 @@ public class RecommendationsSetup extends AbstractSetup<Production, Recommendati
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory<Production> cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
     cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
@@ -26,7 +27,12 @@ public class RecommendationsSetup extends AbstractSetup<Production, Recommendati
   }
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<Production>> event, RecommendationsPresentation presentation) {
-    PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem()));
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, RecommendationsPresentation presentation) {
+    PresentationLoader.navigate(event, () -> {
+      @SuppressWarnings("unchecked")
+      MediaItem<Production> mediaItem = (MediaItem<Production>)(MediaItem<?>)event.getItem();
+
+      return productionPresentationFactory.create(mediaItem);
+    });
   }
 }

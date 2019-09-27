@@ -52,7 +52,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     @Inject private MediaItem.Factory mediaItemFactory;
     @Inject private MediaService mediaService;
 
-    public ProductionPresentation create(MediaItem<?> mediaItem) {
+    public ProductionPresentation create(MediaItem<? extends Production> mediaItem) {
       if(mediaItem.getData().getClass().equals(Production.class) || (mediaItem.getData() instanceof Serie && ((Serie)mediaItem.getData()).getSeasons() == null)) {  // If not a subclass of Production, or an incomplete Serie, get more details
         mediaItem = mediaItemFactory.create(videoDatabase.queryProduction(mediaItem.getProduction().getIdentifier()), mediaItem.getParent());
       }
@@ -93,7 +93,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   public final List<MediaItem<Episode>> episodeItems;
   public final ObjectProperty<MediaItem<Episode>> episodeItem = new SimpleObjectProperty<>();
 
-  public final MediaItem<?> rootItem;
+  public final MediaItem<? extends Production> rootItem;
 
   public final PlayAction play;
   public final ResumeAction resume;
@@ -117,7 +117,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     Provider<EpisodesPresentation> episodesPresentationProvider,
     PlayAction.Factory playActionFactory,
     ResumeAction.Factory resumeActionFactory,
-    MediaItem<?> rootItem
+    MediaItem<? extends Production> rootItem
   ) {
     this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
     this.videoDatabase = videoDatabase;

@@ -444,12 +444,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
             Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.rootItem)),
             Buttons.create("Recommendations", e -> navigateToRecommendations(e))
           );
-          if(presentation.rootItem.getData() instanceof Production) {
-            ((Production)presentation.rootItem.getData()).getCollectionIdentifier()
-              .ifPresent(i -> {
-                hbox.getChildren().add(Buttons.create("Collection", e -> navigateToCollection(e, i)));
-              });
-          }
+
+          presentation.rootItem.getData().getCollectionIdentifier()
+            .ifPresent(i -> {
+              hbox.getChildren().add(Buttons.create("Collection", e -> navigateToCollection(e, i)));
+            });
           break;
         }
       }

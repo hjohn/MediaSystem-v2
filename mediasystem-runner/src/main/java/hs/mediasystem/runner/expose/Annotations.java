@@ -118,11 +118,11 @@ public class Annotations {
       .format(f -> ResourceManager.getText(GridViewPresentation.class, "stateFilter", f.name().toLowerCase()))
       .as("stateFilter");
 
-    Expose.listProperty((GridViewPresentation<MediaDescriptor> p) -> p.group)
+    Expose.listProperty((GridViewPresentation<MediaDescriptor> p) -> p.grouping)
       .of(GridViewPresentation.class)
-      .allowedValues(p -> p.availableGroups)
-      .format(f -> ResourceManager.getText(GridViewPresentation.class, "group", f.resourceKey))
-      .as("group");
+      .allowedValues(p -> p.availableGroupings)
+      .format(f -> ResourceManager.getText(GridViewPresentation.class, "grouping", f.getClass().getSimpleName()))
+      .as("grouping");
 
     Expose.booleanProperty(GridViewPresentation<?>::watchedProperty)
       .of(GridViewPresentation.class)

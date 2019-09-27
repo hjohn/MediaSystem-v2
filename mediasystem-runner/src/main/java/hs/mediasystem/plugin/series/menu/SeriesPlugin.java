@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.series.menu;
 
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -36,10 +37,10 @@ import javax.inject.Singleton;
 public class SeriesPlugin implements Plugin {
   private static final MediaType SERIE = MediaType.of("SERIE");
 
-  private static final List<SortOrder<Serie>> SORT_ORDERS = List.of(
-    new SortOrder<Serie>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL))),
-    new SortOrder<Serie>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())),
-    new SortOrder<Serie>("watched-date", Comparator.comparing(mi -> mi.lastWatchedTime.get(), Comparator.<LocalDateTime>nullsFirst(Comparator.naturalOrder()).reversed()))
+  private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
+    new SortOrder<>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL))),
+    new SortOrder<>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())),
+    new SortOrder<>("watched-date", Comparator.comparing(mi -> mi.lastWatchedTime.get(), Comparator.<LocalDateTime>nullsFirst(Comparator.naturalOrder()).reversed()))
   );
 
   private static final List<Filter<Serie>> FILTERS = List.of(

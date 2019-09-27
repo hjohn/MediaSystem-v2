@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
@@ -29,9 +30,9 @@ public class ProductionCollectionFactory {
   @Inject private VideoDatabase videoDatabase;
   @Inject private MediaItem.Factory mediaItemFactory;
 
-  private static final List<SortOrder<Production>> SORT_ORDERS = List.of(
-    new SortOrder<Production>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())))),
-    new SortOrder<Production>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL)))
+  private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
+    new SortOrder<>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())))),
+    new SortOrder<>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL)))
   );
 
   private static final List<Filter<Production>> FILTERS = List.of(

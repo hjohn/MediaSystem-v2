@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
@@ -24,7 +25,7 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
   @Inject private MediaItem.Factory mediaItemFactory;
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory<ProductionRole> cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
     cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
@@ -34,9 +35,9 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
     );
   }
 
-  private static String formatDetail(MediaItem<ProductionRole> m) {
+  private static String formatDetail(MediaItem<MediaDescriptor> m) {
     Role role = m.getRole();
-    ProductionRole productionRole = m.getData();
+    ProductionRole productionRole = (ProductionRole)m.getData();
 
     String detail = role.getCharacter() != null && !role.getCharacter().isEmpty() ? "as " + role.getCharacter()
       : role.getJob() != null && !role.getJob().isEmpty() ? role.getJob() : "";
@@ -54,7 +55,7 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
   }
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<ProductionRole>> event, PersonParticipationsPresentation presentation) {
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, PersonParticipationsPresentation presentation) {
     PresentationLoader.navigate(event, () -> productionPresentationFactory.create(mediaItemFactory.create(event.getItem().getProduction(), null)));
   }
 }

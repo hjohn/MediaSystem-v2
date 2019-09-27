@@ -2,6 +2,7 @@ package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.db.SettingsSourceFactory;
 import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
@@ -20,8 +21,8 @@ import javax.inject.Singleton;
 public class CastAndCrewPresentation extends GridViewPresentation<PersonRole> {
   public final MediaItem<?> mediaItem;
 
-  private static final List<SortOrder<PersonRole>> SORT_ORDERS = List.of(
-    new SortOrder<PersonRole>("best", Comparator.comparing(mediaItem -> mediaItem.getData().getOrder()))
+  private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
+    new SortOrder<>("best", Comparator.comparing((MediaItem<MediaDescriptor> mediaItem) -> ((PersonRole)mediaItem.getData()).getOrder()))
   );
 
   private static final List<Filter<PersonRole>> FILTERS = List.of(

@@ -50,7 +50,15 @@ public class MediaItem<T extends MediaDescriptor> {
     @Inject private VideoDatabase videoDatabase;
     @Inject private StreamPrintProvider streamPrintProvider;
 
+    public <T extends MediaDescriptor> MediaItem<T> createParent(T descriptor, List<MediaItem<? extends MediaDescriptor>> children) {
+      return create(descriptor, null, List.copyOf(children));
+    }
+
     public <T extends MediaDescriptor> MediaItem<T> create(T descriptor, MediaItem<?> parent) {
+      return create(descriptor, parent, Collections.emptyList());
+    }
+
+    private <T extends MediaDescriptor> MediaItem<T> create(T descriptor, MediaItem<?> parent, List<MediaItem<? extends MediaDescriptor>> children) {
       Release release = getRelease(descriptor);
       Set<BasicStream> streams = release == null ? Collections.emptySet() : mediaService.findStreams(release.getIdentifier());
       List<BasicStream> sortedStreams = streams.stream()
@@ -75,7 +83,8 @@ public class MediaItem<T extends MediaDescriptor> {
         sortedStreams,
         streamId == null ? new SimpleBooleanProperty() : streamStateService.watchedProperty(streamId),
         streamId == null ? null : streamStateService.getLastWatchedTime(streamId),
-        collectionTitle
+        collectionTitle,
+        children
       );
     }
   }
@@ -101,9 +110,10 @@ public class MediaItem<T extends MediaDescriptor> {
   private final List<BasicStream> streams;
   private final String logicalId;
   private final String physicalId;
-  private final MediaItem<?> parent;
+  private final MediaItem<?> parent;  // This always is the logical parent (ie, Serie for an Episode)
+  private final List<MediaItem<? extends MediaDescriptor>> children;  // Children belonging to this item for grouping (not logical children!)
 
-  private MediaItem(T wrappedObject, MediaItem<?> parent, List<BasicStream> streams, BooleanProperty watchedProperty, LocalDateTime lastWatchedTime, String collectionTitle) {
+  private MediaItem(T wrappedObject, MediaItem<?> parent, List<BasicStream> streams, BooleanProperty watchedProperty, LocalDateTime lastWatchedTime, String collectionTitle, List<MediaItem<? extends MediaDescriptor>> children) {
     if(wrappedObject == null) {
       throw new IllegalArgumentException("wrappedObject cannot be null");
     }
@@ -114,6 +124,7 @@ public class MediaItem<T extends MediaDescriptor> {
     this.watched = watchedProperty;
     this.lastWatchedTime.set(lastWatchedTime);
     this.collectionTitle.set(collectionTitle);
+    this.children = List.copyOf(children);
 
     this.mediaStatus = new ObjectBinding<>() {
       {
@@ -122,7 +133,7 @@ public class MediaItem<T extends MediaDescriptor> {
 
       @Override
       protected MediaStatus computeValue() {
-        if(MediaItem.this.getData() instanceof ProductionCollection) {
+        if(MediaItem.this.getData() instanceof ProductionCollection || !children.isEmpty()) {
           return MediaStatus.AVAILABLE;
         }
 
@@ -247,8 +258,12 @@ public class MediaItem<T extends MediaDescriptor> {
     return parent;
   }
 
+  public List<MediaItem<? extends MediaDescriptor>> getChildren() {
+    return children;
+  }
+
   private String createLogicalId() {
-    return wrappedObject.getClass().getSimpleName() + ":" + wrappedObject.getIdentifier();
+    return wrappedObject.getIdentifier().toString();
   }
 
   private String createPhysicalId() {
@@ -304,6 +319,6 @@ public class MediaItem<T extends MediaDescriptor> {
 
   @Override
   public String toString() {
-    return "MediaItem[" + wrappedObject + "]";
+    return "MediaItem[" + getId() + ": " + wrappedObject + "]";
   }
 }

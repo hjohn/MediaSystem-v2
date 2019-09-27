@@ -26,8 +26,8 @@ import javafx.animation.Transition;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
-import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
@@ -60,14 +60,21 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
   }
 
   public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
-    MediaGridView<MediaItem<T>> listView = new MediaGridView<>();
+    MediaGridView<MediaItem<MediaDescriptor>> listView = new MediaGridView<>();
 
     listView.setOrientation(Orientation.VERTICAL);
     listView.pageByGroup.set(true);
     listView.groupDisplayMode.set(GroupDisplayMode.FOCUSED);
 
     listView.getStyleClass().add("glass-pane");
-    listView.onItemSelected.set(e -> onItemSelected(e, presentation));
+    listView.onItemSelected.set(e -> {
+      if(e.getItem().getChildren().isEmpty()) {
+        onItemSelected(e, presentation);
+      }
+      else {
+        presentation.contextItem.setValue(e.getItem());
+      }
+    });
     listView.getSelectionModel().selectedItemProperty().addListener((ov, old, current) -> {
       if(current != null) {
         Node context = contextLayout.create(current);
@@ -80,7 +87,7 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
 
     areaPane.add(Area.CENTER, listView);
 
-    MediaGridViewCellFactory<T> cellFactory = new MediaGridViewCellFactory<>();
+    MediaGridViewCellFactory<MediaDescriptor> cellFactory = new MediaGridViewCellFactory<>();
 
     cellFactory.setMaxRatio(0.9);
     cellFactory.setContentBias(Orientation.VERTICAL);
@@ -124,7 +131,7 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
     updateSelectedItem(listView, presentation, presentation.selectedItem.getValue());
   }
 
-  private void updateSelectedItem(MediaGridView<MediaItem<T>> listView, P presentation, MediaItem<T> selectedItem) {
+  private void updateSelectedItem(MediaGridView<MediaItem<MediaDescriptor>> listView, P presentation, MediaItem<MediaDescriptor> selectedItem) {
     if(Objects.equals(selectedItem, listView.getSelectionModel().getSelectedItem())) {
       return;
     }
@@ -251,11 +258,10 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
   }
 
   private void setupStatusBar(AreaPane2<Area> areaPane, GridViewPresentation<T> presentation) {
-    ObservableList<MediaItem<T>> items = presentation.items;
     Val<Integer> totalItemCount = presentation.totalItemCount;
     Val<Integer> visibleUniqueItemCount = presentation.visibleUniqueItemCount;
 
-    StringBinding binding = Bindings.createStringBinding(() -> String.format(items.size() == totalItemCount.getValue() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), visibleUniqueItemCount.getValue(), totalItemCount.getValue()), visibleUniqueItemCount, totalItemCount);
+    StringBinding binding = Bindings.createStringBinding(() -> String.format(visibleUniqueItemCount.getValue() == totalItemCount.getValue() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), visibleUniqueItemCount.getValue(), totalItemCount.getValue()), visibleUniqueItemCount, totalItemCount);
     GridPane gridPane = new GridPane();
     VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
 
@@ -272,14 +278,15 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
       gridPane.at(2, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.stateFilter"), "header"), Labels.create("remote-shortcut, yellow")));
       gridPane.at(2, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.name().toLowerCase())).orElse("Unknown")));
     }
-    if(presentation.availableGroups.size() > 1) {
-      gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.group"), "header"), Labels.create("remote-shortcut, blue")));
-      gridPane.at(3, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.group).map(g -> RESOURCES.getText("group", g.resourceKey)).orElse("Unknown")));
-    }
+
+    BooleanBinding visibility = Bindings.isNotEmpty(presentation.availableGroupings);
+
+    gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.grouping"), "header", visibility), Labels.create("", "remote-shortcut, blue", visibility)));
+    gridPane.at(3, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.grouping).map(g -> RESOURCES.getText("grouping", g.getClass().getSimpleName())).orElse("Unknown"), visibility));
   }
 
-  protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<T>> event, P presentation);
-  protected abstract void configureCellFactory(MediaGridViewCellFactory<T> cellFactory);
+  protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, P presentation);
+  protected abstract void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory);
 
   protected Node createContextPanel(P presentation) {
     MediaItem<?> mediaItem = presentation.contextItem.getValue();

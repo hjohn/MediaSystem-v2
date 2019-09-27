@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.tmdb.menu;
 
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -28,7 +29,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class TMDBPlugin implements Plugin {
-  private static final List<SortOrder<Production>> SORT_ORDERS = List.of(
+  private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
     new SortOrder<>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())),
     new SortOrder<>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL)))
   );

@@ -17,15 +17,15 @@ stateFilter:
   all: "-"
   available: In Collection
   unwatched: Not Watched
-group:
-  none: "-"
-  grouped: "By Collection"
-  ungrouped: "-"
+grouping:
+  NoGrouping: "-"
+  CollectionGrouping: "By Collection"
+  GenreGrouping: "By Genre"
 header:
   order: ORDER
   filter: FILTER
   stateFilter: STATE
-  group: GROUPING
+  grouping: GROUPING
 status-message:
   unfiltered: Showing %d items
   filtered: Showing %d out of %d items

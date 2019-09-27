@@ -1,0 +1,126 @@
+action:
+  description: >
+               Films in which the protagonist or protagonists are thrust into a series of events that 
+               typically include violence, extended fighting, physical feats, and frantic chases.
+
+adult:
+  description: >
+               Category of films or videos centered around sexual activity. At the milder end of the 
+               adult spectrum the sex is portrayed with full nudity but without any type of graphic 
+               detail, while hardcore adult films can be extremely graphic and even violent.
+
+adventure:
+  description: >
+               Exciting stories, with new experiences or exotic locales.
+               
+animation:
+  description: >
+               Films in which each frame is produced individually, whether generated as a computer 
+               graphic, or by photographing a series of drawn images (an animated cartoon), or by 
+               repeatedly making small changes to a model (see claymation and stop motion), and 
+               then photographing the result.
+
+comedy:
+  description: >
+               Light-hearted plots consistently and deliberately designed to amuse and provoke laughter
+               by exaggerating the situation, the language, action, relationships and characters.
+
+crime:
+  description: >
+               A crime film is a type of film focusing on the lives of criminals. The stylistic 
+               approach ranges from grittily realistic portrayals of real-life criminal figures (crime 
+               drama) to the far-fetched evil doings of imaginary arch-villains (master criminal 
+               films.) Criminal acts are almost always glorified in these movies.
+
+drama:
+  description: >
+               Serious, plot-driven presentations, portraying realistic characters, settings, life 
+               situations, and stories involving intense character development and interaction.
+
+documentary:
+  description: >
+               Depicts reality, primarily for the purposes of instruction, education, or maintaining a
+               historical record.
+
+family:
+  description: >
+               A type of film aimed at the children's market and/or made for family viewing. Usually 
+               consisting of comedies or adventures, these films are often based on children's 
+               literature and can involve any number of helpful animals, friendly supernatural beings 
+               and fantasy worlds, all geared to stimulate and appeal to the imagination. Whatever the 
+               situation, there is little or no offensive material and generally a lesson is learned 
+               on the way.              
+               
+fantasy:
+  description: >
+               A type of film commonly associated with the fanciful worlds of fairy tales or imaginary 
+               lands, films dealing the wonders of magic and magicians, with the doings of gods, 
+               angels, elves, fairies, gnomes and other supernatural beings. Anything drawn from a 
+               completely invented world, with some element of sorcery or inventive zoology, can 
+               qualify, though the most common forms are ones based in the era of princes and 
+               princesses, swords and dragons.
+
+history:
+  description: >
+               Historical fiction and period films where the story takes place in the 19th century or 
+               earlier. 
+
+horror:
+  description: >
+               Films designed to frighten and to invoke our hidden worst fears, often in a terrifying, 
+               shocking finale, while captivating and entertaining us at the same time in a cathartic 
+               experience.
+
+mystery:
+  description: >
+               A mystery is primarily concerned with solving a crime or a puzzle. The standard mystery 
+               generally revolves around a murder which must then be solved by policemen, private 
+               detectives, or amateur sleuths. Typically, the viewer is presented with a series of 
+               likely suspects, some of who are "red herrings," -- persons with motive to commit the 
+               crime who didn't actually do it -- and attempts to solve the puzzle along with the 
+               investigator. 
+  
+music:
+  description: >
+               Films which emphasize full-scale scores or song and dance routines in a significant way 
+               (usually with a musical or dance performance integrated as part of the film narrative), 
+               or they are films that are centered on combinations of music, dance, song or choreography.
+romance:
+  description: >
+               A film which deals with a sentimental relationship between two (or more) characters as 
+               its basis. Possibly the biggest purveyor of escapism in film, the romance film plays on 
+               the viewer's assumption of what romance is like: long stares into a significant other's 
+               eyes accompanied by sunsets, birds singing, and the sounds of violins playing in the 
+               background (the romance as transcendental bliss). The story inevitably revolves around 
+               two lovers who meet, fall in love, and then must deal with the obstacles thrown in their
+               way -- everything from social-class structures, to parental disapproval, to death -- 
+               oftentimes with a great sacrifice made on the part of one individual.
+
+"science fiction":
+  description: >
+               Quasi-scientific, visionary and imaginative - complete with heroes, aliens, distant
+               planets, impossible quests, improbable settings, fantastic places, great dark and shadowy
+               villains, futuristic technology, unknown and unknowable forces, and extraordinary 
+               monsters, either created by mad scientists or by nuclear havoc.
+               
+thriller:
+  description: >
+               Films that evoke excitement and suspense.
+               
+"tv movie":
+  description: >
+               Films made directly for TV.
+               
+war:
+  description: >
+               A movie genre where war is either the major action of the film or the essential background
+               for the film's action. Though largely focused on combat or preparation for fighting, the 
+               genre also embraces other war-related subjects: prisoners of war, resistance fighters in 
+               occupied countries, spy activities during wartime. War can also serve as a context for 
+               highly dramatic situations though the characters may not be directly involved in the 
+               fighting. 
+               
+western:
+  description: >
+               A eulogy to the early days of the expansive American frontier.
+ 

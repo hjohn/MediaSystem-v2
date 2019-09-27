@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
@@ -18,7 +19,7 @@ public class CastAndCrewSetup extends AbstractSetup<PersonRole, CastAndCrewPrese
   @Inject private PersonParticipationsPresentation.Factory personParticipationsPresentationFactory;
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory<PersonRole> cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
     cellFactory.setTitleBindProvider(m -> m.personName);
     cellFactory.setImageExtractor(m -> m.getPerson().getImage() == null ? null : imageHandleFactory.fromURI(m.getPerson().getImage()));
     cellFactory.setDetailExtractor(m -> m.getRole().getCharacter() != null && !m.getRole().getCharacter().isEmpty() ? "as " + m.getRole().getCharacter() :
@@ -31,7 +32,7 @@ public class CastAndCrewSetup extends AbstractSetup<PersonRole, CastAndCrewPrese
   }
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<MediaItem<PersonRole>> event, CastAndCrewPresentation presentation) {
+  protected void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, CastAndCrewPresentation presentation) {
     PresentationLoader.navigate(event, () -> personParticipationsPresentationFactory.create(event.getItem().getPerson()));
   }
 }

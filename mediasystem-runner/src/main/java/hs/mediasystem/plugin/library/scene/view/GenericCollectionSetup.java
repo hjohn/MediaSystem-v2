@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
+import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
@@ -18,7 +18,6 @@ import javax.inject.Singleton;
 public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, GenericCollectionPresentation<MediaDescriptor>> {
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
-  @Inject private ProductionCollectionFactory productionCollectionSupplier;
 
   @Override
   protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
@@ -31,11 +30,11 @@ public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, Gener
 
   @Override
   protected void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, GenericCollectionPresentation<MediaDescriptor> presentation) {
-    if(event.getItem().getData() instanceof ProductionCollection) {
-      PresentationLoader.navigate(event, () -> productionCollectionSupplier.create(event.getItem().getData().getIdentifier()));
-    }
-    else {
-      PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem()));
-    }
+    PresentationLoader.navigate(event, () -> {
+      @SuppressWarnings("unchecked")
+      MediaItem<Production> mediaItem = (MediaItem<Production>)(MediaItem<?>)event.getItem();
+
+      return productionPresentationFactory.create(mediaItem);
+    });
   }
 }
