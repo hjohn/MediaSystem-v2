@@ -122,6 +122,12 @@ public class BiasedImageView extends Region {
           ).play();
         }
       }
+      else {
+        // Reset opacities when image becomes null, so a clean fade-in is possible later
+        placeHolder.setOpacity(1);
+        effectRegion.setOpacity(0);
+        imageView.setOpacity(0);
+      }
     });
 
     getChildren().add(effectRegion);  // effect region before image view so a background color won't overlay over the image
@@ -221,7 +227,6 @@ public class BiasedImageView extends Region {
       imageView.setFitWidth(fitWidth);
       imageView.setFitHeight(fitHeight);
     }
-
 
     layoutInArea(imageView, insets.getLeft(), insets.getTop(), getWidth() - insetsWidth, getHeight() - insetsHeight, 0, alignment.get().getHpos(), alignment.get().getVpos());
 
