@@ -104,31 +104,7 @@ public class BiasedImageView extends Region {
       Platform.runLater(() -> requestLayout());  // Request layout when image presence changes; layout makes image visible or not, to prevent flashing the image at the wrong size
     });
 
-    imageView.setOpacity(0);
-    effectRegion.setOpacity(0);
-
-    imageProperty().addListener((obs, old, current) -> {
-      if(current != null) {
-        if(placeHolder != null) {
-          new Timeline(
-            new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(effectRegion.opacityProperty(), 0), new KeyValue(placeHolder.opacityProperty(), 1)),
-            new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(effectRegion.opacityProperty(), 1), new KeyValue(placeHolder.opacityProperty(), 0))
-          ).play();
-        }
-        else {
-          new Timeline(
-            new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(effectRegion.opacityProperty(), 0)),
-            new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(effectRegion.opacityProperty(), 1))
-          ).play();
-        }
-      }
-      else {
-        // Reset opacities when image becomes null, so a clean fade-in is possible later
-        placeHolder.setOpacity(1);
-        effectRegion.setOpacity(0);
-        imageView.setOpacity(0);
-      }
-    });
+    setupFadeIn(placeHolder);
 
     getChildren().add(effectRegion);  // effect region before image view so a background color won't overlay over the image
 
@@ -142,12 +118,48 @@ public class BiasedImageView extends Region {
     getChildren().add(overlayRegion);
   }
 
-  public StackPane getOverlayRegion() {
-    return overlayRegion;
-  }
-
   public BiasedImageView() {
     this(null);
+  }
+
+  private void setupFadeIn(Node placeHolder) {
+    imageView.setOpacity(0);
+    effectRegion.setOpacity(0);
+
+    Timeline timeline;
+
+    if(placeHolder == null) {
+      timeline = new Timeline(
+        new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(effectRegion.opacityProperty(), 0)),
+        new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(effectRegion.opacityProperty(), 1))
+      );
+    }
+    else {
+      timeline = new Timeline(
+        new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(effectRegion.opacityProperty(), 0), new KeyValue(placeHolder.opacityProperty(), 1)),
+        new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(effectRegion.opacityProperty(), 1), new KeyValue(placeHolder.opacityProperty(), 0))
+      );
+    }
+
+    imageProperty().addListener((obs, old, current) -> {
+      if(current != null) {
+        timeline.play();
+      }
+      else {
+        // Reset opacities when image becomes null, so a clean fade-in is possible later
+        timeline.stop();  // Stop timeline, or it may override stuff if still playing
+
+        if(placeHolder != null) {
+          placeHolder.setOpacity(1);
+        }
+        effectRegion.setOpacity(0);
+        imageView.setOpacity(0);
+      }
+    });
+  }
+
+  public StackPane getOverlayRegion() {
+    return overlayRegion;
   }
 
   @Override
