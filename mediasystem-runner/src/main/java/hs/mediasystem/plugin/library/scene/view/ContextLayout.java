@@ -15,7 +15,6 @@ import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
-import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
@@ -40,6 +39,8 @@ import javafx.scene.layout.VBox;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.reactfx.value.Val;
 
 @Singleton
 public class ContextLayout {
@@ -211,7 +212,7 @@ public class ContextLayout {
 
       getStyleClass().add("side-panel");
 
-      poster.imageHandleProperty().bind(Binds.monadic(imageURI).map(imageHandleFactory::fromURI));
+      poster.imageHandleProperty().bind(Val.wrap(imageURI).map(imageHandleFactory::fromURI));
 
       ScaledImageView imageView = new ScaledImageView() {{
         getStyleClass().add("poster-image");

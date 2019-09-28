@@ -8,7 +8,6 @@ import hs.mediasystem.plugin.library.scene.serie.ProductionOverviewNodeFactory;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 
@@ -19,6 +18,8 @@ import javafx.scene.layout.StackPane;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.reactfx.value.Val;
+
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = ProductionOverviewNodeFactory.class)
 public class ProductionOverviewPlacer extends AbstractPlacer<LibraryPresentation, ProductionPresentation, ProductionOverviewNodeFactory> {
@@ -26,7 +27,7 @@ public class ProductionOverviewPlacer extends AbstractPlacer<LibraryPresentation
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, ProductionPresentation presentation) {
-    parentPresentation.backdrop.bind(Binds.monadic(presentation.rootItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
+    parentPresentation.backdrop.bind(Val.constant(presentation.rootItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
   }
 
   @Override

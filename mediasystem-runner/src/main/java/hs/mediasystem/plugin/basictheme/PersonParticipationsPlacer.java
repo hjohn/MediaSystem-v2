@@ -8,10 +8,11 @@ import hs.mediasystem.plugin.library.scene.view.PersonParticipationsPresentation
 import hs.mediasystem.plugin.library.scene.view.PersonParticipationsSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.javafx.Binds;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.reactfx.value.Val;
 
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = PersonParticipationsSetup.class)
@@ -20,6 +21,6 @@ public class PersonParticipationsPlacer extends AbstractPlacer<LibraryPresentati
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, PersonParticipationsPresentation presentation) {
-    parentPresentation.backdrop.bind(Binds.monadic(presentation.selectedItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
+    parentPresentation.backdrop.bind(Val.wrap(presentation.selectedItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
   }
 }

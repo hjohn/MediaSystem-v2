@@ -7,7 +7,6 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.ResourceManager;
-import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.control.AreaPane2;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -270,19 +269,19 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
     areaPane.add(Area.INFORMATION_PANEL, vbox);
 
     gridPane.at(0, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.order"), "header"), Labels.create("remote-shortcut, red")));
-    gridPane.at(0, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.sortOrder).map(so -> RESOURCES.getText("sort-order", so.resourceKey)).orElse("Unknown")));
+    gridPane.at(0, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.sortOrder).map(so -> RESOURCES.getText("sort-order", so.resourceKey)).orElseConst("Unknown")));
     gridPane.at(1, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.filter"), "header"), Labels.create("remote-shortcut, green")));
-    gridPane.at(1, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.filter).map(f -> RESOURCES.getText("filter", f.resourceKey)).orElse("Unknown")));
+    gridPane.at(1, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.filter).map(f -> RESOURCES.getText("filter", f.resourceKey)).orElseConst("Unknown")));
 
     if(presentation.availableStateFilters.size() > 1) {
       gridPane.at(2, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.stateFilter"), "header"), Labels.create("remote-shortcut, yellow")));
-      gridPane.at(2, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.name().toLowerCase())).orElse("Unknown")));
+      gridPane.at(2, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.name().toLowerCase())).orElseConst("Unknown")));
     }
 
     BooleanBinding visibility = Bindings.size(presentation.availableGroupings).greaterThan(1);
 
     gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create(RESOURCES.getText("header.grouping"), "header", visibility), Labels.create("", "remote-shortcut, blue", visibility)));
-    gridPane.at(3, 1).add(Labels.create("status-bar-element", Binds.monadic(presentation.grouping).map(g -> RESOURCES.getText("grouping", g.getClass().getSimpleName())).orElse("Unknown"), visibility));
+    gridPane.at(3, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.grouping).map(g -> RESOURCES.getText("grouping", g.getClass().getSimpleName())).orElseConst("Unknown"), visibility));
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, P presentation);

@@ -5,8 +5,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.NavigateEvent;
-import hs.mediasystem.util.javafx.Binds;
-import hs.mediasystem.util.javafx.MonadicObjectBinding;
 import hs.mediasystem.util.javafx.action.Action;
 
 import java.util.Objects;
@@ -34,12 +32,12 @@ public class PlayAction implements Action {
   }
 
   private final Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
-  private final MonadicObjectBinding<MediaItem<?>> playableMediaItem;
+  private final Val<MediaItem<?>> playableMediaItem;
   private final Val<Boolean> enabled;
 
   private PlayAction(Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider, ObservableValue<MediaItem<?>> mediaItem) {
     this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
-    this.playableMediaItem = Binds.monadic(mediaItem)
+    this.playableMediaItem = Val.wrap(mediaItem)
       .filter(Objects::nonNull)
       .filter(mi -> mi.getData() instanceof Movie || mi.getData() instanceof Episode)
       .filter(mi -> !mi.getStreams().isEmpty());

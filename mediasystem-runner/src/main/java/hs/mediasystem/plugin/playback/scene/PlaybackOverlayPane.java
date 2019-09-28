@@ -7,7 +7,6 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
-import hs.mediasystem.util.javafx.Binds;
 import hs.mediasystem.util.javafx.MapBindings;
 import hs.mediasystem.util.javafx.SpecialEffects;
 import hs.mediasystem.util.javafx.StringBinding;
@@ -19,7 +18,6 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -45,6 +43,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
+import org.reactfx.value.Val;
+
 public class PlaybackOverlayPane extends StackPane {
   public final ObjectProperty<PlayerPresentation> player = new SimpleObjectProperty<>();
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
@@ -54,7 +54,7 @@ public class PlaybackOverlayPane extends StackPane {
 
   private final GridPane detailsOverlay = GridPaneUtil.create(new double[] {5, 20, 5, 65, 5}, new double[] {45, 50, 5});
 
-  private final ObjectBinding<ImageHandle> posterHandle;
+  private final Val<ImageHandle> posterHandle;
   private final AsyncImageProperty poster = new AsyncImageProperty();
 
   private final PlaybackInfoBorders borders = new PlaybackInfoBorders(playerBindings);
@@ -79,7 +79,7 @@ public class PlaybackOverlayPane extends StackPane {
 
   public PlaybackOverlayPane(PlaybackOverlayPresentation presentation, ImageHandleFactory imageHandleFactory) {
     this.presentation.set(presentation);
-    this.posterHandle = Binds.monadic(this.presentation).map(p -> p.mediaItem.get()).map(MediaItem::getProduction).map(Production::getImage).map(imageHandleFactory::fromURI);
+    this.posterHandle = Val.wrap(this.presentation).map(p -> p.mediaItem.get()).map(MediaItem::getProduction).map(Production::getImage).map(imageHandleFactory::fromURI);
     this.player.bind(presentation.playerPresentation);
     this.overlayVisible.bind(presentation.overlayVisible);
 
@@ -105,7 +105,7 @@ public class PlaybackOverlayPane extends StackPane {
 
     setFocusTraversable(true);
 
-    borders.mediaProperty().bind(Binds.monadic(this.presentation).map(p -> p.mediaItem.get()));
+    borders.mediaProperty().bind(Val.wrap(this.presentation).map(p -> p.mediaItem.get()));
 
     detailsOverlay.setId("video-overlay");
     detailsOverlay.add(new ScaledImageView() {{

@@ -1,10 +1,7 @@
 package hs.mediasystem.util.javafx.control;
 
-import hs.mediasystem.util.javafx.Binds;
-
 import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -41,7 +38,6 @@ public class ScaledImageView extends Region {
   public final boolean isPreserveRatio() { return this.preserveRatio.get(); }
   public final void setPreserveRatio(boolean preserveRatio) { this.preserveRatio.set(preserveRatio); }
 
-  private final ObjectBinding<Boolean> backgroundLoadingBinding = Binds.monadic(imageView.imageProperty()).map(Image::isBackgroundLoading);
   private final BooleanBinding imagePresent = imageView.imageProperty().isNotNull();
   private final Node placeHolder;
 
