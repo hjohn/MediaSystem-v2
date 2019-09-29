@@ -28,7 +28,7 @@ public class CollectionGrouping implements Grouping<Production> {
     List<MediaItem<MediaDescriptor>> topLevelItems = new ArrayList<>();
 
     for(MediaItem<? extends Production> mediaItem : items) {
-      mediaItem.getData().getCollectionIdentifier().ifPresentOrElse(collectionIdentifiers::add, () -> topLevelItems.add((MediaItem<MediaDescriptor>)mediaItem));
+      mediaItem.getData().getCollectionIdentifier().ifPresentOrElse(collectionIdentifiers::add, () -> topLevelItems.add((MediaItem<MediaDescriptor>)(MediaItem<?>)mediaItem));
     }
 
     for(Identifier collectionIdentifier : collectionIdentifiers) {

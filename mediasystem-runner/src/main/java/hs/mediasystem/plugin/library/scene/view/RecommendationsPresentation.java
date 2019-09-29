@@ -51,6 +51,6 @@ public class RecommendationsPresentation extends GridViewPresentation<Production
 
   @SuppressWarnings("unchecked")
   protected RecommendationsPresentation(SettingsSource settingsSource, MediaService mediaService, MediaItem<? extends Production> mediaItem, ObservableList<MediaItem<Production>> recommendations) {
-    super(settingsSource, mediaService, recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)), (MediaItem<MediaDescriptor>)mediaItem);
+    super(settingsSource, mediaService, recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED)), (MediaItem<MediaDescriptor>)(MediaItem<?>)mediaItem);
   }
 }
