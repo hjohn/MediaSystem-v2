@@ -64,8 +64,12 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
   public final Val<MediaItem<MediaDescriptor>> selectedItem = internalSelectedItem;
   public final ObservableList<MediaItem<MediaDescriptor>> items = FXCollections.observableArrayList();
   public final ObservableList<Group> groups = FXCollections.observableArrayList();
-  public final Val<Integer> totalItemCount;
-  public final Val<Integer> visibleUniqueItemCount;
+
+  private final Var<Integer> totalItemCountInternal = Var.newSimpleVar(0);
+  private final Var<Integer> visibleUniqueItemCountInternal = Var.newSimpleVar(0);
+
+  public final Val<Integer> totalItemCount = totalItemCountInternal;
+  public final Val<Integer> visibleUniqueItemCount = visibleUniqueItemCountInternal;
 
   private final MediaService mediaService;
   private final List<MediaItem<T>> inputItems;         // Items this presentation was constructed with (ungrouped, unsorted, unfiltered)
@@ -82,9 +86,6 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     this.mediaService = mediaService;
     this.inputItems = inputItems;
     this.contextItem.setValue(contextItem);
-
-    this.totalItemCount = Val.create(() -> rawBaseItems.size(), grouping, this.contextItem);
-    this.visibleUniqueItemCount = Val.create(() -> baseItems.size(), grouping, filter, stateFilter, this.contextItem);
 
     this.availableSortOrders.setAll(viewOptions.sortOrders);
     this.availableFilters.setAll(viewOptions.filters);
@@ -157,7 +158,7 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
       .collect(Collectors.toList());
 
     groups.clear();
-    
+
     if(order.grouper == null || (!(grouping.getValue() instanceof NoGrouping) && !availableGroupings.isEmpty())) {
       items.setAll(baseItems);
     }
@@ -187,6 +188,9 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
 
       groups.addAll(newGroups);
     }
+
+    totalItemCountInternal.setValue(rawBaseItems.size());
+    visibleUniqueItemCountInternal.setValue(baseItems.size());
   }
 
   private static <E, G extends Comparable<G>> Map<Comparable<Object>, List<E>> group(List<E> elements, Function<E, List<Comparable<Object>>> grouper) {
