@@ -77,9 +77,9 @@ public class ContextLayout {
     BasePanel panel = new BasePanel();
 
     panel.title.set(details.getName());
-    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getDate()));
-    panel.overview.set(details.getDescription());
-    panel.imageURI.set(details.getImage());
+    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getDate().orElse(null)));
+    panel.overview.set(details.getDescription().orElse(null));
+    panel.imageURI.set(details.getImage().orElse(null));
 
     return panel;
   }

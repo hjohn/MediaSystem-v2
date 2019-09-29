@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.util.ImageHandle;
@@ -79,7 +78,7 @@ public class PlaybackOverlayPane extends StackPane {
 
   public PlaybackOverlayPane(PlaybackOverlayPresentation presentation, ImageHandleFactory imageHandleFactory) {
     this.presentation.set(presentation);
-    this.posterHandle = Val.wrap(this.presentation).map(p -> p.mediaItem.get()).map(MediaItem::getProduction).map(Production::getImage).map(imageHandleFactory::fromURI);
+    this.posterHandle = Val.wrap(this.presentation).map(p -> p.mediaItem.get()).map(MediaItem::getDetails).map(d -> d.getImage().orElse(null)).map(imageHandleFactory::fromURI);
     this.player.bind(presentation.playerPresentation);
     this.overlayVisible.bind(presentation.overlayVisible);
 

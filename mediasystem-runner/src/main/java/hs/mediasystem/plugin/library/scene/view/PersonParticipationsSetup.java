@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
@@ -9,8 +8,6 @@ import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
-
-import java.util.Optional;
 
 import javafx.scene.Node;
 
@@ -28,7 +25,7 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
   protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
-    cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
+    cellFactory.setImageExtractor(item -> item.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
     cellFactory.setDetailExtractor(
       m -> formatDetail(m)

@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
@@ -23,13 +22,13 @@ public class CastAndCrewPlacer extends AbstractPlacer<LibraryPresentation, CastA
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, CastAndCrewPresentation presentation) {
     Val<ImageHandle> val = Val.constant(presentation.mediaItem)
-      .map(MediaItem::getProduction)
-      .map(Production::getBackdrop)
+      .map(MediaItem::getDetails)
+      .map(d -> d.getBackdrop().orElse(null))
       .map(imageHandleFactory::fromURI)
       .orElse(Val.constant(presentation.mediaItem)
         .map(MediaItem::getParent)
-        .map(MediaItem::getProduction)
-        .map(Production::getBackdrop)
+        .map(MediaItem::getDetails)
+        .map(d -> d.getBackdrop().orElse(null))
         .map(imageHandleFactory::fromURI)
       );
 

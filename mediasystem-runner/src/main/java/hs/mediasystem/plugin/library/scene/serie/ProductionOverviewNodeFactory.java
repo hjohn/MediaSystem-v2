@@ -5,7 +5,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.ext.basicmediatypes.domain.Release;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
@@ -38,7 +37,6 @@ import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.Grou
 import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
 
 import java.time.Duration;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,7 +100,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       MediaItem<?> mediaItem = presentation.rootItem;
       AsyncImageProperty3 imageProperty = new AsyncImageProperty3(840, 840);
 
-      imageProperty.imageHandleProperty().set(Optional.ofNullable(mediaItem.getProduction().getImage()).map(imageHandleFactory::fromURI).orElse(null));
+      imageProperty.imageHandleProperty().set(mediaItem.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
 
       BiasedImageView poster = new BiasedImageView();
 
@@ -117,7 +115,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       VBox leftTitleBox = Containers.vbox(
         titleLabel,
-        Labels.create(createYear(mediaItem), "release-year"),
+        Labels.create(mediaItem.productionYearRange.getValue(), "release-year"),
         Labels.create(mediaItem.getProduction().getGenres().stream().collect(Collectors.joining(" / ")), "genres")
       );
 
@@ -155,29 +153,6 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
     }
 
-    private String createYear(MediaItem<?> mediaItem) {
-      if(mediaItem.getData() instanceof Serie) {
-        Serie serie = (Serie)mediaItem.getData();
-
-        if(serie.getDate() == null) {
-          return "";
-        }
-
-        String year = "" + serie.getDate().getYear();
-
-        if(serie.getState() == Serie.State.ENDED && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != serie.getDate().getYear()) {
-          year += " - " + serie.getLastAirDate().getYear();
-        }
-        else if(serie.getState() == Serie.State.CONTINUING) {
-          year += " -";
-        }
-
-        return year;
-      }
-
-      return Optional.ofNullable(mediaItem.getProduction().getDate()).map(LocalDate::getYear).map(Object::toString).orElse("");
-    }
-
     private VBox createDynamicBox() {
       VBox box = Containers.vbox("dynamic-panel");
 
@@ -202,7 +177,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
             }
           }
 
-          leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create(production.getDescription(), "description"), 12000, 40));
+          leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create(production.getDescription().orElse(""), "description"), 12000, 40));
 
           Region castPane = castPaneFactory.create(production);
 
@@ -243,7 +218,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         cellFactory.setPlaceHolderAspectRatio(9.0 / 16.0);
         cellFactory.setMinRatio(4.0 / 3.0);
         cellFactory.setImageExtractor(item ->
-          Optional.of(item).map(MediaItem::getRelease).map(Release::getImage)
+          item.getRelease().getImage()
             .or(() -> Optional.of(item).map(MediaItem::getStream).map(BasicStream::getId).map(StreamID::asInt).map(id -> new ImageURI("localdb://" + id + "/1")))
             .map(imageHandleFactory::fromURI)
             .orElse(null)
@@ -338,7 +313,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       MediaItem<Episode> mediaItem = presentation.episodeItem.get();
       AsyncImageProperty3 imageProperty = new AsyncImageProperty3(840, 840);
 
-      imageProperty.imageHandleProperty().set(Optional.ofNullable(mediaItem.getData().getImage()).map(imageHandleFactory::fromURI).orElse(null));
+      imageProperty.imageHandleProperty().set(mediaItem.getData().getImage().map(imageHandleFactory::fromURI).orElse(null));
 
       Label label = new AspectCorrectLabel("?", 0.75, Orientation.VERTICAL, 1000, 1000);
       BiasedImageView poster = new BiasedImageView(label);
@@ -356,7 +331,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       poster.getOverlayRegion().getChildren().add(indicatorPane);
 
-      String formattedDate = MediaItemFormatter.formattedLocalDate(mediaItem.getRelease().getDate());
+      String formattedDate = MediaItemFormatter.formattedLocalDate(mediaItem.getRelease().getDate().orElse(null));
       String subtitle = createSeasonEpisodeText(mediaItem) + (formattedDate == null ? "" : " • " + formattedDate);
 
       Label titleLabel = Labels.create("title", presentation.episodeItem.get().productionTitle);
@@ -375,7 +350,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           titleBox,
           createStarRating(mediaItem.getData().getReception(), 10, 4)
         ),
-        new AutoVerticalScrollPane(Labels.create(mediaItem.getData().getDescription(), "description"), 12000, 40)
+        new AutoVerticalScrollPane(Labels.create(mediaItem.getData().getDescription().orElse(""), "description"), 12000, 40)
       );
 
       HBox hbox = Containers.hbox("episode-panel", vbox, poster);

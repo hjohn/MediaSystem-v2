@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
@@ -31,6 +32,7 @@ public class StreamMetaDataCodec {
       .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
       .registerModule(new ParameterNamesModule(Mode.PROPERTIES))
       .registerModule(new JavaTimeModule())
+      .registerModule(new Jdk8Module())
       .registerModule(new BasicDataTypesModule());
   }
 

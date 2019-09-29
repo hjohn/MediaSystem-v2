@@ -1,15 +1,12 @@
 package hs.mediasystem.plugin.library.scene.view;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
-
-import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -24,7 +21,7 @@ public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, Gener
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
     cellFactory.setSideBarCenterBindProvider(item -> item.collectionTitle);
-    cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getDetails()).map(Details::getImage).map(imageHandleFactory::fromURI).orElse(null));
+    cellFactory.setImageExtractor(item -> item.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
   }
 

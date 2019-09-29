@@ -1,7 +1,5 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.serie.ProductionOverviewNodeFactory;
@@ -27,7 +25,7 @@ public class ProductionOverviewPlacer extends AbstractPlacer<LibraryPresentation
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, ProductionPresentation presentation) {
-    parentPresentation.backdrop.bind(Val.constant(presentation.rootItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
+    parentPresentation.backdrop.bind(Val.constant(presentation.rootItem.getDetails().getBackdrop().map(imageHandleFactory::fromURI).orElse(null)));
   }
 
   @Override

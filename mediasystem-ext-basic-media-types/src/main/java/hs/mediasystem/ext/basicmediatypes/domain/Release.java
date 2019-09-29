@@ -4,6 +4,7 @@ import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public class Release implements MediaDescriptor {
   private final ProductionIdentifier identifier;
@@ -37,19 +38,19 @@ public class Release implements MediaDescriptor {
     return details.getName();
   }
 
-  public String getDescription() {
+  public Optional<String> getDescription() {
     return details.getDescription();
   }
 
-  public LocalDate getDate() {
+  public Optional<LocalDate> getDate() {
     return details.getDate();
   }
 
-  public ImageURI getImage() {
+  public Optional<ImageURI> getImage() {
     return details.getImage();
   }
 
-  public ImageURI getBackdrop() {
+  public Optional<ImageURI> getBackdrop() {
     return details.getBackdrop();
   }
 

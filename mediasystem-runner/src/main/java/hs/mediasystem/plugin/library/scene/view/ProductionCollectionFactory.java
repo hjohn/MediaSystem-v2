@@ -10,12 +10,9 @@ import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.StateFilter;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.ViewOptions;
-import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
@@ -31,13 +28,13 @@ public class ProductionCollectionFactory {
   @Inject private MediaItem.Factory mediaItemFactory;
 
   private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
-    new SortOrder<>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())))),
-    new SortOrder<>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL)))
+    new SortOrder<>("release-date", MediaItem.BY_RELEASE_DATE.reversed()),
+    new SortOrder<>("alpha", MediaItem.BY_NAME)
   );
 
   private static final List<Filter<Production>> FILTERS = List.of(
     new Filter<Production>("none", mi -> true),
-    new Filter<Production>("released-recently", mi -> Optional.ofNullable(mi.getProduction().getDate()).filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+    new Filter<Production>("released-recently", mi -> mi.getProduction().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
   public GenericCollectionPresentation<Production> create(Identifier collectionIdentifier) {

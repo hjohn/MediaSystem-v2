@@ -58,7 +58,7 @@ public class ProductionCollection extends AbstractCollection<Production> {
     LocalDate last = null;    // last release
 
     for(Production production : getItems()) {
-      LocalDate date = production.getDate();
+      LocalDate date = production.getDate().orElse(null);
 
       if(date != null) {
         first = first == null || date.isBefore(first) ? date : first;

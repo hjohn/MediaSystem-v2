@@ -8,8 +8,6 @@ import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -22,7 +20,7 @@ public class RecommendationsSetup extends AbstractSetup<Production, Recommendati
   protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
-    cellFactory.setImageExtractor(item -> Optional.ofNullable(item.getProduction()).map(Production::getImage).map(imageHandleFactory::fromURI).orElse(null));
+    cellFactory.setImageExtractor(item -> item.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
     cellFactory.setMediaStatusBindProvider(item -> item.mediaStatus);
   }
 

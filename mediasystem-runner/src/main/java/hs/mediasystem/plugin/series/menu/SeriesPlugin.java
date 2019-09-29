@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.series.menu;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
@@ -17,12 +16,10 @@ import hs.mediasystem.runner.CollectionLocationManager.CollectionDefinition;
 import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.scanner.api.MediaType;
-import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,14 +35,14 @@ public class SeriesPlugin implements Plugin {
   private static final MediaType SERIE = MediaType.of("SERIE");
 
   private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
-    new SortOrder<>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL))),
-    new SortOrder<>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())),
-    new SortOrder<>("watched-date", Comparator.comparing(mi -> mi.lastWatchedTime.get(), Comparator.<LocalDateTime>nullsFirst(Comparator.naturalOrder()).reversed()))
+    new SortOrder<>("alpha", MediaItem.BY_NAME),
+    new SortOrder<>("release-date", MediaItem.BY_RELEASE_DATE.reversed()),
+    new SortOrder<>("watched-date", MediaItem.BY_WATCHED_DATE.reversed())
   );
 
   private static final List<Filter<Serie>> FILTERS = List.of(
     new Filter<>("none", mi -> true),
-    new Filter<>("released-recently", mi -> Optional.ofNullable(mi.getProduction().getDate()).filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent()),
+    new Filter<>("released-recently", mi -> mi.getProduction().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent()),
     new Filter<>("watched-recently", mi -> Optional.ofNullable(mi.lastWatchedTime.get()).filter(d -> d.isAfter(LocalDateTime.now().minusYears(2))).isPresent())
   );
 

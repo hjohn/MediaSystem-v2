@@ -60,7 +60,9 @@ public class GenreGrouping implements Grouping<Production> {
             mi.getDetails().getBackdrop().ifPresent(backgroundURIRef::set);
           }
         })
-        .map(mi -> mi.getDetails().getImage())
+        .map(MediaItem::getDetails)
+        .map(Details::getImage)
+        .flatMap(Optional::stream)
         .filter(Objects::nonNull)
         .map(Object::toString)
         .limit(4)

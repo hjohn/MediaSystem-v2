@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
@@ -21,6 +20,6 @@ public class RecommendationsPlacer extends AbstractPlacer<LibraryPresentation, R
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, RecommendationsPresentation presentation) {
-    parentPresentation.backdrop.bind(Val.wrap(presentation.selectedItem).map(MediaItem::getProduction).map(Production::getBackdrop).map(imageHandleFactory::fromURI));
+    parentPresentation.backdrop.bind(Val.wrap(presentation.selectedItem).map(MediaItem::getDetails).map(d -> d.getBackdrop().orElse(null)).map(imageHandleFactory::fromURI));
   }
 }

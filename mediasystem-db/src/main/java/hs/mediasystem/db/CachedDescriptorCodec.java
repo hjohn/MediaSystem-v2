@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
@@ -30,6 +31,7 @@ public class CachedDescriptorCodec {
       .registerModule(new ParameterNamesModule(Mode.PROPERTIES))
       .registerModule(new BasicDataTypesModule())
       .registerModule(new MediaSystemDomainModule())
+      .registerModule(new Jdk8Module())
       .registerModule(new JavaTimeModule());
   }
 

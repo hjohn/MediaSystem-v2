@@ -13,12 +13,9 @@ import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
 import hs.mediasystem.runner.util.ResourceManager;
-import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
@@ -30,13 +27,13 @@ import javax.inject.Singleton;
 @Singleton
 public class TMDBPlugin implements Plugin {
   private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
-    new SortOrder<>("release-date", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getDate, Comparator.nullsLast(Comparator.naturalOrder())).reversed())),
-    new SortOrder<>("alpha", Comparator.comparing(MediaItem::getProduction, Comparator.comparing(Production::getName, NaturalLanguage.ALPHABETICAL)))
+    new SortOrder<>("release-date", MediaItem.BY_RELEASE_DATE.reversed()),
+    new SortOrder<>("alpha", MediaItem.BY_NAME)
   );
 
   private static final List<Filter<Production>> FILTERS = List.of(
     new Filter<>("none", mi -> true),
-    new Filter<>("released-recently", mi -> Optional.ofNullable(mi.getProduction().getDate()).filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+    new Filter<>("released-recently", mi -> mi.date.get().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
   private static final List<StateFilter> STATE_FILTERS = List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED);

@@ -17,6 +17,7 @@ import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrintProvider;
 import hs.mediasystem.util.Exceptional;
+import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,6 +44,10 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 public class MediaItem<T extends MediaDescriptor> {
+  public static final Comparator<MediaItem<MediaDescriptor>> BY_NAME = Comparator.comparing(MediaItem::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL));
+  public static final Comparator<MediaItem<MediaDescriptor>> BY_RELEASE_DATE = Comparator.comparing(MediaItem::getDetails, Comparator.comparing((Details d) -> d.getDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
+  public static final Comparator<MediaItem<MediaDescriptor>> BY_WATCHED_DATE = Comparator.comparing(mi -> mi.lastWatchedTime.get(), Comparator.nullsFirst(Comparator.naturalOrder()));
+
   @Singleton
   public static class Factory {
     @Inject private StreamStateService streamStateService;
@@ -101,7 +106,7 @@ public class MediaItem<T extends MediaDescriptor> {
   public final StringProperty productionTitle = new SimpleStringProperty();
   public final StringProperty productionYearRange = new SimpleStringProperty();
   public final StringProperty personName = new SimpleStringProperty();
-  public final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
+  public final ObjectProperty<Optional<LocalDate>> date = new SimpleObjectProperty<>();
   public final ObjectProperty<List<String>> genres = new SimpleObjectProperty<>();
   public final ObjectBinding<MediaStatus> mediaStatus;
   public final ObjectProperty<LocalDateTime> lastWatchedTime = new SimpleObjectProperty<>();
@@ -160,7 +165,7 @@ public class MediaItem<T extends MediaDescriptor> {
           int minYear = first.getYear();
           int maxYear = max.getYear();
 
-          date.setValue(max);
+          date.setValue(Optional.of(max));
           productionYearRange.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
         }
 
@@ -191,7 +196,7 @@ public class MediaItem<T extends MediaDescriptor> {
           productionYearRange.set(createSerieYearRange((Serie)getData()));
         }
         else {
-          productionYearRange.set(Optional.ofNullable(date.get()).map(LocalDate::getYear).map(Object::toString).orElse(""));
+          productionYearRange.set(date.get().map(LocalDate::getYear).map(Object::toString).orElse(""));
         }
       }
     }
@@ -211,13 +216,15 @@ public class MediaItem<T extends MediaDescriptor> {
   }
 
   private static String createSerieYearRange(Serie serie) {
-    if(serie.getDate() == null) {
+    LocalDate date = serie.getDate().orElse(null);
+
+    if(date == null) {
       return "";
     }
 
-    String year = "" + serie.getDate().getYear();
+    String year = "" + date.getYear();
 
-    if((serie.getState() == Serie.State.CANCELED || serie.getState() == Serie.State.ENDED) && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != serie.getDate().getYear()) {
+    if((serie.getState() == Serie.State.CANCELED || serie.getState() == Serie.State.ENDED) && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != date.getYear()) {
       year += " - " + serie.getLastAirDate().getYear();
     }
     else if(serie.getState() == Serie.State.CONTINUING) {
