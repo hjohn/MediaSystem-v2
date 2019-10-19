@@ -1,4 +1,4 @@
-package hs.mediasystem.framework.expose;
+package hs.mediasystem.util.expose;
 
 public abstract class AbstractExposedControl<P> implements ExposedControl<P> {
   protected String name;

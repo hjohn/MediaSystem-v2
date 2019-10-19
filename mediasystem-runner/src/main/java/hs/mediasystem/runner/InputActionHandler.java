@@ -1,7 +1,7 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.expose.ExposedControl;
 import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.util.expose.ExposedControl;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 

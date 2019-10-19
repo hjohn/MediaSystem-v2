@@ -1,9 +1,9 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.expose.AbstractExposedProperty;
-import hs.mediasystem.framework.expose.ExposedControl;
-import hs.mediasystem.framework.expose.ExposedMethod;
-import hs.mediasystem.framework.expose.ExposedNode;
+import hs.mediasystem.util.expose.AbstractExposedProperty;
+import hs.mediasystem.util.expose.ExposedControl;
+import hs.mediasystem.util.expose.ExposedMethod;
+import hs.mediasystem.util.expose.ExposedNode;
 
 import java.util.ArrayList;
 import java.util.List;

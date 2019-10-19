@@ -1,15 +1,15 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.expose.AbstractExposedProperty;
-import hs.mediasystem.framework.expose.ExposedBooleanProperty;
-import hs.mediasystem.framework.expose.ExposedControl;
-import hs.mediasystem.framework.expose.ExposedDoubleProperty;
-import hs.mediasystem.framework.expose.ExposedListProperty;
-import hs.mediasystem.framework.expose.ExposedLongProperty;
-import hs.mediasystem.framework.expose.ExposedMethod;
-import hs.mediasystem.framework.expose.ExposedNode;
-import hs.mediasystem.framework.expose.ExposedNumberProperty;
 import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.util.expose.AbstractExposedProperty;
+import hs.mediasystem.util.expose.ExposedBooleanProperty;
+import hs.mediasystem.util.expose.ExposedControl;
+import hs.mediasystem.util.expose.ExposedDoubleProperty;
+import hs.mediasystem.util.expose.ExposedListProperty;
+import hs.mediasystem.util.expose.ExposedLongProperty;
+import hs.mediasystem.util.expose.ExposedMethod;
+import hs.mediasystem.util.expose.ExposedNode;
+import hs.mediasystem.util.expose.ExposedNumberProperty;
 
 import java.util.ArrayList;
 import java.util.Collections;

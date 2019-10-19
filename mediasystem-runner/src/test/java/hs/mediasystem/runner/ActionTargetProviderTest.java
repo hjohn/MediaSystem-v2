@@ -1,7 +1,7 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.expose.Expose;
-import hs.mediasystem.framework.expose.ExposedControl;
+import hs.mediasystem.util.expose.Expose;
+import hs.mediasystem.util.expose.ExposedControl;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;

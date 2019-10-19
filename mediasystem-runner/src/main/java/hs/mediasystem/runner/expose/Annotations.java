@@ -4,13 +4,13 @@ import hs.mediasystem.domain.AudioTrack;
 import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.domain.Subtitle;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.framework.expose.Expose;
 import hs.mediasystem.plugin.library.scene.serie.EpisodePresentation;
 import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.view.GridViewPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.root.RootPresentation;
 import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.util.expose.Expose;
 
 import org.reactfx.value.Val;
 

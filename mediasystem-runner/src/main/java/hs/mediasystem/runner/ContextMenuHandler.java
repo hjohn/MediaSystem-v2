@@ -1,18 +1,18 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.expose.AbstractExposedNumericProperty;
-import hs.mediasystem.framework.expose.AbstractExposedProperty;
-import hs.mediasystem.framework.expose.ExposedBooleanProperty;
-import hs.mediasystem.framework.expose.ExposedControl;
-import hs.mediasystem.framework.expose.ExposedDoubleProperty;
-import hs.mediasystem.framework.expose.ExposedListProperty;
-import hs.mediasystem.framework.expose.ExposedLongProperty;
-import hs.mediasystem.framework.expose.ExposedMethod;
-import hs.mediasystem.framework.expose.Formatter;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.util.expose.AbstractExposedNumericProperty;
+import hs.mediasystem.util.expose.AbstractExposedProperty;
+import hs.mediasystem.util.expose.ExposedBooleanProperty;
+import hs.mediasystem.util.expose.ExposedControl;
+import hs.mediasystem.util.expose.ExposedDoubleProperty;
+import hs.mediasystem.util.expose.ExposedListProperty;
+import hs.mediasystem.util.expose.ExposedLongProperty;
+import hs.mediasystem.util.expose.ExposedMethod;
+import hs.mediasystem.util.expose.Formatter;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 

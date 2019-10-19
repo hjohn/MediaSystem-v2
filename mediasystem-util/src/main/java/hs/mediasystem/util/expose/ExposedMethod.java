@@ -1,4 +1,4 @@
-package hs.mediasystem.framework.expose;
+package hs.mediasystem.util.expose;
 
 import java.util.ArrayList;
 import java.util.function.BiFunction;

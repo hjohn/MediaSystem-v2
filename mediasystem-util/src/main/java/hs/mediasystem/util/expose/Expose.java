@@ -1,4 +1,4 @@
-package hs.mediasystem.framework.expose;
+package hs.mediasystem.util.expose;
 
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;

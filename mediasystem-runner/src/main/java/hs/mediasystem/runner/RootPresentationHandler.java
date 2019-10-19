@@ -1,12 +1,12 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.framework.expose.Expose;
-import hs.mediasystem.framework.expose.ExposedControl;
 import hs.mediasystem.presentation.ParentPresentation;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.InputActionHandler.Action;
 import hs.mediasystem.runner.util.SceneManager;
+import hs.mediasystem.util.expose.Expose;
+import hs.mediasystem.util.expose.ExposedControl;
 
 import java.util.List;
 import java.util.Map;

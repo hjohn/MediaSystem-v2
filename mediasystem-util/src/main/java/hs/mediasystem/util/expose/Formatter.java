@@ -1,4 +1,4 @@
-package hs.mediasystem.framework.expose;
+package hs.mediasystem.util.expose;
 
 public interface Formatter<T> {
   String format(T value); 
