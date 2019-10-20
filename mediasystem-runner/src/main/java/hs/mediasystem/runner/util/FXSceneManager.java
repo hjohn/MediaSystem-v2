@@ -68,7 +68,7 @@ public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
     rootPane.setBackground(Background.EMPTY);
 
     scene.setFill(Color.BLACK);
-    scene.getStylesheets().add(LessLoader.compile(getClass().getResource("global.css")).toExternalForm());
+    scene.getStylesheets().add(LessLoader.compile(getClass().getResource("global.less")).toExternalForm());
 
     contentStage = new Stage(StageStyle.TRANSPARENT);
     contentStage.setTitle(title + " Dialog");
