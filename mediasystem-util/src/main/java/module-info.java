@@ -10,11 +10,11 @@ module hs.mediasystem.util {
   exports hs.mediasystem.util.javafx.control.gridlistviewskin;
   exports hs.mediasystem.util.javafx.property;
   exports hs.mediasystem.util.logging;
-  requires javafx.base;
-  requires java.logging;
+  requires transitive javafx.base;
+  requires transitive javafx.controls;
+  requires transitive java.logging;
   requires javax.inject;
   requires javafx.graphics;
   requires reactfx;
-  requires javafx.controls;
   requires java.desktop;
 }

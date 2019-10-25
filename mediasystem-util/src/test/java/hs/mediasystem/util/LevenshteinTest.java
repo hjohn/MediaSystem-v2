@@ -19,7 +19,7 @@ public class LevenshteinTest {
   private final String text;
   private final String matchText;
 
-  public LevenshteinTest(MatchType matchType, String text, String matchText) {
+  public LevenshteinTest(@SuppressWarnings("exports") MatchType matchType, String text, String matchText) {
     this.matchType = matchType;
     this.text = text;
     this.matchText = matchText;

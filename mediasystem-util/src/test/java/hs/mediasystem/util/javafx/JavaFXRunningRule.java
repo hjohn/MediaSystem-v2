@@ -25,6 +25,7 @@ public class JavaFXRunningRule implements TestRule {
    */
   private static boolean jfxIsSetup;
 
+  @SuppressWarnings("exports")
   @Override
   public Statement apply(Statement statement, Description description) {
     return new OnJFXThreadStatement(statement);

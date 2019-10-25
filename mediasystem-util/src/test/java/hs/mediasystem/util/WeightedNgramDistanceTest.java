@@ -19,7 +19,7 @@ public class WeightedNgramDistanceTest {
   private final String text;
   private final String matchText;
 
-  public WeightedNgramDistanceTest(MatchType matchType, String text, String matchText) {
+  public WeightedNgramDistanceTest(@SuppressWarnings("exports") MatchType matchType, String text, String matchText) {
     this.matchType = matchType;
     this.text = text;
     this.matchText = matchText;
