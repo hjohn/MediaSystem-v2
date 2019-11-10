@@ -379,6 +379,10 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
 
     @SuppressWarnings("unchecked")
     public <G extends Comparable<G>> SortOrder(String resourceKey, Comparator<MediaItem<T>> comparator, Function<MediaItem<T>, List<G>> grouper, boolean reverseGroupOrder) {
+      if(comparator == null) {
+        throw new IllegalArgumentException("comparator cannot be null");
+      }
+
       this.resourceKey = resourceKey;
       this.comparator = comparator;
       this.grouper = (Function<MediaItem<T>, List<Comparable<Object>>>)(Function<?, ?>)grouper;
@@ -395,6 +399,10 @@ public class GridViewPresentation<T extends MediaDescriptor> extends AbstractPre
     public final Predicate<MediaItem<T>> predicate;
 
     public Filter(String resourceKey, Predicate<MediaItem<T>> predicate) {
+      if(predicate == null) {
+        throw new IllegalArgumentException("predicate cannot be null");
+      }
+
       this.resourceKey = resourceKey;
       this.predicate = predicate;
     }

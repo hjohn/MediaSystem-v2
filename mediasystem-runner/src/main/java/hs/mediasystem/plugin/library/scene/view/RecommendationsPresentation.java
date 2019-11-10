@@ -20,7 +20,7 @@ import javax.inject.Singleton;
 
 public class RecommendationsPresentation extends GridViewPresentation<Production> {
   private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
-    new SortOrder<>("best", null),
+    new SortOrder<>("best", (a, b) -> 0),
     new SortOrder<>("alpha", MediaItem.BY_NAME),
     new SortOrder<>("release-date", MediaItem.BY_RELEASE_DATE.reversed())
   );
