@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.collection;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator.Mode;
@@ -93,28 +93,8 @@ public class CollectionLocationManager {
       .collect(Collectors.toList());
   }
 
-  public static class CollectionDefinition {
-    private final String type;
-    private final String tag;
-    private final String title;
-
-    public CollectionDefinition(String type, String tag, String title) {
-      this.type = type;
-      this.tag = tag;
-      this.title = title;
-    }
-
-    public String getType() {
-      return type;
-    }
-
-    public String getTitle() {
-      return title;
-    }
-
-    public String getTag() {
-      return tag;
-    }
+  public List<CollectionDefinition> getCollectionDefinitions() {
+    return List.copyOf(collectionDefinitions);
   }
 
   public static class ImportDefinition {

@@ -5,7 +5,7 @@ import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.DatabaseStreamPrintProvider;
 import hs.mediasystem.db.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
-import hs.mediasystem.runner.CollectionLocationManager;
+import hs.mediasystem.runner.collection.CollectionLocationManager;
 import hs.mediasystem.runner.expose.Annotations;
 import hs.mediasystem.runner.util.DatabaseResponseCache;
 
