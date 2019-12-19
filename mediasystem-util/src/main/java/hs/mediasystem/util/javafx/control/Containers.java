@@ -2,6 +2,7 @@ package hs.mediasystem.util.javafx.control;
 
 import javafx.beans.binding.BooleanBinding;
 import javafx.scene.Node;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -55,6 +56,18 @@ public class Containers {
 
   public static StackPane stack(String styleClass, Node... nodes) {
     return addStyleClass(new StackPane(nodes), styleClass);
+  }
+
+  public static BorderPane border(String styleClass, Node center, Node left, Node right, Node top, Node bottom) {
+    BorderPane borderPane = new BorderPane();
+
+    borderPane.setCenter(center);
+    borderPane.setLeft(left);
+    borderPane.setRight(right);
+    borderPane.setTop(top);
+    borderPane.setBottom(bottom);
+
+    return addStyleClass(borderPane, styleClass);
   }
 
   private static <T extends Node> T addStyleClass(T node, String styleClass) {

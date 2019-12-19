@@ -1,5 +1,7 @@
 package hs.mediasystem.util;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,6 +37,56 @@ public class SizeFormatter {
   public static final FormatSet<Double> DOUBLE_THREE_SIGNIFICANT = new FormatSet<>(List.of(
     new AutoDoubleFormat(3)
   ));
+
+  public static final String formatTimeAgo(LocalDateTime time) {
+    LocalDateTime now = LocalDateTime.now();
+
+    if(time.isAfter(now)) {
+      return "In the future";
+    }
+
+    LocalDateTime midnight = now.truncatedTo(ChronoUnit.DAYS);
+
+    if(time.isBefore(midnight)) {
+      LocalDateTime endDate = midnight.plusDays(1);
+      long monthsAgo = ChronoUnit.MONTHS.between(time, endDate);
+
+      if(monthsAgo >= 2) {
+        return monthsAgo + " months ago";
+      }
+
+      long weeksAgo = ChronoUnit.WEEKS.between(time, endDate);
+
+      if(weeksAgo >= 3) {
+        return weeksAgo + " weeks ago";
+      }
+
+      long daysAgo = ChronoUnit.DAYS.between(time, endDate);
+
+      if(daysAgo >= 2) {
+        return (daysAgo + 1) + " days ago";
+      }
+
+      return "Yesterday";
+    }
+
+    long hoursAgo = ChronoUnit.HOURS.between(time, now);
+
+    if(hoursAgo >= 2) {
+      return hoursAgo + " hours ago";
+    }
+    else if(hoursAgo == 1) {
+      return "An hour ago";
+    }
+
+    long minutesAgo = ChronoUnit.MINUTES.between(time, now);
+
+    if(minutesAgo >= 5) {
+      return minutesAgo + " minutes ago";
+    }
+
+    return "Just now";
+  }
 
   public static String formatBytes(long bytes) {
     long b = bytes + 1023;
