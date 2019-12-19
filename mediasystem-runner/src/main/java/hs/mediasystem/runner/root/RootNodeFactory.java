@@ -67,7 +67,7 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
         time.set(now.format(TIME_FORMATTER));
         date.set(now.format(DATE_FORMATTER));
       }),
-      new KeyFrame(Duration.seconds(0.2))
+      new KeyFrame(Duration.seconds(0.1))
     );
 
     timeline.setCycleCount(Timeline.INDEFINITE);
