@@ -6,6 +6,7 @@ import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.scanner.api.StreamID;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,4 +22,5 @@ public interface BasicStreamStore {
   Set<BasicStream> findStreams(Identifier identifier);
   Set<BasicStream> findStreams(MediaType type, String tag);
   Map<BasicStream, Map<Identifier, Identification>> findIdentifiersByStreams(MediaType type, String tag);
+  List<BasicStream> findNewest(int maximum);
 }

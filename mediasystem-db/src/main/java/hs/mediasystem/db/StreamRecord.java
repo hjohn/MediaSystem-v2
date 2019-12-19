@@ -14,11 +14,14 @@ public class StreamRecord {
   @Column(name = "scanner_id")
   private int importSourceId;
 
+  @Column(name = "creation_ms")
+  private long creationMillis;
+
   @Column(name = "lastenrichtime")
-  private Long lastEnrichTime;
+  private Long lastEnrichTime;  // in seconds since epoch
 
   @Column(name = "nextenrichtime")
-  private Long nextEnrichTime;
+  private Long nextEnrichTime;  // in seconds since epoch
 
   @Column
   private byte[] json;
@@ -37,6 +40,14 @@ public class StreamRecord {
 
   public void setImportSourceId(int importSourceId) {
     this.importSourceId = importSourceId;
+  }
+
+  public long getCreationMillis() {
+    return creationMillis;
+  }
+
+  public void setCreationMillis(long creationMillis) {
+    this.creationMillis = creationMillis;
   }
 
   public Long getLastEnrichTime() {

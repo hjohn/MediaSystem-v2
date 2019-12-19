@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -128,6 +129,16 @@ public class DatabaseStreamStore implements BasicStreamStore {
     return cachedStream.getIdentifiedStream().getIdentifications();
   }
 
+  @Override
+  public List<BasicStream> findNewest(int maximum) {
+    return cache.values().stream()
+      .sorted(Comparator.comparing(CachedStream::getCreationTime).reversed())
+      .limit(maximum)
+      .map(CachedStream::getIdentifiedStream)
+      .map(IdentifiedStream::getStream)
+      .collect(Collectors.toList());
+  }
+
   synchronized Set<StreamID> findUnenrichedStreams() {
     return cache.values().stream()
       .filter(cs -> cs.getLastEnrichTime() == null)
@@ -180,6 +191,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     CachedStream newCS = new CachedStream(
       cs.getIdentifiedStream(),
       cs.getImportSourceId(),
+      cs.getCreationTime(),
       Instant.now(),
       nextEnrichTime
     );
@@ -198,7 +210,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
   synchronized void put(int importSourceId, BasicStream stream) {
     CachedStream existingCS = cache.get(stream.getId());
     IdentifiedStream identifiedStream = new IdentifiedStream(stream, existingCS == null ? Collections.emptyMap() : existingCS.getIdentifiedStream().getIdentifications());
-    CachedStream newCS = new CachedStream(identifiedStream, importSourceId, null, null);
+    CachedStream newCS = new CachedStream(identifiedStream, importSourceId, Instant.now(), null, null);
 
     database.store(codec.toRecord(newCS));
 
@@ -213,6 +225,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
       CachedStream newCS = new CachedStream(
         new IdentifiedStream(cs.getIdentifiedStream().getStream(), identifications),
         cs.getImportSourceId(),
+        cs.getCreationTime(),
         cs.getLastEnrichTime(),
         cs.getNextEnrichTime()
       );

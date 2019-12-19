@@ -37,6 +37,7 @@ public class CachedStreamCodec {
     return new CachedStream(
       objectMapper.readValue(record.getJson(), IdentifiedStream.class),
       record.getImportSourceId(),
+      Instant.ofEpochMilli(record.getCreationMillis()),
       record.getLastEnrichTime() == null ? null : Instant.ofEpochSecond(record.getLastEnrichTime()),
       record.getNextEnrichTime() == null ? null : Instant.ofEpochSecond(record.getNextEnrichTime())
     );
@@ -48,6 +49,7 @@ public class CachedStreamCodec {
 
       record.setStreamId(stream.getIdentifiedStream().getStream().getId().asInt());
       record.setImportSourceId(stream.getImportSourceId());
+      record.setCreationMillis(stream.getCreationTime().toEpochMilli());
       record.setLastEnrichTime(stream.getLastEnrichTime() == null ? null : stream.getLastEnrichTime().getEpochSecond());
       record.setNextEnrichTime(stream.getNextEnrichTime() == null ? null : stream.getNextEnrichTime().getEpochSecond());
       record.setJson(objectMapper.writeValueAsBytes(stream.getIdentifiedStream()));
