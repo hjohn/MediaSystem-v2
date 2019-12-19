@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.util;
 
 import hs.database.core.DatabaseException;
 import hs.mediasystem.mediamanager.StreamMetaDataProvider;

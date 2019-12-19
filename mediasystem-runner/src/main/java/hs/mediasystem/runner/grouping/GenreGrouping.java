@@ -68,7 +68,7 @@ public class GenreGrouping implements Grouping<Production> {
         .limit(4)
         .collect(Collectors.joining(","));
 
-      Details details = new Details(entry.getKey(), RM.getText(entry.getKey().toLowerCase(), "description"), null, uris.isEmpty() ? null : new ImageURI("multi:" + uris), backgroundURIRef.get());
+      Details details = new Details(entry.getKey(), RM.getText(entry.getKey().toLowerCase(), "description"), null, uris.isEmpty() ? null : new ImageURI("multi::" + uris), backgroundURIRef.get());
 
       @SuppressWarnings("unchecked")
       List<MediaItem<? extends MediaDescriptor>> children = (List<MediaItem<? extends MediaDescriptor>>)(List<?>)entry.getValue();

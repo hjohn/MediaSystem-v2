@@ -1,4 +1,4 @@
-package hs.mediasystem.runner.grouping;
+package hs.mediasystem.runner.util;
 
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
@@ -8,7 +8,6 @@ import hs.mediasystem.util.javafx.ImageCache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -29,6 +28,11 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
+/**
+ * Supports URL's of format:
+ *
+ *    multi:[optional parameters]:uri1,uri2
+ */
 @Singleton
 public class MultiImageURIHandler implements ImageURIHandler {
   private static final Pattern SPLIT_PATTERN = Pattern.compile(",");
@@ -38,10 +42,46 @@ public class MultiImageURIHandler implements ImageURIHandler {
   @Override
   public ImageHandle handle(ImageURI uri) {
     if(uri.getUri().startsWith("multi:")) {
-      return new MultiImageHandle(uri, 600, 900);
+      ImageHandleFactory factory = factoryProvider.get();
+      List<ImageHandle> handles = SPLIT_PATTERN.splitAsStream(uri.getUri().substring(uri.getUri().indexOf(":", 6) + 1))
+        .map(ImageURI::new).map(factory::fromURI).collect(Collectors.toList());
+
+      if(uri.getUri().startsWith("multi:landscape:")) {
+        return new MultiImageHandle(uri, handles, 900, 450, c -> {
+          return List.of(
+            new Rectangle2D(0, 0, 300, 450),
+            new Rectangle2D(300, 0, 300, 450),
+            new Rectangle2D(600, 0, 300, 450)
+          );
+        });
+      }
+
+      return new MultiImageHandle(uri, handles, 600, 900, c -> {
+        int width = 600;
+        int height = 900;
+
+        if(c <= 3) {
+          return List.of(
+            new Rectangle2D(0, 0, width, height),
+            new Rectangle2D(width / 10 * 6, height / 10, width / 10 * 3, height / 10 * 3),
+            new Rectangle2D(width / 10 * 6, height / 10 * 6, width / 10 * 3, height / 10 * 3)
+          );
+        }
+
+        return List.of(
+          new Rectangle2D(0, 0, width / 2, height / 2),
+          new Rectangle2D(width / 2, 0, width / 2, height / 2),
+          new Rectangle2D(0, height / 2, width / 2, height / 2),
+          new Rectangle2D(width / 2, height / 2, width / 2, height / 2)
+        );
+      });
    }
 
     return null;
+  }
+
+  interface Positioner {
+    List<Rectangle2D> positionsFor(int imageCount);
   }
 
   class MultiImageHandle implements ImageHandle {
@@ -49,43 +89,24 @@ public class MultiImageURIHandler implements ImageURIHandler {
     private final List<ImageHandle> handles;
     private final int width;
     private final int height;
+    private final Positioner positioner;
 
-    public MultiImageHandle(ImageURI uri, int width, int height) {
-      ImageHandleFactory factory = factoryProvider.get();
-
+    public MultiImageHandle(ImageURI uri, List<ImageHandle> handles, int width, int height, Positioner positioner) {
       this.uri = uri;
-      this.handles = SPLIT_PATTERN.splitAsStream(uri.getUri().substring(6)).map(ImageURI::new).map(factory::fromURI).collect(Collectors.toList());
+      this.handles = handles;
       this.width = width;
       this.height = height;
+      this.positioner = positioner;
     }
 
     @Override
     public byte[] getImageData() {
       Canvas c = new Canvas(width, height);
       Scene scene = new Scene(new StackPane(c));
-
-      // 1 -> 1
-      // 2 -> 1 big, 2 small top right
-      // 3 -> 1 big, 2 small top right, 3 small bottom right
-      // 4 -> spread equally
-      // 5+ unsupported
-
-      List<Rectangle2D> locations = new ArrayList<>();
-
-      if(handles.size() <= 3) {
-        locations.add(new Rectangle2D(0, 0, width, height));
-        locations.add(new Rectangle2D(width / 10 * 6, height / 10, width / 10 * 3, height / 10 * 3));
-        locations.add(new Rectangle2D(width / 10 * 6, height / 10 * 6, width / 10 * 3, height / 10 * 3));
-      }
-      else {
-        locations.add(new Rectangle2D(0, 0, width / 2, height / 2));
-        locations.add(new Rectangle2D(width / 2, 0, width / 2, height / 2));
-        locations.add(new Rectangle2D(0, height / 2, width / 2, height / 2));
-        locations.add(new Rectangle2D(width / 2, height / 2, width / 2, height / 2));
-      }
+      List<Rectangle2D> locations = positioner.positionsFor(handles.size());
 
       for(int i = 0; i < handles.size(); i++) {
-        if(i >= 4) {
+        if(i >= locations.size()) {
           break;
         }
 
