@@ -69,7 +69,8 @@
   @control-border: darken(@theme-primary, 50%, relative);
   @control-bg: fade(darken(@theme-primary, 75%, relative), 40%);
   
-  .button {
+  .button,
+  .toggle-button {
     -fx-background-color: @control-bg;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
@@ -132,6 +133,7 @@
   .check-box.focused > .box, 
   .combo-box-base.focused, 
   .button.focused,
+  .toggle-button.focused,
   .list-view.focused:external-focus,  /* without mouse focus */
   .list-view:focused:external-focus   /* with mouse focus */
   {
