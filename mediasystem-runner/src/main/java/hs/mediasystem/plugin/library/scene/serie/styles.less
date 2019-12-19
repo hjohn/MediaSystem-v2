@@ -27,7 +27,7 @@
       .heading-drop-shadow;
     }
     
-    .indicator-pane {
+    .status-indicator {
       -fx-padding: 20 0 0 0;
     }
   }
@@ -146,7 +146,7 @@
           -fx-padding: 40;
         }
   
-        .indicator-pane {
+        .status-indicator {
           -fx-padding: 20;
         }
       }
@@ -218,66 +218,7 @@
   {
     -fx-padding: 15 0 0 0;
   }
-  
-  .indicator-pane-background,
-  .indicator-checkmark,
-  .indicator-cross,
-  .indicator-percentage,
-  .indicator-arc
-  {      
-    -fx-min-width: 50;
-    -fx-min-height: 50;
-  }
-  
-  .indicator-pane-background
-  {
-    -fx-background-color: rgba(0, 0, 0, 0.6);
-    -fx-scale-x: 1.1;
-    -fx-scale-y: 1.1;
-    -fx-shape: @shape-disc;
-  }
-  
-  .indicator-checkmark
-  {
-    -fx-background-color: rgba(125, 255, 125, 0.5);
-    -fx-shape: @shape-checkmark;
-  }
-  
-  .indicator-cross
-  {
-    -fx-background-color: rgba(255, 125, 125, 0.5);
-    -fx-shape: @shape-cross;
-  }
-  
-  .indicator-percentage
-  {
-    -fx-text-fill: rgba(125, 255, 125, 0.8);
-    -fx-alignment: center;
-    .bold;
-    -fx-font-size: 16;
-  }
-  
-  .indicator-arc-shape,
-  .indicator-circle-shape
-  {
-    -fx-fill: transparent;
-    -fx-stroke: rgba(125, 255, 125, 0.5);
-    -fx-stroke-line-cap: butt; 
-  }
-  
-  .indicator-arc-shape-missing
-  {
-    -fx-fill: transparent;
-    -fx-stroke: rgba(255, 125, 125, 0.5);
-    -fx-stroke-line-cap: butt; 
-    -fx-stroke-width: 5;
-  }
-  
-  .indicator-arc-shape
-  {
-    -fx-stroke-width: 5;
-  }
-  
+    
   .navigation-area {
     -fx-spacing: 10;
     -fx-alignment: center;

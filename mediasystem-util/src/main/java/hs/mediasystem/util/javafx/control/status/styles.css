@@ -1,0 +1,56 @@
+
+.status-indicator .size
+{      
+  -fx-min-width: 50;
+  -fx-min-height: 50;
+}
+
+.status-indicator .background
+{
+  -fx-background-color: rgba(0, 0, 0, 0.6);
+  -fx-scale-x: 1.1;
+  -fx-scale-y: 1.1;
+  -fx-shape: "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8z";
+}
+
+.status-indicator .full,
+.status-indicator .partial
+{
+  -fx-background-color: rgba(125, 255, 125, 0.5);
+  -fx-shape: "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S392 8 256 8zm0 48c110 0 200 89 200 200 0 110-89 200-200 200-110 0-200-89-200-200 0-110 89-200 200-200m140 130l-22-22c-4-4-12-4-16 0L215 303l-59-60c-4-4-12-4-16 0l-22 22c-4 4-4 12 0 16l90 91c4 4 12 4 16 0l172-171c4-4 4-12 0-16z";
+}
+
+.status-indicator .empty
+{
+  -fx-background-color: rgba(255, 125, 125, 0.5);
+  -fx-shape: "M256 8C119 8 8 119 8 256s111 248 248 248 248-111 248-248S393 8 256 8zm0 448c-110.5 0-200-89.5-200-200S145.5 56 256 56s200 89.5 200 200-89.5 200-200 200zm101.8-262.2L295.6 256l62.2 62.2c4.7 4.7 4.7 12.3 0 17l-22.6 22.6c-4.7 4.7-12.3 4.7-17 0L256 295.6l-62.2 62.2c-4.7 4.7-12.3 4.7-17 0l-22.6-22.6c-4.7-4.7-4.7-12.3 0-17l62.2-62.2-62.2-62.2c-4.7-4.7-4.7-12.3 0-17l22.6-22.6c4.7-4.7 12.3-4.7 17 0l62.2 62.2 62.2-62.2c4.7-4.7 12.3-4.7 17 0l22.6 22.6c4.7 4.7 4.7 12.3 0 17z";
+}
+
+.status-indicator .percentage
+{
+  -fx-text-fill: rgba(125, 255, 125, 0.8);
+  -fx-alignment: center;
+  -fx-font-size: 16;
+  -fx-font-weight: bold;
+}
+
+.status-indicator .arc-shape,
+.status-indicator .circle-shape
+{
+  -fx-fill: transparent;
+  -fx-stroke: rgba(125, 255, 125, 0.5);
+  -fx-stroke-line-cap: butt; 
+}
+
+.status-indicator .arc-shape-missing
+{
+  -fx-fill: transparent;
+  -fx-stroke: rgba(255, 125, 125, 0.5);
+  -fx-stroke-line-cap: butt; 
+  -fx-stroke-width: 5;
+}
+
+.status-indicator .arc-shape
+{
+  -fx-stroke-width: 5;
+}

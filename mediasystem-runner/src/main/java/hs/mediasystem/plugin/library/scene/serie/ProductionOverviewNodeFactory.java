@@ -35,6 +35,7 @@ import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.StarRating;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
+import hs.mediasystem.util.javafx.control.status.StatusIndicator;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -379,15 +380,15 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       return hbox;
     }
 
-    private StackPane createMediaStatusIndicatorPane(Val<Double> percentage, Val<Double> missingFraction) {
-      MediaStatusIndicatorPane indicatorPane = new MediaStatusIndicatorPane();
+    private StatusIndicator createMediaStatusIndicatorPane(Val<Double> percentage, Val<Double> missingFraction) {
+      StatusIndicator indicator = new StatusIndicator();
 
-      indicatorPane.setAlignment(Pos.BOTTOM_RIGHT);
-      indicatorPane.getStyleClass().add("indicator-pane");
-      indicatorPane.value.bind(percentage.conditionOnShowing(this));
-      indicatorPane.missingFraction.bind(missingFraction.conditionOnShowing(this));
+      indicator.setAlignment(Pos.BOTTOM_RIGHT);
+      indicator.getStyleClass().add("indicator-pane");
+      indicator.value.bind(percentage.conditionOnShowing(this));
+      indicator.missingFraction.bind(missingFraction.conditionOnShowing(this));
 
-      return indicatorPane;
+      return indicator;
     }
 
     private void updateButtons(HBox hbox) {
