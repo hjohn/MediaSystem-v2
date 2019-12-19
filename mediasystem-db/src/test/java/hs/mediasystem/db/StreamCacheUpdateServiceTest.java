@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +62,7 @@ public class StreamCacheUpdateServiceTest {
   public void shouldAddMedia() throws InterruptedException {
     BasicStream stream1 = basicStream(1234, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
 
-    when(streamStore.findStream(new StreamID(1234))).thenReturn(stream1);
+    when(streamStore.findStream(new StreamID(1234))).thenReturn(Optional.of(stream1));
     when(identificationService.identify(stream1, allowedDataSources)).thenReturn(new MediaIdentification(stream1, Set.of(Exceptional.of(Tuple.of(
       new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION, null
     )))));
@@ -90,7 +91,7 @@ public class StreamCacheUpdateServiceTest {
       new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION, movie
     )))));
 
-    when(streamStore.findStream(new StreamID(21))).thenReturn(stream1);
+    when(streamStore.findStream(new StreamID(21))).thenReturn(Optional.of(stream1));
 
     updater.update(1, List.of(Exceptional.of(List.of(
       stream1
@@ -119,7 +120,7 @@ public class StreamCacheUpdateServiceTest {
       new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION, movie
     )))));
 
-    when(streamStore.findStream(new StreamID(20))).thenReturn(stream1);  // Return renamed stream with same stream id (as content was same)
+    when(streamStore.findStream(new StreamID(20))).thenReturn(Optional.of(stream1));  // Return renamed stream with same stream id (as content was same)
 
     updater.update(1, List.of(Exceptional.of(List.of(
       stream1
@@ -144,7 +145,7 @@ public class StreamCacheUpdateServiceTest {
     when(identificationService.identify(stream1, allowedDataSources)).thenReturn(new MediaIdentification(stream1, Set.of(Exceptional.of(Tuple.of(
       new Identifier(MOVIE_DATASOURCE, "10000"), IDENTIFICATION, null
     )))));
-    when(streamStore.findStream(new StreamID(123))).thenReturn(stream1);
+    when(streamStore.findStream(new StreamID(123))).thenReturn(Optional.of(stream1));
 
     updater.update(1, List.of(Exceptional.of(List.of(
       stream1

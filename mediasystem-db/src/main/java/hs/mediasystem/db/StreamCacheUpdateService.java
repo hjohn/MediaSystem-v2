@@ -100,21 +100,17 @@ public class StreamCacheUpdateService {
     EXECUTOR.execute(() -> {
       try {
         try(Key key = storeConsistencyLock.lock()) {
-          BasicStream stream = streamStore.findStream(streamId);
+          streamStore.findStream(streamId).ifPresent(stream -> {
+            StreamSource source = streamStore.findStreamSource(streamId);
 
-          if(stream == null) {
-            return;
-          }
+            key.earlyUnlock();
 
-          StreamSource source = streamStore.findStreamSource(streamId);
+            MediaIdentification mediaIdentification = identificationService.identify(stream, source.getDataSourceNames());
 
-          key.earlyUnlock();
-
-          MediaIdentification mediaIdentification = identificationService.identify(stream, source.getDataSourceNames());
-
-          fetchAndStoreCollectionDescriptors(mediaIdentification);
-          updateCacheWithIdentification(mediaIdentification, incremental, false);
-          logEnrichmentResult(mediaIdentification, incremental);
+            fetchAndStoreCollectionDescriptors(mediaIdentification);
+            updateCacheWithIdentification(mediaIdentification, incremental, false);
+            logEnrichmentResult(mediaIdentification, incremental);
+          });
         }
       }
       finally {
@@ -246,7 +242,7 @@ public class StreamCacheUpdateService {
 
   public MediaIdentification reidentifyStream(StreamID streamId) {
     try(Key key = storeConsistencyLock.lock()) {
-      BasicStream stream = streamStore.findStream(streamId);
+      BasicStream stream = streamStore.findStream(streamId).orElse(null);
 
       if(stream == null) {
         return null;

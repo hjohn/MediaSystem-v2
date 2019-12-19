@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -34,7 +35,12 @@ public class DatabaseStreamStore implements BasicStreamStore {
   private static final Logger LOGGER = Logger.getLogger(DatabaseStreamStore.class.getName());
   private static final Set<StreamID> EMPTY_SET = Collections.emptySet();
 
+  // Data managed by this store
   private final Map<StreamID, CachedStream> cache = new HashMap<>();
+
+  // Indices on the data
+  private final Map<StreamID, BasicStream> streamIndex = new HashMap<>();  // Contains all BasicStreams, including children
+  private final Map<StreamID, StreamID> parentIndex = new HashMap<>();     // Maps child StreamID to parent StreamID
   private final Map<Identifier, Set<StreamID>> identifierIndex = new HashMap<>();
 
   @Inject private ImportSourceProvider importSourceProvider;
@@ -99,8 +105,13 @@ public class DatabaseStreamStore implements BasicStreamStore {
   }
 
   @Override
-  public synchronized BasicStream findStream(StreamID streamId) {
-    return cache.get(streamId).getIdentifiedStream().getStream();
+  public synchronized Optional<BasicStream> findStream(StreamID streamId) {
+    return Optional.ofNullable(streamIndex.get(streamId));
+  }
+
+  @Override
+  public synchronized Optional<StreamID> findParentId(StreamID streamId) {
+    return Optional.ofNullable(parentIndex.get(streamId));
   }
 
   @Override
@@ -160,7 +171,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
       .collect(Collectors.toSet());
   }
 
-  void markEnriched(StreamID streamId) {
+  synchronized void markEnriched(StreamID streamId) {
     CachedStream cs = cache.get(streamId);
 
     if(cs == null) {
@@ -241,19 +252,45 @@ public class DatabaseStreamStore implements BasicStreamStore {
     CachedStream cs = cache.remove(streamId);
 
     if(cs != null) {
-      cs.getIdentifiedStream().getIdentifications().keySet().forEach(
+      IdentifiedStream is = cs.getIdentifiedStream();
+
+      // Remove stream from identifier index
+      is.getIdentifications().keySet().forEach(
         identifier -> identifierIndex.computeIfPresent(identifier, (k, v) -> v.remove(streamId) && v.isEmpty() ? null : v)
       );
+
+      // Remove stream from stream id index
+      streamIndex.remove(is.getStream().getId());
+
+      // Remove child streams from stream id index
+      is.getStream().getChildren().forEach(c -> {
+        // Remove child stream from stream id index
+        streamIndex.remove(c.getId());
+
+        // Remove child stream id from parent stream id index
+        parentIndex.remove(c.getId());
+      });
     }
   }
 
   private void putInCache(CachedStream cs) {
-    StreamID streamId = cs.getIdentifiedStream().getStream().getId();
+    IdentifiedStream is = cs.getIdentifiedStream();
+    StreamID streamId = is.getStream().getId();
 
     cache.put(streamId, cs);
 
-    cs.getIdentifiedStream().getIdentifications().keySet().forEach(
-      identifier -> identifierIndex.computeIfAbsent(identifier, k -> new HashSet<>()).add(streamId)
-    );
+    // Add stream to identifier index
+    is.getIdentifications().keySet().forEach(i -> identifierIndex.computeIfAbsent(i, k -> new HashSet<>()).add(streamId));
+
+    // Add stream to stream id index
+    streamIndex.put(is.getStream().getId(), is.getStream());
+
+    is.getStream().getChildren().forEach(c -> {
+      // Add child stream to stream id index
+      streamIndex.put(c.getId(), c);
+
+      // Add child stream id to parent stream id index
+      parentIndex.put(c.getId(), streamId);
+    });
   }
 }

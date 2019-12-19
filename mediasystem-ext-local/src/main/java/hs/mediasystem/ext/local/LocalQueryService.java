@@ -67,7 +67,7 @@ public class LocalQueryService extends AbstractQueryService {
   @Override
   public Serie query(Identifier identifier) {
     StreamID streamId = new StreamID(Integer.parseInt(identifier.getId()));
-    BasicStream stream = streamStore.findStream(streamId);
+    BasicStream stream = streamStore.findStream(streamId).orElseThrow();
     Map<Integer, List<Episode>> episodes = new HashMap<>();
 
     for(BasicStream childStream : stream.getChildren()) {
