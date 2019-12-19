@@ -19,7 +19,6 @@ import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
 import hs.mediasystem.plugin.library.scene.view.ProductionCollectionFactory;
 import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.presentation.TransitionPane;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
@@ -36,6 +35,7 @@ import hs.mediasystem.util.javafx.control.StarRating;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
 import hs.mediasystem.util.javafx.control.status.StatusIndicator;
+import hs.mediasystem.util.javafx.control.transitionpane.TransitionPane;
 
 import java.time.Duration;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.library.scene.view;
+package hs.mediasystem.util.javafx.control.transitionpane;
 
 import javafx.animation.Interpolator;
 import javafx.animation.Transition;

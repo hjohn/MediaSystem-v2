@@ -1,5 +1,7 @@
 package hs.mediasystem.presentation;
 
+import hs.mediasystem.util.javafx.control.transitionpane.TransitionPane;
+
 import java.util.function.Consumer;
 
 import javafx.beans.value.ChangeListener;

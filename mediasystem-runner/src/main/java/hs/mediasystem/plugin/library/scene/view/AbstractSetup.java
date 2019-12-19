@@ -14,6 +14,8 @@ import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
+import hs.mediasystem.util.javafx.control.transitionpane.SlideInTransition;
+import hs.mediasystem.util.javafx.control.transitionpane.SlideOutTransition;
 
 import java.util.Objects;
 

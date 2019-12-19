@@ -1,7 +1,4 @@
-package hs.mediasystem.presentation;
-
-import hs.mediasystem.plugin.library.scene.view.SlideInTransition;
-import hs.mediasystem.plugin.library.scene.view.SlideOutTransition;
+package hs.mediasystem.util.javafx.control.transitionpane;
 
 import java.util.stream.IntStream;
 
@@ -23,6 +20,19 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
+/**
+ * A pane which enables smooth transitions between its child nodes.<p>
+ *
+ * Although this pane can temporarily contain multiple children, after
+ * all transitions have completed only the focused child will remain.
+ * The newest child also immediately attains the focus, so even if a
+ * transition takes some time to complete, all events will go to the
+ * new child.<p>
+ *
+ * It is ideally suited for smoothly replacing content when a navigation
+ * action is triggered.  The transition itself is only cosmetic and
+ * will not interfere with input.
+ */
 public class TransitionPane extends StackPane {  // Maybe use Region, its getChildren method is protected.
   private static final String PREFIX = "TransitionPane-";
   private static final String INDEX_KEY = PREFIX + "index";
