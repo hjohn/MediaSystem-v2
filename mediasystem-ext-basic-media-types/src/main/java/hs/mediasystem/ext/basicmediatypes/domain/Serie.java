@@ -4,8 +4,10 @@ import hs.mediasystem.ext.basicmediatypes.Identifier;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class Serie extends Production {
@@ -64,5 +66,14 @@ public class Serie extends Production {
 
   public Season findSeason(int seasonNumber) {
     return seasons == null ? null : seasons.stream().filter(s -> s.getNumber() == seasonNumber).findFirst().orElse(null);
+  }
+
+  public Optional<Episode> findEpisode(int seasonNumber, int episodeNumber) {
+    return seasons == null ? null : seasons.stream().filter(s -> s.getNumber() == seasonNumber).map(Season::getEpisodes).flatMap(Collection::stream).filter(e -> e.getNumber() == episodeNumber).findFirst();
+  }
+
+  public Optional<Episode> findNextEpisode(Episode episode) {
+    return findEpisode(episode.getSeasonNumber(), episode.getNumber() + 1)
+      .or(() -> findEpisode(episode.getSeasonNumber() + 1, 1));
   }
 }
