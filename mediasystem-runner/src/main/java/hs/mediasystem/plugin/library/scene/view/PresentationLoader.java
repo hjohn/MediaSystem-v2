@@ -11,13 +11,13 @@ import javafx.event.Event;
 
 public class PresentationLoader {
 
-  public static <T extends Presentation> void navigate(Event event, Supplier<T> supplier) {
+  public static <T extends Presentation> void navigate(Event event, Supplier<T> presentationSupplier) {
     Dialogs.showProgressDialog(event, new Task<T>() {
       @Override
       protected T call() throws Exception {
         updateTitle("Loading...");
 
-        return supplier.get();
+        return presentationSupplier.get();
       }
     }).ifPresent(p -> Event.fireEvent(event.getTarget(), NavigateEvent.to(p)));
 
