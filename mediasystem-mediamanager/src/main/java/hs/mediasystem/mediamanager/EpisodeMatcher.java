@@ -20,10 +20,11 @@ import javax.inject.Singleton;
 @Singleton
 public class EpisodeMatcher {
 
+  // This may match multiple episodes if the stream is using an episode range, for example: 2x01-03
   @SuppressWarnings("static-method")
-  public List<Episode> attemptMatch(Serie serie, Attributes attributes) {
-    String sequence = attributes.get(Attribute.SEQUENCE);
-    String typeString = attributes.get(Attribute.CHILD_TYPE);
+  public List<Episode> attemptMatch(Serie serie, Attributes childAttributes) {
+    String sequence = childAttributes.get(Attribute.SEQUENCE);
+    String typeString = childAttributes.get(Attribute.CHILD_TYPE);
     ChildType type = typeString == null ? null : ChildType.valueOf(typeString);
 
     if(sequence != null && type == ChildType.EPISODE) {
@@ -35,14 +36,14 @@ public class EpisodeMatcher {
     }
 
     if(type == null || type == ChildType.SPECIAL) {
-      Tuple2<Double, Episode> match = attemptSpecialsMatch(serie, attributes.get(Attribute.TITLE), attributes.get(Attribute.SUBTITLE), sequence);
+      Tuple2<Double, Episode> match = attemptSpecialsMatch(serie, childAttributes.get(Attribute.TITLE), childAttributes.get(Attribute.SUBTITLE), sequence);
 
       if(match != null) {
         return Collections.singletonList(match.b);
       }
     }
 
-    return null;
+    return Collections.emptyList();
   }
 
   private static List<Episode> attemptMatch(Serie serie, String sequence) {

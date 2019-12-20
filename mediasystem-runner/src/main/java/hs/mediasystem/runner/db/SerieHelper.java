@@ -86,7 +86,7 @@ public class SerieHelper {
               if(!"EXTRA".equals(attributes.get(Attribute.CHILD_TYPE))) {
                 List<Episode> result = episodeMatcher.attemptMatch(serie, attributes);
 
-                if(result != null) {
+                if(!result.isEmpty()) {
                   result.forEach(e -> episodeIdentifierToStreams.computeIfAbsent(e.getIdentifier(), k2 -> new HashSet<>()).add(childStream));
                   continue;
                 }
