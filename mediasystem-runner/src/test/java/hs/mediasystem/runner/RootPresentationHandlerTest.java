@@ -6,27 +6,24 @@ import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.PostConstructCaller;
-import hs.mediasystem.util.javafx.JavaFXThreadingRule;
 
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 public class RootPresentationHandlerTest {
-
-  @Rule public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();
-
   @Mock private Theme theme;
   @Mock private SceneManager sceneManager;
   @Mock private Placer<ParentPresentation, TopPresentation> placer;
@@ -44,7 +41,12 @@ public class RootPresentationHandlerTest {
   private MiddlePresentation middlePresentation = new MiddlePresentation();
   private BottomPresentation bottomPresentation = new BottomPresentation();
 
-  @Before
+  @BeforeAll
+  public void beforeAll() {
+    Platform.startup(() -> {});
+  }
+
+  @BeforeEach
   public void before() {
     MockitoAnnotations.initMocks(this);
 

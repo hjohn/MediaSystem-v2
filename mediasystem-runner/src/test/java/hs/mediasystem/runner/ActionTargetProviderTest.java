@@ -12,20 +12,20 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.reactfx.value.Var;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ActionTargetProviderTest {
 
   private ActionTargetProvider provider = new ActionTargetProvider();
 
-  @Before
+  @BeforeEach
   public void before() {
     Expose.longProperty(TestRoot::volume)
       .of(TestRoot.class)
@@ -56,7 +56,7 @@ public class ActionTargetProviderTest {
       .as("position");
   }
 
-  @After
+  @AfterEach
   public void after() {
     ExposedControl.clear();
   }

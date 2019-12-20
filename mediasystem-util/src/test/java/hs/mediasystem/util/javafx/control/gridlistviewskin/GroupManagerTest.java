@@ -1,8 +1,8 @@
 package hs.mediasystem.util.javafx.control.gridlistviewskin;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class GroupManagerTest {
   private final GroupManager manager3 = new GroupManager(new int[] {0, 7, 9, 13, 14}, 3);
@@ -13,7 +13,7 @@ public class GroupManagerTest {
     GroupManager gm = new GroupManager(new int[] {0}, 3);
 
     for(int i = 0; i < 100; i++) {
-      assertEquals("testing " + i, 0, gm.groupNumber(i));
+      assertEquals(0, gm.groupNumber(i), "testing " + i);
     }
   }
 
@@ -39,7 +39,7 @@ public class GroupManagerTest {
     };
 
     for(int i = 0; i < expectedValues.length; i++) {
-      assertEquals("input: " + i, expectedValues[i], manager4.toViewIndex(i));
+      assertEquals(expectedValues[i], manager4.toViewIndex(i), "input: " + i);
       assertEquals(i, manager4.toModelIndex(manager4.toViewIndex(i)));
     }
 
@@ -55,7 +55,7 @@ public class GroupManagerTest {
     };
 
     for(int i = 0; i < expectedValues.length; i++) {
-      assertEquals("input: " + i, expectedValues[i], manager3.toViewIndex(i));
+      assertEquals(expectedValues[i], manager3.toViewIndex(i), "input: " + i);
       assertEquals(i, manager3.toModelIndex(manager3.toViewIndex(i)));
     }
   }
@@ -73,7 +73,7 @@ public class GroupManagerTest {
 
     for(int i = 0; i < expectedValues.length; i++) {
 //      System.out.println("Converting " + i);
-      assertEquals("input: " + i, expectedValues[i], manager4.toModelIndex(i));
+      assertEquals(expectedValues[i], manager4.toModelIndex(i), "input: " + i);
     }
   }
 
@@ -89,7 +89,7 @@ public class GroupManagerTest {
     };
 
     for(int i = 0; i < expectedValues.length; i++) {
-      assertEquals("input: " + i, expectedValues[i], manager4.toModelIndexSmart(i));
+      assertEquals(expectedValues[i], manager4.toModelIndexSmart(i), "input: " + i);
     }
   }
 
@@ -105,7 +105,7 @@ public class GroupManagerTest {
     };
 
     for(int i = 0; i < expectedValues.length; i++) {
-      assertEquals("input: " + i, expectedValues[i], manager4.isValidViewIndex(i));
+      assertEquals(expectedValues[i], manager4.isValidViewIndex(i), "input: " + i);
     }
 
     expectedValues = new boolean[] {
@@ -120,7 +120,7 @@ public class GroupManagerTest {
    };
 
    for(int i = 0; i < expectedValues.length; i++) {
-     assertEquals("input: " + i, expectedValues[i], manager3.isValidViewIndex(i));
+     assertEquals(expectedValues[i], manager3.isValidViewIndex(i), "input: " + i);
    }
   }
 
@@ -132,7 +132,7 @@ public class GroupManagerTest {
                              4, 4, 4, 4, 4};
 
     for(int i = 0; i < rows1.length; i++) {
-      assertEquals("input 1 row: " + i, rows1[i], manager4.countViewItems(i, 1));
+      assertEquals(rows1[i], manager4.countViewItems(i, 1), "input 1 row: " + i);
     }
 
     int[] rows3 = new int[] {9, 8, 7, 10, 9,
@@ -141,7 +141,7 @@ public class GroupManagerTest {
                              12, 12, 12};
 
     for(int i = 0; i < rows3.length; i++) {
-      assertEquals("input 3 rows: " + i, rows3[i], manager4.countViewItems(i, 3));
+      assertEquals(rows3[i], manager4.countViewItems(i, 3), "input 3 rows: " + i);
     }
   }
 
@@ -168,7 +168,7 @@ public class GroupManagerTest {
     int[] rows = new int[] {3, 6, 9, 15, 16, 23, 27, 31};
 
     for(int i = 0; i < rows.length; i++) {
-      assertEquals("input: " + i, rows[i], manager4.viewIndexOfLastItemInViewRow(i));
+      assertEquals(rows[i], manager4.viewIndexOfLastItemInViewRow(i), "input: " + i);
     }
   }
 }

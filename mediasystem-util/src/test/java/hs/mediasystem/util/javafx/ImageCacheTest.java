@@ -2,10 +2,10 @@ package hs.mediasystem.util.javafx;
 
 import java.util.Random;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("static-method")
 public class ImageCacheTest {
@@ -34,11 +34,11 @@ public class ImageCacheTest {
       int[] result = ImageCache.computeImageSize(sw, sh, tw, th);
       String msg = String.format("src: %dx%d, target: %dx%d, result: %dx%d", sw, sh, tw, th, result[0], result[1]);
 
-      assertTrue(msg, result[0] <= tw);
-      assertTrue(msg, result[1] <= th);
-      assertTrue(msg, result[0] > 0);
-      assertTrue(msg, result[1] > 0);
-      assertTrue(msg, result[0] == tw || result[1] == th);
+      assertTrue(result[0] <= tw, msg);
+      assertTrue(result[1] <= th, msg);
+      assertTrue(result[0] > 0, msg);
+      assertTrue(result[1] > 0, msg);
+      assertTrue(result[0] == tw || result[1] == th, msg);
     }
   }
 }

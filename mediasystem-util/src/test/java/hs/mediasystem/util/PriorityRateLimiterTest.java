@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PriorityRateLimiterTest {
 
@@ -26,7 +26,7 @@ public class PriorityRateLimiterTest {
     for(int i = 0; i < 10; i++) {
       long diff = (timestamps.get(i + 1) - timestamps.get(i)) / 1000L / 1000L;
 
-      assertTrue("Expected a time close to 100 ms, but got: " + diff + " ms", Math.abs(diff - 100) < 10);
+      assertTrue(Math.abs(diff - 100) < 10, "Expected a time close to 100 ms, but got: " + diff + " ms");
     }
   }
 
@@ -47,13 +47,13 @@ public class PriorityRateLimiterTest {
     for(int i = 0; i < 5; i++) {
       long diff = (timestamps.get(i + 1) - timestamps.get(i)) / 1000L / 1000L;
 
-      assertTrue("Expected a time close to 0 ms, but got: " + diff + " ms", Math.abs(diff) < 10);
+      assertTrue(Math.abs(diff) < 10, "Expected a time close to 0 ms, but got: " + diff + " ms");
     }
 
     for(int i = 5; i < 20; i++) {
       long diff = (timestamps.get(i + 1) - timestamps.get(i)) / 1000L / 1000L;
 
-      assertTrue("Expected a time close to 100 ms, but got: " + diff + " ms", Math.abs(diff - 100) < 10);
+      assertTrue(Math.abs(diff - 100) < 10, "Expected a time close to 100 ms, but got: " + diff + " ms");
     }
   }
 

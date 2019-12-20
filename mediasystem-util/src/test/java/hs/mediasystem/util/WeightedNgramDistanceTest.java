@@ -3,29 +3,15 @@ package hs.mediasystem.util;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(Parameterized.class)
 public class WeightedNgramDistanceTest {
   private enum MatchType {PERFECT, EXCELLENT, GOOD, AVERAGE, POOR}
 
-  private final MatchType matchType;
-  private final String text;
-  private final String matchText;
-
-  public WeightedNgramDistanceTest(@SuppressWarnings("exports") MatchType matchType, String text, String matchText) {
-    this.matchType = matchType;
-    this.text = text;
-    this.matchText = matchText;
-  }
-
-  @Parameters
   public static Collection<Object[]> data() {
     return Arrays.asList(new Object[][]
       {
@@ -57,26 +43,27 @@ public class WeightedNgramDistanceTest {
     );
   }
 
-  @Test
-  public void shouldMatchWellEnough() {
+  @ParameterizedTest
+  @MethodSource("data")
+  public void shouldMatchWellEnough(MatchType matchType, String text, String matchText) {
     double compare = WeightedNgramDistance.calculate(text, matchText);
     String failureText = "\"" + text + "\" vs \"" + matchText + "\"; expected=" + matchType + ", but was: " + compare;
 
     switch(matchType) {
     case PERFECT:
-      assertEquals(failureText, 1.0, compare, 0.00001);
+      assertEquals(1.0, compare, 0.00001, failureText);
       break;
     case EXCELLENT:
-      assertTrue(failureText, compare >= 0.85);
+      assertTrue(compare >= 0.85, failureText);
       break;
     case GOOD:
-      assertTrue(failureText, compare >= 0.66);
+      assertTrue(compare >= 0.66, failureText);
       break;
     case AVERAGE:
-      assertTrue(failureText, compare >= 0.4);
+      assertTrue(compare >= 0.4, failureText);
       break;
     case POOR:
-      assertTrue(failureText, compare < 0.4);
+      assertTrue(compare < 0.4, failureText);
       break;
     }
   }
