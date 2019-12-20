@@ -26,13 +26,17 @@ public class StreamStateProvider {
   }
 
   @SuppressWarnings("unchecked")
-  public <T> T getOrDefault(StreamID streamId, String key, T defaultValue) {
-    StreamState streamState = getStreamState(streamId);
+  public synchronized <T> T getOrDefault(StreamID streamId, String key, T defaultValue) {
+    if(!streamStates.containsKey(streamId)) {  // Prevents modifying map if key didn't exist
+      return defaultValue;
+    }
+
+    StreamState streamState = getStreamState(streamId);  // Modifies map if key didn't exist
 
     return (T)streamState.getProperties().getOrDefault(key, defaultValue);
   }
 
-  public void put(StreamID streamId, String key, Object value) {
+  public synchronized void put(StreamID streamId, String key, Object value) {
     StreamState streamState = getStreamState(streamId);
 
     streamState.getProperties().put(key, value);
