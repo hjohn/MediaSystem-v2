@@ -9,7 +9,7 @@ import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.StringURI;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.logging.Logger;
 
 import javafx.beans.property.BooleanProperty;
@@ -101,11 +101,6 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             LOGGER.config("Marking as viewed: " + mediaItem.get());
 
             streamStateService.setWatched(streamId, true);
-            streamStateService.setLastWatchedTime(streamId, LocalDateTime.now());
-
-            if(parentMediaItem.get() != null) {
-              streamStateService.setLastWatchedTime(parentMediaItem.get().getStream().getId(), LocalDateTime.now());
-            }
           }
 
           if(timeViewedSinceLastSkip > 30 * 1000) {
@@ -119,8 +114,15 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             int storedResumePosition = streamStateService.getResumePosition(streamId);
 
             if(Math.abs(storedResumePosition - resumePosition) > 10) {
+              Instant now = Instant.now();
+
               streamStateService.setResumePosition(streamId, resumePosition);
               streamStateService.setTotalDuration(streamId, (int)(length / 1000));
+              streamStateService.setLastWatchedTime(streamId, now);
+
+              if(parentMediaItem.get() != null) {
+                streamStateService.setLastWatchedTime(parentMediaItem.get().getStream().getId(), now);
+              }
             }
           }
         }

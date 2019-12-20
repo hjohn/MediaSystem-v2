@@ -3,7 +3,7 @@ package hs.mediasystem.db;
 import hs.database.util.WeakValueMap;
 import hs.mediasystem.scanner.api.StreamID;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 
 import javafx.beans.property.BooleanProperty;
@@ -50,20 +50,20 @@ public class StreamStateService {
    * @param streamId a {@link StreamID}
    * @return a time, or null if not available
    */
-  public LocalDateTime getLastWatchedTime(StreamID streamId) {
+  public Instant getLastWatchedTime(StreamID streamId) {
     String text = streamStateProvider.getOrDefault(streamId, LAST_WATCHED_TIME_KEY, null);
 
-    return text == null ? null : LocalDateTime.parse(text);
+    return text == null ? null : Instant.parse(text.endsWith("Z") ? text : text + "Z");
   }
 
-  public void setLastWatchedTime(StreamID streamId, LocalDateTime lastWatchedTime) {
+  public void setLastWatchedTime(StreamID streamId, Instant lastWatchedTime) {
     lastWatchedTimeProperty(streamId).set(lastWatchedTime);
   }
 
   @SuppressWarnings("unchecked")
-  public ObjectProperty<LocalDateTime> lastWatchedTimeProperty(StreamID streamId) {
-    return (ObjectProperty<LocalDateTime>)properties.computeIfAbsent(streamId.asInt() + "/" + LAST_WATCHED_TIME_KEY, k -> {
-      ObjectProperty<LocalDateTime> property = new SimpleObjectProperty<>(getLastWatchedTime(streamId));
+  public ObjectProperty<Instant> lastWatchedTimeProperty(StreamID streamId) {
+    return (ObjectProperty<Instant>)properties.computeIfAbsent(streamId.asInt() + "/" + LAST_WATCHED_TIME_KEY, k -> {
+      ObjectProperty<Instant> property = new SimpleObjectProperty<>(getLastWatchedTime(streamId));
 
       property.addListener((ov, old, current) -> streamStateProvider.put(streamId, LAST_WATCHED_TIME_KEY, current.toString()));
 

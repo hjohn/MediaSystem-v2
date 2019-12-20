@@ -19,8 +19,8 @@ import hs.mediasystem.scanner.api.StreamPrintProvider;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.NaturalLanguage;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -109,7 +109,7 @@ public class MediaItem<T extends MediaDescriptor> {
   public final ObjectProperty<Optional<LocalDate>> date = new SimpleObjectProperty<>();
   public final ObjectProperty<List<String>> genres = new SimpleObjectProperty<>();
   public final ObjectBinding<MediaStatus> mediaStatus;
-  public final ObjectProperty<LocalDateTime> lastWatchedTime = new SimpleObjectProperty<>();
+  public final ObjectProperty<Instant> lastWatchedTime = new SimpleObjectProperty<>();
 
   private final T wrappedObject;
   private final List<BasicStream> streams;
@@ -118,7 +118,7 @@ public class MediaItem<T extends MediaDescriptor> {
   private final MediaItem<?> parent;  // This always is the logical parent (ie, Serie for an Episode)
   private final List<MediaItem<? extends MediaDescriptor>> children;  // Children belonging to this item for grouping (not logical children!)
 
-  private MediaItem(T wrappedObject, MediaItem<?> parent, List<BasicStream> streams, BooleanProperty watchedProperty, LocalDateTime lastWatchedTime, String collectionTitle, List<MediaItem<? extends MediaDescriptor>> children) {
+  private MediaItem(T wrappedObject, MediaItem<?> parent, List<BasicStream> streams, BooleanProperty watchedProperty, Instant lastWatchedTime, String collectionTitle, List<MediaItem<? extends MediaDescriptor>> children) {
     if(wrappedObject == null) {
       throw new IllegalArgumentException("wrappedObject cannot be null");
     }
