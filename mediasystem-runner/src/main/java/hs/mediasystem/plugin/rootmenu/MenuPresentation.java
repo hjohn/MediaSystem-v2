@@ -71,9 +71,10 @@ public class MenuPresentation implements Presentation {
   }
 
   @Singleton
-  public static class Factory {
+  public static class Factory implements hs.mediasystem.runner.StartupPresentationProvider.Plugin {
     @Inject private List<Plugin> plugins;
 
+    @Override
     public MenuPresentation create() {
       return new MenuPresentation(plugins.stream().map(Plugin::getMenu).collect(Collectors.toList()));
     }
