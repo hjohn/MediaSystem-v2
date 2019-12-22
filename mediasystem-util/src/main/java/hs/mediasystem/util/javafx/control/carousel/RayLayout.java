@@ -12,7 +12,14 @@ public class RayLayout extends Layout {
    * The radius of the carousel circle expressed as a fraction of half the view's width.
    * This controls how wide the carousel appears in view size independent fashion.<p>
    *
-   * Defaults to 1.0 which should cover the whole view horizontally.
+   * Note that a 3D representation of the carousel can appear less wide (or wider)
+   * than the property indicates; this is because cells placed further away from the viewer
+   * will appear smaller.  Only if all cells are placed near the viewer (which can be
+   * achieved by setting {@link #viewDistanceRatioProperty()} to a high value) will the cells
+   * appear to use the fraction of the view as expressed by this property.<p>
+   *
+   * Defaults to 1.0 which would cover the whole view horizontally if the view distance ratio
+   * is high.
    *
    * @return the radius ratio property
    */
@@ -25,6 +32,13 @@ public class RayLayout extends Layout {
    * of the carousel's radius.  Higher values will result in less perspective.  Note
    * that this value is independent of how large the carousel appears, it only changes
    * the perspective.<p>
+   *
+   * Setting this very high or low (<-100 or >100) will make the carousel appear like a
+   * ribbon without any perspective.  Setting this near 1.0 will put the camera near the
+   * edge of the carousel, resulting in badly distorted cells.  Setting this below 1.0
+   * will result in the cells being viewed from the opposite side and their perspective
+   * will therefore be inverted (a carousel would curve towards the viewer, instead of
+   * away).
    *
    * Defaults to 2.0.
    *

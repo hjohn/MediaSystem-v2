@@ -63,7 +63,7 @@ public abstract class AbstractHorizontalCellIterator extends AbstractCellIterato
   }
 
   @Override
-  protected Rectangle2D adjustCellRectangle(Rectangle2D cellRectangle) {
+  protected Rectangle2D adjustCellRectangleForReflection(Rectangle2D cellRectangle) {
     double reflectionMaxHeight = layout.getReflectionMaxHeight();
 
     double height = cellRectangle.getHeight();
@@ -91,7 +91,7 @@ public abstract class AbstractHorizontalCellIterator extends AbstractCellIterato
   private static final double REFLECTION_OPACITY = 0.5;
 
   @Override
-  protected Tuple2<Shape, Reflection> adjustTransform(PerspectiveTransform perspectiveTransform) {
+  protected Tuple2<Shape, Reflection> adjustTransformForReflection(PerspectiveTransform perspectiveTransform) {
     double reflectionMaxHeight = layout.getReflectionMaxHeight();
 
     double cellHeight = getNormalizedCellSize().getHeight();

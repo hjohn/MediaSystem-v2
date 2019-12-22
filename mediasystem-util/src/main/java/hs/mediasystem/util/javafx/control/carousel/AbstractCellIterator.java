@@ -41,8 +41,8 @@ public abstract class AbstractCellIterator implements CellIterator {
 
   protected abstract PerspectiveTransform createPerspectiveTransform(Rectangle2D cellRectangle, double offset);
   protected abstract Rectangle2D calculateCellBounds();
-  protected abstract Rectangle2D adjustCellRectangle(Rectangle2D cellRectangle);
-  protected abstract Tuple2<Shape, Reflection> adjustTransform(PerspectiveTransform perspectiveTransform);
+  protected abstract Rectangle2D adjustCellRectangleForReflection(Rectangle2D cellRectangle);
+  protected abstract Tuple2<Shape, Reflection> adjustTransformForReflection(PerspectiveTransform perspectiveTransform);
   protected abstract boolean hasNext();
 
   @Override
@@ -73,7 +73,7 @@ public abstract class AbstractCellIterator implements CellIterator {
        * Do additional adjustments for the reflection.
        */
 
-      cellRectangle = adjustCellRectangle(cellRectangle);
+      cellRectangle = adjustCellRectangleForReflection(cellRectangle);
     }
 
     /*
@@ -90,7 +90,7 @@ public abstract class AbstractCellIterator implements CellIterator {
     Shape currentClip = null;
 
     if(layout.getReflectionEnabled() && orientation == Orientation.HORIZONTAL) {
-      Tuple2<Shape, Reflection> tuple = adjustTransform(perspectiveTransform);
+      Tuple2<Shape, Reflection> tuple = adjustTransformForReflection(perspectiveTransform);
 
       currentClip = tuple.a;
       reflection = tuple.b;
