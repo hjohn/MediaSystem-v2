@@ -172,6 +172,29 @@ public class MultiImageURIHandler implements ImageURIHandler {
     }
 
     @Override
+    public int hashCode() {
+      return Objects.hash(uri);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if(this == obj) {
+        return true;
+      }
+      if(obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+
+      MultiImageHandle other = (MultiImageHandle)obj;
+
+      if(!uri.equals(other.uri)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    @Override
     public String getKey() {
       return uri.toString();
     }
