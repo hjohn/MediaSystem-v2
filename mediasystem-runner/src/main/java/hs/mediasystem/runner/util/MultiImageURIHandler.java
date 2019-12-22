@@ -8,9 +8,12 @@ import hs.mediasystem.util.javafx.ImageCache;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -36,6 +39,9 @@ import javax.inject.Singleton;
 @Singleton
 public class MultiImageURIHandler implements ImageURIHandler {
   private static final Pattern SPLIT_PATTERN = Pattern.compile(",");
+  private static final Pattern SEMI_COLON_PATTERN = Pattern.compile(";");
+  private static final Pattern MAIN_PATTERN = Pattern.compile(":");
+  private static final Pattern POSITIONAL_PATTERN = Pattern.compile("([0-9]+,[0-9]+)(;[0-9]+,[0-9]+,[0-9]+,[0-9]+)+");
 
   @Inject private Provider<ImageHandleFactory> factoryProvider;
 
@@ -43,10 +49,11 @@ public class MultiImageURIHandler implements ImageURIHandler {
   public ImageHandle handle(ImageURI uri) {
     if(uri.getUri().startsWith("multi:")) {
       ImageHandleFactory factory = factoryProvider.get();
-      List<ImageHandle> handles = SPLIT_PATTERN.splitAsStream(uri.getUri().substring(uri.getUri().indexOf(":", 6) + 1))
+      String[] parts = MAIN_PATTERN.split(uri.getUri(), 3);
+      List<ImageHandle> handles = SPLIT_PATTERN.splitAsStream(parts[2])
         .map(ImageURI::new).map(factory::fromURI).collect(Collectors.toList());
 
-      if(uri.getUri().startsWith("multi:landscape:")) {
+      if(parts[1].equals("landscape")) {
         return new MultiImageHandle(uri, handles, 900, 450, c -> {
           return List.of(
             new Rectangle2D(0, 0, 300, 450),
@@ -54,6 +61,27 @@ public class MultiImageURIHandler implements ImageURIHandler {
             new Rectangle2D(600, 0, 300, 450)
           );
         });
+      }
+
+      Matcher matcher = POSITIONAL_PATTERN.matcher(parts[1]);
+
+      if(matcher.matches()) {
+        String[] positions = SEMI_COLON_PATTERN.split(parts[1]);
+        String[] sizes = SPLIT_PATTERN.split(positions[0]);
+        List<Rectangle2D> rectangles = new ArrayList<>();
+
+        for(int i = 1; i < positions.length; i++) {
+          String[] numbers = SPLIT_PATTERN.split(positions[i]);
+
+          rectangles.add(new Rectangle2D(
+            Integer.parseInt(numbers[0]),
+            Integer.parseInt(numbers[1]),
+            Integer.parseInt(numbers[2]),
+            Integer.parseInt(numbers[3])
+          ));
+        }
+
+        return new MultiImageHandle(uri, handles, Integer.parseInt(sizes[0]), Integer.parseInt(sizes[1]), c -> rectangles);
       }
 
       return new MultiImageHandle(uri, handles, 600, 900, c -> {
