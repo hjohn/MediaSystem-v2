@@ -45,7 +45,7 @@ public class StreamMetaData {
     return streamId;
   }
 
-  public Duration getDuration() {
+  public Duration getLength() {
     return duration;
   }
 

@@ -106,10 +106,10 @@ public class ShowInfoEventHandler {
       StreamMetaData metaData = metaDataProvider.find(stream.getId());
 
       if(metaData != null) {
-        if(metaData.getDuration() != Duration.ZERO) {
+        if(metaData.getLength() != Duration.ZERO) {
           gridPane.addRow(
             Labels.create("Duration", "title"),
-            Labels.create(SizeFormatter.DURATION.format(metaData.getDuration().toSeconds()), "value"),
+            Labels.create(SizeFormatter.DURATION.format(metaData.getLength().toSeconds()), "value"),
             GridPane.FILL,
             GridPane.FILL
           );

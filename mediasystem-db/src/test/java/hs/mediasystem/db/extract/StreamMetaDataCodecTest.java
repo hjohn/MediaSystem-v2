@@ -51,7 +51,7 @@ class StreamMetaDataCodecTest {
     StreamMetaData metaData = codec.decode(data);
 
     assertEquals(new StreamID(120), metaData.getStreamId());
-    assertEquals(Duration.ofSeconds(999), metaData.getDuration());
+    assertEquals(Duration.ofSeconds(999), metaData.getLength());
     assertEquals("title", metaData.getVideoStreams().get(0).getTitle());
     assertEquals("mp3", metaData.getAudioStreams().get(0).getCodec());
     assertEquals(new ImageURI("localdb://12345/1"), metaData.getSnapshots().get(0).getImageUri());
