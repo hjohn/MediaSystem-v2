@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -45,6 +47,10 @@ public class StreamStateProvider {
     StreamState copy = new StreamState(streamState.getStreamID(), new HashMap<>(streamState.getProperties()));
 
     EXECUTOR.execute(() -> store.store(copy));
+  }
+
+  public synchronized <R> R map(Function<Stream<StreamState>, R> converter) {
+    return converter.apply(streamStates.values().stream());
   }
 
   private StreamState getStreamState(StreamID streamId) {
