@@ -378,7 +378,7 @@ public class BiasedImageView extends Region {
   private double computePrefWidthInternalNew(double height) {
     calculateImageSize();
 
-    if(height <= -1) {
+    if(height < 0) {
       if(imageWidth != 0 && imageHeight != 0) {
         return imageWidth;
       }
@@ -404,7 +404,7 @@ public class BiasedImageView extends Region {
   private double computePrefHeightInternalNew(double width) {
     calculateImageSize();
 
-    if(width <= -1) {
+    if(width < 0) {
       if(imageWidth != 0 && imageHeight != 0) {
         return imageHeight;
       }
@@ -420,7 +420,7 @@ public class BiasedImageView extends Region {
 
   @Override
   protected double computeMaxWidth(double height) {
-    if(height != -1 && height != Double.MAX_VALUE && getContentBias() == Orientation.VERTICAL) {
+    if(height >= 0 && height != Double.MAX_VALUE && getContentBias() == Orientation.VERTICAL) {
       return calcWidthGivenHeight(height);
     }
 
@@ -429,7 +429,7 @@ public class BiasedImageView extends Region {
 
   @Override
   protected double computeMaxHeight(double width) {
-    if(width != -1 && width != Double.MAX_VALUE && getContentBias() == Orientation.HORIZONTAL) {
+    if(width >= 0 && width != Double.MAX_VALUE && getContentBias() == Orientation.HORIZONTAL) {
       return calcHeightGivenWidth(width);
     }
 
