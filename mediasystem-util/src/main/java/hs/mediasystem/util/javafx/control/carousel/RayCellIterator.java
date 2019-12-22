@@ -71,28 +71,41 @@ public class RayCellIterator extends AbstractHorizontalCellIterator {
      * Return the PerspectiveTransform
      */
 
-    double cx = (projectedPoints[0].getX() + projectedPoints[1].getX() + projectedPoints[2].getX() + projectedPoints[3].getX()) / 4;
-    double cy = (projectedPoints[0].getY() + projectedPoints[1].getY() + projectedPoints[2].getY() + projectedPoints[3].getY()) / 4;
+    // About commented code: this seems to center the Transform, but also distorts it (makes it almost twice as small),
+    // messes up cell alignment and doesn't handle reflection correctly (at the point where the reflection would no
+    // longer be visible, the cell position jumps when playing with cell alignment values).
+    //
+    // No idea why this was here.
+
+//    double cx = (projectedPoints[0].getX() + projectedPoints[1].getX() + projectedPoints[2].getX() + projectedPoints[3].getX()) / 4;
+//    double cy = (projectedPoints[0].getY() + projectedPoints[1].getY() + projectedPoints[2].getY() + projectedPoints[3].getY()) / 4;
+//
+//    return new PerspectiveTransform(
+//      (projectedPoints[0].getX() - cx) + projectedPoints[0].getX(), (projectedPoints[0].getY() - cy) + projectedPoints[0].getY(),
+//      (projectedPoints[1].getX() - cx) + projectedPoints[1].getX(), (projectedPoints[1].getY() - cy) + projectedPoints[1].getY(),
+//      (projectedPoints[2].getX() - cx) + projectedPoints[2].getX(), (projectedPoints[2].getY() - cy) + projectedPoints[2].getY(),
+//      (projectedPoints[3].getX() - cx) + projectedPoints[3].getX(), (projectedPoints[3].getY() - cy) + projectedPoints[3].getY()
+//    );
 
     return new PerspectiveTransform(
-      (projectedPoints[0].getX() - cx) * zoom + projectedPoints[0].getX(), (projectedPoints[0].getY() - cy) * zoom + projectedPoints[0].getY(),
-      (projectedPoints[1].getX() - cx) * zoom + projectedPoints[1].getX(), (projectedPoints[1].getY() - cy) * zoom + projectedPoints[1].getY(),
-      (projectedPoints[2].getX() - cx) * zoom + projectedPoints[2].getX(), (projectedPoints[2].getY() - cy) * zoom + projectedPoints[2].getY(),
-      (projectedPoints[3].getX() - cx) * zoom + projectedPoints[3].getX(), (projectedPoints[3].getY() - cy) * zoom + projectedPoints[3].getY()
+      projectedPoints[0].getX(), projectedPoints[0].getY(),
+      projectedPoints[1].getX(), projectedPoints[1].getY(),
+      projectedPoints[2].getX(), projectedPoints[2].getY(),
+      projectedPoints[3].getX(), projectedPoints[3].getY()
     );
   }
 
   protected Point2D[] project(Point3D[] points) {
-    double carouselRadius = getCarouselRadius();
-    double viewDistance = layout.getViewDistanceRatio() * carouselRadius;
-    double fov = viewDistance - carouselRadius;
+    double carouselDiameter = getCarouselDiameter();
+    double viewDistance = layout.getViewDistanceRatio() * carouselDiameter;
+    double fov = viewDistance - carouselDiameter;
     double horizonY = layout.getMaxCellHeight() * layout.getViewAlignment() - 0.5 * layout.getMaxCellHeight();
 
     Point2D[] projectedPoints = new Point2D[points.length];
-    double centerShift = -getCarouselRadius() * (0.5 - layout.getCenterPosition()) / layout.getRadiusRatio();
+    double centerShift = -carouselDiameter * (0.5 - layout.getCenterPosition()) / layout.getRadiusRatio();
 
     for(int i = 0; i < points.length; i++) {
-      projectedPoints[i] = project(points[i], viewDistance, fov, horizonY, centerShift);
+      projectedPoints[i] = project(points[i], viewDistance, fov * zoom, horizonY, centerShift);
     }
 
     return projectedPoints;
@@ -108,21 +121,20 @@ public class RayCellIterator extends AbstractHorizontalCellIterator {
     double cos = Math.cos(angleOnCarousel);
     double sin = -Math.sin(angleOnCarousel);
 
-    double centerShift = 0;//-getCarouselRadius() * (layout.getCenterPosition() - 0.5) / layout.getRadiusRatio();
-    double l = getCarouselRadius() * zoom - cellRectangle.getMinX();
+    double l = getCarouselDiameter() - cellRectangle.getMinX();
     double r = l - cellRectangle.getWidth();
 
-    double lx = l * cos + centerShift;
-    double rx = r * cos + centerShift;
+    double lx = l * cos;
+    double rx = r * cos;
     double ty = cellRectangle.getMinY();
-    double by = ty + cellRectangle.getHeight();
+    double by = cellRectangle.getMaxY();
     double lz = l * sin;
     double rz = r * sin;
 
     return new Point3D[] {new Point3D(lx, ty, lz), new Point3D(rx, ty, rz), new Point3D(rx, by, rz), new Point3D(lx, by, lz)};
   }
 
-  protected double getCarouselRadius() {
+  protected double getCarouselDiameter() {
     return size.getWidth() * layout.getRadiusRatio();
   }
 

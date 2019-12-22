@@ -91,8 +91,8 @@ public class RayLayout extends Layout {
   public static void fadeOutEdgeCells(RayCellIterator iterator, CarouselListCell<?> cell, double fadeOutCellCount, double index) {
     double fadeOutDistance = iterator.getCellCount() / 2 - fadeOutCellCount + 0.5;
 
-    if(index > fadeOutDistance) {
-      cell.setOpacity(1.0 - (index - fadeOutDistance) / fadeOutCellCount);
+    if(Math.abs(index) > fadeOutDistance) {
+      cell.setOpacity(1.0 - (Math.abs(index) - fadeOutDistance) / fadeOutCellCount);
     }
     else {
       cell.setOpacity(1.0);
