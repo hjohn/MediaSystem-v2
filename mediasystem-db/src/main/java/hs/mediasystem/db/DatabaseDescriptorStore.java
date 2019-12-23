@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -57,9 +58,9 @@ public class DatabaseDescriptorStore implements DescriptorStore {
   }
 
   @Override
-  public synchronized MediaDescriptor get(Identifier identifier) {
+  public synchronized Optional<MediaDescriptor> find(Identifier identifier) {
     CachedDescriptor cd = cache.get(identifier);
 
-    return cd == null ? null : cd.getDescriptor();
+    return cd == null ? Optional.empty() : Optional.of(cd.getDescriptor());
   }
 }

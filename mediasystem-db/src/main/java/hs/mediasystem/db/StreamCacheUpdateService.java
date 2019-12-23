@@ -184,7 +184,7 @@ public class StreamCacheUpdateService {
                   continue;
                 }
 
-                MediaDescriptor mediaDescriptor = descriptorStore.get(identifier);
+                MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
 
                 if(mediaDescriptor == null) {
                   // One or more descriptors are missing, enrich:
@@ -198,7 +198,7 @@ public class StreamCacheUpdateService {
                   Identifier collectionIdentifier = production.getCollectionIdentifier().orElse(null);
 
                   if(collectionIdentifier != null) {
-                    IdentifierCollection identifierCollection = (IdentifierCollection)descriptorStore.get(collectionIdentifier);
+                    IdentifierCollection identifierCollection = (IdentifierCollection)descriptorStore.find(collectionIdentifier).orElse(null);
 
                     if(identifierCollection == null) {
                       LOGGER.warning("Existing stream is missing collection data in cache (" + collectionIdentifier + ") -> refetching: " + scannedStream);
@@ -208,7 +208,7 @@ public class StreamCacheUpdateService {
                     }
 
                     for(Identifier collectionItemIdentifier : identifierCollection.getItems()) {
-                      if(descriptorStore.get(collectionItemIdentifier) == null) {
+                      if(descriptorStore.find(collectionItemIdentifier).orElse(null) == null) {
                         LOGGER.warning("Existing stream is missing collection items in cache (" + collectionItemIdentifier + " is missing, out of " + identifierCollection.getItems() + " from " + collectionIdentifier + ") -> refetching: " + scannedStream);
 
                         asyncEnrichMediaStream(scannedStream.getId(), true);
@@ -266,7 +266,7 @@ public class StreamCacheUpdateService {
     Map<Identifier, Identification> identifications = streamStore.findIdentifications(streamId);
 
     return identifications.entrySet().stream()
-      .collect(Collectors.toMap(Map.Entry::getKey, e -> Tuple.of(e.getValue(), descriptorStore.get(e.getKey()))));
+      .collect(Collectors.toMap(Map.Entry::getKey, e -> Tuple.of(e.getValue(), descriptorStore.find(e.getKey()).orElse(null))));
   }
 
   private Set<Tuple3<Identifier, Identification, MediaDescriptor>> createMergedRecords(BasicStream stream, Set<Tuple3<Identifier, Identification, MediaDescriptor>> records) {

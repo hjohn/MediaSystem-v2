@@ -92,7 +92,7 @@ public class MediaService {
     int bestIndex = Integer.MAX_VALUE;
 
     for(Identifier identifier : set) {
-      MediaDescriptor descriptor = descriptorStore.get(identifier);
+      MediaDescriptor descriptor = descriptorStore.find(identifier).orElse(null);
 
       if(descriptor != null) {
         int index = dataSourceNames.indexOf(identifier.getDataSource().getName());

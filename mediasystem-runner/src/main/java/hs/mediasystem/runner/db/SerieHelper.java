@@ -72,7 +72,7 @@ public class SerieHelper {
     synchronized(streamsByChildIdentifierByRootIdentifier) {
       return streamsByChildIdentifierByRootIdentifier.computeIfAbsent(rootIdentifier, k -> {
         Map<Identifier, Set<BasicStream>> episodeIdentifierToStreams = new LinkedHashMap<>();
-        Serie serie = (Serie)descriptorStore.get(rootIdentifier);
+        Serie serie = (Serie)descriptorStore.find(rootIdentifier).orElse(null);
 
         if(serie != null) {
           for(BasicStream parentStream : streamStore.findStreams(rootIdentifier)) {

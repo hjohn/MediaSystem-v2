@@ -21,7 +21,6 @@ import hs.mediasystem.mediamanager.DescriptorStore;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -72,7 +71,7 @@ public class VideoDatabase {
   }
 
   public ProductionCollection queryProductionCollection(Identifier identifier) {
-    MediaDescriptor mediaDescriptor = descriptorStore.get(identifier);
+    MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
 
     if(mediaDescriptor instanceof IdentifierCollection) {  // If cached, get it from cache instead
       IdentifierCollection identifierCollection = (IdentifierCollection)mediaDescriptor;
@@ -80,8 +79,7 @@ public class VideoDatabase {
       return new ProductionCollection(
         identifierCollection.getCollectionDetails(),
         identifierCollection.getItems().stream()
-          .map(descriptorStore::get)
-          .filter(Objects::nonNull)
+          .map(descriptorStore::find)
           .filter(Production.class::isInstance)
           .map(Production.class::cast)
           .collect(Collectors.toList())
