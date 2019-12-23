@@ -58,8 +58,8 @@ public class SerieHelper {
     EXECUTOR_SERVICE.scheduleWithFixedDelay(() -> clearCaches(), 2, 5, TimeUnit.MINUTES);
   }
 
-  public Set<BasicStream> findChildStreams(Identifier rootIdentifier, Identifier identifier) {
-    return getChildIdentifierToStreamMap(rootIdentifier).getOrDefault(identifier, EMPTY_SET);
+  public Set<BasicStream> findChildStreams(Identifier rootIdentifier, Identifier childIdentifier) {
+    return getChildIdentifierToStreamMap(rootIdentifier).getOrDefault(childIdentifier, EMPTY_SET);
   }
 
   private void clearCaches() {
@@ -156,7 +156,7 @@ public class SerieHelper {
     );
   }
 
-  public static LocalEpisodeIdentifier createLocalId(Serie serie, BasicStream stream) {
+  private static LocalEpisodeIdentifier createLocalId(Serie serie, BasicStream stream) {
     return new LocalEpisodeIdentifier(LOCAL_RELEASE, serie.getIdentifier().getId() + "/" + stream.getId().asInt(), serie.getIdentifier());
   }
 

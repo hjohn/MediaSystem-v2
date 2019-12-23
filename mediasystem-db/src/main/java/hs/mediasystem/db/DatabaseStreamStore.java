@@ -134,7 +134,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     CachedStream cachedStream = cache.get(streamId);
 
     if(cachedStream == null) {
-      return null;
+      return Collections.emptyMap();
     }
 
     return cachedStream.getIdentifiedStream().getIdentifications();
