@@ -67,6 +67,7 @@ public class BiasedImageView extends Region {
   private Orientation orientation = Orientation.HORIZONTAL;
   private double maxRatio = Double.MAX_VALUE;
   private double minRatio = 0;
+  private double expectedAspectRatio;  // Used when there is no place holder and no image yet for layout size calculations
 
   public void setOrientation(Orientation orientation) {
     this.orientation = orientation;
@@ -80,8 +81,9 @@ public class BiasedImageView extends Region {
     this.maxRatio = maxRatio;
   }
 
-  public BiasedImageView(Node placeHolder) {
+  public BiasedImageView(Node placeHolder, double expectedAspectRatio) {
     this.placeHolder = placeHolder;
+    this.expectedAspectRatio = expectedAspectRatio;
 
     /*
      * Ratios are preserved by this Region instead of having ImageView do it, because ImageView will sometimes size a pixel smaller than expected depending on whether
@@ -116,6 +118,10 @@ public class BiasedImageView extends Region {
 
     getChildren().add(imageView);
     getChildren().add(overlayRegion);
+  }
+
+  public BiasedImageView(Node placeHolder) {
+    this(placeHolder, 16.0 / 9);
   }
 
   public BiasedImageView() {
@@ -334,8 +340,7 @@ public class BiasedImageView extends Region {
       return placeHolder.prefWidth(height);
     }
 
-    // Pfft.. there's nothing, return bullshit:
-    return 30;
+    return height * expectedAspectRatio;
   }
 
   private double calcHeightGivenWidth(double width) {
@@ -357,8 +362,7 @@ public class BiasedImageView extends Region {
       return placeHolder.prefHeight(width);
     }
 
-    // Pfft.. there's nothing, return bullshit:
-    return 30;
+    return width / expectedAspectRatio;
   }
 
   @Override
