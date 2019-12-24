@@ -8,7 +8,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.ext.basicmediatypes.domain.Release;
+import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
@@ -87,11 +87,9 @@ public class ContextLayout {
   public BasePanel create(Serie serie, int seasonNumber) {
     BasePanel panel = create(serie.getDetails());
 
-    Release release = serie.findSeason(seasonNumber);
-
     panel.season.set(seasonNumber == 0 ? "Specials" : "" + seasonNumber);
 
-    setReception(panel.rating, release.getReception());
+    setReception(panel.rating, serie.findSeason(seasonNumber).map(Season::getReception).orElse(null));
 
     return panel;
   }

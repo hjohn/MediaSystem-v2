@@ -64,8 +64,8 @@ public class Serie extends Production {
     return seasons;
   }
 
-  public Season findSeason(int seasonNumber) {
-    return seasons == null ? null : seasons.stream().filter(s -> s.getNumber() == seasonNumber).findFirst().orElse(null);
+  public Optional<Season> findSeason(int seasonNumber) {
+    return seasons == null ? Optional.empty() : seasons.stream().filter(s -> s.getNumber() == seasonNumber).findFirst();
   }
 
   public Optional<Episode> findEpisode(int seasonNumber, int episodeNumber) {
