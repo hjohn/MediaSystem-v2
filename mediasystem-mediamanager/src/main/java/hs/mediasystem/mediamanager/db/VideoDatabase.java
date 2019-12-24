@@ -21,6 +21,7 @@ import hs.mediasystem.mediamanager.DescriptorStore;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -80,6 +81,7 @@ public class VideoDatabase {
         identifierCollection.getCollectionDetails(),
         identifierCollection.getItems().stream()
           .map(descriptorStore::find)
+          .flatMap(Optional::stream)
           .filter(Production.class::isInstance)
           .map(Production.class::cast)
           .collect(Collectors.toList())
