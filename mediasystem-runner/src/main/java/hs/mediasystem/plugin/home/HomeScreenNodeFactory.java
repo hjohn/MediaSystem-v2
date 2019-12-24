@@ -130,7 +130,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     menuListView.getSelectionModel().select(0);
 
-    Label menuBackgroundLabel = Labels.create("⮞", "menu-background");
+    Label menuBackgroundLabel = Labels.create(">", "menu-background");
     StackPane.setAlignment(menuBackgroundLabel, Pos.CENTER_LEFT);
 
     grid.at(0, 0).spanning(2, 8).add(Containers.stack("main-menu-container", menuBackgroundLabel, menuListView));
