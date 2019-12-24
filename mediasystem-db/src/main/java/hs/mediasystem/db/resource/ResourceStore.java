@@ -31,8 +31,7 @@ public class ResourceStore {
   @Inject private DatabaseStreamMetaDataStore metaDataStore;
 
   public synchronized Optional<Resource> find(StreamID streamId) {
-    return streamStore.findStream(streamId)
-      .map(this::toResource);
+    return streamStore.findStream(streamId).map(this::toResource);
   }
 
   public synchronized List<Resource> findLastWatched(int maximum, Instant after) {
@@ -46,6 +45,14 @@ public class ResourceStore {
       .limit(maximum)
       .collect(Collectors.toList())
     );
+  }
+
+  public synchronized List<Resource> findNewest(int maximum) {
+    return streamStore.findNewest(maximum).stream()
+      .map(BasicStream::getId)
+      .map(this::find)
+      .flatMap(Optional::stream)
+      .collect(Collectors.toList());
   }
 
   private Resource toResource(BasicStream bs) {
@@ -65,7 +72,7 @@ public class ResourceStore {
     return new Resource(
       streamId,
       parentId,
-      new StreamAttributes(bs.getType(), bs.getUri(), bs.getAttributes()),
+      new StreamAttributes(bs.getType(), bs.getUri(), streamStore.findCreationTime(streamId).orElseThrow(), bs.getAttributes()),
       new State(lastWatchedTime, watched, resumePosition),
       md
     );

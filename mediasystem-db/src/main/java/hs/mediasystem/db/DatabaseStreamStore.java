@@ -150,6 +150,10 @@ public class DatabaseStreamStore implements BasicStreamStore {
       .collect(Collectors.toList());
   }
 
+  public synchronized Optional<Instant> findCreationTime(StreamID streamId) {
+    return Optional.ofNullable(cache.get(findParentId(streamId).orElse(streamId))).map(CachedStream::getCreationTime);
+  }
+
   synchronized Set<StreamID> findUnenrichedStreams() {
     return cache.values().stream()
       .filter(cs -> cs.getLastEnrichTime() == null)
