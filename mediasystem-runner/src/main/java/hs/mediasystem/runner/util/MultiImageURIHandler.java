@@ -140,7 +140,7 @@ public class MultiImageURIHandler implements ImageURIHandler {
 
         ImageHandle handle = handles.get(i);
         Rectangle2D location = locations.get(i);
-        Image image = ImageCache.loadImageUptoMaxSize(handle, 640, 480);
+        Image image = ImageCache.loadImageUptoMaxSize(handle, (int)location.getWidth(), (int)location.getHeight());
 
         c.getGraphicsContext2D().drawImage(image, location.getMinX(), location.getMinY(), location.getWidth(), location.getHeight());
       }
