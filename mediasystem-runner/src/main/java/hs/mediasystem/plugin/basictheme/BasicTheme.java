@@ -4,6 +4,8 @@ import hs.ddif.core.Injector;
 import hs.ddif.core.NoSuchBeanException;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Value;
+import hs.mediasystem.plugin.home.HomePresentation;
+import hs.mediasystem.plugin.home.HomeScreenNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.serie.ProductionOverviewNodeFactory;
@@ -64,6 +66,9 @@ public class BasicTheme implements Theme {
     if(cls == MenuPresentation.class) {
       return RootPresentation.class;
     }
+    if(cls == HomePresentation.class) {
+      return RootPresentation.class;
+    }
     if(cls == PlaybackOverlayPresentation.class) {
       return RootPresentation.class;
     }
@@ -81,6 +86,9 @@ public class BasicTheme implements Theme {
     }
     if(cls == MenuPresentation.class) {
       return (Class<T>)RootMenuScenePlugin.class;
+    }
+    if(cls == HomePresentation.class) {
+      return (Class<T>)HomeScreenNodeFactory.class;
     }
     if(cls == PersonParticipationsPresentation.class) {
       return (Class<T>)PersonParticipationsSetup.class;

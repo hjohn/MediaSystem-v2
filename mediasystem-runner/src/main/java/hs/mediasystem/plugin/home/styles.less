@@ -1,0 +1,96 @@
+@import "../../runner/properties.less";
+
+.menu-view {
+  -fx-alignment: bottom-center;
+}
+
+.backdrop-container {
+  .clip {
+    -fx-background-color: 
+      radial-gradient(center 200% 50%,  radius 200%, transparent, transparent 96%, rgba(0, 0, 0, 0.1) 97%, rgba(0, 0, 0, 0.3) 98%, rgba(0, 0, 0, 0.6) 99%, black)
+    ;
+  }
+}
+
+.option-container {
+  .list-cell {
+    -fx-padding: 0 0 0 0;
+    -fx-content-display: graphic-only;
+  }
+
+  -fx-background-color: linear-gradient(to bottom, transparent 0%, transparent 75%, rgba(40, 40, 40) 75%, black);
+  
+  .image-view, .image-view-overlay {
+    -fx-border-color: black;
+    -fx-border-width: 3px;
+  }
+ 
+  .scaled-image-view {
+    -fx-background-color: black;
+  }
+  
+  .overlay {
+    -fx-background-color: @glass-color;
+    -fx-fill-height: true;
+    -fx-spacing: 10px;
+    
+    .status-indicator {
+      -fx-padding: 5;
+
+      .circle-shape {
+        -fx-stroke-width: 3;
+        -fx-stroke: rgba(125, 255, 125, 0.2);
+      }
+      
+      .arc-shape {
+        -fx-stroke-width: 5;
+      }
+
+      .empty {
+        -fx-background-color: rgba(125, 255, 125, 0.5);
+        -fx-shape: @shape-play;
+      }
+      
+      .partial {
+        -fx-shape: @shape-resume; 
+      }
+      
+      .full {
+        -fx-shape: @shape-checkmark;
+      }
+    }
+    
+    .title-box {
+      -fx-alignment: CENTER_LEFT;
+      
+      .label {
+        -fx-wrap-text: true;
+        .heading-drop-shadow;
+      }
+      
+      .title {
+        -fx-font-size: 22;
+        -fx-text-fill: @text-primary-highlight;
+      }
+      
+      .subtitle {
+        -fx-font-size: 16;
+        -fx-text-fill: @text-accent;
+      }
+    }
+  }
+}
+
+.main-menu-container {
+  .menu-background {
+    -fx-font-size: 32;
+    -fx-text-fill: fade(@text-accent, 0.4);
+    .black;
+  }
+  
+  .list-cell {     
+    -fx-text-fill: @text-primary-highlight;
+    -fx-font-size: 30;
+    .black;
+  }
+}
