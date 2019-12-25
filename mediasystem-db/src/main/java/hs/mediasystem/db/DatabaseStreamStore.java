@@ -116,6 +116,12 @@ public class DatabaseStreamStore implements BasicStreamStore {
 
   @Override
   public synchronized StreamSource findStreamSource(StreamID streamId) {
+    CachedStream cachedStream = cache.get(streamId);
+
+    if(cachedStream == null) {
+      return null;
+    }
+
     return importSourceProvider.getStreamSource(cache.get(streamId).getImportSourceId() & 0xffff).getStreamSource();
   }
 
