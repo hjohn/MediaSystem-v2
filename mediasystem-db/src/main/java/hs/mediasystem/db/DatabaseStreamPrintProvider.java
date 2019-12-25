@@ -1,7 +1,7 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.db.streamids.DatabaseStreamIdStore;
-import hs.mediasystem.db.uris.DatabaseUriStore;
+import hs.mediasystem.db.streamids.StreamIdDatabase;
+import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.db.uris.UriRecord;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrint;
@@ -33,8 +33,8 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
   private static final Logger LOGGER = Logger.getLogger(DatabaseStreamPrintProvider.class.getName());
 
   @Inject private MediaHash mediaHash;
-  @Inject private DatabaseUriStore uriStore;
-  @Inject private DatabaseStreamIdStore streamIdStore;
+  @Inject private UriDatabase uriDatabase;
+  @Inject private StreamIdDatabase streamIdDatabase;
 
   // Note: lock can be held a long time currently (>5 seconds when hashing over network)
   private final AutoReentrantLock lock = new AutoReentrantLock();
@@ -46,9 +46,9 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
 
   @PostConstruct
   private void postConstruct() {
-    streamIds = uriStore.findAll(UriRecord::getUri, r -> new StreamID(r.getStreamId()));
+    streamIds = uriDatabase.findAll(UriRecord::getUri, r -> new StreamID(r.getStreamId()));
 
-    streamIdStore.forEach(r -> {
+    streamIdDatabase.forEach(r -> {
       StreamID streamId = new StreamID(r.getId());
 
       streamPrints.put(streamId, new StreamPrint(new StreamID(r.getId()), r.getSize(), r.getLastModificationTime(), r.getHash()));
@@ -181,14 +181,14 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
           if(!idsToMark.isEmpty()) {
             LOGGER.fine("Marking " + idsToMark.size() + " items as NOT seen recently: " + idsToMark);
 
-            streamIdStore.markSeen(idsToMark);
+            streamIdDatabase.markSeen(idsToMark);
             markedIds.addAll(idsToMark);
           }
 
           if(!idsToUnmark.isEmpty()) {
             LOGGER.fine("Unmarking " + idsToUnmark.size() + " items: " + idsToUnmark);
 
-            streamIdStore.unmarkSeen(idsToUnmark);
+            streamIdDatabase.unmarkSeen(idsToUnmark);
             markedIds.removeAll(idsToUnmark);
           }
 
@@ -205,7 +205,7 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
 
   private StreamPrint updateDirectory(StringURI uri, StreamID streamId, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
-    streamIdStore.update(streamId, null, lastModificationTime, hash);
+    streamIdDatabase.update(streamId, null, lastModificationTime, hash);
 
     StreamPrint streamPrint = new StreamPrint(streamId, null, lastModificationTime, hash);
 
@@ -217,8 +217,8 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
 
   private StreamPrint link(StringURI uri, Long size, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
-    int id = streamIdStore.findOrAdd(size, lastModificationTime, hash);
-    uriStore.store(uri.toString(), id);
+    int id = streamIdDatabase.findOrAdd(size, lastModificationTime, hash);
+    uriDatabase.store(uri.toString(), id);
 
     StreamID streamId = new StreamID(id);
     StreamPrint streamPrint = new StreamPrint(streamId, size, lastModificationTime, hash);

@@ -2,7 +2,7 @@ package hs.mediasystem.db.extract;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.db.uris.DatabaseUriStore;
+import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Throwables;
@@ -30,7 +30,7 @@ public class MediaMetaDataExtractor {
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Extracting Metadata");
   private static final long HOUR = 60 * 60 * 1000;
 
-  @Inject private DatabaseUriStore uriStore;
+  @Inject private UriDatabase uriDatabase;
   @Inject private DefaultStreamMetaDataStore metaDataStore;
   @Inject private StreamMetaDataFactory factory;
   @Inject private Database database;
@@ -77,7 +77,7 @@ public class MediaMetaDataExtractor {
 
   private void createMetaData(int streamId) {
     try {
-      uriStore.findUris(streamId).stream()
+      uriDatabase.findUris(streamId).stream()
         .map(URI::create)
         .map(Paths::get)
         .map(Path::toFile)

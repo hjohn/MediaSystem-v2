@@ -15,7 +15,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class DatabaseStreamIdStore {
+public class StreamIdDatabase {
   @Inject private Database database;
 
   public <T, U> Map<T, U> findAll(Function<StreamIdRecord, T> keyMapper, Function<StreamIdRecord, U> valueMapper) {

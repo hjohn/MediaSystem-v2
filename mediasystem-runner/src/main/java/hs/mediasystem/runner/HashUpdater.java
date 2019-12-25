@@ -2,8 +2,8 @@ package hs.mediasystem.runner;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
-import hs.mediasystem.db.streamids.DatabaseStreamIdStore;
-import hs.mediasystem.db.uris.DatabaseUriStore;
+import hs.mediasystem.db.streamids.StreamIdDatabase;
+import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.runner.config.DatabaseConfigurer;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.MediaHash;
@@ -31,8 +31,8 @@ public class HashUpdater {
     Ini ini = new Ini(new File("mediasystem.ini"));
     DatabaseConfigurer.configure(injector, ini.getSection("database"));
 
-    DatabaseStreamIdStore store = injector.getInstance(DatabaseStreamIdStore.class);
-    DatabaseUriStore uriStore = injector.getInstance(DatabaseUriStore.class);
+    StreamIdDatabase store = injector.getInstance(StreamIdDatabase.class);
+    UriDatabase uriStore = injector.getInstance(UriDatabase.class);
     MediaHash mediaHash = injector.getInstance(MediaHash.class);
     AtomicInteger recordsSeen = new AtomicInteger();
     AtomicInteger hashesChanged = new AtomicInteger();

@@ -12,7 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class DatabaseUriStore {
+public class UriDatabase {
   @Inject private Database database;
 
   public <T, U> Map<T, U> findAll(Function<UriRecord, T> keyMapper, Function<UriRecord, U> valueMapper) {

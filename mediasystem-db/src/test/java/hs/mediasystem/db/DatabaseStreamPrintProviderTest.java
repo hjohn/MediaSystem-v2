@@ -1,8 +1,8 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.db.streamids.DatabaseStreamIdStore;
+import hs.mediasystem.db.streamids.StreamIdDatabase;
 import hs.mediasystem.db.streamids.StreamIdRecord;
-import hs.mediasystem.db.uris.DatabaseUriStore;
+import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.scanner.api.StreamPrint;
 import hs.mediasystem.util.MediaHash;
@@ -41,8 +41,8 @@ import static org.mockito.Mockito.when;
 class DatabaseStreamPrintProviderTest {
   @TempDir static Path tempDir;
 
-  @Mock DatabaseStreamIdStore idStore;
-  @Mock DatabaseUriStore uriStore;
+  @Mock StreamIdDatabase idStore;
+  @Mock UriDatabase uriStore;
   @Mock MediaHash mediaHash;
 
   @InjectMocks DatabaseStreamPrintProvider provider;
