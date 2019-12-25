@@ -12,7 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class ImageStore {
+public class ImageDatabase {
   private static final Set<String> ACCESS_TIME_SET = Set.of("accesstime");
 
   @Inject private Database database;

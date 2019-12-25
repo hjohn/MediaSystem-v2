@@ -3,7 +3,7 @@ package hs.mediasystem.runner.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hs.mediasystem.db.ImageRecord;
-import hs.mediasystem.db.ImageStore;
+import hs.mediasystem.db.ImageDatabase;
 import hs.mediasystem.util.PriorityRateLimiter;
 
 import java.io.ByteArrayInputStream;
@@ -48,7 +48,7 @@ public class DatabaseResponseCache extends ResponseCache {
   private static final List<String> DEFAULT_NULL = Arrays.asList((String)null);
   private static final Map<String, PriorityRateLimiter> RATE_LIMITERS = new HashMap<>();
 
-  @Inject private ImageStore store;
+  @Inject private ImageDatabase store;
 
   @Override
   public CacheResponse get(URI uri, String method, Map<String, List<String>> requestHeaders) throws IOException {
