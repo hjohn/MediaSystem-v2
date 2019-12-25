@@ -9,23 +9,60 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+/**
+ * A container object similar to {@link Optional} which may or may not contain a non-null value
+ * or contains a (caught) Exception. If a value is present, {@code isPresent()} will return {@code true} and
+ * {@code get()} will return the value. If instead an exception is present, {@code get()} will throw an
+ * {@link ExceptionalException}.<p>
+ *
+ * Various methods are provided to fluently deal with situations where the {@link Exceptional} is empty or
+ * contains an exception.
+ *
+ * @author John Hendrikx
+ * @param <T> the type contained within the {@link Exceptional}
+ */
 public final class Exceptional<T> {
+
+  /*
+   * The value and exception fields can be in three states:
+   *
+   * value != null && exception == null -> Exceptional contains a value
+   * value == null && exception == null -> Exceptional is empty
+   * value == null && exception != null -> Exceptional contains exception
+   *
+   * The state where both value and exception are not null is invalid
+   */
+
   private final T value;
   private final Throwable exception;
 
-  private Exceptional(T value, Throwable exc) {
-    this.value = value;
-    this.exception = exc;
-  }
-
+  /**
+   * Creates an empty {@link Exceptional}.
+   *
+   * @param <T> the type of the contained value
+   * @return an empty {@link Exceptional}, never null
+   */
   public static <T> Exceptional<T> empty() {
     return new Exceptional<>(null, null);
   }
 
+  /**
+   * Creates an {@link Exceptional} containing the given value, or an empty one if supplied value was null.
+   *
+   * @param <T> the type of the contained value
+   * @return an {@link Exceptional}, never null
+   */
   public static <T> Exceptional<T> ofNullable(T value) {
     return value != null ? of(value) : empty();
   }
 
+  /**
+   * Creates an {@link Exceptional} containing the given value, or throws an exception if supplied value was null.
+   *
+   * @param <T> the type of the contained value
+   * @return an {@link Exceptional}, never null
+   * @throws NullPointerException if supplied value was null
+   */
   public static <T> Exceptional<T> of(T value) {
     return new Exceptional<>(Objects.requireNonNull(value), null);
   }
@@ -34,20 +71,34 @@ public final class Exceptional<T> {
     return new Exceptional<>(Objects.requireNonNull(value).orElse(null), null);
   }
 
+  /**
+   * Creates an {@link Exceptional} containing the given exception, or an empty one if supplied exception was null.
+   *
+   * @param <T> the type of the contained value
+   * @return an {@link Exceptional}, never null
+   */
   public static <T> Exceptional<T> ofNullableException(Throwable exception) {
     return exception != null ? new Exceptional<>(null, exception) : empty();
   }
 
+  /**
+   * Creates an {@link Exceptional} containing the given exception, or throws an exception if supplied exception was null.
+   *
+   * @param <T> the type of the contained value
+   * @return an {@link Exceptional}, never null
+   * @throws NullPointerException if supplied exception was null
+   */
   public static <T> Exceptional<T> ofException(Throwable exception) {
     return new Exceptional<>(null, Objects.requireNonNull(exception));
   }
 
   /**
    * Creates a new Exceptional with the value supplied by the given supplier.  If an
-   * exception occurs in the supplier, it is caught and stored.
+   * exception occurs in the supplier, it is caught and stored.  If the resulting
+   * value is null, an empty Exceptional is returned.
    *
    * @param supplier a supplier for the value of this Exceptional
-   * @return a new Exceptional with the supplied value or a caught exception
+   * @return a new Exceptional with the supplied value or a caught exception, never null
    */
   public static <T> Exceptional<T> from(TrySupplier<T> supplier) {
     try {
@@ -58,20 +109,28 @@ public final class Exceptional<T> {
     }
   }
 
+  /**
+   * Runs the given task, and returns an empty Exceptional if the task completed succesfully, otherwise
+   * returns an Exceptional containing the thrown exception.
+   *
+   * @param task a task to run
+   * @return an empty Exceptional or an Exceptional with a caught exception, never null
+   */
   public static Exceptional<Void> fromVoid(TryRunnable task) {
-    try {
-      task.run();
-      return new Exceptional<>(null, null);
-    }
-    catch (Throwable t) {
-      return new Exceptional<>(null, t);
-    }
+    return from(() -> { task.run(); return null; });
   }
 
-  public static <E extends Throwable> Consumer<? super E> swallow() {
-    return e -> {};
+  private Exceptional(T value, Throwable exc) {
+    this.value = value;
+    this.exception = exc;
   }
 
+  /**
+   * Returns the contained exception, or throws {@link NoSuchElementException} if not present.
+   *
+   * @return the contained exception, never null
+   * @throws NoSuchElementException if no exception was present
+   */
   public Throwable getException() {
     if(exception != null) {
       return exception;
@@ -80,26 +139,86 @@ public final class Exceptional<T> {
     throw new NoSuchElementException("No exception present");
   }
 
+  /**
+   * Returns the value of this {@link Exceptional}, or throws {@link NoSuchElementException} if it contains
+   * no exception, otherwise throws ExceptionalException with the contained exception.
+   *
+   * @return the value of this {@link Exceptional}, never null
+   * @throws ExceptionalException if the Exceptional contained an exception
+   * @throws NoSuchElementException if no value was present
+   */
   public T get() {
     if(value != null) {
       return value;
     }
     if(exception != null) {
-      sneakyThrow(exception);
+      throwExceptionalException(exception);
     }
 
     throw new NoSuchElementException("No value present");
   }
 
+  /**
+   * Returns the value of this {@link Exceptional} if present, or the supplied value if it contains no exception,
+   * otherwise throws ExceptionalException with the contained exception.
+   *
+   * @param other an alternative value to return
+   * @return the value of this {@link Exceptional} if present, or the supplied value if it contains no exception
+   * @throws ExceptionalException if the Exceptional contained an exception
+   */
   public T orElse(T other) {
     if(value != null) {
       return value;
     }
     if(exception != null) {
-      sneakyThrow(exception);
+      throwExceptionalException(exception);
     }
 
     return other;
+  }
+
+  /**
+   * Returns the value of this {@link Exceptional} if present, or the value supplied by the supplier if it
+   * contains no exception, otherwise throws ExceptionalException with the contained exception.
+   *
+   * @param otherSupplier a {@link Supplier} which supplies an alternative value to return, cannot be null
+   * @return the value of this {@link Exceptional} if present, or the supplied value if it contains no exception
+   * @throws NullPointerException when otherSupplier is null
+   * @throws ExceptionalException if the Exceptional contained an exception
+   */
+  public T orElseGet(Supplier<? extends T> otherSupplier) {
+    Objects.requireNonNull(otherSupplier);
+
+    if(value != null) {
+      return value;
+    }
+    if(exception != null) {
+      throwExceptionalException(exception);
+    }
+
+    return otherSupplier.get();
+  }
+
+  /**
+   * Returns the value of this {@link Exceptional} if present, or throws the supplied exception if it contains
+   * no exception, otherwise throws ExceptionalException with the contained exception.
+   *
+   * @param <X> the type of the supplied exception
+   * @param exceptionSupplier a {@link Supplier} with an exception to throw, cannot be null
+   * @return the value of this {@link Exceptional} if present, never null
+   * @throws X when no value is present and the {@link Exceptional} did not contain an exception
+   */
+  public <X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier) throws X {
+    Objects.requireNonNull(exceptionSupplier);
+
+    if(value != null) {
+      return value;
+    }
+    if(exception != null) {
+      throwExceptionalException(exception);
+    }
+
+    throw exceptionSupplier.get();
   }
 
   /**
@@ -116,6 +235,7 @@ public final class Exceptional<T> {
    */
   public Exceptional<T> or(Supplier<? extends Exceptional<? extends T>> supplier) {
       Objects.requireNonNull(supplier);
+
       if (isPresent() || isException()) {
           return this;
       }
@@ -123,17 +243,6 @@ public final class Exceptional<T> {
       @SuppressWarnings("unchecked")
       Exceptional<T> r = (Exceptional<T>) supplier.get();
       return Objects.requireNonNull(r);
-  }
-
-  public T orElseGet(Supplier<? extends T> other) {
-    if(value != null) {
-      return value;
-    }
-    if(exception != null) {
-      sneakyThrow(exception);
-    }
-
-    return other.get();
   }
 
   /**
@@ -160,145 +269,298 @@ public final class Exceptional<T> {
       return new Exceptional<>(null, exception);
     }
 
-    try {
-      return ofNullable(mapper.apply(value));
-    }
-    catch(Throwable t) {
-      return new Exceptional<>(null, t);
-    }
+    return from(() -> mapper.apply(value));
   }
 
+  /**
+   * If a value is present, returns the result of applying the given
+   * {@code Exceptional}-bearing mapping function to the value, otherwise returns
+   * this exceptional (empty or with exception).
+   *
+   * <p>This method is similar to {@link #map(Function)}, but the mapping
+   * function is one whose result is already an {@code Exceptional}, and if
+   * invoked, {@code flatMap} does not wrap it within an additional
+   * {@code Exceptional}.
+   *
+   * <p>If the mapping function throws an exception, it is caught and an
+   * {@link Exceptional} is returned containing it.
+   *
+   * @param <U> The type of value of the {@code Exceptional} returned by the
+   *            mapping function
+   * @param mapper the mapping function to apply to a value, if present
+   * @return the result of applying an {@code Exceptional}-bearing mapping
+   *         function to the value of this {@code Exceptional}, if a value is
+   *         present, otherwise an empty {@code Exceptional}
+   * @throws NullPointerException if the mapping function is {@code null} or
+   *         returns a {@code null} result
+   */
+  @SuppressWarnings("unchecked")
   public <U> Exceptional<U> flatMap(Function<? super T, Exceptional<U>> mapper) {
     Objects.requireNonNull(mapper);
-    return value != null ? Objects.requireNonNull(mapper.apply(value)) : (Exceptional<U>)this;  // TODO I get the impression this should be empty() but this, or exception is swallowed.
+
+    Exceptional<U> exceptional;
+
+    try {
+        exceptional = value == null
+            ? (Exceptional<U>)this // Cast here is safe, as this Exceptional does not contain a value
+            : mapper.apply(value);
+    }
+    catch(Throwable t) {
+        return Exceptional.ofException(t);
+    }
+
+    return Objects.requireNonNull(exceptional);
   }
 
+  /**
+   * Returns a {@link Stream} containing only the value of this Exceptional, or an empty
+   * stream if the Exceptional is empty or contained an exception.
+   *
+   * @return a {@link Stream} containing 0 or 1 elements, never null
+   */
   public Stream<T> ignoreAllAndStream() {
     return value == null ? Stream.empty() : Stream.of(value);
   }
 
+  /**
+   * Returns a {@link Stream} containing only the value of this Exceptional, or an empty
+   * stream if the Exceptional is empty or throws an exception if it contained an exception.
+   *
+   * @return a {@link Stream} containing 0 or 1 elements, never null
+   */
   public Stream<T> stream() {
     if(exception != null)  {
-      sneakyThrow(exception);
+      throwExceptionalException(exception);
     }
 
     return value == null ? Stream.empty() : Stream.of(value);
   }
 
+  /**
+   * If a value is present, and the value matches the given predicate,
+   * returns an {@code Exceptional} describing the value, otherwise returns the
+   * current {@code Exceptional}.<p>
+   *
+   * If the filter function throws an exception, it is caught and stored into
+   * a new {@link Exceptional}.
+   *
+   * @param predicate the predicate to apply to a value, if present
+   * @return an {@code Exceptional} describing the value of this
+   *         {@code Exceptional}, if a value is present and the value matches the
+   *         given predicate, otherwise the current {@code Exceptional} or
+   *         an {@link Exceptional} with any exception that occured.
+   * @throws NullPointerException if the predicate is {@code null}
+   */
   public Exceptional<T> filter(Predicate<? super T> predicate) {
     Objects.requireNonNull(predicate);
+
     if(value == null) {
       return this;
     }
+
     final boolean b;
+
     try {
       b = predicate.test(value);
     }
     catch(Throwable t) {
       return ofException(t);
     }
+
     return b ? this : empty();
   }
 
-  public <X extends Throwable> Exceptional<T> ignore(Class<? extends X> excType) {
-    return excType.isInstance(exception) ? empty() : this;
+  /**
+   * Ignores matching exception types by converting them into an empty {@link Exceptional},
+   * otherwise returns this {@link Exceptional}.
+   *
+   * @param <X>
+   * @param type the type of exception to ignore, cannot be null
+   * @return an empty exceptional if it contained an exception matching the given type, otherwise this {@link Exceptional}
+   */
+  public <X extends Throwable> Exceptional<T> ignore(Class<? extends X> type) {
+    Objects.requireNonNull(type);
+
+    return type.isInstance(exception) ? empty() : this;
   }
 
-  public <X extends Throwable> Exceptional<T> recover(Class<? extends X> excType, Function<? super X, T> mapper) {
+  /**
+   * Recovers from all exceptions by replacing it with the value supplied by a mapper,
+   * otherwise returns this {@link Exceptional}.<p>
+   *
+   * If the mapping function throws an exception, it is caught and an {@link Exceptional} is returned containing it.
+   *
+   * @param <X>
+   * @param mapper a mapper to supply a value for this {@link Exceptional}
+   * @return a new {@link Exceptional} containing the value of the supplied mapper if it contained an exception, otherwise returns this {@link Exceptional}
+   */
+  public Exceptional<T> recover(Function<Throwable, T> mapper) {
     Objects.requireNonNull(mapper);
-    return excType.isInstance(exception) ? ofNullable(mapper.apply(excType.cast(exception))) : this;
+
+    return exception != null ? from(() -> mapper.apply(exception)) : this;
   }
 
-  public <X extends Throwable> Exceptional<T> recover(Iterable<Class<? extends X>> excTypes, Function<? super X, T> mapper) {
+  /**
+   * Recovers from matching exception types by replacing it with the value supplied by a mapper,
+   * otherwise returns this {@link Exceptional}.<p>
+   *
+   * If the mapping function throws an exception, it is caught and an {@link Exceptional} is returned containing it.
+   *
+   * @param <X>
+   * @param type the type of exception to recover from, cannot be null
+   * @param mapper a mapper to supply a value for this {@link Exceptional}
+   * @return a new {@link Exceptional} containing the value of the supplied mapper if it contained a matching exception, otherwise returns this {@link Exceptional}
+   */
+  public <X extends Throwable> Exceptional<T> recover(Class<? extends X> type, Function<? super X, T> mapper) {
     Objects.requireNonNull(mapper);
-    for (Class<? extends X> excType : excTypes) {
-      if (excType.isInstance(exception)) {
-        return ofNullable(mapper.apply(excType.cast(exception)));
+    Objects.requireNonNull(type);
+
+    return type.isInstance(exception) ? from(() -> mapper.apply(type.cast(exception))) : this;
+  }
+
+  /**
+   * Recovers from matching exception types by replacing it with the value supplied by a mapper,
+   * otherwise returns this {@link Exceptional}.
+   *
+   * If the mapping function throws an exception, it is caught and an {@link Exceptional} is returned containing it.
+   *
+   * @param <X>
+   * @param types the types of exception to recover from
+   * @param mapper a mapper to supply a value for this {@link Exceptional}
+   * @return a new {@link Exceptional} containing the value of the supplied mapper if it contained a matching exception, otherwise returns this {@link Exceptional}
+   */
+  public <X extends Throwable> Exceptional<T> recover(Iterable<Class<? extends X>> types, Function<? super X, T> mapper) {
+    Objects.requireNonNull(mapper);
+    Objects.requireNonNull(types);
+
+    for(Class<? extends X> type : types) {
+      if(type.isInstance(exception)) {
+        return from(() -> mapper.apply(type.cast(exception)));
       }
     }
+
     return this;
   }
 
-  public <X extends Throwable> Exceptional<T> flatRecover(Class<? extends X> excType, Function<? super X, Exceptional<T>> mapper) {
+  public <X extends Throwable> Exceptional<T> flatRecover(Class<? extends X> type, Function<? super X, Exceptional<T>> mapper) {
     Objects.requireNonNull(mapper);
-    return excType.isInstance(exception) ? Objects.requireNonNull(mapper.apply(excType.cast(exception))) : this;
+
+    return type.isInstance(exception) ? Objects.requireNonNull(mapper.apply(type.cast(exception))) : this;
   }
 
-  public <X extends Throwable> Exceptional<T> flatRecover(Iterable<Class<? extends X>> excTypes, Function<? super X, Exceptional<T>> mapper) {
+  public <X extends Throwable> Exceptional<T> flatRecover(Iterable<Class<? extends X>> types, Function<? super X, Exceptional<T>> mapper) {
     Objects.requireNonNull(mapper);
-    for(Class<? extends X> c : excTypes) {
+
+    for(Class<? extends X> c : types) {
       if(c.isInstance(exception)) {
         return Objects.requireNonNull(mapper.apply(c.cast(exception)));
       }
     }
+
     return this;
   }
 
-  public <E extends Throwable> Exceptional<T> propagate(Class<E> excType) throws E {
-    if (excType.isInstance(exception)) {
-      throw excType.cast(exception);
+  public <E extends Throwable> Exceptional<T> propagate(Class<E> type) throws E {
+    if(type.isInstance(exception)) {
+      throw type.cast(exception);
     }
 
     return this;
   }
 
-  public <E extends Throwable> Exceptional<T> propagate(Iterable<Class<? extends E>> excTypes) throws E {
-    for(Class<? extends E> excType : excTypes) {
-      if(excType.isInstance(exception)) {
-        throw excType.cast(exception);
+  public <E extends Throwable> Exceptional<T> propagate(Iterable<Class<? extends E>> types) throws E {
+    for(Class<? extends E> type : types) {
+      if(type.isInstance(exception)) {
+        throw type.cast(exception);
       }
     }
 
     return this;
   }
 
-  public <E extends Throwable, F extends Throwable> Exceptional<T> propagate(Class<E> excType, Function<? super E, ? extends F> translator) throws F {
-    if(excType.isInstance(exception)) {
-      throw translator.apply(excType.cast(exception));
+  public <E extends Throwable, F extends Throwable> Exceptional<T> propagate(Class<E> type, Function<? super E, ? extends F> translator) throws F {
+    if(type.isInstance(exception)) {
+      throw translator.apply(type.cast(exception));
     }
 
     return this;
   }
 
-  public <E extends Throwable, F extends Throwable> Exceptional<T> propagate(Iterable<Class<E>> excTypes, Function<? super E, ? extends F> translator) throws F {
-    for(Class<? extends E> excType : excTypes) {
-      if(excType.isInstance(exception)) {
-        throw translator.apply(excType.cast(exception));
+  public <E extends Throwable, F extends Throwable> Exceptional<T> propagate(Iterable<Class<E>> types, Function<? super E, ? extends F> translator) throws F {
+    for(Class<? extends E> type : types) {
+      if(type.isInstance(exception)) {
+        throw translator.apply(type.cast(exception));
       }
     }
 
     return this;
   }
 
+  /**
+   * Handles all exceptions by executing an action and converting it to an empty {@link Exceptional},
+   * otherwise returns this {@link Exceptional}.<p>
+   *
+   * If the action throws an exception, it is caught and an {@link Exceptional} is returned containing it.
+   *
+   * @param <X>
+   * @param type the type of exception to handle, cannot be null
+   * @param action an action to execute, cannot be null
+   * @return a new empty {@link Exceptional} if an exception was present, otherwise returns this {@link Exceptional} or an {@link Exceptional} containing the exception thrown by action
+   */
   public Exceptional<T> handle(Consumer<Throwable> action) {
-    if (exception != null) {
-      action.accept(Throwable.class.cast(exception));
-      return empty();
+    Objects.requireNonNull(action);
+
+    if(exception != null) {
+      return from(() -> { action.accept(exception); return null; });
     }
+
     return this;
   }
 
-  public <E extends Throwable> Exceptional<T> handle(Class<E> excType, Consumer<? super E> action) {
-    if (excType.isInstance(exception)) {
-      action.accept(excType.cast(exception));
-      return empty();
+  /**
+   * Handles matching exception types by executing an action and converting it to an empty {@link Exceptional},
+   * otherwise returns this {@link Exceptional}.<p>
+   *
+   * If the action throws an exception, it is caught and an {@link Exceptional} is returned containing it.
+   *
+   * @param <X>
+   * @param type the type of exception to handle, cannot be null
+   * @param action an action to execute, cannot be null
+   * @return a new empty {@link Exceptional} if an exception was handled, otherwise returns this {@link Exceptional} or an {@link Exceptional} containing the exception thrown by action
+   */
+  public <E extends Throwable> Exceptional<T> handle(Class<? extends E> type, Consumer<? super E> action) {
+    Objects.requireNonNull(type);
+    Objects.requireNonNull(action);
+
+    if(type.isInstance(exception)) {
+      return from(() -> { action.accept(type.cast(exception)); return null; });
     }
+
     return this;
   }
 
-  public <E extends Throwable> Exceptional<T> handle(Iterable<Class<E>> excTypes, Consumer<? super E> action) {
-    for (Class<? extends E> excType : excTypes)
-      if (excType.isInstance(exception)) {
-        action.accept(excType.cast(exception));
-        return empty();
+  /**
+   * Handles matching exception types by executing an action and converting it to an empty {@link Exceptional},
+   * otherwise returns this {@link Exceptional}.<p>
+   *
+   * If the action throws an exception, it is caught and an {@link Exceptional} is returned containing it.
+   *
+   * @param <X>
+   * @param types the types of exception to handle, cannot be null
+   * @param action an action to execute, cannot be null
+   * @return a new empty {@link Exceptional} if an exception was handled, otherwise returns this {@link Exceptional} or an {@link Exceptional} containing the exception thrown by action
+   */
+  public <E extends Throwable> Exceptional<T> handle(Iterable<Class<? extends E>> types, Consumer<? super E> action) {
+    Objects.requireNonNull(types);
+    Objects.requireNonNull(action);
+
+    for(Class<? extends E> type : types) {
+      if(type.isInstance(exception)) {
+        return from(() -> { action.accept(type.cast(exception)); return null; });
       }
-    return this;
-  }
+    }
 
-  public <X extends Throwable> T orElseThrow(Supplier<? extends X> exceptionSupplier) throws X {
-    if (value != null) return value;
-    if (exception != null) sneakyThrow(exception);
-    throw exceptionSupplier.get();
+    return this;
   }
 
   /**
@@ -319,12 +581,20 @@ public final class Exceptional<T> {
     return value != null || exception != null;
   }
 
-  public void ifPresent(Consumer<? super T> consumer) {
+  /**
+   * If a value is present, performs the given action with the value,
+   * or does nothing if there is no contained exception, otherwise throws
+   * the contained exception.
+   *
+   * @param action the action to be performed, if a value is present
+   * @throws NullPointerException if value is present and the given action is {@code null}
+   */
+  public void ifPresent(Consumer<? super T> action) {
     if(value != null) {
-      consumer.accept(value);
+      action.accept(value);
     }
     if(exception != null) {
-      sneakyThrow(exception);
+      throwExceptionalException(exception);
     }
   }
 
@@ -369,7 +639,7 @@ public final class Exceptional<T> {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(value);
+    return Objects.hash(value, exception);
   }
 
   @Override
@@ -384,7 +654,7 @@ public final class Exceptional<T> {
     return "Exceptional:empty";
   }
 
-  private static void sneakyThrow(Throwable t) {
+  private static void throwExceptionalException(Throwable t) {
     throw new ExceptionalException(t);
   }
 }
