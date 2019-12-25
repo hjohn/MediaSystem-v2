@@ -2,57 +2,66 @@ package hs.mediasystem.db.extract;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import hs.database.core.Database;
-import hs.database.core.Database.Transaction;
-import hs.mediasystem.db.streamids.StreamIdRecord;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.util.Throwables;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
-  @Inject private Database database;
+  private static final Logger LOGGER = Logger.getLogger(DefaultStreamMetaDataStore.class.getName());
+
+  @Inject private StreamMetaDataDatabase database;
   @Inject private StreamMetaDataCodec codec;
 
+  private final Map<StreamID, StreamMetaData> cache = new HashMap<>();
+
+  @PostConstruct
+  private void postConstruct() {
+    List<Integer> badIds = new ArrayList<>();
+
+    database.forEach(r -> {
+      try {
+        StreamMetaData smd = codec.decode(r.getJson());
+
+        cache.put(smd.getStreamId(), smd);
+      }
+      catch(IOException e) {
+        LOGGER.warning("Exception decoding StreamMetaDataRecord: " + r + ": " + Throwables.formatAsOneLine(e));
+
+        badIds.add(r.getStreamId());
+      }
+    });
+
+    badIds.stream().forEach(database::delete);
+
+    LOGGER.fine("Loaded " + cache.size() + " StreamMetaDataRecords, deleted " + badIds.size() + " bad ones");
+  }
+
   public void store(StreamMetaData streamMetaData) {
-    try(Transaction tx = database.beginTransaction()) {
-      boolean exists = tx.selectUnique(StreamMetaDataRecord.class, "stream_id = ?", streamMetaData.getStreamId().asInt()) != null;
-
-      StreamMetaDataRecord record = toRecord(streamMetaData);
-
-      if(exists) {
-        tx.update(record);
-      }
-      else {
-        tx.insert(record);
-      }
-
-      tx.commit();
-    }
+    database.store(toRecord(streamMetaData));
+    cache.put(streamMetaData.getStreamId(), streamMetaData);
   }
 
   public Stream<Integer> streamUnindexedStreamIds() {
-    return database.stream(StreamIdRecord.class, "lastseentime IS NULL AND id NOT IN (SELECT stream_id FROM stream_metadata)").map(StreamIdRecord::getId);
+    return database.streamUnindexedStreamIds();
   }
 
   public void storeImage(int streamId, int index, byte[] image) {
-    try(Transaction tx = database.beginTransaction()) {
-      StreamMetaDataSnapshotRecord record = new StreamMetaDataSnapshotRecord();
-
-      record.setStreamId(streamId);
-      record.setIndex(index);
-      record.setImage(image);
-
-      tx.insert(record);
-      tx.commit();
-    }
+    database.storeImage(streamId, index, image);
   }
 
   private StreamMetaDataRecord toRecord(StreamMetaData streamMetaData) {
@@ -71,30 +80,13 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     }
   }
 
-  private StreamMetaData toObject(StreamMetaDataRecord record) {
-    try {
-      return codec.decode(record.getJson());
-    }
-    catch(IOException e) {
-      throw new IllegalStateException(e);
-    }
-  }
-
   @Override
   public StreamMetaData find(StreamID streamId) {
-    try(Transaction tx = database.beginReadOnlyTransaction()) {
-      StreamMetaDataRecord record = tx.selectUnique(StreamMetaDataRecord.class, "stream_id = ?", streamId.asInt());
-
-      return record == null ? null : toObject(record);
-    }
+    return cache.get(streamId);
   }
 
   @Override
   public byte[] readSnapshot(StreamID streamId, int snapshotIndex) {
-    try(Transaction tx = database.beginReadOnlyTransaction()) {
-      StreamMetaDataSnapshotRecord record = tx.selectUnique(StreamMetaDataSnapshotRecord.class, "stream_id = ? AND index = ?", streamId.asInt(), snapshotIndex);
-
-      return record == null ? null : record.getImage();
-    }
+    return database.readSnapshot(streamId.asInt(), snapshotIndex);
   }
 }
