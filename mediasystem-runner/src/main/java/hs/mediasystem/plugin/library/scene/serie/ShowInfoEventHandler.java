@@ -5,7 +5,7 @@ import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.AudioStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.VideoStream;
-import hs.mediasystem.mediamanager.StreamMetaDataProvider;
+import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.plugin.library.scene.MediaItem;
 import hs.mediasystem.runner.db.MediaService;
 import hs.mediasystem.runner.util.Dialogs;
@@ -40,7 +40,7 @@ public class ShowInfoEventHandler {
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.UK).withZone(ZoneOffset.systemDefault());
 
   @Inject private MediaService mediaService;
-  @Inject private StreamMetaDataProvider metaDataProvider;
+  @Inject private StreamMetaDataStore metaDataProvider;
   @Inject private StreamPrintProvider streamPrintProvider;
 
   public void handle(Event event, MediaItem<?> mediaItem) {

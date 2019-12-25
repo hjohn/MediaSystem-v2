@@ -6,7 +6,7 @@ import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
 import hs.mediasystem.db.streamids.StreamIdRecord;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
-import hs.mediasystem.mediamanager.StreamMetaDataProvider;
+import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.scanner.api.StreamID;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class DatabaseStreamMetaDataStore implements StreamMetaDataProvider {
+public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Inject private Database database;
   @Inject private StreamMetaDataCodec codec;
 
@@ -40,7 +40,6 @@ public class DatabaseStreamMetaDataStore implements StreamMetaDataProvider {
 
   public Stream<Integer> streamUnindexedStreamIds() {
     return database.stream(StreamIdRecord.class, "lastseentime IS NULL AND id NOT IN (SELECT stream_id FROM stream_metadata)").map(StreamIdRecord::getId);
-//    return database.stream(LocalMedia.class, "deletetime IS NULL AND stream_id NOT IN (SELECT stream_id FROM stream_metadata)").map(LocalMedia::getStreamId);  // TODO better if it only selected one field (as LocalMedia contains a json block)
   }
 
   public void storeImage(int streamId, int index, byte[] image) {

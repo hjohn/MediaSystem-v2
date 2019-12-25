@@ -1,7 +1,7 @@
 package hs.mediasystem.runner.util;
 
 import hs.database.core.DatabaseException;
-import hs.mediasystem.mediamanager.StreamMetaDataProvider;
+import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageURI;
@@ -21,7 +21,7 @@ public class LocalImageURIHandler implements ImageURIHandler {
   private static final Logger LOGGER = Logger.getLogger(LocalImageURIHandler.class.getName());
   private static final Pattern PATTERN = Pattern.compile("(?i)localdb://([0-9]+)/([0-9]+)");
 
-  @Inject private StreamMetaDataProvider provider;
+  @Inject private StreamMetaDataStore provider;
 
   @Override
   public ImageHandle handle(ImageURI uri) {

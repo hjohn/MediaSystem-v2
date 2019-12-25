@@ -31,7 +31,7 @@ public class MediaMetaDataExtractor {
   private static final long HOUR = 60 * 60 * 1000;
 
   @Inject private DatabaseUriStore uriStore;
-  @Inject private DatabaseStreamMetaDataStore metaDataStore;
+  @Inject private DefaultStreamMetaDataStore metaDataStore;
   @Inject private StreamMetaDataFactory factory;
   @Inject private Database database;
 

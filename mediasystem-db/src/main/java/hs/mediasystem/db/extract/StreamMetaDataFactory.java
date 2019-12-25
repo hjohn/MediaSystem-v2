@@ -26,7 +26,7 @@ import org.bytedeco.javacv.Java2DFrameConverter;
 public class StreamMetaDataFactory {
   private static final Logger LOGGER = Logger.getLogger(StreamMetaDataFactory.class.getName());
 
-  @Inject private DatabaseStreamMetaDataStore store;
+  @Inject private DefaultStreamMetaDataStore store;
 
   public StreamMetaData generatePreviewImage(StreamID streamId, File file) throws IOException, Exception {
     @SuppressWarnings("resource")

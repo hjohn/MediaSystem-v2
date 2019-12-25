@@ -4,7 +4,7 @@ import hs.mediasystem.db.DatabaseStreamStore;
 import hs.mediasystem.db.StreamState;
 import hs.mediasystem.db.StreamStateProvider;
 import hs.mediasystem.db.StreamStateService;
-import hs.mediasystem.db.extract.DatabaseStreamMetaDataStore;
+import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Resource;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.State;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamAttributes;
@@ -28,7 +28,7 @@ public class ResourceStore {
   @Inject private DatabaseStreamStore streamStore;
   @Inject private StreamStateService stateService;
   @Inject private StreamStateProvider streamStateProvider;
-  @Inject private DatabaseStreamMetaDataStore metaDataStore;
+  @Inject private DefaultStreamMetaDataStore metaDataStore;
 
   public synchronized Optional<Resource> find(StreamID streamId) {
     return streamStore.findStream(streamId).map(this::toResource);

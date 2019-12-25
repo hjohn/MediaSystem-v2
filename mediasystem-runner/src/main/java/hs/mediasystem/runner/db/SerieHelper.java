@@ -11,7 +11,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
 import hs.mediasystem.mediamanager.BasicStreamStore;
 import hs.mediasystem.mediamanager.DescriptorStore;
 import hs.mediasystem.mediamanager.LocalSerie;
-import hs.mediasystem.mediamanager.StreamMetaDataProvider;
+import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.scanner.api.Attribute;
 import hs.mediasystem.scanner.api.Attribute.ChildType;
 import hs.mediasystem.scanner.api.BasicStream;
@@ -46,7 +46,7 @@ public class SerieHelper {
 
   @Inject private BasicStreamStore streamStore;  // Only stores top level items, not children
   @Inject private DescriptorStore descriptorStore;
-  @Inject private StreamMetaDataProvider metaDataProvider;
+  @Inject private StreamMetaDataStore metaDataProvider;
 
   /**
    * Cache containing matches of child identifiers to their streams (for each parent/root identifier).
