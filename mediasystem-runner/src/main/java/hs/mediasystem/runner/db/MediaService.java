@@ -1,6 +1,7 @@
 package hs.mediasystem.runner.db;
 
 import hs.mediasystem.db.StreamCacheUpdateService;
+import hs.mediasystem.db.resource.SerieHelper;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;

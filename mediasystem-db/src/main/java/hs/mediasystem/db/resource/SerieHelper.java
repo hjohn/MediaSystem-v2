@@ -1,4 +1,4 @@
-package hs.mediasystem.runner.db;
+package hs.mediasystem.db.resource;
 
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;

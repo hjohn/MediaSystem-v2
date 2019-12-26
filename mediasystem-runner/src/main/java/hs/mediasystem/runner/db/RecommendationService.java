@@ -1,6 +1,7 @@
 package hs.mediasystem.runner.db;
 
 import hs.mediasystem.db.resource.ResourceStore;
+import hs.mediasystem.db.resource.SerieHelper;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
