@@ -1,5 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
+import hs.mediasystem.ext.basicmediatypes.Identification;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.scanner.api.StreamID;
 
 import java.util.Optional;
@@ -10,8 +12,10 @@ public class Resource {
   private final StreamAttributes attributes;
   private final State state;
   private final Optional<StreamMetaData> metaData;
+  private final Identification identification;
+  private final MediaDescriptor descriptor;
 
-  public Resource(StreamID streamId, StreamID parentId, StreamAttributes attributes, State state, StreamMetaData metaData) {
+  public Resource(StreamID streamId, StreamID parentId, StreamAttributes attributes, State state, StreamMetaData metaData, Identification identification, MediaDescriptor descriptor) {
     if(streamId == null) {
       throw new IllegalArgumentException("streamId cannot be null");
     }
@@ -27,6 +31,8 @@ public class Resource {
     this.attributes = attributes;
     this.state = state;
     this.metaData = Optional.ofNullable(metaData);
+    this.identification = identification;
+    this.descriptor = descriptor;
   }
 
   public StreamID getId() {
@@ -47,5 +53,13 @@ public class Resource {
 
   public Optional<StreamMetaData> getMetaData() {
     return metaData;
+  }
+
+  public Identification getIdentification() {
+    return identification;
+  }
+
+  public MediaDescriptor getDescriptor() {
+    return descriptor;
   }
 }
