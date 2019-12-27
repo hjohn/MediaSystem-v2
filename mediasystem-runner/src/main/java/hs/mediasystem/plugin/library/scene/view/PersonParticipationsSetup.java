@@ -22,7 +22,7 @@ public class PersonParticipationsSetup extends AbstractSetup<ProductionRole, Per
   @Inject private MediaItem.Factory mediaItemFactory;
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<MediaItem<MediaDescriptor>> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
     cellFactory.setImageExtractor(item -> item.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));

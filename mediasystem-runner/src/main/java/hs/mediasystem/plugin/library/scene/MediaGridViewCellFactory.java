@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty2;
@@ -39,43 +38,43 @@ import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
-public class MediaGridViewCellFactory<T extends MediaDescriptor> implements Callback<ListView<MediaItem<T>>, ListCell<MediaItem<T>>> {
-  private Function<MediaItem<T>, ObservableValue<? extends String>> titleBindProvider;
-  private Function<MediaItem<T>, ObservableValue<? extends String>> sideBarTopLeftBindProvider;
-  private Function<MediaItem<T>, ObservableValue<? extends String>> sideBarCenterBindProvider;
-  private Function<MediaItem<T>, ImageHandle> imageHandleExtractor;
-  private Function<MediaItem<T>, String> detailExtractor;
-  private Function<MediaItem<T>, ObservableValue<? extends MediaStatus>> mediaStatusBindProvider;
-  private Function<MediaItem<T>, String> sequenceNumberExtractor;
+public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCell<T>> {
+  private Function<T, ObservableValue<? extends String>> titleBindProvider;
+  private Function<T, ObservableValue<? extends String>> sideBarTopLeftBindProvider;
+  private Function<T, ObservableValue<? extends String>> sideBarCenterBindProvider;
+  private Function<T, ImageHandle> imageHandleExtractor;
+  private Function<T, String> detailExtractor;
+  private Function<T, ObservableValue<? extends MediaStatus>> mediaStatusBindProvider;
+  private Function<T, String> sequenceNumberExtractor;
 
   private Orientation orientation = Orientation.HORIZONTAL;
   private double aspectRatio = 1.5;
 
-  public void setTitleBindProvider(Function<MediaItem<T>, ObservableValue<? extends String>> bindProvider) {
+  public void setTitleBindProvider(Function<T, ObservableValue<? extends String>> bindProvider) {
     this.titleBindProvider = bindProvider;
   }
 
-  public void setSideBarTopLeftBindProvider(Function<MediaItem<T>, ObservableValue<? extends String>> bindProvider) {
+  public void setSideBarTopLeftBindProvider(Function<T, ObservableValue<? extends String>> bindProvider) {
     this.sideBarTopLeftBindProvider = bindProvider;
   }
 
-  public void setSideBarCenterBindProvider(Function<MediaItem<T>, ObservableValue<? extends String>> bindProvider) {
+  public void setSideBarCenterBindProvider(Function<T, ObservableValue<? extends String>> bindProvider) {
     this.sideBarCenterBindProvider = bindProvider;
   }
 
-  public void setImageExtractor(Function<MediaItem<T>, ImageHandle> extractor) {
+  public void setImageExtractor(Function<T, ImageHandle> extractor) {
     this.imageHandleExtractor = extractor;
   }
 
-  public void setDetailExtractor(Function<MediaItem<T>, String> extractor) {
+  public void setDetailExtractor(Function<T, String> extractor) {
     this.detailExtractor = extractor;
   }
 
-  public void setMediaStatusBindProvider(Function<MediaItem<T>, ObservableValue<? extends MediaStatus>> bindProvider) {
+  public void setMediaStatusBindProvider(Function<T, ObservableValue<? extends MediaStatus>> bindProvider) {
     this.mediaStatusBindProvider = bindProvider;
   }
 
-  public void setSequenceNumberExtractor(Function<MediaItem<T>, String> extractor) {
+  public void setSequenceNumberExtractor(Function<T, String> extractor) {
     this.sequenceNumberExtractor = extractor;
   }
 
@@ -99,7 +98,7 @@ public class MediaGridViewCellFactory<T extends MediaDescriptor> implements Call
   }
 
   @Override
-  public ListCell<MediaItem<T>> call(ListView<MediaItem<T>> param) {
+  public ListCell<T> call(ListView<T> param) {
     return new ListCell<>() {
       private final Label placeHolderLabel = new AspectCorrectLabel("?", aspectRatio, orientation, 1000, 1000);
       private final BiasedImageView imageView = new BiasedImageView(placeHolderLabel);
@@ -276,7 +275,7 @@ public class MediaGridViewCellFactory<T extends MediaDescriptor> implements Call
       }
 
       @Override
-      protected void updateItem(MediaItem<T> item, boolean empty) {
+      protected void updateItem(T item, boolean empty) {
         super.updateItem(item, empty);
 
         if(!empty) {

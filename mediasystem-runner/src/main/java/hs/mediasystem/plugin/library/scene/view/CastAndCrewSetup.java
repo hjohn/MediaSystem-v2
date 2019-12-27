@@ -19,7 +19,7 @@ public class CastAndCrewSetup extends AbstractSetup<PersonRole, CastAndCrewPrese
   @Inject private PersonParticipationsPresentation.Factory personParticipationsPresentationFactory;
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<MediaItem<MediaDescriptor>> cellFactory) {
     cellFactory.setTitleBindProvider(m -> m.personName);
     cellFactory.setImageExtractor(m -> m.getPerson().getImage() == null ? null : imageHandleFactory.fromURI(m.getPerson().getImage()));
     cellFactory.setDetailExtractor(m -> m.getRole().getCharacter() != null && !m.getRole().getCharacter().isEmpty() ? "as " + m.getRole().getCharacter() :

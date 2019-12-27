@@ -17,7 +17,7 @@ public class GenericCollectionSetup extends AbstractSetup<MediaDescriptor, Gener
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<MediaItem<MediaDescriptor>> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
     cellFactory.setSideBarCenterBindProvider(item -> item.collectionTitle);

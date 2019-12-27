@@ -201,7 +201,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         break;
       case LIST:
         MediaGridView<MediaItem<Episode>> gridView = new MediaGridView<>();
-        MediaGridViewCellFactory<Episode> cellFactory = new MediaGridViewCellFactory<>();
+        MediaGridViewCellFactory<MediaItem<Episode>> cellFactory = new MediaGridViewCellFactory<>();
 
         gridView.visibleRows.set(1);
         gridView.visibleColumns.set(3);

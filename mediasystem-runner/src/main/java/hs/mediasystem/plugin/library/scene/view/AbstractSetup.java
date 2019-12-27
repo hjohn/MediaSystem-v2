@@ -88,7 +88,7 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
 
     areaPane.add(Area.CENTER, listView);
 
-    MediaGridViewCellFactory<MediaDescriptor> cellFactory = new MediaGridViewCellFactory<>();
+    MediaGridViewCellFactory<MediaItem<MediaDescriptor>> cellFactory = new MediaGridViewCellFactory<>();
 
     cellFactory.setMaxRatio(0.9);
     cellFactory.setContentBias(Orientation.VERTICAL);
@@ -287,7 +287,7 @@ public abstract class AbstractSetup<T extends MediaDescriptor, P extends GridVie
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<MediaItem<MediaDescriptor>> event, P presentation);
-  protected abstract void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory);
+  protected abstract void configureCellFactory(MediaGridViewCellFactory<MediaItem<MediaDescriptor>> cellFactory);
 
   protected Node createContextPanel(P presentation) {
     MediaItem<?> mediaItem = presentation.contextItem.getValue();

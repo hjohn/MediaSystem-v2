@@ -17,7 +17,7 @@ public class RecommendationsSetup extends AbstractSetup<Production, Recommendati
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
 
   @Override
-  protected void configureCellFactory(MediaGridViewCellFactory<MediaDescriptor> cellFactory) {
+  protected void configureCellFactory(MediaGridViewCellFactory<MediaItem<MediaDescriptor>> cellFactory) {
     cellFactory.setTitleBindProvider(item -> item.productionTitle);
     cellFactory.setSideBarTopLeftBindProvider(item -> item.productionYearRange);
     cellFactory.setImageExtractor(item -> item.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
