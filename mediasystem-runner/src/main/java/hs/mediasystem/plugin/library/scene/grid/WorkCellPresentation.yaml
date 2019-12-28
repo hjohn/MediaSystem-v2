@@ -1,0 +1,7 @@
+action-target:
+  watched:
+    order: 5
+    label: Watched
+  reidentify:
+    order: 6
+    label: Reidentify Media

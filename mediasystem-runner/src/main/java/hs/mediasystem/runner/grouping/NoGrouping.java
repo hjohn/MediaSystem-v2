@@ -1,15 +1,12 @@
 package hs.mediasystem.runner.grouping;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.plugin.library.scene.MediaItem;
-
 import java.util.List;
 
-public class NoGrouping<T extends MediaDescriptor> implements Grouping<T> {
+public class NoGrouping<T> implements Grouping<T> {
 
-  @Override
   @SuppressWarnings("unchecked")
-  public List<MediaItem<MediaDescriptor>> group(List<MediaItem<T>> items) {
-    return (List<MediaItem<MediaDescriptor>>)(List<?>)items;
+  @Override
+  public List<Object> group(List<T> items) {
+    return (List<Object>)items;
   }
 }

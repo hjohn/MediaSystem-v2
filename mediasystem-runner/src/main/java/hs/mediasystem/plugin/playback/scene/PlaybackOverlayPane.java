@@ -1,27 +1,25 @@
 package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.ext.basicmediatypes.domain.Details;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
-import hs.mediasystem.util.javafx.MapBindings;
 import hs.mediasystem.util.javafx.SpecialEffects;
-import hs.mediasystem.util.javafx.StringBinding;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -78,7 +76,7 @@ public class PlaybackOverlayPane extends StackPane {
 
   public PlaybackOverlayPane(PlaybackOverlayPresentation presentation, ImageHandleFactory imageHandleFactory) {
     this.presentation.set(presentation);
-    this.posterHandle = Val.wrap(this.presentation).map(p -> p.mediaItem.get()).map(MediaItem::getDetails).map(d -> d.getImage().orElse(null)).map(imageHandleFactory::fromURI);
+    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work.get()).map(Work::getDetails).map(d -> d.getImage().orElse(null)).map(imageHandleFactory::fromURI);
     this.player.bind(presentation.playerPresentation);
     this.overlayVisible.bind(presentation.overlayVisible);
 
@@ -104,7 +102,7 @@ public class PlaybackOverlayPane extends StackPane {
 
     setFocusTraversable(true);
 
-    borders.mediaProperty().bind(Val.wrap(this.presentation).map(p -> p.mediaItem.get()));
+    borders.mediaProperty().bind(Val.wrap(this.presentation).map(p -> p.work.get()));
 
     detailsOverlay.setId("video-overlay");
     detailsOverlay.add(new ScaledImageView() {{
@@ -123,19 +121,19 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          final StringBinding serieName = MapBindings.get(PlaybackOverlayPane.this.presentation).then("parentMediaItem").then("release").then("name").asStringBinding();
-          final StringBinding title = MapBindings.get(PlaybackOverlayPane.this.presentation).then("mediaItem").then("release").then("name").asStringBinding();
+          final Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).flatMap(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).map(Parent::getName);
+          final Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).flatMap(pop -> pop.work).map(Work::getDetails).map(Details::getName);
 
           HBox.setHgrow(this, Priority.ALWAYS);
           getChildren().add(new Label() {{
             setWrapText(true);
-            textProperty().bind(Bindings.when(serieName.isNotNull()).then(serieName).otherwise(title));
+            textProperty().bind(serieName.orElse(title));
             getStyleClass().add("video-title");
             setEffect(SpecialEffects.createNeonEffect(64));
           }});
           getChildren().add(new Label() {{
             setWrapText(true);
-            textProperty().bind(Bindings.when(serieName.isNotNull()).then(title).otherwise(new SimpleStringProperty()));
+            textProperty().bind(serieName.flatMap(x -> title).orElseConst(""));
             getStyleClass().add("video-subtitle");
           }});
         }});

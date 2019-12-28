@@ -1,0 +1,46 @@
+sort-order:
+  alpha: Alphabetically
+  best: Most Relevant
+  genre: By Genre
+  season-number: Season Number
+  episode-number: Episode Number
+  release-date: Release Date
+  popularity: Popularity
+  watched-date: Most Recently Watched
+filter:
+  none: "-"
+  cast: Only Castings
+  crew: Only as Crew
+  released-recently: Released in the last 5 years
+  watched-recently: Watched in the last 2 years
+stateFilter:
+  none: "-"
+  available: In Collection
+  unwatched: Not Watched
+grouping:
+  NoGrouping: "-"
+  CollectionGrouping: "By Collection"
+  GenreGrouping: "By Genre"
+header:
+  order: ORDER
+  filter: FILTER
+  stateFilter: STATE
+  grouping: GROUPING
+status-message:
+  unfiltered: Showing %d items
+  filtered: Showing %d out of %d items
+
+action-target:
+  sortOrder:
+    order: 1
+    label: Order
+  filter:
+    order: 2
+    label: Filter
+  stateFilter:
+    order: 3
+    label: State
+  grouping:
+    order: 4
+    label: Grouping
+

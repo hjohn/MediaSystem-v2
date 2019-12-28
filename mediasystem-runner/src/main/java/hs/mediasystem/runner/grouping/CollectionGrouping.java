@@ -1,48 +1,49 @@
 package hs.mediasystem.runner.grouping;
 
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
-import hs.mediasystem.mediamanager.db.VideoDatabase;
-import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.db.services.WorkService;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.scanner.api.MediaType;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class CollectionGrouping implements Grouping<Production> {
-  @Inject private MediaItem.Factory factory;
-  @Inject private VideoDatabase videoDatabase;
+public class CollectionGrouping implements Grouping<Work> {
+  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
+
+  @Inject private WorkService workService;
 
   @Override
-  @SuppressWarnings("unchecked")
-  public List<MediaItem<MediaDescriptor>> group(List<MediaItem<Production>> items) {
-    Set<Identifier> collectionIdentifiers = new HashSet<>();
-    List<MediaItem<MediaDescriptor>> topLevelItems = new ArrayList<>();
+  public List<Object> group(List<Work> items) {
+    Map<WorkId, List<Work>> childWorks = new HashMap<>();
+    List<Object> topLevelItems = new ArrayList<>();
 
-    for(MediaItem<? extends Production> mediaItem : items) {
-      mediaItem.getData().getCollectionIdentifier().ifPresentOrElse(collectionIdentifiers::add, () -> topLevelItems.add((MediaItem<MediaDescriptor>)(MediaItem<?>)mediaItem));
-    }
+    for(Work work : items) {
+      work.getParent().filter(p -> p.getType().equals(COLLECTION)).ifPresent(p -> {
+        if(!childWorks.containsKey(p.getId())) {
+          workService.find(p.getId()).ifPresent(r -> {
+            childWorks.put(p.getId(), workService.findChildren(p.getId()));
 
-    for(Identifier collectionIdentifier : collectionIdentifiers) {
-      ProductionCollection pc = videoDatabase.queryProductionCollection(collectionIdentifier);
+            topLevelItems.add(createWorkGroup(r, childWorks.get(p.getId())));
+          });
+        }
+      });
 
-      topLevelItems.add(factory.createParent(pc, createChildren(pc)));
+      if(work.getParent().filter(p -> childWorks.containsKey(p.getId())).isEmpty()) {
+        topLevelItems.add(work);
+      }
     }
 
     return topLevelItems;
   }
 
-  private List<MediaItem<? extends MediaDescriptor>> createChildren(ProductionCollection pc) {
-    return pc.getItems().stream()
-      .map(p -> factory.create(p, null))
-      .collect(Collectors.toUnmodifiableList());
+  private static WorksGroup createWorkGroup(Work work, List<Work> list) {
+    return new WorksGroup(work.getId(), work.getDetails(), list);
   }
 }

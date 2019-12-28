@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.plugin.library.scene.MediaItem.MediaStatus;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty2;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
@@ -8,13 +7,15 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.VerticalLabel;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -39,43 +40,27 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 
 public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCell<T>> {
-  private Function<T, ObservableValue<? extends String>> titleBindProvider;
-  private Function<T, ObservableValue<? extends String>> sideBarTopLeftBindProvider;
-  private Function<T, ObservableValue<? extends String>> sideBarCenterBindProvider;
-  private Function<T, ImageHandle> imageHandleExtractor;
-  private Function<T, String> detailExtractor;
-  private Function<T, ObservableValue<? extends MediaStatus>> mediaStatusBindProvider;
-  private Function<T, String> sequenceNumberExtractor;
+  private static final List<String> MEDIA_STATE_STYLES = List.of("watched", "available", "unavailable");
+
+  public interface Binder<T> extends BinderBase<T> {
+    Function<T, ObservableValue<? extends String>> titleBindProvider();
+    Function<T, ImageHandle> imageHandleExtractor();
+
+    default Function<T, ObservableValue<? extends String>> sideBarTopLeftBindProvider() { return null; }
+    default Function<T, ObservableValue<? extends String>> sideBarCenterBindProvider() { return null; }
+    default Function<T, String> detailExtractor() { return null; }
+    default Function<T, String> sequenceNumberExtractor() { return null; }
+    default Optional<BooleanProperty> watchedProperty(@SuppressWarnings("unused") T item) { return Optional.empty(); }
+    default Optional<Boolean> hasStream(@SuppressWarnings("unused") T item) { return Optional.empty(); }
+  }
+
+  private final BinderProvider bindersProvider;
 
   private Orientation orientation = Orientation.HORIZONTAL;
   private double aspectRatio = 1.5;
 
-  public void setTitleBindProvider(Function<T, ObservableValue<? extends String>> bindProvider) {
-    this.titleBindProvider = bindProvider;
-  }
-
-  public void setSideBarTopLeftBindProvider(Function<T, ObservableValue<? extends String>> bindProvider) {
-    this.sideBarTopLeftBindProvider = bindProvider;
-  }
-
-  public void setSideBarCenterBindProvider(Function<T, ObservableValue<? extends String>> bindProvider) {
-    this.sideBarCenterBindProvider = bindProvider;
-  }
-
-  public void setImageExtractor(Function<T, ImageHandle> extractor) {
-    this.imageHandleExtractor = extractor;
-  }
-
-  public void setDetailExtractor(Function<T, String> extractor) {
-    this.detailExtractor = extractor;
-  }
-
-  public void setMediaStatusBindProvider(Function<T, ObservableValue<? extends MediaStatus>> bindProvider) {
-    this.mediaStatusBindProvider = bindProvider;
-  }
-
-  public void setSequenceNumberExtractor(Function<T, String> extractor) {
-    this.sequenceNumberExtractor = extractor;
+  public MediaGridViewCellFactory(BinderProvider bindersProvider) {
+    this.bindersProvider = bindersProvider;
   }
 
   public void setContentBias(Orientation orientation) {
@@ -110,7 +95,8 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
       private final StackPane indicatorPane = new StackPane(indicatorBackground, indicator);
       private final Label sequenceNumber = Labels.create("sequence-number");
       private final StackPane sequenceNumberPane = new StackPane(sequenceNumber);
-      private final ObjectProperty<MediaStatus> mediaStatusProperty = new SimpleObjectProperty<>();
+      private final BooleanProperty watchedProperty = new SimpleBooleanProperty();
+      private final BooleanProperty hasStreamProperty = new SimpleBooleanProperty();
       private final DropShadow dropShadow = new DropShadow(BlurType.GAUSSIAN, new Color(1, 1, 1, 0.8), 0, 0.0, 0, 0);
 
       private final StringProperty sideBarTopLeftText = new SimpleStringProperty();
@@ -119,51 +105,45 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
       private final Pane sideDetail;
 
       {
-        if(sideBarCenterBindProvider != null || sideBarTopLeftBindProvider != null) {
-          if(orientation == Orientation.VERTICAL) {
-            sideDetail = new VBox();
+        if(orientation == Orientation.VERTICAL) {
+          sideDetail = new VBox();
 
-            VerticalLabel topLeft = new VerticalLabel(VerticalDirection.DOWN);
-            VerticalLabel center = new VerticalLabel(VerticalDirection.DOWN);
+          VerticalLabel topLeft = new VerticalLabel(VerticalDirection.DOWN);
+          VerticalLabel center = new VerticalLabel(VerticalDirection.DOWN);
 
-            sideDetail.getChildren().addAll(topLeft, center, indicatorPane);
+          sideDetail.getChildren().addAll(topLeft, center, indicatorPane);
 
-            topLeft.textProperty().bind(sideBarTopLeftText);
-            topLeft.getStyleClass().add("top-left");
-            topLeft.setMinWidth(Region.USE_PREF_SIZE);
-            topLeft.setMinHeight(Region.USE_PREF_SIZE);
+          topLeft.textProperty().bind(sideBarTopLeftText);
+          topLeft.getStyleClass().add("top-left");
+          topLeft.setMinWidth(Region.USE_PREF_SIZE);
+          topLeft.setMinHeight(Region.USE_PREF_SIZE);
 
-            center.textProperty().bind(sideBarCenterText);
-            center.getStyleClass().add("center");
-            center.setMinWidth(Region.USE_PREF_SIZE);
-            center.setMaxHeight(Double.MAX_VALUE);
+          center.textProperty().bind(sideBarCenterText);
+          center.getStyleClass().add("center");
+          center.setMinWidth(Region.USE_PREF_SIZE);
+          center.setMaxHeight(Double.MAX_VALUE);
 
-            VBox.setVgrow(center, Priority.ALWAYS);
-          }
-          else {
-            sideDetail = new HBox();
-
-            Label topLeft = new Label();
-            Label center = new Label();
-
-            topLeft.textProperty().bind(sideBarTopLeftText);
-            topLeft.getStyleClass().add("top-left");
-
-            center.textProperty().bind(sideBarCenterText);
-            center.getStyleClass().add("center");
-            center.setMaxWidth(Double.MAX_VALUE);
-
-            sideDetail.getChildren().addAll(topLeft, center, indicatorPane);
-
-            HBox.setHgrow(center, Priority.ALWAYS);
-          }
-
-          sideDetail.getStyleClass().add("image-detail-bar");
+          VBox.setVgrow(center, Priority.ALWAYS);
         }
         else {
           sideDetail = new HBox();
+
+          Label topLeft = new Label();
+          Label center = new Label();
+
+          topLeft.textProperty().bind(sideBarTopLeftText);
+          topLeft.getStyleClass().add("top-left");
+
+          center.textProperty().bind(sideBarCenterText);
+          center.getStyleClass().add("center");
+          center.setMaxWidth(Double.MAX_VALUE);
+
+          sideDetail.getChildren().addAll(topLeft, center, indicatorPane);
+
+          HBox.setHgrow(center, Priority.ALWAYS);
         }
-//        new Group(Labels.create("5", "top")), new Group(Labels.create("Star Wars", "center")), new Group(Labels.create("2005", "bottom")));
+
+        sideDetail.getStyleClass().add("image-detail-bar");
       }
 
       private final Pane imageBox;
@@ -211,25 +191,21 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
         }
       }});
 
-      private final ChangeListener<? super MediaStatus> updateIndicatorListener = (obs, old, current) -> {
-        switch(current == null ? MediaStatus.UNAVAILABLE : current) {
-        case WATCHED:
+      private final ChangeListener<Boolean> updateIndicatorListener = (obs, old, watched) -> updateMediaStateStyles();
+
+      private void updateMediaStateStyles() {
+        getStyleClass().removeAll(MEDIA_STATE_STYLES);
+
+        if(watchedProperty.get()) {
           getStyleClass().add("watched");
-          getStyleClass().remove("available");
-          getStyleClass().remove("unavailable");
-          break;
-        case AVAILABLE:
-          getStyleClass().add("available");
-          getStyleClass().remove("watched");
-          getStyleClass().remove("unavailable");
-          break;
-        case UNAVAILABLE:
-          getStyleClass().remove("available");
-          getStyleClass().remove("watched");
-          getStyleClass().add("unavailable");
-          break;
         }
-      };
+        else if(hasStreamProperty.get()) {
+          getStyleClass().add("available");
+        }
+        else {
+          getStyleClass().add("unavailable");
+        }
+      }
 
       {
         imageView.setPreserveRatio(true);
@@ -271,7 +247,8 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
           }
         });
 
-        this.mediaStatusProperty.addListener(updateIndicatorListener);
+        this.hasStreamProperty.addListener(updateIndicatorListener);
+        this.watchedProperty.addListener(updateIndicatorListener);
       }
 
       @Override
@@ -279,41 +256,52 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
         super.updateItem(item, empty);
 
         if(!empty) {
+          @SuppressWarnings("unchecked")
+          Binder<T> binders = bindersProvider.findBinder(Binder.class, item.getClass()).orElseThrow(() -> new IllegalStateException("No binder available for class: " + item.getClass()));
+
           setGraphic(vbox);
 
-          name.textProperty().bind(titleBindProvider.apply(item));
-          asyncImageProperty.imageHandleProperty().set(imageHandleExtractor.apply(item));
+          name.textProperty().bind(binders.titleBindProvider().apply(item));
+          asyncImageProperty.imageHandleProperty().set(binders.imageHandleExtractor().apply(item));
 
-          if(detailExtractor != null) {
-            detail.setText(detailExtractor.apply(item));
+          if(binders.detailExtractor() != null) {
+            detail.setText(binders.detailExtractor().apply(item));
           }
 
-          if(sideBarTopLeftBindProvider != null) {
-            sideBarTopLeftText.bind(sideBarTopLeftBindProvider.apply(item));
+          if(binders.sideBarTopLeftBindProvider() != null && binders.sideBarTopLeftBindProvider().apply(item) != null) {
+            sideDetail.setVisible(true);
+            sideDetail.setManaged(true);
+            sideBarTopLeftText.bind(binders.sideBarTopLeftBindProvider().apply(item));
           }
 
-          if(sideBarCenterBindProvider != null) {
-            sideBarCenterText.bind(sideBarCenterBindProvider.apply(item));
+          if(binders.sideBarCenterBindProvider() != null && binders.sideBarCenterBindProvider().apply(item) != null) {
+            sideDetail.setVisible(true);
+            sideDetail.setManaged(true);
+            sideBarCenterText.bind(binders.sideBarCenterBindProvider().apply(item));
           }
 
-          if(mediaStatusBindProvider != null) {
-            mediaStatusProperty.bind(mediaStatusBindProvider.apply(item));
+          binders.hasStream(item).ifPresent(hasStreamProperty::set);
+          binders.watchedProperty(item).ifPresent(watchedProperty::bind);
+
+          if(binders.sequenceNumberExtractor() != null) {
+            sequenceNumber.setText(binders.sequenceNumberExtractor().apply(item));
           }
 
-          if(sequenceNumberExtractor != null) {
-            sequenceNumber.setText(sequenceNumberExtractor.apply(item));
-          }
+          updateMediaStateStyles();
         }
         else {
           setGraphic(null);
 
+          sideDetail.setVisible(false);
+          sideDetail.setManaged(false);
+
           name.textProperty().unbind();
           sideBarTopLeftText.unbind();
           sideBarCenterText.unbind();
-          mediaStatusProperty.unbind();
+          watchedProperty.unbind();
+          hasStreamProperty.set(true);
           asyncImageProperty.imageHandleProperty().set(null);  // Helps to cancel bg loading of images when cells quickly change
-          getStyleClass().remove("watched");
-          getStyleClass().remove("available");
+          getStyleClass().removeAll(MEDIA_STATE_STYLES);
         }
       }
     };

@@ -1,12 +1,10 @@
 package hs.mediasystem.plugin.home;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.plugin.library.scene.base.BackgroundPane;
-import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
-import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.presentation.NodeFactory;
+import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.db.CollectionService;
 import hs.mediasystem.runner.db.Recommendation;
 import hs.mediasystem.runner.db.RecommendationService;
@@ -55,7 +53,6 @@ import org.reactfx.value.Val;
 @Singleton
 public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private MediaItem.Factory mediaItemFactory;
   @Inject private CollectionPresentationProvider collectionPresentationProvider;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
   @Inject private MenuOptionCellFactory menuOptionCellFactory;
@@ -143,12 +140,9 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   }
 
   private Supplier<ProductionPresentation> createProductionPresentationSupplier(Recommendation recommendation) {
-    MediaDescriptor mediaDescriptor = recommendation.getParent().orElse(recommendation.getMediaDescriptor());
+    WorkId id = recommendation.getWork().getParentId().orElse(recommendation.getWork().getId());
 
-    @SuppressWarnings("unchecked")
-    MediaItem<? extends Production> mediaItem = (MediaItem<? extends Production>)(MediaItem<?>)mediaItemFactory.create(mediaDescriptor, null);
-
-    return () -> productionPresentationFactory.create(mediaItem);
+    return () -> productionPresentationFactory.create(id);
   }
 
   private ActionListView<MenuOption> createWatchRecommendationView() {

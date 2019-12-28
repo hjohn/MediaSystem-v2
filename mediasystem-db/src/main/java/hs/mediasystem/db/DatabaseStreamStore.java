@@ -84,6 +84,13 @@ public class DatabaseStreamStore implements BasicStreamStore {
       .collect(Collectors.toSet());
   }
 
+  public synchronized Map<BasicStream, Identification> findStreamsAndIdentifications(Identifier identifier) {
+    return identifierIndex.getOrDefault(identifier, EMPTY_SET).stream()
+      .map(sid -> cache.get(sid))
+      .map(CachedStream::getIdentifiedStream)
+      .collect(Collectors.toMap(IdentifiedStream::getStream, is -> is.getIdentifications().get(identifier)));
+  }
+
   private Stream<BasicStream> stream(MediaType type, String tag) {
     return cache.values().stream()
       .filter(cs -> tag == null ? true : importSourceProvider.getStreamSource(cs.getImportSourceId() & 0xffff).getStreamSource().getTags().contains(tag))  // TODO performance here might suck somewhat
@@ -147,7 +154,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
   }
 
   @Override
-  public List<BasicStream> findNewest(int maximum) {
+  public synchronized List<BasicStream> findNewest(int maximum) {
     return cache.values().stream()
       .sorted(Comparator.comparing(CachedStream::getCreationTime).reversed())
       .limit(maximum)

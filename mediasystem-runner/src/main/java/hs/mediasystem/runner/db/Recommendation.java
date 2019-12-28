@@ -1,6 +1,7 @@
 package hs.mediasystem.runner.db;
 
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.scanner.api.StreamID;
 
 import java.time.Duration;
@@ -9,6 +10,7 @@ import java.util.Optional;
 
 public class Recommendation {
   private final Instant instant;
+  private final Work work;
   private final Optional<MediaDescriptor> parent;
   private final MediaDescriptor mediaDescriptor;
   private final Optional<Duration> length;
@@ -16,9 +18,12 @@ public class Recommendation {
   private final StreamID streamId;
   private final boolean watched;
 
-  public Recommendation(Instant instant, MediaDescriptor parent, MediaDescriptor mediaDescriptor, StreamID streamId, Duration length, Duration position, boolean watched) {
+  public Recommendation(Instant instant, Work work, MediaDescriptor parent, MediaDescriptor mediaDescriptor, StreamID streamId, Duration length, Duration position, boolean watched) {
     if(instant == null) {
       throw new IllegalArgumentException("instant cannot be null");
+    }
+    if(work == null) {
+      throw new IllegalArgumentException("work cannot be null");
     }
     if(mediaDescriptor == null) {
       throw new IllegalArgumentException("mediaDescriptor cannot be null");
@@ -31,6 +36,7 @@ public class Recommendation {
     }
 
     this.instant = instant;
+    this.work = work;
     this.parent = Optional.ofNullable(parent);
     this.mediaDescriptor = mediaDescriptor;
     this.streamId = streamId;
@@ -41,6 +47,10 @@ public class Recommendation {
 
   public Instant getInstant() {
     return instant;
+  }
+
+  public Work getWork() {
+    return work;
   }
 
   public Optional<MediaDescriptor> getParent() {

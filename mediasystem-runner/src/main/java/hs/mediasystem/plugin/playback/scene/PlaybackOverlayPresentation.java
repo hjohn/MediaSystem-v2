@@ -2,10 +2,9 @@ package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
-import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.StringURI;
 
@@ -28,8 +27,7 @@ import javax.inject.Inject;
 public class PlaybackOverlayPresentation implements Navigable, Presentation {
   private static final Logger LOGGER = Logger.getLogger(PlaybackOverlayPresentation.class.getName());
 
-  public final ObjectProperty<MediaItem<?>> parentMediaItem = new SimpleObjectProperty<>();
-  public final ObjectProperty<MediaItem<?>> mediaItem = new SimpleObjectProperty<>();
+  public final ObjectProperty<Work> work = new SimpleObjectProperty<>();
   public final ObjectProperty<StringURI> uri = new SimpleObjectProperty<>();
   public final LongProperty startPositionMillis = new SimpleLongProperty();
 
@@ -37,14 +35,16 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
 
+  private StreamID streamId;
+
   @Inject private PlayerSetting playerSetting;
   @Inject private StreamStateService streamStateService;
 
-  public PlaybackOverlayPresentation set(MediaItem<?> mediaItem, StringURI uri, long startPositionMillis) {
-    this.parentMediaItem.set(mediaItem.getParent());
-    this.mediaItem.set(mediaItem);
+  public PlaybackOverlayPresentation set(Work work, StringURI uri, long startPositionMillis) {
+    this.work.set(work);
     this.uri.set(uri);
     this.startPositionMillis.set(startPositionMillis);
+    this.streamId = work.getPrimaryStream().orElseThrow().getId();
 
     return this;
   }
@@ -82,11 +82,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
       }
 
       private void updatePositionAndViewed() {
-        mediaItem.get().getStreams().stream()
-          .filter(s -> s.getUri().equals(uri.get()))
-          .findFirst()
-          .map(BasicStream::getId)
-          .ifPresent(this::updatePositionAndViewed);
+        updatePositionAndViewed(streamId);
       }
 
       private void updatePositionAndViewed(StreamID streamId) {
@@ -98,7 +94,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
           boolean watched = streamStateService.isWatched(streamId);
 
           if(timeViewed >= length * 9 / 10 && !watched) {   // 90% viewed and not viewed yet?
-            LOGGER.config("Marking as viewed: " + mediaItem.get());
+            LOGGER.info("Marking as viewed: " + work.get());
 
             streamStateService.setWatched(streamId, true);
           }
@@ -120,9 +116,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
               streamStateService.setTotalDuration(streamId, (int)(length / 1000));
               streamStateService.setLastWatchedTime(streamId, now);
 
-              if(parentMediaItem.get() != null) {
-                streamStateService.setLastWatchedTime(parentMediaItem.get().getStream().getId(), now);
-              }
+              work.get().getParent().ifPresent(p -> streamStateService.setLastWatchedTime(p.temp_getStreamId(), now));
             }
           }
         }
@@ -140,7 +134,6 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
   @Override
   public void navigateBack(Event e) {
-    System.out.println("PlaybackOverlayPresentation, consumed = " + e.isConsumed());
     playerPresentation.get().stop();
   }
 }

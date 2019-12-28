@@ -411,7 +411,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
     if(groups != null) {
       // Adjust line count in case last group is near end:
-      int lastGroupIndex = groups.get(groups.size() - 1).getPosition();
+      int lastGroupIndex = groups.get(groups.size() - 1).getPosition();  // TODO rare cases get IndexOutOfBoundsException here (-1, length = 0)
       int totalItems = getSkinnable().getItems().size();
       int itemsVisibleInLastGroup = totalItems - lastGroupIndex;
       int linesOccupiedInLastGroup = (itemsVisibleInLastGroup + gm.getWidth() - 1) / gm.getWidth();

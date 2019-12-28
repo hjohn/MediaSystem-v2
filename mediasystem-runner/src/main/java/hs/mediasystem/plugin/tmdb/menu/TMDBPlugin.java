@@ -1,14 +1,12 @@
 package hs.mediasystem.plugin.tmdb.menu;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.mediamanager.db.VideoDatabase;
-import hs.mediasystem.plugin.library.scene.MediaItem;
-import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.Filter;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.SortOrder;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.StateFilter;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation.ViewOptions;
+import hs.mediasystem.db.services.WorksService;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.plugin.library.scene.WorkBinder;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
@@ -16,7 +14,6 @@ import hs.mediasystem.runner.util.ResourceManager;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,21 +23,24 @@ import javax.inject.Singleton;
 
 @Singleton
 public class TMDBPlugin implements Plugin {
-  private static final List<SortOrder<MediaDescriptor>> SORT_ORDERS = List.of(
-    new SortOrder<>("release-date", MediaItem.BY_RELEASE_DATE.reversed()),
-    new SortOrder<>("alpha", MediaItem.BY_NAME)
+  private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
+    new SortOrder<>("release-date", WorkBinder.BY_RELEASE_DATE.reversed()),
+    new SortOrder<>("alpha", WorkBinder.BY_NAME)
   );
 
-  private static final List<Filter<Production>> FILTERS = List.of(
-    new Filter<>("none", mi -> true),
-    new Filter<>("released-recently", mi -> mi.date.get().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+  private static final List<Filter<Work>> FILTERS = List.of(
+    new Filter<>("none", r -> true),
+    new Filter<>("released-recently", r -> r.getDetails().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
-  private static final List<StateFilter> STATE_FILTERS = List.of(StateFilter.ALL, StateFilter.AVAILABLE, StateFilter.UNWATCHED);
+  private static final List<Filter<Work>> STATE_FILTERS = List.of(
+    new Filter<>("none", r -> true),
+    new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isWatched())
+  );
 
   @Inject private GenericCollectionPresentation.Factory factory;
-  @Inject private VideoDatabase videoDatabase;
-  @Inject private MediaItem.Factory mediaItemFactory;
+  @Inject private WorksService worksService;
 
   @Override
   public Menu getMenu() {
@@ -54,12 +54,7 @@ public class TMDBPlugin implements Plugin {
     ));
   }
 
-  private ObservableList<MediaItem<Production>> createProductionItems() {
-    List<Production> list = videoDatabase.queryTop100();
-
-    return FXCollections.observableArrayList(list.stream().map(p -> mediaItemFactory.create(
-      p,
-      null
-    )).collect(Collectors.toList()));
+  private ObservableList<Work> createProductionItems() {
+    return FXCollections.observableArrayList(worksService.findTop100());
   }
 }

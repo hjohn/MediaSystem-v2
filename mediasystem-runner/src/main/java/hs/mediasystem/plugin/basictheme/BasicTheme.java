@@ -8,16 +8,16 @@ import hs.mediasystem.plugin.home.HomePresentation;
 import hs.mediasystem.plugin.home.HomeScreenNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
-import hs.mediasystem.plugin.library.scene.serie.ProductionOverviewNodeFactory;
-import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
-import hs.mediasystem.plugin.library.scene.view.CastAndCrewPresentation;
-import hs.mediasystem.plugin.library.scene.view.CastAndCrewSetup;
-import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.view.GenericCollectionSetup;
-import hs.mediasystem.plugin.library.scene.view.PersonParticipationsPresentation;
-import hs.mediasystem.plugin.library.scene.view.PersonParticipationsSetup;
-import hs.mediasystem.plugin.library.scene.view.RecommendationsPresentation;
-import hs.mediasystem.plugin.library.scene.view.RecommendationsSetup;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionSetup;
+import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentation;
+import hs.mediasystem.plugin.library.scene.grid.RecommendationsSetup;
+import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentation;
+import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsSetup;
+import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsPresentation;
+import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsSetup;
+import hs.mediasystem.plugin.library.scene.overview.ProductionOverviewNodeFactory;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackLayout;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation;
@@ -45,10 +45,10 @@ public class BasicTheme implements Theme {
     if(cls == GenericCollectionPresentation.class) {
       return LibraryPresentation.class;
     }
-    if(cls == PersonParticipationsPresentation.class) {
+    if(cls == ParticipationsPresentation.class) {
       return LibraryPresentation.class;
     }
-    if(cls == CastAndCrewPresentation.class) {
+    if(cls == ContributionsPresentation.class) {
       return LibraryPresentation.class;
     }
     if(cls == ProductionPresentation.class) {
@@ -90,11 +90,11 @@ public class BasicTheme implements Theme {
     if(cls == HomePresentation.class) {
       return (Class<T>)HomeScreenNodeFactory.class;
     }
-    if(cls == PersonParticipationsPresentation.class) {
-      return (Class<T>)PersonParticipationsSetup.class;
+    if(cls == ParticipationsPresentation.class) {
+      return (Class<T>)ParticipationsSetup.class;
     }
-    if(cls == CastAndCrewPresentation.class) {
-      return (Class<T>)CastAndCrewSetup.class;
+    if(cls == ContributionsPresentation.class) {
+      return (Class<T>)ContributionsSetup.class;
     }
     if(cls == ProductionPresentation.class) {
       return (Class<T>)ProductionOverviewNodeFactory.class;

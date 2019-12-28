@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.domain.AudioTrack;
 import hs.mediasystem.domain.Subtitle;
-import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.util.javafx.StringBinding;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.RangeBar;
@@ -37,8 +37,8 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 public class PlaybackInfoBorders extends StackPane {
-  private final ObjectProperty<MediaItem<?>> media = new SimpleObjectProperty<>();
-  public ObjectProperty<MediaItem<?>> mediaProperty() { return media; }
+  private final ObjectProperty<Work> media = new SimpleObjectProperty<>();
+  public ObjectProperty<Work> mediaProperty() { return media; }
 
   public final Var<Boolean> clockAndPositionVisible = Var.newSimpleVar(true);
 

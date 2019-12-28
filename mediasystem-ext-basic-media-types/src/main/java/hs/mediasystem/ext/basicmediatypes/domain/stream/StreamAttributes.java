@@ -1,23 +1,17 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
 import hs.mediasystem.scanner.api.Attribute;
-import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
 
 import java.time.Instant;
 
 public class StreamAttributes {
-  private final MediaType type;
   private final StringURI uri;
   private final Instant creationTime;
   private final Attributes attributes;
 
-  public StreamAttributes(MediaType type, StringURI uri, Instant creationTime, Attributes attributes) {
-    this.creationTime = creationTime;
-    if(type == null) {
-      throw new IllegalArgumentException("type cannot be null");
-    }
+  public StreamAttributes(StringURI uri, Instant creationTime, Attributes attributes) {
     if(uri == null) {
       throw new IllegalArgumentException("uri cannot be null");
     }
@@ -31,13 +25,9 @@ public class StreamAttributes {
       throw new IllegalArgumentException("attributes must contain Attribute.TITLE");
     }
 
-    this.type = type;
     this.uri = uri;
+    this.creationTime = creationTime;
     this.attributes = attributes;
-  }
-
-  public MediaType getType() {
-    return type;
   }
 
   public StringURI getUri() {

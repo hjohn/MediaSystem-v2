@@ -3,10 +3,10 @@ package hs.mediasystem.runner.expose;
 import hs.mediasystem.domain.AudioTrack;
 import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.domain.Subtitle;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.plugin.library.scene.serie.EpisodePresentation;
-import hs.mediasystem.plugin.library.scene.serie.ProductionPresentation;
-import hs.mediasystem.plugin.library.scene.view.GridViewPresentation;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
+import hs.mediasystem.plugin.library.scene.grid.WorkCellPresentation;
+import hs.mediasystem.plugin.library.scene.overview.EpisodePresentation;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.root.RootPresentation;
 import hs.mediasystem.runner.util.ResourceManager;
@@ -100,36 +100,36 @@ public class Annotations {
       .format(AudioTrack::getDescription)
       .as("audioTrack");
 
-    Expose.listProperty((GridViewPresentation<MediaDescriptor> p) -> p.sortOrder)
+    Expose.listProperty((GridViewPresentation<Object> p) -> p.sortOrder)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableSortOrders)
       .format(f -> ResourceManager.getText(GridViewPresentation.class, "sort-order", f.resourceKey))
       .as("sortOrder");
 
-    Expose.listProperty((GridViewPresentation<MediaDescriptor> p) -> p.filter)
+    Expose.listProperty((GridViewPresentation<Object> p) -> p.filter)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableFilters)
       .format(f -> ResourceManager.getText(GridViewPresentation.class, "filter", f.resourceKey))
       .as("filter");
 
-    Expose.listProperty((GridViewPresentation<MediaDescriptor> p) -> p.stateFilter)
+    Expose.listProperty((GridViewPresentation<Object> p) -> p.stateFilter)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableStateFilters)
-      .format(f -> ResourceManager.getText(GridViewPresentation.class, "stateFilter", f.name().toLowerCase()))
+      .format(f -> ResourceManager.getText(GridViewPresentation.class, "stateFilter", f.resourceKey))
       .as("stateFilter");
 
-    Expose.listProperty((GridViewPresentation<MediaDescriptor> p) -> p.grouping)
+    Expose.listProperty((GridViewPresentation<Object> p) -> p.grouping)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableGroupings)
       .format(f -> ResourceManager.getText(GridViewPresentation.class, "grouping", f.getClass().getSimpleName()))
       .as("grouping");
 
-    Expose.booleanProperty(GridViewPresentation<?>::watchedProperty)
-      .of(GridViewPresentation.class)
+    Expose.booleanProperty(WorkCellPresentation::watchedProperty)
+      .of(WorkCellPresentation.class)
       .as("watched");
 
-    Expose.action(GridViewPresentation<?>::reidentify)
-      .of(GridViewPresentation.class)
+    Expose.action(WorkCellPresentation::reidentify)
+      .of(WorkCellPresentation.class)
       .as("reidentify");
 
     // Debug actions

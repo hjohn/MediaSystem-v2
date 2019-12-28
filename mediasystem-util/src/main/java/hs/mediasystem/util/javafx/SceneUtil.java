@@ -95,6 +95,10 @@ public class SceneUtil {
 
         long duration = System.currentTimeMillis() - startTime;
 
+        if(duration > 10) {
+          LOGGER.warning("Slow Event (" + duration + " ms): " + event);
+        }
+
 //        future.cancel(false);
 //
 //        if(!future.isCancelled()) {  // separate check, as future may have been cancelled already multiple times, so cannot use result from Future#cancel

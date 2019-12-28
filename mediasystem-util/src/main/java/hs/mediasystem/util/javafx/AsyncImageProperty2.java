@@ -128,27 +128,28 @@ public class AsyncImageProperty2 extends SimpleObjectProperty<Image> {
    * @param imageHandle the image to load
    */
   private static void loadImageInBackground(WeakReference<AsyncImageProperty2> propertyRef, ImageHandle imageHandle, int maxWidth, int maxHeight) {
-    Image cachedImage = ImageCache.getClosestImage(imageHandle, maxWidth, maxHeight);
-
-    if(cachedImage != null) {
-      AsyncImageProperty2 property = propertyRef.get();
-
-      if(property != null) {
-        try {
-          if(imageHandle.equals(property.imageHandle.get())) {  // TODO deduplicate
-            property.set(cachedImage);
-
-            return;
-          }
-        }
-        finally {
-          try(Key key = property.backgroundLoadLock.lock()) {
-            property.backgroundLoadInProgress = false;
-            property.loadImageInBackgroundIfNeeded();
-          }
-        }
-      }
-    }
+//    Image cachedImage = ImageCache.getClosestImage(imageHandle, maxWidth, maxHeight);
+//
+//    if(cachedImage != null) {
+//      AsyncImageProperty2 property = propertyRef.get();
+//
+//      if(property != null) {
+//        try {
+//          if(imageHandle.equals(property.imageHandle.get())) {  // TODO deduplicate
+//            property.set(cachedImage);
+//
+//            return;
+//          }
+//        }
+//        finally {
+//          try(Key key = property.backgroundLoadLock.lock()) {
+//            property.backgroundLoadInProgress = false;
+//            property.loadImageInBackgroundIfNeeded();
+//          }
+//        }
+//      }
+//    }
+    // TODO: because this could potentially return a tiny poststamp, with no recourse to get a better image later
 
     CompletableFuture
       .supplyAsync(() -> imageHandle.isFastSource() ? FAST_EXECUTOR : SLOW_EXECUTOR, FAST_EXECUTOR)

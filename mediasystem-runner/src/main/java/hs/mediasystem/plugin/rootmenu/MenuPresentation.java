@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.rootmenu;
 
-import hs.mediasystem.plugin.library.scene.view.PresentationLoader;
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.PresentationLoader;
 
 import java.util.Collections;
 import java.util.List;

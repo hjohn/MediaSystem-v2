@@ -1,12 +1,12 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.plugin.library.scene.MediaItem;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
-import hs.mediasystem.plugin.library.scene.view.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.view.GenericCollectionSetup;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
+import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.util.ImageHandleFactory;
 
 import javax.inject.Inject;
@@ -16,11 +16,19 @@ import org.reactfx.value.Val;
 
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = GenericCollectionSetup.class)
-public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation<MediaDescriptor>, GenericCollectionSetup> {
+public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation<Work>, GenericCollectionSetup> {
   @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
-  protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<MediaDescriptor> presentation) {
-    parentPresentation.backdrop.bind(Val.wrap(presentation.selectedItem).map(MediaItem::getDetails).map(d -> d.getBackdrop().orElse(null)).map(imageHandleFactory::fromURI));
+  protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<Work> presentation) {
+    parentPresentation.backdrop.bind(
+      Val.wrap(presentation.selectedItem)
+        .filter(Work.class::isInstance)
+        .map(Work.class::cast)
+        .map(Work::getDetails)
+        .orElse(Val.wrap(presentation.selectedItem).filter(WorksGroup.class::isInstance).map(WorksGroup.class::cast).map(WorksGroup::getDetails))
+        .map(d -> d.getBackdrop().orElse(null))
+        .map(imageHandleFactory::fromURI)
+    );
   }
 }

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -81,8 +82,8 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   }
 
   @Override
-  public StreamMetaData find(StreamID streamId) {
-    return cache.get(streamId);
+  public Optional<StreamMetaData> find(StreamID streamId) {
+    return Optional.ofNullable(cache.get(streamId));
   }
 
   @Override
