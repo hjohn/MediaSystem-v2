@@ -13,8 +13,8 @@ public class Details {
   private final Optional<ImageURI> backdrop;
 
   public Details(String name, String description, LocalDate date, ImageURI image, ImageURI backdrop) {
-    if(name == null) {
-      throw new IllegalArgumentException("name cannot be null");
+    if(name == null || name.isBlank()) {
+      throw new IllegalArgumentException("name cannot be null or blank: " + name);
     }
 
     this.name = name;
