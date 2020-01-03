@@ -11,8 +11,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -350,11 +350,11 @@ public class GridViewPresentation<T> extends AbstractPresentation implements Nav
     final List<Filter<T>> stateFilters;
     final List<Grouping<T>> groupings;
 
-    public ViewOptions(List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<Filter<T>> stateFilters, List<Grouping<T>> groupers) {
+    public ViewOptions(List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<Filter<T>> stateFilters, List<Grouping<T>> groupings) {
       this.sortOrders = sortOrders;
       this.filters = filters;
       this.stateFilters = stateFilters;
-      this.groupings = groupers;
+      this.groupings = groupings;
     }
 
     public ViewOptions(List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<Filter<T>> stateFilters) {
