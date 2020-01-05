@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.mediasystem.client.Sequence;
+import hs.mediasystem.client.Sequence.Type;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.db.SettingsStore;
-import hs.mediasystem.db.StreamStateService;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.scanner.api.StreamID;
 
@@ -28,21 +28,20 @@ import org.reactfx.value.Var;
 
 public class EpisodesPresentation extends AbstractPresentation {
   private static final String SYSTEM = "MediaSystem:Episode";
-  private static final Comparator<Work> SEASON_ORDER = (r1, r2) -> {
-    int s1 = ((Episode)r1.getDescriptor()).getSeasonNumber();
-    int s2 = ((Episode)r2.getDescriptor()).getSeasonNumber();
+  private static final Comparator<Work> SEASON_ORDER = (w1, w2) -> {
+    int s1 = toSeasonBarIndex(w1);
+    int s2 = toSeasonBarIndex(w2);
 
-    return Integer.compare(s1 <= 0 ? Integer.MAX_VALUE - 10 - s1 : s1, s2 == 0 ? Integer.MAX_VALUE - 10 - s2 : s2);
+    return Integer.compare(s1 <= 0 ? Integer.MAX_VALUE - 10 - s1 : s1, s2 <= 0 ? Integer.MAX_VALUE - 10 - s2 : s2);
   };
-  private static final Comparator<Work> EPISODE_ORDER = (r1, r2) -> {
-    int e1 = ((Episode)r1.getDescriptor()).getNumber();
-    int e2 = ((Episode)r2.getDescriptor()).getNumber();
+  private static final Comparator<Work> EPISODE_ORDER = (w1, w2) -> {
+    int e1 = w1.getDetails().getSequence().map(Sequence::getNumber).orElse(0);
+    int e2 = w2.getDetails().getSequence().map(Sequence::getNumber).orElse(0);
 
     return Integer.compare(e1, e2);
   };
 
   @Inject private SettingsStore settingsStore;
-  @Inject private StreamStateService streamStateService;
 
   private final List<Work> internalEpisodeItems = new ArrayList<>();
 
@@ -84,7 +83,7 @@ public class EpisodesPresentation extends AbstractPresentation {
     ObservableSet<EventStream<Change<Boolean>>> set = FXCollections.observableSet(new HashSet<>());
 
     for(Work episodeItem : internalEpisodeItems) {
-      episodeItem.getPrimaryStream().map(MediaStream::getId).map(streamStateService::watchedProperty).ifPresent(p -> set.add(EventStreams.changesOf(p)));
+      set.add(EventStreams.changesOf(episodeItem.getState().isConsumed()));
     }
 
     EventStreams.merge(set)
@@ -102,9 +101,9 @@ public class EpisodesPresentation extends AbstractPresentation {
     for(Work episodeItem : internalEpisodeItems) {
       StreamID streamId = episodeItem.getPrimaryStream().map(MediaStream::getId).orElse(null);
       boolean missing = streamId == null;
-      boolean watched = streamId == null ? false : streamStateService.isWatched(streamId);
+      boolean watched = streamId == null ? false : episodeItem.getState().isConsumed().getValue();
 
-      int seasonNumber = ((Episode)episodeItem.getDescriptor()).getSeasonNumber();
+      int seasonNumber = toSeasonBarIndex(episodeItem);
 
       missingCounts.merge(seasonNumber, missing ? 1 : 0, (a, b) -> a + b);
       watchCounts.merge(seasonNumber, watched ? 1 : 0, (a, b) -> a + b);
@@ -115,5 +114,11 @@ public class EpisodesPresentation extends AbstractPresentation {
       seasonWatchStates.computeIfAbsent(seasonNumber, k -> Var.newSimpleVar(null))
         .setValue(new SeasonWatchState(totalCounts.get(seasonNumber), missingCounts.get(seasonNumber), watchCounts.get(seasonNumber)));
     }
+  }
+
+  private static int toSeasonBarIndex(Work episode) {
+    Sequence sequence = episode.getDetails().getSequence().orElseThrow();
+
+    return sequence.getType() == Type.SPECIAL ? 0 : sequence.getType() == Type.EXTRA ? -1 : sequence.getSeasonNumber().orElse(-1);
   }
 }

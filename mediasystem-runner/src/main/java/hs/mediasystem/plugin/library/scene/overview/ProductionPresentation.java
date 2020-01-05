@@ -1,13 +1,11 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.db.StreamStateService;
-import hs.mediasystem.db.services.WorkService;
+import hs.mediasystem.client.Sequence;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorkClient;
 import hs.mediasystem.ext.basicmediatypes.VideoLink;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.mediamanager.db.VideoDatabase;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
@@ -20,6 +18,7 @@ import hs.mediasystem.util.javafx.action.Action;
 import hs.mediasystem.util.javafx.action.SimpleAction;
 import hs.mediasystem.util.javafx.property.SimpleReadOnlyObjectProperty;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -46,28 +45,26 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   @Singleton
   public static class Factory {
-    @Inject private Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
+    @Inject private PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory;
     @Inject private VideoDatabase videoDatabase;
-    @Inject private StreamStateService streamStateService;
     @Inject private Provider<EpisodesPresentation> episodesPresentationProvider;
     @Inject private PlayAction.Factory playActionFactory;
     @Inject private ResumeAction.Factory resumeActionFactory;
-    @Inject private WorkService workService;
+    @Inject private WorkClient workClient;
 
     public ProductionPresentation create(WorkId id) {
-      return create(workService.find(id).orElseThrow());
+      return create(workClient.find(id).orElseThrow());
     }
 
     private ProductionPresentation create(Work work) {
       return new ProductionPresentation(
-        playbackOverlayPresentationProvider,
+        playbackOverlayPresentationFactory,
         videoDatabase,
-        streamStateService,
         episodesPresentationProvider,
         playActionFactory,
         resumeActionFactory,
         work,
-        workService.findChildren(work.getId())
+        workClient.findChildren(work.getId())
       );
     }
   }
@@ -80,7 +77,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     MAIN, PLAY_RESUME, RELATED
   }
 
-  private final Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
+  private final PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory;
   private final VideoDatabase videoDatabase;
 
   private final ObjectProperty<VideoLink> trailerVideoLink = new SimpleObjectProperty<>();
@@ -112,21 +109,17 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   private final Var<Boolean> rootWatched;
   private final Var<Boolean> rootMissing;
 
-  private final StreamStateService streamStateService;
-
   private ProductionPresentation(
-    Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider,
+    PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory,
     VideoDatabase videoDatabase,
-    StreamStateService streamStateService,
     Provider<EpisodesPresentation> episodesPresentationProvider,
     PlayAction.Factory playActionFactory,
     ResumeAction.Factory resumeActionFactory,
     Work rootItem,
     List<Work> children
   ) {
-    this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
+    this.playbackOverlayPresentationFactory = playbackOverlayPresentationFactory;
     this.videoDatabase = videoDatabase;
-    this.streamStateService = streamStateService;
     this.rootItem = rootItem;
 
     this.episodesPresentation = rootItem.getType().equals(SERIE) ? episodesPresentationProvider.get().set(rootItem, children) : null;
@@ -149,7 +142,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
       .flatMap(ms -> ms.getMetaData().map(StreamMetaData::getLength).map(d -> (int)d.toSeconds()))
       .orElse(null));
 
-    this.rootWatched = Var.newSimpleVar(rootItem.getState().isWatched());
+    this.rootWatched = rootItem.getState().isConsumed();
     this.rootMissing = Var.newSimpleVar(rootItem.getStreams().isEmpty());
 
     this.watchedPercentage = Val.create(this::getWatchedPercentage, EventStreams.merge(
@@ -240,16 +233,16 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
       return -1.0;
     }
     if(!rootItem.getType().equals(SERIE) && resume.resumePosition.isPresent() && totalDuration.isPresent()) {
-      return resume.resumePosition.getValue() / (double)totalDuration.getValue();
+      return resume.resumePosition.getValue().toSeconds() / (double)totalDuration.getValue();
     }
     if(rootItem.getType().equals(SERIE)) {
       long totalWatched = episodeItems.stream()
-        .filter(i -> ((Episode)i.getDescriptor()).getSeasonNumber() > 0)
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
         .filter(i -> isWatched(i).getValue())
         .count();
 
       long total = episodeItems.stream()
-        .filter(i -> ((Episode)i.getDescriptor()).getSeasonNumber() > 0)
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
         .count();
 
       return totalWatched / (double)total;
@@ -261,12 +254,12 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   private double getMissingFraction() {
     if(rootItem.getType().equals(SERIE) && !rootWatched.getValue() && !rootMissing.getValue()) {
       long totalMissingUnwatched = episodeItems.stream()
-        .filter(i -> ((Episode)i.getDescriptor()).getSeasonNumber() > 0)
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
         .filter(i -> i.getStreams().isEmpty() && !isWatched(i).getValue())
         .count();
 
       long total = episodeItems.stream()
-        .filter(i -> ((Episode)i.getDescriptor()).getSeasonNumber() > 0)
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
         .count();
 
       return totalMissingUnwatched / (double)total;
@@ -304,10 +297,10 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     else {
       long total = 0;
       long watched = 0;
-      int seasonNumber = ((Episode)currentItem.getDescriptor()).getSeasonNumber();
+      int seasonNumber = currentItem.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0);
 
       for(Work episode : episodeItems) {
-        if(((Episode)episode.getDescriptor()).getSeasonNumber() == seasonNumber) {
+        if(episode.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) == seasonNumber) {
           total++;
 
           if(isWatched(episode).getValue()) {
@@ -320,12 +313,8 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     }
   }
 
-  private Var<Boolean> isWatched(Work episode) {
-    return episode.getPrimaryStream()
-      .map(MediaStream::getId)
-      .map(streamStateService::watchedProperty)
-      .map(Var::suspendable)
-      .orElse(Var.newSimpleVar(episode.getState().isWatched()).suspendable());
+  private static Var<Boolean> isWatched(Work episode) {
+    return episode.getState().isConsumed();
   }
 
   public Property<Boolean> seasonWatchedProperty() {
@@ -339,11 +328,11 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     List<Work> initialWatchedEpisodes;
 
     seasonEpisodes = episodeItems.stream()
-      .filter(r -> ((Episode)r.getDescriptor()).getSeasonNumber() == ((Episode)currentItem.getDescriptor()).getSeasonNumber())
+      .filter(w -> w.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) == currentItem.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0))
       .collect(Collectors.toList());
 
     initialWatchedEpisodes = seasonEpisodes.stream()
-      .filter(r -> isWatched(r).getValue())
+      .filter(w -> isWatched(w).getValue())
       .collect(Collectors.toList());
 
     Property<Boolean> seasonWatchedProperty = new SimpleObjectProperty<>();
@@ -374,7 +363,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   private void playTrailer(Event event) {
     VideoLink videoLink = trailerVideoLink.get();
-    Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationProvider.get().set(getPlayableMediaItem(), new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), 0)));
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(getPlayableWork(), new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
   }
 
   public void update() {
@@ -405,7 +394,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     return null;
   }
 
-  private Work getPlayableMediaItem() {
+  private Work getPlayableWork() {
     return rootItem.getType().equals(SERIE) ? episodeItem.get() : rootItem;
   }
 

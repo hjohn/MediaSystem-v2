@@ -1,9 +1,9 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
-import hs.mediasystem.db.services.WorkService;
+import hs.mediasystem.client.Contribution;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorkClient;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
 
 import java.util.Comparator;
@@ -33,12 +33,12 @@ public class ContributionsPresentation extends GridViewPresentation<Contribution
 
   @Singleton
   public static class Factory {
-    @Inject private WorkService workService;
+    @Inject private WorkClient workClient;
 
     public ContributionsPresentation create(Work work) {
       return new ContributionsPresentation(
         work,
-        workService.findContributions(work.getId())
+        workClient.findContributions(work.getId())
       );
     }
   }

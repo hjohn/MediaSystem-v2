@@ -1,9 +1,7 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.mediasystem.db.services.WorkService;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorkClient;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 
 import java.time.LocalDate;
@@ -25,28 +23,28 @@ public class RecommendationsPresentation extends GridViewPresentation<Work> {
 
   private static final List<Filter<Work>> FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("released-recently", r -> r.getDetails().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+    new Filter<>("released-recently", r -> r.getDetails().getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isWatched())
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
   );
 
   @Singleton
   public static class Factory {
-    @Inject private WorkService workService;
+    @Inject private WorkClient workClient;
 
-    public RecommendationsPresentation create(Production production) {
+    public RecommendationsPresentation create(Work work) {
       return new RecommendationsPresentation(
-        production,
-        FXCollections.observableList(workService.findRecommendations(new WorkId(production.getIdentifier())))
+        work,
+        FXCollections.observableList(workClient.findRecommendations(work.getId()))
       );
     }
   }
 
-  protected RecommendationsPresentation(Production production, ObservableList<Work> recommendations) {
-    super(recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), production);
+  protected RecommendationsPresentation(Work work, ObservableList<Work> recommendations) {
+    super(recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), work);
   }
 }

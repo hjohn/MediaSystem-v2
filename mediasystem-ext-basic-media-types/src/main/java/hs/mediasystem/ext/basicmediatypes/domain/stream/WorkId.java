@@ -1,6 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
 import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.scanner.api.MediaType;
 
 public class WorkId {
   private final Identifier identifier;
@@ -11,6 +12,10 @@ public class WorkId {
 
   public Identifier getIdentifier() {
     return identifier;
+  }
+
+  public MediaType getType() {
+    return identifier.getDataSource().getType();
   }
 
   @Override

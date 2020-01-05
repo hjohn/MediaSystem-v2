@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid.participation;
 
+import hs.mediasystem.client.Participation;
 import hs.mediasystem.db.SettingsSourceFactory;
 import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Participation;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.AbstractSetup;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;

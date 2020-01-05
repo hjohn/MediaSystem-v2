@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.series.menu;
 
-import hs.mediasystem.db.services.WorksService;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorksClient;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
@@ -31,18 +31,18 @@ public class SeriesCollectionType implements CollectionType {
 
   private static final List<Filter<Work>> FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("released-recently", r -> r.getDetails().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent()),
-    new Filter<>("watched-recently", r -> r.getState().getLastWatchedTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent()
+    new Filter<>("released-recently", r -> r.getDetails().getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent()),
+    new Filter<>("watched-recently", r -> r.getState().getLastConsumptionTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent()
     )
   );
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("unwatched", r -> !r.getState().isWatched())
+    new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
   );
 
   @Inject private GenericCollectionPresentation.Factory factory;
-  @Inject private WorksService worksService;
+  @Inject private WorksClient worksClient;
 
   @Override
   public String getId() {
@@ -52,7 +52,7 @@ public class SeriesCollectionType implements CollectionType {
   @Override
   public Presentation createPresentation(String tag) {
     return factory.create(
-      worksService.findAllByType(SERIE, tag),
+      worksClient.findAllByType(SERIE, tag),
       "Series" + (tag == null ? "" : ":" + tag),
       new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS),
       null

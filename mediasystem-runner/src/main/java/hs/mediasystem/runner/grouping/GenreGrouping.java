@@ -1,12 +1,11 @@
 package hs.mediasystem.runner.grouping;
 
+import hs.mediasystem.client.Classification;
+import hs.mediasystem.client.Details;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.ext.basicmediatypes.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.ext.basicmediatypes.domain.Release;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.scanner.api.MediaType;
@@ -28,14 +27,14 @@ import javax.inject.Singleton;
 public class GenreGrouping implements Grouping<Work> {
   private static final ResourceManager RM = new ResourceManager(GenreGrouping.class);
   private static final DataSource DATA_SOURCE = DataSource.instance(MediaType.of("GROUPING"), "GENRE");
-  private static final Comparator<Work> RATING_COMPARATOR = Comparator.comparing((Work r) -> Optional.of((Release)r.getDescriptor()).map(Release::getReception).map(Reception::getRating).orElse(0.0)).reversed();
+  private static final Comparator<Work> RATING_COMPARATOR = Comparator.comparing((Work w) -> w.getDetails().getReception().map(Reception::getRating).orElse(0.0)).reversed();
 
   @Override
   public List<Object> group(List<Work> items) {
     Map<String, List<Work>> map = new HashMap<>();
 
     for(Work item : items) {
-      for(String genre : ((Production)item.getDescriptor()).getGenres()) {
+      for(String genre : item.getDetails().getClassification().getGenres()) {
         map.computeIfAbsent(genre, k -> new ArrayList<>()).add(item);
       }
     }
@@ -44,7 +43,7 @@ public class GenreGrouping implements Grouping<Work> {
 
     for(Map.Entry<String, List<Work>> entry : map.entrySet()) {
       Comparator<Work> majorGenreComparator = Comparator.comparing((Work r) -> {
-        int index = ((Production)r.getDescriptor()).getGenres().indexOf(entry.getKey());
+        int index = r.getDetails().getClassification().getGenres().indexOf(entry.getKey());
 
         return index == -1 ? Integer.MAX_VALUE : index;
       });
@@ -65,7 +64,19 @@ public class GenreGrouping implements Grouping<Work> {
         .limit(4)
         .collect(Collectors.joining(","));
 
-      Details details = new Details(entry.getKey(), RM.getText(entry.getKey().toLowerCase(), "description"), null, uris.isEmpty() ? null : new ImageURI("multi::" + uris), backgroundURIRef.get());
+      Details details = new Details(
+        entry.getKey(),
+        RM.getText(entry.getKey().toLowerCase(), "description"),
+        null,
+        null,
+        uris.isEmpty() ? null : new ImageURI("multi::" + uris),
+        backgroundURIRef.get(),
+        null,
+        null,
+        null,
+        null,
+        Classification.DEFAULT
+      );
 
       List<Work> children = entry.getValue();
 

@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.client.Details;
+import hs.mediasystem.client.Sequence;
+import hs.mediasystem.client.Sequence.Type;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
@@ -118,7 +118,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       VBox leftTitleBox = Containers.vbox(
         titleLabel,
         Labels.create(WorkBinder.createYearRange(work), "release-year"),
-        Labels.create(((Production)work.getDescriptor()).getGenres().stream().collect(Collectors.joining(" / ")), "genres")
+        Labels.create(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")), "genres")
       );
 
       TransitionPane dynamicBoxContainer = new TransitionPane(new TransitionPane.FadeIn(), createDynamicBox());
@@ -136,7 +136,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           "title-panel",
           leftTitleBox,
           Containers.vbox(
-            createStarRating(((Production)work.getDescriptor()).getReception(), 20, 8),
+            createStarRating(work.getDetails().getReception().orElse(null), 20, 8),
             indicatorPane
           )
         ),
@@ -165,21 +165,17 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       case OVERVIEW:
         {
           BorderPane borderPane = new BorderPane();
-          Production production = (Production)work.getDescriptor();
+          Details details = work.getDetails();
 
           box.getChildren().add(borderPane);
 
           VBox leftBox = Containers.vbox();
 
-          if(production instanceof Movie) {
-            Movie movie = (Movie)production;
+          details.getTagline().ifPresent(tl -> {
+            leftBox.getChildren().add(Labels.create("“" + tl + "”", "tag-line"));
+          });
 
-            if(movie.getTagLine() != null && !movie.getTagLine().isEmpty()) {
-              leftBox.getChildren().add(Labels.create("“" + movie.getTagLine() + "”", "tag-line"));
-            }
-          }
-
-          leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create(production.getDescription().orElse(""), "description"), 12000, 40));
+          leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create(details.getDescription().orElse(""), "description"), 12000, 40));
 
           Region castPane = castPaneFactory.create(work.getId());
 
@@ -227,7 +223,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
         for(int i = 0; i < presentation.episodeItems.size(); i++) {
           Work episode = presentation.episodeItems.get(i);
-          int seasonNumber = ((Episode)episode.getDescriptor()).getSeasonNumber();
+          int seasonNumber = toSeasonBarIndex(episode);
 
           if(!knownSeasons.contains(seasonNumber)) {
             groups.add(new Group(seasonNumber == 0 ? "Specials" : seasonNumber == -1 ? "Extras" : "Season " + seasonNumber, i));
@@ -264,7 +260,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         seasonsBar.entries.setValue(entries);
 
         gridView.groups.set(groups);
-        gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(((Episode)current.getDescriptor()).getSeasonNumber())));
+        gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(toSeasonBarIndex(current))));
 
         box.getChildren().addAll(seasonsBar, gridView);
 
@@ -312,18 +308,17 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       poster.setOrientation(Orientation.VERTICAL);
       poster.imageProperty().bind(imageProperty);
 
-      // FIXME watched and isEmpty are constant here
-      Val<Double> percentage = Val.combine(Val.constant(work.getState().isWatched()), Val.constant(work.getStreams().isEmpty()), presentation.resume.resumePosition.orElseConst(0), presentation.totalDuration.orElseConst(1), (w, m, rp, td) -> {
+      Val<Double> percentage = Val.combine(work.getState().isConsumed(), Val.constant(work.getStreams().isEmpty()), presentation.resume.resumePosition.orElseConst(Duration.ZERO), presentation.totalDuration.orElseConst(1), (w, m, rp, td) -> {
         return w ? 1.0 :
                m ? -0.01 :
-                   rp / (double)td;
+                   rp.toSeconds() / (double)td;
       });
 
       StackPane indicatorPane = createMediaStatusIndicatorPane(percentage.animate(Duration.ofSeconds(2), Interpolator.EASE_BOTH_DOUBLE), Val.constant(0.0));
 
       poster.getOverlayRegion().getChildren().add(indicatorPane);
 
-      String formattedDate = MediaItemFormatter.formattedLocalDate(work.getDetails().getDate().orElse(null));
+      String formattedDate = MediaItemFormatter.formattedLocalDate(work.getDetails().getReleaseDate().orElse(null));
       String subtitle = createSeasonEpisodeText(work) + (formattedDate == null ? "" : " • " + formattedDate);
 
       Label titleLabel = Labels.create("title", presentation.episodeItem.get().getDetails().getName());
@@ -340,7 +335,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       VBox vbox = Containers.vbox(
         Containers.hbox(
           titleBox,
-          createStarRating(((Episode)work.getDescriptor()).getReception(), 10, 4)
+          createStarRating(work.getDetails().getReception().orElse(null), 10, 4)
         ),
         new AutoVerticalScrollPane(Labels.create(work.getDetails().getDescription().orElse(""), "description"), 12000, 40)
       );
@@ -402,7 +397,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           break;
         case PLAY_RESUME:
           hbox.getChildren().addAll(
-            create("Resume", "From " + SizeFormatter.SECONDS_AS_POSITION.format(presentation.resume.resumePosition.getValue().longValue()), e -> presentation.resume.trigger(e)),
+            create("Resume", "From " + SizeFormatter.SECONDS_AS_POSITION.format(presentation.resume.resumePosition.getValue().toSeconds()), e -> presentation.resume.trigger(e)),
             create("Play", "From start", e -> presentation.play.trigger(e))
           );
           break;
@@ -441,17 +436,22 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private void navigateToRecommendations(ActionEvent event) {
-      PresentationLoader.navigate(event, () -> recommendationsPresentationFactory.create((Production)presentation.rootItem.getDescriptor()));
+      PresentationLoader.navigate(event, () -> recommendationsPresentationFactory.create(presentation.rootItem));
     }
   }
 
+  private static int toSeasonBarIndex(Work episode) {
+    Sequence sequence = episode.getDetails().getSequence().orElseThrow();
+
+    return sequence.getType() == Type.SPECIAL ? 0 : sequence.getType() == Type.EXTRA ? -1 : sequence.getSeasonNumber().orElse(-1);
+  }
+
   private static String createSeasonEpisodeText(Work work) {
-    Episode episode = (Episode)work.getDescriptor();
-    int seasonNumber = episode.getSeasonNumber();
+    int seasonNumber = toSeasonBarIndex(work);
 
     return seasonNumber == 0 ? "Special"
         : seasonNumber == -1 ? "Extra"
-                             : "Season " + seasonNumber + ", Episode " + episode.getNumber();
+                             : "Season " + seasonNumber + ", Episode " + work.getDetails().getSequence().map(Sequence::getNumber).orElse(0);
   }
 
   private static Button create(String title, String subtitle, EventHandler<ActionEvent> eventHandler) {

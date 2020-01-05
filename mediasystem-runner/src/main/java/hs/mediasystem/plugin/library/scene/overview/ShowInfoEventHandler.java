@@ -1,12 +1,12 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.mediasystem.client.Work;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.AudioStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.VideoStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.scanner.api.StreamPrint;

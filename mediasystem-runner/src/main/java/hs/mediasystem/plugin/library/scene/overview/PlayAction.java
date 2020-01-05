@@ -1,10 +1,11 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.util.javafx.action.Action;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import javafx.beans.binding.StringExpression;
@@ -13,7 +14,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.reactfx.value.Val;
@@ -22,22 +22,22 @@ public class PlayAction implements Action {
 
   @Singleton
   public static class Factory {
-    @Inject private Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
+    @Inject private PlaybackOverlayPresentation.Factory factory;
 
-    public PlayAction create(ObservableValue<Work> mediaItem) {
-      return new PlayAction(playbackOverlayPresentationProvider, mediaItem);
+    public PlayAction create(ObservableValue<Work> work) {
+      return new PlayAction(factory, work);
     }
   }
 
-  private final Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
+  private final PlaybackOverlayPresentation.Factory factory;
   private final Val<Work> playableMediaItem;
   private final Val<Boolean> enabled;
 
-  private PlayAction(Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider, ObservableValue<Work> mediaItem) {
-    this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
-    this.playableMediaItem = Val.wrap(mediaItem)
+  private PlayAction(PlaybackOverlayPresentation.Factory factory, ObservableValue<Work> work) {
+    this.factory = factory;
+    this.playableMediaItem = Val.wrap(work)
       .filter(Objects::nonNull)
-      .filter(r -> !r.getStreams().isEmpty());
+      .filter(w -> !w.getStreams().isEmpty());
     this.enabled = Val.map(playableMediaItem, Objects::nonNull).orElseConst(false);
   }
 
@@ -53,8 +53,8 @@ public class PlayAction implements Action {
 
   @Override
   public void trigger(Event event) {
-    playableMediaItem.ifPresent(r -> {
-      Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationProvider.get().set(r, r.getPrimaryStream().orElseThrow().getAttributes().getUri(), 0)));
+    playableMediaItem.ifPresent(w -> {
+      Event.fireEvent(event.getTarget(), NavigateEvent.to(factory.create(w, w.getPrimaryStream().orElseThrow().getAttributes().getUri(), Duration.ZERO)));
       event.consume();
     });
   }

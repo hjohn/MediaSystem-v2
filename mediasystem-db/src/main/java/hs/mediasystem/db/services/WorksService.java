@@ -29,9 +29,9 @@ public class WorksService {
       .map(StreamState::getStreamID)
       .map(workService::find)
       .flatMap(Optional::stream)
-      .filter(r -> r.getState().getLastWatchedTime().isPresent())
-      .filter(r -> after == null || r.getState().getLastWatchedTime().map(lwt -> lwt.isAfter(after)).orElse(false))
-      .sorted(Comparator.comparing((Work r) -> r.getState().getLastWatchedTime().orElseThrow()).reversed())
+      .filter(r -> r.getState().getLastConsumptionTime().isPresent())
+      .filter(r -> after == null || r.getState().getLastConsumptionTime().map(lwt -> lwt.isAfter(after)).orElse(false))
+      .sorted(Comparator.comparing((Work r) -> r.getState().getLastConsumptionTime().orElseThrow()).reversed())
       .limit(maximum)
       .collect(Collectors.toList())
     );

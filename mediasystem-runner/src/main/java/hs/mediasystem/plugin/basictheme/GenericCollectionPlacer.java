@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Details;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
@@ -26,8 +27,9 @@ public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation,
         .filter(Work.class::isInstance)
         .map(Work.class::cast)
         .map(Work::getDetails)
-        .orElse(Val.wrap(presentation.selectedItem).filter(WorksGroup.class::isInstance).map(WorksGroup.class::cast).map(WorksGroup::getDetails))
-        .map(d -> d.getBackdrop().orElse(null))
+        .map(Details::getBackdrop)
+        .orElse(Val.wrap(presentation.selectedItem).filter(WorksGroup.class::isInstance).map(WorksGroup.class::cast).map(WorksGroup::getDetails).map(Details::getBackdrop))
+        .map(o -> o.orElse(null))
         .map(imageHandleFactory::fromURI)
     );
   }

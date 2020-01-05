@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.mediasystem.db.services.WorkService;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorkClient;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
@@ -17,7 +17,7 @@ import javax.inject.Singleton;
 @Singleton
 public class ProductionCollectionFactory {
   @Inject private GenericCollectionPresentation.Factory factory;
-  @Inject private WorkService workService;
+  @Inject private WorkClient workClient;
 
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
     new SortOrder<>("release-date", WorkBinder.BY_RELEASE_DATE.reversed()),
@@ -26,18 +26,18 @@ public class ProductionCollectionFactory {
 
   private static final List<Filter<Work>> FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("released-recently", r -> r.getDetails().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+    new Filter<>("released-recently", r -> r.getDetails().getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isWatched())
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
   );
 
   public GenericCollectionPresentation<Work> create(WorkId id) {
-    Work collection = workService.find(id).orElseThrow();
-    List<Work> children = workService.findChildren(id);
+    Work collection = workClient.find(id).orElseThrow();
+    List<Work> children = workClient.findChildren(id);
 
     return factory.create(children, "Collections", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), collection);
   }

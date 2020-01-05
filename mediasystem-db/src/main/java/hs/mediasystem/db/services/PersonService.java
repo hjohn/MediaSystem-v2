@@ -29,6 +29,7 @@ public class PersonService {
 
   private Person toPerson(PersonalProfile pp) {
     return new Person(
+      new PersonId(pp.getPerson().getIdentifier()),
       pp.getPerson().getName(),
       pp.getBiography(),
       pp.getPerson().getImage(),

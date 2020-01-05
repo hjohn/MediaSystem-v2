@@ -39,6 +39,8 @@ import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
+import org.reactfx.value.Var;
+
 public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCell<T>> {
   private static final List<String> MEDIA_STATE_STYLES = List.of("watched", "available", "unavailable");
 
@@ -50,7 +52,7 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
     default Function<T, ObservableValue<? extends String>> sideBarCenterBindProvider() { return null; }
     default Function<T, String> detailExtractor() { return null; }
     default Function<T, String> sequenceNumberExtractor() { return null; }
-    default Optional<BooleanProperty> watchedProperty(@SuppressWarnings("unused") T item) { return Optional.empty(); }
+    default Var<Boolean> watchedProperty(@SuppressWarnings("unused") T item) { return Var.newSimpleVar(false); }
     default Optional<Boolean> hasStream(@SuppressWarnings("unused") T item) { return Optional.empty(); }
   }
 
@@ -267,24 +269,39 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
           if(binders.detailExtractor() != null) {
             detail.setText(binders.detailExtractor().apply(item));
           }
+          else {
+            detail.setText(null);
+          }
+
+          boolean sideBarVisible = false;
 
           if(binders.sideBarTopLeftBindProvider() != null && binders.sideBarTopLeftBindProvider().apply(item) != null) {
-            sideDetail.setVisible(true);
-            sideDetail.setManaged(true);
+            sideBarVisible = true;
             sideBarTopLeftText.bind(binders.sideBarTopLeftBindProvider().apply(item));
+          }
+          else {
+            sideBarTopLeftText.unbind();
           }
 
           if(binders.sideBarCenterBindProvider() != null && binders.sideBarCenterBindProvider().apply(item) != null) {
-            sideDetail.setVisible(true);
-            sideDetail.setManaged(true);
+            sideBarVisible = true;
             sideBarCenterText.bind(binders.sideBarCenterBindProvider().apply(item));
           }
+          else {
+            sideBarCenterText.unbind();
+          }
 
-          binders.hasStream(item).ifPresent(hasStreamProperty::set);
-          binders.watchedProperty(item).ifPresent(watchedProperty::bind);
+          sideDetail.setVisible(sideBarVisible);
+          sideDetail.setManaged(sideBarVisible);
+
+          hasStreamProperty.set(binders.hasStream(item).orElse(false));
+          watchedProperty.bind(binders.watchedProperty(item));
 
           if(binders.sequenceNumberExtractor() != null) {
             sequenceNumber.setText(binders.sequenceNumberExtractor().apply(item));
+          }
+          else {
+            sequenceNumber.setText(null);
           }
 
           updateMediaStateStyles();

@@ -90,7 +90,7 @@ public class WorkService {
     if(workId.getIdentifier().getDataSource().getName().equals("STREAM_ID")) {
       return find(new StreamID(Integer.parseInt(workId.getIdentifier().getId())));
     }
-    else if(workId.getIdentifier().getDataSource().getType().equals(COLLECTION)) {
+    if(workId.getIdentifier().getDataSource().getType().equals(COLLECTION)) {
       return queryProductionCollection(workId.getIdentifier())
         .map(pc -> toWork(pc, null));
     }
@@ -231,8 +231,6 @@ public class WorkService {
     if(parentDescriptor != null) {
       List<BasicStream> childStreams = serieHelper.findChildStreams(parentDescriptor.getIdentifier(), descriptor.getIdentifier());
 
-      StreamID parentStreamId = streamStore.findStreams(parentDescriptor.getIdentifier()).stream().map(BasicStream::getId).findFirst().orElse(null);
-
       /*
        * When multiple streams are returned for an Episode, there are two cases:
        * - Stream is split over multiple files
@@ -248,7 +246,7 @@ public class WorkService {
 
       return new Work(
         descriptor,
-        new Parent(new WorkId(parentDescriptor.getIdentifier()), parentDescriptor.getIdentifier().getDataSource().getType(), parentDescriptor.getDetails().getName(), parentStreamId),
+        new Parent(new WorkId(parentDescriptor.getIdentifier()), parentDescriptor.getIdentifier().getDataSource().getType(), parentDescriptor.getDetails().getName()),
         mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
         mediaStreams
       );
@@ -274,14 +272,35 @@ public class WorkService {
 
       parent = movie.getCollectionIdentifier()
         .flatMap(ci -> find(new WorkId(ci)))
-        .map(r -> new Parent(r.getId(), COLLECTION, r.getDetails().getName(), null))
+        .map(r -> new Parent(r.getId(), COLLECTION, r.getDetails().getName()))
         .orElse(null);
     }
 
     return parent;
   }
 
-  private State toState(StreamID streamId) {
+  private State toState(BasicStream bs) {
+    StreamID streamId = bs.getId();
+
+    if(bs.getType().equals(SERIE)) {
+      Instant lastWatchedTime = null;
+      int consumed = 0;
+
+      for(BasicStream childStream : bs.getChildren()) {
+        Instant lwt = stateService.getLastWatchedTime(childStream.getId());
+
+        if(lastWatchedTime == null || (lwt != null && lwt.isAfter(lastWatchedTime))) {
+          lastWatchedTime = lwt;
+        }
+
+        if(stateService.isWatched(childStream.getId())) {
+          consumed++;
+        }
+      }
+
+      return new State(lastWatchedTime, consumed >= bs.getChildren().size(), Duration.ZERO);
+    }
+
     Instant lastWatchedTime = stateService.getLastWatchedTime(streamId);
     boolean watched = stateService.isWatched(streamId);
     Duration resumePosition = Duration.ofSeconds(stateService.getResumePosition(streamId));
@@ -292,7 +311,7 @@ public class WorkService {
   private MediaStream toMediaStream(BasicStream bs, Identification identification) {
     StreamID streamId = bs.getId();
     StreamID parentId = streamStore.findParentId(streamId).orElse(null);
-    State state = toState(streamId);
+    State state = toState(bs);
     StreamMetaData md = metaDataStore.find(streamId).orElse(null);
     int totalDuration = stateService.getTotalDuration(streamId);
 
@@ -313,7 +332,7 @@ public class WorkService {
   Work toWork(BasicStream bs) {
     StreamID streamId = bs.getId();
     Optional<Tuple2<MediaDescriptor, Identification>> tuple = findBestDescriptor(streamId);
-    State state = toState(streamId);
+    State state = toState(bs);
 
     List<MediaStream> mediaStreams = tuple.map(t -> t.a)
       .map(MediaDescriptor::getIdentifier)

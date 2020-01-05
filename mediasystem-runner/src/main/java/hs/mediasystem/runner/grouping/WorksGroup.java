@@ -1,7 +1,7 @@
 package hs.mediasystem.runner.grouping;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Details;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Parent;
 

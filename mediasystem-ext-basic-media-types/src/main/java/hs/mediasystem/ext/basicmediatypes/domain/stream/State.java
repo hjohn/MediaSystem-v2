@@ -5,8 +5,8 @@ import java.time.Instant;
 import java.util.Optional;
 
 public class State {
-  private final Optional<Instant> lastWatchedTime;
-  private final boolean watched;
+  private final Optional<Instant> lastConsumptionTime;
+  private final boolean consumed;
   private final Duration resumePosition;
 
   public State(Instant lastWatchedTime, boolean watched, Duration resumePosition) {
@@ -14,17 +14,17 @@ public class State {
       throw new IllegalArgumentException("resumePosition cannot be null or negative: " + resumePosition);
     }
 
-    this.lastWatchedTime = Optional.ofNullable(lastWatchedTime);
-    this.watched = watched;
+    this.lastConsumptionTime = Optional.ofNullable(lastWatchedTime);
+    this.consumed = watched;
     this.resumePosition = resumePosition;
   }
 
-  public Optional<Instant> getLastWatchedTime() {
-    return lastWatchedTime;
+  public Optional<Instant> getLastConsumptionTime() {
+    return lastConsumptionTime;
   }
 
-  public boolean isWatched() {
-    return watched;
+  public boolean isConsumed() {
+    return consumed;
   }
 
   public Duration getResumePosition() {

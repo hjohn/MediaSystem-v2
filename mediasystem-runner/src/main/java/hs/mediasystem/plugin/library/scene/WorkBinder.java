@@ -1,13 +1,13 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.db.StreamStateService;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.client.Details;
+import hs.mediasystem.client.Sequence;
+import hs.mediasystem.client.Sequence.Type;
+import hs.mediasystem.client.Stage;
+import hs.mediasystem.client.State;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.State;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.Binder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.scanner.api.MediaType;
@@ -22,25 +22,24 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.reactfx.value.Var;
+
 @Singleton
 public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL));
-  public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
-  public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastWatchedTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
+  public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
+  public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().getValue(), Comparator.nullsLast(Comparator.naturalOrder())));
 
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
   private static final MediaType SERIE = MediaType.of("SERIE");
   private static final MediaType COLLECTION = MediaType.of("COLLECTION");
 
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private StreamStateService streamStateService;
 
   @Override
   public Class<Work> getType() {
@@ -62,15 +61,18 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
 
   @Override
   public Function<Work, ObservableValue<? extends String>> sideBarTopLeftBindProvider() {
-    return r -> {
-      if(r.getType().equals(EPISODE)) {
-        Episode episode = (Episode)r.getDescriptor();
+    return r -> new SimpleStringProperty(r.getDetails().getSequence().map(this::createSequenceInfo).orElseGet(() -> createYearRange(r)));
+  }
 
-        return new SimpleStringProperty(episode.getSeasonNumber() == 0 ? "Special " : "Ep. " + episode.getNumber());
-      }
+  private String createSequenceInfo(Sequence sequence) {
+    if(sequence.getType() == Type.SPECIAL) {
+      return "Special " + sequence.getNumber();
+    }
+    if(sequence.getType() == Type.EXTRA) {
+      return "Extra " + sequence.getNumber();
+    }
 
-      return new SimpleStringProperty(createYearRange(r));
-    };
+    return "Ep. " + sequence.getNumber();
   }
 
   @Override
@@ -78,12 +80,13 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
     return r -> new SimpleStringProperty(r.getParent()
       .filter(p -> p.getType().equals(COLLECTION))
       .map(Parent::getName)
-      .orElse(""));
+      .orElse("")
+    );
   }
 
   @Override
-  public Optional<BooleanProperty> watchedProperty(Work work) {
-    return work.getPrimaryStream().map(MediaStream::getId).map(streamStateService::watchedProperty);
+  public Var<Boolean> watchedProperty(Work work) {
+    return work.getState().isConsumed();
   }
 
   @Override
@@ -102,30 +105,23 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   }
 
   public static String createYearRange(Work item) {
-    if(item.getType().equals(SERIE) && item.getDescriptor() instanceof Serie) {  // TODO remove Serie check here
-      return createSerieYearRange(item);
-    }
-
-    return item.getDetails().getDate().map(LocalDate::getYear).map(Object::toString).orElse("");
-  }
-
-  private static String createSerieYearRange(Work item) {
-    Serie serie = (Serie)item.getDescriptor();
-    LocalDate date = item.getDetails().getDate().orElse(null);
+    Details details = item.getDetails();
+    LocalDate date = details.getReleaseDate().orElse(null);
 
     if(date == null) {
       return "";
     }
 
-    String year = "" + date.getYear();
+    Stage stage = details.getClassification().getStage();
+    LocalDate lastAirDate = details.getLastAirDate().orElse(null);
 
-    if((serie.getState() == Serie.State.CANCELED || serie.getState() == Serie.State.ENDED) && serie.getLastAirDate() != null && serie.getLastAirDate().getYear() != date.getYear()) {
-      year += " - " + serie.getLastAirDate().getYear();
+    if(stage == Stage.ENDED && lastAirDate != null && lastAirDate.getYear() != date.getYear()) {
+      return date.getYear() + " - " + lastAirDate.getYear();
     }
-    else if(serie.getState() == Serie.State.CONTINUING) {
-      year += " -";
+    else if(item.getType().equals(SERIE) && stage == Stage.RELEASED) {
+      return date.getYear() + " -";
     }
 
-    return year;
+    return "" + date.getYear();
   }
 }

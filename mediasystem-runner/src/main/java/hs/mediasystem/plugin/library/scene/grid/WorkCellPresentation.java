@@ -1,12 +1,10 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.client.Work;
 import hs.mediasystem.db.StreamCacheUpdateService;
-import hs.mediasystem.db.StreamStateService;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.presentation.Presentation;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.scene.control.ListView;
@@ -14,37 +12,33 @@ import javafx.scene.control.ListView;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.reactfx.value.Var;
+
 public class WorkCellPresentation implements Presentation {
   private final StreamCacheUpdateService updateService;
   private final ListView<?> listView;
-  private final StreamStateService streamStateService;
 
   @Singleton
   public static class Factory {
-    @Inject private StreamStateService streamStateService;
     @Inject private StreamCacheUpdateService updateService;
 
     public WorkCellPresentation create(ListView<?> listView) {
-      return new WorkCellPresentation(updateService, streamStateService, listView);
+      return new WorkCellPresentation(updateService, listView);
     }
   }
 
-  private WorkCellPresentation(StreamCacheUpdateService updateService, StreamStateService streamStateService, ListView<?> listView) {
+  private WorkCellPresentation(StreamCacheUpdateService updateService, ListView<?> listView) {
     this.updateService = updateService;
-    this.streamStateService = streamStateService;
     this.listView = listView;
   }
 
-  public BooleanProperty watchedProperty() {
+  public Var<Boolean> watchedProperty() {
     Object obj = listView.getSelectionModel().getSelectedItem();
 
     if(obj instanceof Work) {
       Work work = (Work)obj;
 
-      return work.getPrimaryStream()
-        .map(MediaStream::getId)
-        .map(streamStateService::watchedProperty)
-        .orElse(null);
+      return work.getState().isConsumed();
     }
 
     return null;  // Indicates no state possible as there is no stream

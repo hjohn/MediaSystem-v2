@@ -1,7 +1,7 @@
 package hs.mediasystem.runner.grouping;
 
-import hs.mediasystem.db.services.WorkService;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorkClient;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.scanner.api.MediaType;
 
@@ -17,7 +17,7 @@ import javax.inject.Singleton;
 public class CollectionGrouping implements Grouping<Work> {
   private static final MediaType COLLECTION = MediaType.of("COLLECTION");
 
-  @Inject private WorkService workService;
+  @Inject private WorkClient workClient;
 
   @Override
   public List<Object> group(List<Work> items) {
@@ -27,8 +27,8 @@ public class CollectionGrouping implements Grouping<Work> {
     for(Work work : items) {
       work.getParent().filter(p -> p.getType().equals(COLLECTION)).ifPresent(p -> {
         if(!childWorks.containsKey(p.getId())) {
-          workService.find(p.getId()).ifPresent(r -> {
-            childWorks.put(p.getId(), workService.findChildren(p.getId()));
+          workClient.find(p.getId()).ifPresent(r -> {
+            childWorks.put(p.getId(), workClient.findChildren(p.getId()));
 
             topLevelItems.add(createWorkGroup(r, childWorks.get(p.getId())));
           });

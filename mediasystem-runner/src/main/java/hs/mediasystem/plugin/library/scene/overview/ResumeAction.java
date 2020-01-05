@@ -1,11 +1,12 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.db.StreamStateService;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.State;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.util.javafx.action.Action;
 
+import java.time.Duration;
 import java.util.Objects;
 
 import javafx.beans.binding.StringExpression;
@@ -14,7 +15,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.reactfx.value.Val;
@@ -23,31 +23,27 @@ public class ResumeAction implements Action {
 
   @Singleton
   public static class Factory {
-    @Inject private StreamStateService streamStateService;
-    @Inject private Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
+    @Inject private PlaybackOverlayPresentation.Factory factory;
 
     public ResumeAction create(ObservableValue<Work> work) {
-      return new ResumeAction(streamStateService, playbackOverlayPresentationProvider, work);
+      return new ResumeAction(factory, work);
     }
   }
 
-  public final Val<Integer> resumePosition;
+  public final Val<Duration> resumePosition;
 
-  private final Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider;
+  private final PlaybackOverlayPresentation.Factory factory;
   private final Val<Work> resumableWork;
   private final Val<Boolean> enabled;
 
-  private ResumeAction(StreamStateService streamStateService, Provider<PlaybackOverlayPresentation> playbackOverlayPresentationProvider, ObservableValue<Work> work) {
-    this.playbackOverlayPresentationProvider = playbackOverlayPresentationProvider;
+  private ResumeAction(PlaybackOverlayPresentation.Factory factory, ObservableValue<Work> work) {
+    this.factory = factory;
 
     Val<Work> playableWork = Val.filter(work, Objects::nonNull)
-      .filter(r -> !r.getStreams().isEmpty());
+      .filter(w -> !w.getStreams().isEmpty());
 
-    this.resumePosition = playableWork
-      .flatMap(playItem -> streamStateService.resumePositionProperty(playItem.getPrimaryStream().orElseThrow().getId()))
-      .orElseConst(-1);
-
-    this.resumableWork = Val.combine(resumePosition, playableWork, (rp, r) -> rp > 0 && r != null ? r : null);
+    this.resumePosition = playableWork.map(Work::getState).flatMap(State::getResumePosition);
+    this.resumableWork = Val.combine(resumePosition, playableWork, (rp, w) -> rp.toSeconds() > 0 && w != null ? w : null);
     this.enabled = Val.map(resumableWork, Objects::nonNull).orElseConst(false);
   }
 
@@ -63,8 +59,8 @@ public class ResumeAction implements Action {
 
   @Override
   public void trigger(Event event) {
-    resumableWork.ifPresent(r -> {
-      Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationProvider.get().set(r, r.getPrimaryStream().orElseThrow().getAttributes().getUri(), resumePosition.getValue() * 1000L)));
+    resumableWork.ifPresent(w -> {
+      Event.fireEvent(event.getTarget(), NavigateEvent.to(factory.create(w, w.getPrimaryStream().orElseThrow().getAttributes().getUri(), resumePosition.getValue())));
       event.consume();
     });
   }

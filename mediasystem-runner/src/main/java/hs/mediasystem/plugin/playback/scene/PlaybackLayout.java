@@ -33,7 +33,7 @@ public class PlaybackLayout implements NodeFactory<PlaybackOverlayPresentation> 
       }
     });
 
-    Platform.runLater(() -> presentation.playerPresentation.get().play(presentation.uri.get().toString(), presentation.startPositionMillis.get()));
+    Platform.runLater(() -> presentation.playerPresentation.get().play(presentation.uri.toString(), presentation.startPosition.toMillis()));
 
     return view;
   }

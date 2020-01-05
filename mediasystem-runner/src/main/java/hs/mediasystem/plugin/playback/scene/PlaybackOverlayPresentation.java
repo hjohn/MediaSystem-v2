@@ -1,59 +1,50 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.db.StreamStateService;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
-import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.StringURI;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.logging.Logger;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.reactfx.value.Var;
 
 public class PlaybackOverlayPresentation implements Navigable, Presentation {
   private static final Logger LOGGER = Logger.getLogger(PlaybackOverlayPresentation.class.getName());
 
-  public final ObjectProperty<Work> work = new SimpleObjectProperty<>();
-  public final ObjectProperty<StringURI> uri = new SimpleObjectProperty<>();
-  public final LongProperty startPositionMillis = new SimpleLongProperty();
-
+  public final Work work;
   public final ObjectProperty<PlayerPresentation> playerPresentation = new SimpleObjectProperty<>();
-
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
+  public final StringURI uri;
+  public final Duration startPosition;
 
-  private StreamID streamId;
+  @Singleton
+  public static class Factory {
+    @Inject private PlayerSetting playerSetting;
 
-  @Inject private PlayerSetting playerSetting;
-  @Inject private StreamStateService streamStateService;
-
-  public PlaybackOverlayPresentation set(Work work, StringURI uri, long startPositionMillis) {
-    this.work.set(work);
-    this.uri.set(uri);
-    this.startPositionMillis.set(startPositionMillis);
-    this.streamId = work.getPrimaryStream().orElseThrow().getId();
-
-    return this;
+    public PlaybackOverlayPresentation create(Work work, StringURI uri, Duration startPosition) {
+      return new PlaybackOverlayPresentation(playerSetting, work, uri, startPosition);
+    }
   }
 
-//  @Inject private Set<SubtitleProvider> subtitleProviders;
-//  @Inject private Set<SubtitleCriteriaProvider> subtitleCriteriaProviders;
-
-  @PostConstruct
-  private void postConstruct() {
+  private PlaybackOverlayPresentation(PlayerSetting playerSetting, Work work, StringURI uri, Duration startPosition) {
+    this.work = work;
+    this.uri = uri;
+    this.startPosition = startPosition;
     this.playerPresentation.set(playerSetting.get());
 
     this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
@@ -82,21 +73,17 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
       }
 
       private void updatePositionAndViewed() {
-        updatePositionAndViewed(streamId);
-      }
-
-      private void updatePositionAndViewed(StreamID streamId) {
         PlayerPresentation player = PlaybackOverlayPresentation.this.playerPresentation.get();
         long length = player.lengthProperty().getValue();
 
         if(length > 0) {
-          long timeViewed = totalTimeViewed + startPositionMillis.get();
-          boolean watched = streamStateService.isWatched(streamId);
+          long timeViewed = totalTimeViewed + startPosition.toMillis();
+          Var<Boolean> consumed = work.getState().isConsumed();
 
-          if(timeViewed >= length * 9 / 10 && !watched) {   // 90% viewed and not viewed yet?
-            LOGGER.info("Marking as viewed: " + work.get());
+          if(timeViewed >= length * 9 / 10 && !consumed.getValue()) {   // 90% viewed and not viewed yet?
+            LOGGER.info("Marking as viewed: " + work);
 
-            streamStateService.setWatched(streamId, true);
+            consumed.setValue(true);
           }
 
           if(timeViewedSinceLastSkip > 30 * 1000) {
@@ -107,30 +94,19 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
               resumePosition = (int)(position / 1000) - 10;
             }
 
-            int storedResumePosition = streamStateService.getResumePosition(streamId);
+            Var<Duration> storedResumePosition = work.getState().getResumePosition();
 
-            if(Math.abs(storedResumePosition - resumePosition) > 10) {
+            if(Math.abs(storedResumePosition.getValue().toSeconds() - resumePosition) > 10) {
               Instant now = Instant.now();
 
-              streamStateService.setResumePosition(streamId, resumePosition);
-              streamStateService.setTotalDuration(streamId, (int)(length / 1000));
-              streamStateService.setLastWatchedTime(streamId, now);
-
-              work.get().getParent().ifPresent(p -> streamStateService.setLastWatchedTime(p.temp_getStreamId(), now));
+              storedResumePosition.setValue(Duration.ofSeconds(resumePosition));
+              work.getState().getLastConsumptionTime().setValue(now);
             }
           }
         }
       }
     });
   }
-
-//  @Expose
-//  public void chooseSubtitle(Event event) {
-//    Dialogs.show(event, new DialogPane<Void>() {{
-//      getChildren().add(new SubtitleDownloadPane(media.get(), subtitleProviders, subtitleCriteriaProviders, controller.getSubtitleDownloadService()));
-//    }});
-//    event.consume();
-//  }
 
   @Override
   public void navigateBack(Event e) {

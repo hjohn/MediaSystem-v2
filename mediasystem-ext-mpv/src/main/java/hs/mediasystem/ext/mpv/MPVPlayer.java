@@ -24,6 +24,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -60,6 +61,9 @@ public class MPVPlayer implements PlayerPresentation {
   private final SuspendableEventStream<Change<Long>> positionChanges = EventStreams.changesOf(position).suppressible();
 
   private final AtomicBoolean isPlaying = new AtomicBoolean(false);
+
+  private final ChangeListener<? super AudioTrack> audioTrackListener = (obs, p, v) -> setProperty("aid", v.getId() == -1 ? "no" : "" + v.getId());
+  private final ChangeListener<? super Subtitle> subtitleTrackListener = (obs, p, v) -> setProperty("sid", v.getId() == -1 ? "no" : "" + v.getId());
 
   public MPVPlayer(PlayerWindowIdSupplier supplier) {
     this.handle = mpv.mpv_create();
@@ -103,21 +107,35 @@ public class MPVPlayer implements PlayerPresentation {
     volume.addListener((obs, p, v) -> setProperty("volume", "" + v));
     audioDelay.addListener((obs, p, v) -> setProperty("audio-delay", "" + v / 1000.0));
     brightness.addListener((obs, p, v) -> setProperty("brightness", "" + (int)((v - 1) * 100)));
-    audioTrack.addListener((obs, p, v) -> setProperty("aid", v.getId() == -1 ? "no" : "" + v.getId()));
-    subtitle.addListener((obs, p, v) -> setProperty("sid", v.getId() == -1 ? "no" : "" + v.getId()));
 
     paused.addListener((obs, old, current) -> setProperty("pause", current ? "yes" : "no"));
     muted.addListener((obs, old, current) -> setProperty("mute", current ? "yes" : "no"));
+
+    addTrackListeners();
+  }
+
+  private void addTrackListeners() {
+    audioTrack.addListener(audioTrackListener);
+    subtitle.addListener(subtitleTrackListener);
+  }
+
+  private void removeTrackListeners() {
+    audioTrack.removeListener(audioTrackListener);
+    subtitle.removeListener(subtitleTrackListener);
   }
 
   @Override
   public void play(String uriString, long positionInMillis) {
 
     // Reset some properties
+    removeTrackListeners();
+
     audioTracks.setAll(AudioTrack.NO_AUDIO_TRACK);
     subtitles.setAll(Subtitle.DISABLED);
     audioTrack.setValue(AudioTrack.NO_AUDIO_TRACK);
     subtitle.setValue(Subtitle.DISABLED);
+
+    addTrackListeners();
 
     URI uri = URI.create(uriString);
     String decodedUri = uri.getScheme().equalsIgnoreCase("file") ? Paths.get(uri).toString() : uri.toString();
@@ -262,7 +280,7 @@ public class MPVPlayer implements PlayerPresentation {
               String selected = getProperty("track-list/" + i + "/selected");
               String description = createDescription(title, lang, id);
 
-              LOGGER.fine("Found Track of type \"" + type + "\", title=" + title + ", lang=" + lang);
+              LOGGER.fine("Found Track of type \"" + type + "\", title=" + title + ", lang=" + lang + ", selected=" + selected);
 
               if(type.equals("audio")) {
                 AudioTrack track = new AudioTrack(id, description);

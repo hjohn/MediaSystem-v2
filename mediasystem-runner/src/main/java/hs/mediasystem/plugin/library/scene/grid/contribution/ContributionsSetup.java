@@ -1,9 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
+import hs.mediasystem.client.Contribution;
 import hs.mediasystem.db.SettingsSourceFactory;
 import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.PersonId;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.AbstractSetup;
 import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsPresentation;
@@ -28,7 +27,7 @@ public class ContributionsSetup extends AbstractSetup<Contribution, Contribution
 
   @Override
   protected void onItemSelected(ItemSelectedEvent<Contribution> event, ContributionsPresentation presentation) {
-    PresentationLoader.navigate(event, () -> personParticipationsPresentationFactory.create(new PersonId(event.getItem().getPerson().getIdentifier())));
+    PresentationLoader.navigate(event, () -> personParticipationsPresentationFactory.create(event.getItem().getPerson().getId()));
   }
 
   @Override

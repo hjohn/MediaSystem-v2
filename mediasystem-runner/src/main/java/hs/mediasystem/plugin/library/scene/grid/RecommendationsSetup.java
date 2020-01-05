@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.client.Work;
 import hs.mediasystem.db.SettingsSourceFactory;
 import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;

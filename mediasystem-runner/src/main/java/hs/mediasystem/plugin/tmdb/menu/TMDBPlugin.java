@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.tmdb.menu;
 
-import hs.mediasystem.db.services.WorksService;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorksClient;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
@@ -30,17 +30,17 @@ public class TMDBPlugin implements Plugin {
 
   private static final List<Filter<Work>> FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("released-recently", r -> r.getDetails().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+    new Filter<>("released-recently", r -> r.getDetails().getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isWatched())
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
   );
 
   @Inject private GenericCollectionPresentation.Factory factory;
-  @Inject private WorksService worksService;
+  @Inject private WorksClient worksClient;
 
   @Override
   public Menu getMenu() {
@@ -55,6 +55,6 @@ public class TMDBPlugin implements Plugin {
   }
 
   private ObservableList<Work> createProductionItems() {
-    return FXCollections.observableArrayList(worksService.findTop100());
+    return FXCollections.observableArrayList(worksClient.findTop100());
   }
 }

@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene.grid.participation;
 
-import hs.mediasystem.db.services.PersonService;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
+import hs.mediasystem.client.Details;
+import hs.mediasystem.client.Participation;
+import hs.mediasystem.client.Person;
+import hs.mediasystem.client.PersonClient;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Participation;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.PersonId;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
 import hs.mediasystem.util.NaturalLanguage;
@@ -24,7 +24,7 @@ public class ParticipationsPresentation extends GridViewPresentation<Participati
   private static final List<SortOrder<Participation>> SORT_ORDERS = List.of(
     new SortOrder<>("popularity", Comparator.comparing((Participation p) -> p.getPopularity()).reversed()),
     new SortOrder<>("alpha", Comparator.comparing(p -> p.getWork().getDetails(), Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL))),
-    new SortOrder<>("release-date", Comparator.comparing(p -> p.getWork().getDetails(), Comparator.comparing((Details d) -> d.getDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))))
+    new SortOrder<>("release-date", Comparator.comparing(p -> p.getWork().getDetails(), Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))))
   );
 
   private static final List<Filter<Participation>> FILTERS = List.of(
@@ -36,15 +36,15 @@ public class ParticipationsPresentation extends GridViewPresentation<Participati
   private static final List<Filter<Participation>> STATE_FILTERS = List.of(
     new Filter<>("none", p -> true),
     new Filter<>("available", p -> p.getWork().getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", p -> p.getWork().getPrimaryStream().isPresent() && !p.getWork().getState().isWatched())
+    new Filter<>("unwatched", p -> p.getWork().getPrimaryStream().isPresent() && !p.getWork().getState().isConsumed().getValue())
   );
 
   @Singleton
   public static class Factory {
-    @Inject private PersonService personService;
+    @Inject private PersonClient personClient;
 
     public ParticipationsPresentation create(PersonId id) {
-      Person person = personService.findPerson(id).orElseThrow();
+      Person person = personClient.findPerson(id).orElseThrow();
 
       return new ParticipationsPresentation(person, FXCollections.observableList(person.getParticipations()));
     }

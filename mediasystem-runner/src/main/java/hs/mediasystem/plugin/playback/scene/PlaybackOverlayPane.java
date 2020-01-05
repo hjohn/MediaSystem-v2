@@ -1,9 +1,9 @@
 package hs.mediasystem.plugin.playback.scene;
 
+import hs.mediasystem.client.Details;
+import hs.mediasystem.client.Work;
 import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
@@ -76,8 +76,8 @@ public class PlaybackOverlayPane extends StackPane {
 
   public PlaybackOverlayPane(PlaybackOverlayPresentation presentation, ImageHandleFactory imageHandleFactory) {
     this.presentation.set(presentation);
-    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work.get()).map(Work::getDetails).map(d -> d.getImage().orElse(null)).map(imageHandleFactory::fromURI);
-    this.player.bind(presentation.playerPresentation);
+    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work).map(Work::getDetails).map(d -> d.getImage().orElse(null)).map(imageHandleFactory::fromURI);
+    this.player.set(presentation.playerPresentation.get());
     this.overlayVisible.bind(presentation.overlayVisible);
 
     getStylesheets().add(LessLoader.compile(getClass().getResource("styles.css")).toExternalForm());
@@ -102,7 +102,7 @@ public class PlaybackOverlayPane extends StackPane {
 
     setFocusTraversable(true);
 
-    borders.mediaProperty().bind(Val.wrap(this.presentation).map(p -> p.work.get()));
+    borders.workProperty().bind(Val.wrap(this.presentation).map(p -> p.work));
 
     detailsOverlay.setId("video-overlay");
     detailsOverlay.add(new ScaledImageView() {{
@@ -121,8 +121,8 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          final Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).flatMap(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).map(Parent::getName);
-          final Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).flatMap(pop -> pop.work).map(Work::getDetails).map(Details::getName);
+          final Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).map(Parent::getName);
+          final Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getDetails).map(Details::getName);
 
           HBox.setHgrow(this, Priority.ALWAYS);
           getChildren().add(new Label() {{

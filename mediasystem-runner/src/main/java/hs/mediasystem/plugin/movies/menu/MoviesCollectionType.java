@@ -1,8 +1,7 @@
 package hs.mediasystem.plugin.movies.menu;
 
-import hs.mediasystem.db.services.WorksService;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.client.Work;
+import hs.mediasystem.client.WorksClient;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
@@ -35,7 +34,7 @@ public class MoviesCollectionType implements CollectionType {
 //    true
   );
 
-  private static SortOrder<Work> BY_GENRE = new SortOrder<>("genre", WorkBinder.BY_NAME, r -> ((Movie)r.getDescriptor()).getGenres(), false);
+  private static SortOrder<Work> BY_GENRE = new SortOrder<>("genre", WorkBinder.BY_NAME, r -> r.getDetails().getClassification().getGenres(), false);
 
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
     ALPHABETICALLY,
@@ -45,18 +44,18 @@ public class MoviesCollectionType implements CollectionType {
 
   private static final List<Filter<Work>> FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("released-recently", r -> r.getDetails().getDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+    new Filter<>("released-recently", r -> r.getDetails().getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("unwatched", r -> !r.getState().isWatched())
+    new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
   );
 
   @Inject private GenericCollectionPresentation.Factory factory;
   @Inject private GenreGrouping genreGrouper;
   @Inject private CollectionGrouping collectionGrouper;
-  @Inject private WorksService worksService;
+  @Inject private WorksClient worksClient;
 
   @Override
   public String getId() {
@@ -66,7 +65,7 @@ public class MoviesCollectionType implements CollectionType {
   @Override
   public Presentation createPresentation(String tag) {
     return factory.create(
-      worksService.findAllByType(MOVIE, tag),
+      worksClient.findAllByType(MOVIE, tag),
       "Movies" + (tag == null ? "" : ":" + tag),
       new ViewOptions<>(
         SORT_ORDERS,

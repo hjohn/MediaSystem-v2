@@ -57,7 +57,7 @@ public class RecommendationService {
     State state = work.getState();
     Duration position = state.getResumePosition();
     Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
-    boolean watched = state.isWatched();
+    boolean watched = state.isConsumed();
 
     return getBestIdentifier(streamId)
       .flatMap(descriptorStore::find)
@@ -81,8 +81,8 @@ public class RecommendationService {
     State state = work.getState();
     Duration position = state.getResumePosition();
     Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
-    Instant lastWatchedTime = state.getLastWatchedTime().orElseThrow();
-    boolean watched = state.isWatched();
+    Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
+    boolean watched = state.isConsumed();
 
     return getBestIdentifier(streamId).flatMap(descriptorStore::find).map(descriptor -> {
       if(watched) {
@@ -102,10 +102,10 @@ public class RecommendationService {
     StreamID streamId = stream.getId();
     State state = work.getState();
 
-    boolean watched = state.isWatched();
+    boolean watched = state.isConsumed();
     Duration position = state.getResumePosition();
     Duration length = stream.getMetaData().orElseThrow().getLength();
-    Instant lastWatchedTime = state.getLastWatchedTime().orElseThrow();
+    Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
     return getBestIdentifier(parentId).flatMap(
       identifier -> descriptorStore.find(identifier).map(Serie.class::cast).map(serie -> {
@@ -119,7 +119,7 @@ public class RecommendationService {
                 .map(BasicStream::getId)
                 .flatMap(workService::find)
                 .map(r -> {
-                  if(!r.getState().isWatched() && r.getState().getResumePosition().isZero()) {
+                  if(!r.getState().isConsumed() && r.getState().getResumePosition().isZero()) {
                     return new Recommendation(lastWatchedTime, r, serie, nextEpisode, r.getPrimaryStream().orElseThrow().getId(), null, r.getState().getResumePosition(), false);
                   }
 

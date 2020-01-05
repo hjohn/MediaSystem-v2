@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene.grid.participation;
 
+import hs.mediasystem.client.Participation;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Participation;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
@@ -11,12 +11,13 @@ import hs.mediasystem.util.ImageHandleFactory;
 import java.util.Optional;
 import java.util.function.Function;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.reactfx.value.Var;
 
 @Singleton
 public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Participation>, IDBinder<Participation> {
@@ -61,8 +62,8 @@ public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Part
   }
 
   @Override
-  public Optional<BooleanProperty> watchedProperty(Participation participation) {
-    return workBinder.watchedProperty(participation.getWork());
+  public Var<Boolean> watchedProperty(Participation participation) {
+    return participation.getWork().getState().isConsumed();
   }
 
   @Override
