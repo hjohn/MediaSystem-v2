@@ -2,15 +2,15 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.domain.stream.Attribute;
+import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.Identification.MatchType;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractIdentificationService;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.TextMatcher;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
-import hs.mediasystem.scanner.api.Attribute;
-import hs.mediasystem.scanner.api.BasicStream;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Tuple;
 import hs.mediasystem.util.Tuple.Tuple2;

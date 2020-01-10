@@ -1,9 +1,9 @@
 package hs.mediasystem.db.extract;
 
 import hs.mediasystem.db.extract.grabber.FFmpegFrameGrabber;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Snapshot;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.Snapshot;
+import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.util.ImageURI;
 
 import java.awt.image.BufferedImage;

@@ -1,13 +1,12 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
+import hs.mediasystem.ui.api.domain.Contribution;
+import hs.mediasystem.ui.api.domain.Role;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -32,7 +31,7 @@ public class ContributionBinder implements MediaGridViewCellFactory.Binder<Contr
 
   @Override
   public Function<Contribution, ImageHandle> imageHandleExtractor() {
-    return c -> Optional.ofNullable(c.getPerson().getImage()).map(imageHandleFactory::fromURI).orElse(null);
+    return c -> c.getPerson().getImage().map(imageHandleFactory::fromURI).orElse(null);
   }
 
   @Override
@@ -47,6 +46,6 @@ public class ContributionBinder implements MediaGridViewCellFactory.Binder<Contr
 
   @Override
   public String toId(Contribution item) {
-    return item.getPerson().getIdentifier().toString();
+    return item.getPerson().getId().toString();
   }
 }

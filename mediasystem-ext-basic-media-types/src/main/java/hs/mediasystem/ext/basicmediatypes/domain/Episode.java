@@ -1,5 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
+import hs.mediasystem.domain.work.Reception;
+
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;

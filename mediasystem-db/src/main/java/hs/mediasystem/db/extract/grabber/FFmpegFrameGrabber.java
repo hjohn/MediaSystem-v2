@@ -49,9 +49,9 @@
 
 package hs.mediasystem.db.extract.grabber;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.AudioStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Resolution;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.VideoStream;
+import hs.mediasystem.domain.work.AudioStream;
+import hs.mediasystem.domain.work.Resolution;
+import hs.mediasystem.domain.work.VideoStream;
 
 import java.io.BufferedInputStream;
 import java.io.File;

@@ -1,5 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
+import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.util.ImageURI;
 

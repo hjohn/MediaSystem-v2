@@ -2,7 +2,7 @@ package hs.mediasystem.db.streamids;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.domain.stream.StreamID;
 
 import java.time.Instant;
 import java.util.HashMap;

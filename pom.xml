@@ -21,7 +21,8 @@
     <module>mediasystem-mediamanager</module>
     <module>mediasystem-db</module>
     <module>mediasystem-ext-basic-media-types</module>
-    <module>mediasystem-scanner-api</module>
+    <module>mediasystem-ui-api</module>
+    <module>mediasystem-local-client</module>
     <module>mediasystem-package</module>
   </modules>
     

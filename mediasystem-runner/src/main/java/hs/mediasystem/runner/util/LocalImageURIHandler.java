@@ -1,15 +1,11 @@
 package hs.mediasystem.runner.util;
 
-import hs.database.core.DatabaseException;
-import hs.mediasystem.mediamanager.StreamMetaDataStore;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.ui.api.ImageClient;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.ImageURIHandler;
-import hs.mediasystem.util.Throwables;
 
 import java.util.Objects;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,10 +14,9 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LocalImageURIHandler implements ImageURIHandler {
-  private static final Logger LOGGER = Logger.getLogger(LocalImageURIHandler.class.getName());
   private static final Pattern PATTERN = Pattern.compile("(?i)localdb://([0-9]+)/([0-9]+)");
 
-  @Inject private StreamMetaDataStore provider;
+  @Inject private ImageClient imageClient;
 
   @Override
   public ImageHandle handle(ImageURI uri) {
@@ -41,20 +36,13 @@ public class LocalImageURIHandler implements ImageURIHandler {
 
     @Override
     public byte[] getImageData() {
-      try {
-        Matcher matcher = PATTERN.matcher(uri.getUri());
+      Matcher matcher = PATTERN.matcher(uri.getUri());
 
-        if(!matcher.matches()) {
-          throw new IllegalArgumentException("Invalid localdb uri: " + uri);
-        }
-
-        return provider.readSnapshot(new StreamID(Integer.parseInt(matcher.group(1))), Integer.parseInt(matcher.group(2)));
+      if(!matcher.matches()) {
+        throw new IllegalArgumentException("Invalid localdb uri: " + uri);
       }
-      catch(DatabaseException e) {
-        LOGGER.warning("Exception while reading image: " + uri + ": " + Throwables.formatAsOneLine(e));
 
-        return null;
-      }
+      return imageClient.findImage(matcher.group(1) + ":" + matcher.group(2)).orElse(null);
     }
 
     @Override

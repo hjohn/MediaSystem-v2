@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.movies.menu;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.client.WorksClient;
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
@@ -12,7 +11,8 @@ import hs.mediasystem.runner.collection.CollectionType;
 import hs.mediasystem.runner.grouping.CollectionGrouping;
 import hs.mediasystem.runner.grouping.GenreGrouping;
 import hs.mediasystem.runner.grouping.NoGrouping;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.ui.api.WorksClient;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.LocalDate;
 import java.util.List;

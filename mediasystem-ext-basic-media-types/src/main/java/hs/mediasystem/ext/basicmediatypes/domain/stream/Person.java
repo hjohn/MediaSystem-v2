@@ -1,5 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
+import hs.mediasystem.domain.work.PersonId;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;

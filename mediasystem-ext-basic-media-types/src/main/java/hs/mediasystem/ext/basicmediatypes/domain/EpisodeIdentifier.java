@@ -1,8 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.DataSource;
 
 public class EpisodeIdentifier extends ProductionIdentifier {
 

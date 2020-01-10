@@ -1,6 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes.services;
 
-import hs.mediasystem.ext.basicmediatypes.DataSource;
+import hs.mediasystem.domain.work.DataSource;
 
 public abstract class AbstractIdentificationService implements IdentificationService {
   private final DataSource dataSource;

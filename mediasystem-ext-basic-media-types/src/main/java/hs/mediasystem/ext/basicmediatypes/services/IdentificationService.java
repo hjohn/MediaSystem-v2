@@ -1,9 +1,9 @@
 package hs.mediasystem.ext.basicmediatypes.services;
 
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.scanner.api.BasicStream;
+import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Tuple.Tuple2;
 

@@ -1,12 +1,13 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.client.Sequence;
-import hs.mediasystem.client.Sequence.Type;
-import hs.mediasystem.client.Work;
-import hs.mediasystem.db.SettingsStore;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.presentation.AbstractPresentation;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.ui.api.SettingsClient;
+import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Sequence.Type;
+import hs.mediasystem.ui.api.domain.SettingsSource;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +42,7 @@ public class EpisodesPresentation extends AbstractPresentation {
     return Integer.compare(e1, e2);
   };
 
-  @Inject private SettingsStore settingsStore;
+  @Inject private SettingsClient settingsClient;
 
   private final List<Work> internalEpisodeItems = new ArrayList<>();
 
@@ -50,6 +51,8 @@ public class EpisodesPresentation extends AbstractPresentation {
 
   public final Map<Integer, Var<SeasonWatchState>> seasonWatchStates = new HashMap<>();
 
+  private SettingsSource settingsSource;
+
   public EpisodesPresentation set(Work serieItem, List<Work> episodes) {
     episodes.stream()
       .sorted(SEASON_ORDER.thenComparing(EPISODE_ORDER))
@@ -57,9 +60,11 @@ public class EpisodesPresentation extends AbstractPresentation {
 
     String settingKey = "last-selected:" + serieItem.getId();
 
-    episodeItem.addListener((obs, old, current) -> settingsStore.storeSetting(SYSTEM, settingKey, current.getId().toString()));
+    settingsSource = settingsClient.of(SYSTEM);
 
-    String id = settingsStore.getSetting(SYSTEM, settingKey);
+    episodeItem.addListener((obs, old, current) -> settingsSource.storeSetting(settingKey, current.getId().toString()));
+
+    String id = settingsSource.getSetting(settingKey);
 
     outer:
     for(;;) {

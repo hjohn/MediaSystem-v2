@@ -1,8 +1,12 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.MediaStream;
+import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.State;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.scanner.api.MediaType;
 
 import java.util.List;
 import java.util.Objects;
@@ -28,9 +32,9 @@ public class Work {
       throw new IllegalArgumentException("state cannot be null");
     }
 
-    this.id = new WorkId(descriptor.getIdentifier());
+    this.id = new WorkId(descriptor.getIdentifier().getDataSource(), descriptor.getIdentifier().getId());
     this.parent = Optional.ofNullable(parent);
-    this.parentId = Optional.ofNullable(descriptor.getIdentifier().getRootIdentifier() == null ? null : new WorkId(descriptor.getIdentifier().getRootIdentifier()));
+    this.parentId = Optional.ofNullable(descriptor.getIdentifier().getRootIdentifier() == null ? null : new WorkId(descriptor.getIdentifier().getRootIdentifier().getDataSource(), descriptor.getIdentifier().getRootIdentifier().getId()));
     this.type = descriptor.getIdentifier().getDataSource().getType();
     this.descriptor = descriptor;
     this.state = state;

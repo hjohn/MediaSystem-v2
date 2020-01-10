@@ -1,0 +1,8 @@
+/target/
+Logs/
+mediasystem.ini
+mediasystem-imports.yaml
+logging.properties
+/mediasystem-collections.yaml
+db/
+derby.log

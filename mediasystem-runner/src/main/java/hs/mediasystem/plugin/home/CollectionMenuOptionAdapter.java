@@ -1,8 +1,7 @@
 package hs.mediasystem.plugin.home;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.domain.work.Collection;
 import hs.mediasystem.presentation.Presentation;
-import hs.mediasystem.runner.db.Collection;
 import hs.mediasystem.util.ImageURI;
 
 import java.util.Optional;
@@ -18,18 +17,13 @@ public class CollectionMenuOptionAdapter implements MenuOption {
   }
 
   @Override
-  public MediaDescriptor getMediaDescriptor() {
-    return null;
-  }
-
-  @Override
   public Supplier<? extends Presentation> getPresentationSupplier() {
     return presentationSupplier;
   }
 
   @Override
   public String getTitle() {
-    return collection.getDetails().getName();
+    return collection.getTitle();
   }
 
   @Override
@@ -39,12 +33,12 @@ public class CollectionMenuOptionAdapter implements MenuOption {
 
   @Override
   public Optional<ImageURI> getImage() {
-    return collection.getDetails().getImage();
+    return collection.getImage();
   }
 
   @Override
   public Optional<ImageURI> getBackdrop() {
-    return collection.getDetails().getBackdrop();
+    return collection.getBackdrop();
   }
 
   @Override

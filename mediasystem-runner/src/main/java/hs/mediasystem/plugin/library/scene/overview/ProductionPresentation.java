@@ -1,18 +1,16 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.client.Sequence;
-import hs.mediasystem.client.Work;
-import hs.mediasystem.client.WorkClient;
-import hs.mediasystem.ext.basicmediatypes.VideoLink;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
-import hs.mediasystem.mediamanager.db.VideoDatabase;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.StreamMetaData;
+import hs.mediasystem.domain.work.VideoLink;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.NavigateEvent;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.javafx.action.Action;
 import hs.mediasystem.util.javafx.action.SimpleAction;
@@ -46,7 +44,6 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   @Singleton
   public static class Factory {
     @Inject private PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory;
-    @Inject private VideoDatabase videoDatabase;
     @Inject private Provider<EpisodesPresentation> episodesPresentationProvider;
     @Inject private PlayAction.Factory playActionFactory;
     @Inject private ResumeAction.Factory resumeActionFactory;
@@ -59,10 +56,10 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     private ProductionPresentation create(Work work) {
       return new ProductionPresentation(
         playbackOverlayPresentationFactory,
-        videoDatabase,
         episodesPresentationProvider,
         playActionFactory,
         resumeActionFactory,
+        workClient,
         work,
         workClient.findChildren(work.getId())
       );
@@ -78,7 +75,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   private final PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory;
-  private final VideoDatabase videoDatabase;
+  private final WorkClient workClient;
 
   private final ObjectProperty<VideoLink> trailerVideoLink = new SimpleObjectProperty<>();
   private final ObjectProperty<State> internalState = new SimpleObjectProperty<>(State.OVERVIEW);
@@ -111,15 +108,15 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   private ProductionPresentation(
     PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory,
-    VideoDatabase videoDatabase,
     Provider<EpisodesPresentation> episodesPresentationProvider,
     PlayAction.Factory playActionFactory,
     ResumeAction.Factory resumeActionFactory,
+    WorkClient workClient,
     Work rootItem,
     List<Work> children
   ) {
     this.playbackOverlayPresentationFactory = playbackOverlayPresentationFactory;
-    this.videoDatabase = videoDatabase;
+    this.workClient = workClient;
     this.rootItem = rootItem;
 
     this.episodesPresentation = rootItem.getType().equals(SERIE) ? episodesPresentationProvider.get().set(rootItem, children) : null;
@@ -372,7 +369,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     trailerVideoLink.set(null);
 
     if(work != null) {
-      CompletableFuture.supplyAsync(() -> videoDatabase.queryVideoLinks(((ProductionIdentifier)work.getId().getIdentifier())))
+      CompletableFuture.supplyAsync(() -> workClient.findVideoLinks(work.getId()))
         .thenAccept(videoLinks -> {
           videoLinks.stream().filter(vl -> vl.getType() == VideoLink.Type.TRAILER).findFirst().ifPresent(videoLink -> Platform.runLater(() -> {
             if(work.equals(getWorkForTrailer())) {

@@ -1,14 +1,14 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie.State;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.Duration;

@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.client.Details;
-import hs.mediasystem.client.Work;
 import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;

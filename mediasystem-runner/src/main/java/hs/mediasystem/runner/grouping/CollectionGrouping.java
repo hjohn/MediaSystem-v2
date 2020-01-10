@@ -1,9 +1,9 @@
 package hs.mediasystem.runner.grouping;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.client.WorkClient;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.WorkId;
+import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.util.ArrayList;
 import java.util.HashMap;

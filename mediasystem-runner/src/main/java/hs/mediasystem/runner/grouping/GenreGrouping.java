@@ -1,14 +1,13 @@
 package hs.mediasystem.runner.grouping;
 
-import hs.mediasystem.client.Classification;
-import hs.mediasystem.client.Details;
-import hs.mediasystem.client.Work;
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.runner.util.ResourceManager;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.ui.api.domain.Classification;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageURI;
 
 import java.util.ArrayList;
@@ -81,7 +80,7 @@ public class GenreGrouping implements Grouping<Work> {
       List<Work> children = entry.getValue();
 
       WorksGroup parent = new WorksGroup(
-        new WorkId(new Identifier(DATA_SOURCE, entry.getKey())),
+        new WorkId(DATA_SOURCE, entry.getKey()),
         details,
         children
       );

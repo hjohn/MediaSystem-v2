@@ -1,12 +1,12 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.client.WorkClient;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
+import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.LocalDate;
 import java.util.List;

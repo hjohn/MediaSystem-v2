@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.db.services.WorkService;
-import hs.mediasystem.ext.basicmediatypes.domain.Role.Type;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
+import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.Contribution;
+import hs.mediasystem.ui.api.domain.Role.Type;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty3;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
@@ -14,7 +14,6 @@ import hs.mediasystem.util.javafx.control.Labels;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,7 +39,7 @@ public class CastPaneFactory {
   private static final Logger LOGGER = Logger.getLogger(CastPaneFactory.class.getName());
 
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private WorkService workService;
+  @Inject private WorkClient workClient;
 
   public Region create(WorkId id) {
     GridPane actorsGrid = Containers.grid("actors-panel");
@@ -59,7 +58,7 @@ public class CastPaneFactory {
 
     actorsGrid.getRowConstraints().addAll(rowConstraints1, rowConstraints2);
 
-    CompletableFuture.supplyAsync(() -> workService.findContributions(id))
+    CompletableFuture.supplyAsync(() -> workClient.findContributions(id))
       .thenAcceptAsync(contributors -> fillActorGrid(contributors, actorsGrid), Platform::runLater)
       .whenComplete((v, e) -> {
         if(e != null) {
@@ -81,7 +80,7 @@ public class CastPaneFactory {
       Contribution contributor = topContributors.get(i);
       AsyncImageProperty3 imageProperty = new AsyncImageProperty3(600, 600);
 
-      imageProperty.imageHandleProperty().set(Optional.ofNullable(contributor.getPerson().getImage()).map(imageHandleFactory::fromURI).orElse(null));
+      imageProperty.imageHandleProperty().set(contributor.getPerson().getImage().map(imageHandleFactory::fromURI).orElse(null));
 
       BiasedImageView photo = new BiasedImageView(new AspectCorrectLabel("?", 0.75, Orientation.VERTICAL, 1000, 1000));
 
@@ -91,14 +90,14 @@ public class CastPaneFactory {
 
       String role = contributor.getRole().getCharacter();
 
-      Label roleLabel = Labels.create("as " + role, "role", new SimpleBooleanProperty(role != null && !role.isEmpty()));
+      Label roleLabel = Labels.create("role", "as " + role, new SimpleBooleanProperty(role != null && !role.isEmpty()));
 
       photo.setPrefHeight(50);
 
       actorsGrid.at(i, 0).add(photo);
       actorsGrid.at(i, 1).add(Containers.vbox(
         "actor-description",
-        Labels.create(contributor.getPerson().getName(), "name"),
+        Labels.create("name", contributor.getPerson().getName()),
         roleLabel
       ));
     }

@@ -1,13 +1,13 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.mediasystem.client.Details;
-import hs.mediasystem.client.Work;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.runner.grouping.WorksGroup;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 
 import javax.inject.Inject;

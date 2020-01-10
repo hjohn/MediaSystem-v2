@@ -1,17 +1,17 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.client.Details;
-import hs.mediasystem.client.Sequence;
-import hs.mediasystem.client.Sequence.Type;
-import hs.mediasystem.client.Stage;
-import hs.mediasystem.client.State;
-import hs.mediasystem.client.Work;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.MediaStream;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.Binder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
-import hs.mediasystem.scanner.api.MediaType;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Stage;
+import hs.mediasystem.ui.api.domain.State;
+import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;

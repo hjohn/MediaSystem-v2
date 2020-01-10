@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.series.menu;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.client.WorksClient;
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
@@ -9,7 +8,8 @@ import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.collection.CollectionType;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.ui.api.WorksClient;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.Instant;
 import java.time.LocalDate;

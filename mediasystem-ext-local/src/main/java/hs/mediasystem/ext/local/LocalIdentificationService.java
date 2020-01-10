@@ -1,13 +1,13 @@
 package hs.mediasystem.ext.local;
 
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.Identification.MatchType;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractIdentificationService;
-import hs.mediasystem.scanner.api.BasicStream;
-import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.Tuple;
 import hs.mediasystem.util.Tuple.Tuple2;
 

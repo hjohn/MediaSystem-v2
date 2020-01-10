@@ -1,12 +1,12 @@
 package hs.mediasystem.plugin.library.scene.grid.participation;
 
-import hs.mediasystem.client.Details;
-import hs.mediasystem.client.Participation;
-import hs.mediasystem.client.Person;
-import hs.mediasystem.client.PersonClient;
-import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.PersonId;
+import hs.mediasystem.domain.work.PersonId;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
+import hs.mediasystem.ui.api.PersonClient;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Participation;
+import hs.mediasystem.ui.api.domain.Person;
+import hs.mediasystem.ui.api.domain.Role;
 import hs.mediasystem.util.NaturalLanguage;
 
 import java.util.Comparator;

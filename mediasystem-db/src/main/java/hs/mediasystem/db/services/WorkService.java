@@ -1,13 +1,25 @@
 package hs.mediasystem.db.services;
 
-import hs.mediasystem.db.DatabaseStreamStore;
-import hs.mediasystem.db.StreamStateService;
+import hs.mediasystem.db.base.DatabaseStreamStore;
+import hs.mediasystem.db.base.StreamCacheUpdateService;
+import hs.mediasystem.db.base.StreamStateService;
 import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.MediaStream;
+import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.State;
+import hs.mediasystem.domain.work.StreamAttributes;
+import hs.mediasystem.domain.work.StreamMetaData;
+import hs.mediasystem.domain.work.VideoLink;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
+import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.IdentifierCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
@@ -16,22 +28,14 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.State;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamAttributes;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
 import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
+import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.mediamanager.DescriptorStore;
 import hs.mediasystem.mediamanager.LocalSerie;
-import hs.mediasystem.scanner.api.BasicStream;
-import hs.mediasystem.scanner.api.MediaType;
-import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Tuple;
 import hs.mediasystem.util.Tuple.Tuple2;
@@ -54,6 +58,8 @@ import javax.inject.Singleton;
 @Singleton
 public class WorkService {
   private static final MediaType SERIE = MediaType.of("SERIE");
+  private static final MediaType MOVIE = MediaType.of("MOVIE");
+  private static final MediaType EPISODE = MediaType.of("EPISODE");
   private static final MediaType COLLECTION = MediaType.of("COLLECTION");
 
   @Inject private DatabaseStreamStore streamStore;
@@ -65,13 +71,15 @@ public class WorkService {
   @Inject private List<RolesQueryService> rolesQueryServices;
   @Inject private List<ProductionCollectionQueryService> productionCollectionQueryServices;
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
+  @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
+  @Inject private StreamCacheUpdateService updateService;
 
   private static final List<String> dataSourcePriorities = List.of("TMDB", "LOCAL");
   private static final Comparator<Map.Entry<Identifier, Identification>> DATA_SOURCE_PRIORITY =
       Comparator.comparing((Map.Entry<Identifier, Identification> e) -> dataSourcePriorities.indexOf(e.getKey().getDataSource().getName()));
   private static final State UNWATCHED_STATE = new State(null, false, Duration.ZERO);
 
-  public synchronized Optional<Work> find(StreamID streamId) {  // TODO needs to become private, called by Home screen recommendations, which should move to back-end
+  synchronized Optional<Work> find(StreamID streamId) {
     return streamStore.findStream(streamId).map(this::toWork);
   }
 
@@ -87,15 +95,15 @@ public class WorkService {
   }
 
   public synchronized Optional<Work> find(WorkId workId) {
-    if(workId.getIdentifier().getDataSource().getName().equals("STREAM_ID")) {
-      return find(new StreamID(Integer.parseInt(workId.getIdentifier().getId())));
+    if(workId.getDataSource().getName().equals("STREAM_ID")) {
+      return find(new StreamID(Integer.parseInt(workId.getKey())));
     }
-    if(workId.getIdentifier().getDataSource().getType().equals(COLLECTION)) {
-      return queryProductionCollection(workId.getIdentifier())
+    if(workId.getType().equals(COLLECTION)) {
+      return queryProductionCollection(toIdentifier(workId))
         .map(pc -> toWork(pc, null));
     }
 
-    Identifier identifier = workId.getIdentifier();
+    Identifier identifier = toIdentifier(workId);
 
     if(identifier.getRootIdentifier() != null) {
       Optional<MediaDescriptor> rootDescriptor = descriptorStore.find(identifier.getRootIdentifier())
@@ -128,7 +136,7 @@ public class WorkService {
   }
 
   public synchronized List<Work> findChildren(WorkId workId) {
-    MediaType type = workId.getIdentifier().getDataSource().getType();
+    MediaType type = workId.getType();
 
     if(type.equals(SERIE)) {
 
@@ -138,20 +146,20 @@ public class WorkService {
        * Case 3: Identifier is has no stream associated with it whatsoever
        */
 
-      if(workId.getIdentifier().getDataSource().getName().equals("STREAM_ID")) {
-        return findChildren(new StreamID(Integer.parseInt(workId.getIdentifier().getId())));
+      if(workId.getDataSource().getName().equals("STREAM_ID")) {
+        return findChildren(new StreamID(Integer.parseInt(workId.getKey())));
       }
 
-      Set<BasicStream> streams = streamStore.findStreams(workId.getIdentifier());
+      Set<BasicStream> streams = streamStore.findStreams(toIdentifier(workId));
 
       if(!streams.isEmpty()) {
         return findChildren(streams.stream().findFirst().get().getId());  // TODO if multiple Series have the same identifier, this picks one at random
       }
 
-      return findChildren((ProductionIdentifier)workId.getIdentifier());
+      return findChildren((ProductionIdentifier)toIdentifier(workId));
     }
     else if(type.equals(COLLECTION)) {
-      return queryProductionCollection(workId.getIdentifier()).map(ProductionCollection::getItems).orElse(List.of()).stream()
+      return queryProductionCollection(toIdentifier(workId)).map(ProductionCollection::getItems).orElse(List.of()).stream()
         .map(p -> toWork(p, null))
         .collect(Collectors.toList());
     }
@@ -187,8 +195,12 @@ public class WorkService {
       .collect(Collectors.toList());
   }
 
+  public synchronized List<VideoLink> findVideoLinks(WorkId workId) {
+    return videoLinksQueryServices.get(0).query(toIdentifier(workId));
+  }
+
   public synchronized List<Contribution> findContributions(WorkId workId) {
-    Identifier identifier = workId.getIdentifier();
+    Identifier identifier = toIdentifier(workId);
 
     for(RolesQueryService rolesQueryService : rolesQueryServices) {
       if(rolesQueryService.getDataSourceName().equals(identifier.getDataSource().getName())) {
@@ -202,9 +214,17 @@ public class WorkService {
   }
 
   public synchronized List<Work> findRecommendations(WorkId workId) {
-    return recommendationQueryServices.get(0).query((ProductionIdentifier)workId.getIdentifier()).stream()
+    return recommendationQueryServices.get(0).query((ProductionIdentifier)toIdentifier(workId)).stream()
       .map(p -> toWork(p, null))
       .collect(Collectors.toList());
+  }
+
+  public synchronized void reidentify(WorkId id) {
+    find(id).stream()
+      .map(Work::getStreams)
+      .flatMap(Collection::stream)
+      .map(MediaStream::getId)
+      .forEach(updateService::reidentifyStream);
   }
 
   private Optional<ProductionCollection> queryProductionCollection(Identifier identifier) {
@@ -246,7 +266,7 @@ public class WorkService {
 
       return new Work(
         descriptor,
-        new Parent(new WorkId(parentDescriptor.getIdentifier()), parentDescriptor.getIdentifier().getDataSource().getType(), parentDescriptor.getDetails().getName()),
+        new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), parentDescriptor.getDetails().getName()),
         mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
         mediaStreams
       );
@@ -258,25 +278,29 @@ public class WorkService {
 
     return new Work(
       descriptor,
-      createParentForMovie(descriptor),
+      createParentForMovieOrEpisode(descriptor),
       mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
       mediaStreams
     );
   }
 
-  private Parent createParentForMovie(MediaDescriptor descriptor) {
-    Parent parent = null;
-
+  private Parent createParentForMovieOrEpisode(MediaDescriptor descriptor) {
     if(descriptor instanceof Movie) {
       Movie movie = (Movie)descriptor;
 
-      parent = movie.getCollectionIdentifier()
-        .flatMap(ci -> find(new WorkId(ci)))
-        .map(r -> new Parent(r.getId(), COLLECTION, r.getDetails().getName()))
+      return movie.getCollectionIdentifier()
+        .flatMap(ci -> find(toWorkId(ci)))
+        .map(r -> new Parent(r.getId(), r.getDetails().getName()))
         .orElse(null);
     }
 
-    return parent;
+    if(descriptor instanceof Episode) {
+      return descriptorStore.find(descriptor.getIdentifier().getRootIdentifier())
+        .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getName()))
+        .orElse(null);
+    }
+
+    return null;
   }
 
   private State toState(BasicStream bs) {
@@ -351,7 +375,7 @@ public class WorkService {
 
     return new Work(
       descriptor,
-      createParentForMovie(descriptor),
+      createParentForMovieOrEpisode(descriptor),
       state,
       mediaStreams
     );
@@ -401,5 +425,20 @@ public class WorkService {
       .stream()
       .findFirst()  // If multiple episodes are found, a reduce could be done (2 episodes matching a single stream)
       .map(ep -> Tuple.of(ep, e.getValue()));
+  }
+
+  private static WorkId toWorkId(Identifier identifier) {
+    return new WorkId(identifier.getDataSource(), identifier.getId());
+  }
+
+  private static Identifier toIdentifier(WorkId workId) {
+    if(workId.getType().equals(EPISODE)) {
+      return new EpisodeIdentifier(workId.getDataSource(), workId.getKey());
+    }
+    else if(workId.getType().equals(SERIE) || workId.getType().equals(MOVIE)) {
+      return new ProductionIdentifier(workId.getDataSource(), workId.getKey());
+    }
+
+    return new Identifier(workId.getDataSource(), workId.getKey());
   }
 }

@@ -2,9 +2,11 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
@@ -12,10 +14,8 @@ import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile.Gender;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
-import hs.mediasystem.ext.basicmediatypes.domain.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
-import hs.mediasystem.scanner.api.MediaType;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;

@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.db.SettingsSourceFactory;
-import hs.mediasystem.db.SettingsSourceFactory.SettingsSource;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.presentation.PresentationLoader;
+import hs.mediasystem.ui.api.SettingsClient;
+import hs.mediasystem.ui.api.domain.SettingsSource;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import javax.inject.Inject;
@@ -13,7 +13,7 @@ import javax.inject.Singleton;
 @Singleton
 public class RecommendationsSetup extends AbstractSetup<Work, RecommendationsPresentation> {
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
-  @Inject private SettingsSourceFactory settingsSourceFactory;
+  @Inject private SettingsClient settingsClient;
 
   @Override
   protected void onItemSelected(ItemSelectedEvent<Work> event, RecommendationsPresentation presentation) {
@@ -22,6 +22,6 @@ public class RecommendationsSetup extends AbstractSetup<Work, RecommendationsPre
 
   @Override
   protected SettingsSource getSettingsSource(RecommendationsPresentation presentation) {
-    return settingsSourceFactory.of(SYSTEM_PREFIX + "Recommendations");
+    return settingsClient.of(SYSTEM_PREFIX + "Recommendations");
   }
 }

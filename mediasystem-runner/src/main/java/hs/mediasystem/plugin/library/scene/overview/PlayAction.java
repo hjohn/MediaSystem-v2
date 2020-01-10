@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.client.Work;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.javafx.action.Action;
 
 import java.time.Duration;

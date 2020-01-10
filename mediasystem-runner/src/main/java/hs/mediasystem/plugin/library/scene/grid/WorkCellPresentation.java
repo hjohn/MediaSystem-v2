@@ -1,9 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.db.StreamCacheUpdateService;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.Work;
 
 import javafx.concurrent.Task;
 import javafx.event.Event;
@@ -15,20 +14,20 @@ import javax.inject.Singleton;
 import org.reactfx.value.Var;
 
 public class WorkCellPresentation implements Presentation {
-  private final StreamCacheUpdateService updateService;
+  private final WorkClient workClient;
   private final ListView<?> listView;
 
   @Singleton
   public static class Factory {
-    @Inject private StreamCacheUpdateService updateService;
+    @Inject private WorkClient workClient;
 
     public WorkCellPresentation create(ListView<?> listView) {
-      return new WorkCellPresentation(updateService, listView);
+      return new WorkCellPresentation(workClient, listView);
     }
   }
 
-  private WorkCellPresentation(StreamCacheUpdateService updateService, ListView<?> listView) {
-    this.updateService = updateService;
+  private WorkCellPresentation(WorkClient workClient, ListView<?> listView) {
+    this.workClient = workClient;
     this.listView = listView;
   }
 
@@ -56,9 +55,7 @@ public class WorkCellPresentation implements Presentation {
         return new Task<>() {
           @Override
           protected Void call() throws Exception {
-            for(MediaStream stream : work.getStreams()) {
-              updateService.reidentifyStream(stream.getId());
-            }
+            workClient.reidentify(work.getId());
 
             return null;
           }

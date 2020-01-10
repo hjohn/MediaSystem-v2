@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.client.Work;
 import hs.mediasystem.domain.AudioTrack;
 import hs.mediasystem.domain.Subtitle;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.javafx.StringBinding;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.RangeBar;

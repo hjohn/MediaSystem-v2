@@ -1,10 +1,10 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-import hs.mediasystem.scanner.api.BasicStream;
-import hs.mediasystem.scanner.api.MediaType;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 
 import java.util.List;
 import java.util.Map;

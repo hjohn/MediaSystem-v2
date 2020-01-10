@@ -1,7 +1,7 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.StreamMetaData;
 
 import java.util.Optional;
 

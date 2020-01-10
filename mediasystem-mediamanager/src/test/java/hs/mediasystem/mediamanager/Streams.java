@@ -1,9 +1,9 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.scanner.api.Attribute;
-import hs.mediasystem.scanner.api.BasicStream;
-import hs.mediasystem.scanner.api.MediaType;
-import hs.mediasystem.scanner.api.StreamID;
+import hs.mediasystem.domain.stream.Attribute;
+import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
 

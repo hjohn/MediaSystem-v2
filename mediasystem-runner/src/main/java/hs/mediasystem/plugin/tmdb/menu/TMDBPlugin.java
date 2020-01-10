@@ -1,7 +1,5 @@
 package hs.mediasystem.plugin.tmdb.menu;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.client.WorksClient;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
@@ -11,6 +9,8 @@ import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
 import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.ui.api.WorksClient;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.LocalDate;
 import java.util.List;

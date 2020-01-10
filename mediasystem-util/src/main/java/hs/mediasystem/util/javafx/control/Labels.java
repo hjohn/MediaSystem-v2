@@ -12,11 +12,11 @@ public class Labels {
     HIDE_IF_EMPTY;
   }
 
-  public static Label create(String text, String styleClass, Feature... features) {
-    return create(text, styleClass, null, features);
+  public static Label create(String styleClass, String text, Feature... features) {
+    return create(styleClass, text, null, features);
   }
 
-  public static Label create(String text, String styleClass, BooleanExpression visibility, Feature... features) {
+  public static Label create(String styleClass, String text, BooleanExpression visibility, Feature... features) {
     Set<Feature> f = Set.of(features);
     Label label = new Label(text);
 
@@ -42,7 +42,7 @@ public class Labels {
   }
 
   public static Label create(String styleClass, Feature... features) {
-    return create("", styleClass, features);
+    return create(styleClass, "", features);
   }
 
   public static Label create(String styleClass, ObservableValue<? extends String> observable) {

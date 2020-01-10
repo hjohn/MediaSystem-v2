@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
-import hs.mediasystem.client.Contribution;
-import hs.mediasystem.client.Work;
-import hs.mediasystem.client.WorkClient;
-import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
+import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.Contribution;
+import hs.mediasystem.ui.api.domain.Role;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.util.Comparator;
 import java.util.List;

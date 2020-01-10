@@ -1,9 +1,9 @@
 package hs.mediasystem.runner.grouping;
 
-import hs.mediasystem.client.Details;
-import hs.mediasystem.client.Work;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Parent;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Work;
 
 import java.util.List;
 

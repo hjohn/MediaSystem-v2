@@ -72,7 +72,7 @@ public class ContextMenuHandler {
         if(control != null) {
           String label = (String)control.getProperties().get("label");
 
-          gridPane.addRow(row++, label == null ? new Label() : Labels.create(label, "header"), control);
+          gridPane.addRow(row++, label == null ? new Label() : Labels.create("header", label), control);
         }
       }
     }

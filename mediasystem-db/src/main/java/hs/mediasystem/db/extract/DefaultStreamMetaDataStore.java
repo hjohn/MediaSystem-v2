@@ -2,9 +2,9 @@ package hs.mediasystem.db.extract;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
-import hs.mediasystem.scanner.api.StreamID;
 import hs.mediasystem.util.Throwables;
 
 import java.io.IOException;

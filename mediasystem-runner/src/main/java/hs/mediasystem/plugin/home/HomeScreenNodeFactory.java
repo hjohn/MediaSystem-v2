@@ -1,14 +1,16 @@
 package hs.mediasystem.plugin.home;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.base.BackgroundPane;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
-import hs.mediasystem.runner.db.CollectionService;
-import hs.mediasystem.runner.db.Recommendation;
-import hs.mediasystem.runner.db.RecommendationService;
 import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.ui.api.CollectionClient;
+import hs.mediasystem.ui.api.RecommendationClient;
+import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.control.ActionListView;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -52,12 +54,14 @@ import org.reactfx.value.Val;
 
 @Singleton
 public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
+  private static final MediaType EPISODE = MediaType.of("EPISODE");
+
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private CollectionPresentationProvider collectionPresentationProvider;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
   @Inject private MenuOptionCellFactory menuOptionCellFactory;
-  @Inject private RecommendationService recommendationService;
-  @Inject private CollectionService collectionService;
+  @Inject private RecommendationClient recommendationClient;
+  @Inject private CollectionClient collectionClient;
 
   @Override
   public Node create(HomePresentation presentation) {
@@ -127,7 +131,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     menuListView.getSelectionModel().select(0);
 
-    Label menuBackgroundLabel = Labels.create(">", "menu-background");
+    Label menuBackgroundLabel = Labels.create("menu-background", ">");
     StackPane.setAlignment(menuBackgroundLabel, Pos.CENTER_LEFT);
 
     grid.at(0, 0).spanning(2, 8).add(Containers.stack("main-menu-container", menuBackgroundLabel, menuListView));
@@ -140,14 +144,16 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   }
 
   private Supplier<ProductionPresentation> createProductionPresentationSupplier(Recommendation recommendation) {
-    WorkId id = recommendation.getWork().getParentId().orElse(recommendation.getWork().getId());
+    WorkId id = recommendation.getWork().getType().equals(EPISODE) ?
+        recommendation.getWork().getParent().map(Parent::getId).orElseThrow() :
+        recommendation.getWork().getId();
 
     return () -> productionPresentationFactory.create(id);
   }
 
   private ActionListView<MenuOption> createWatchRecommendationView() {
     ActionListView<MenuOption> mediaGridView = createCarousel(
-      recommendationService.findRecommendations(100).stream().map(r -> new RecommendationMenuOptionAdapter(r, createProductionPresentationSupplier(r))).collect(Collectors.toList()),
+      recommendationClient.findRecommendations(100).stream().map(r -> new RecommendationMenuOptionAdapter(r, createProductionPresentationSupplier(r))).collect(Collectors.toList()),
       menuOptionCellFactory
     );
 
@@ -156,7 +162,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
   private ActionListView<MenuOption> createCollectionView() {
     ActionListView<MenuOption> mediaGridView = createCarousel(
-      collectionService.findCollections().stream()
+      collectionClient.findCollections().stream()
         .map(c -> new CollectionMenuOptionAdapter(c, () -> collectionPresentationProvider.createPresentation(c.getDefinition().getType(), c.getDefinition().getTag())))
         .collect(Collectors.toList()),
       menuOptionCellFactory
@@ -167,7 +173,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
   private ActionListView<MenuOption> createNewView() {
     ActionListView<MenuOption> mediaGridView = createCarousel(
-      recommendationService.findNew().stream().map(r -> new RecommendationMenuOptionAdapter(r, createProductionPresentationSupplier(r))).collect(Collectors.toList()),
+      recommendationClient.findNew().stream().map(r -> new RecommendationMenuOptionAdapter(r, createProductionPresentationSupplier(r))).collect(Collectors.toList()),
       menuOptionCellFactory
     );
 

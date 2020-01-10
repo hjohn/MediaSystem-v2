@@ -1,11 +1,11 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentation;
 import hs.mediasystem.plugin.library.scene.grid.RecommendationsSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 
 import javax.inject.Inject;

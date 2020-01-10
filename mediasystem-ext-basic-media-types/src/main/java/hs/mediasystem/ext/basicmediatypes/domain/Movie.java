@@ -1,6 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import hs.mediasystem.ext.basicmediatypes.Identifier;
+import hs.mediasystem.domain.work.Reception;
 
 import java.time.Duration;
 import java.util.List;

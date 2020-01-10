@@ -83,7 +83,7 @@ public class Dialogs {
       task.getException().printStackTrace();
 
       resultBox.getChildren().clear();
-      resultBox.getChildren().add(Labels.create(task.getException().toString(), "error"));
+      resultBox.getChildren().add(Labels.create("error", task.getException().toString()));
     });
     task.onSucceededProperty().set(e -> dialogPane.close(task.getValue()));
 

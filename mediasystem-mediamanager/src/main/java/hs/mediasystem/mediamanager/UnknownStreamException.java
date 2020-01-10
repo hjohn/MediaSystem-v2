@@ -1,7 +1,7 @@
 package hs.mediasystem.mediamanager;
 
+import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
-import hs.mediasystem.scanner.api.BasicStream;
 
 import java.util.Objects;
 

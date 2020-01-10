@@ -1,13 +1,13 @@
 package hs.mediasystem.ext.scanners;
 
+import hs.mediasystem.domain.stream.Attribute;
+import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.Scanner;
+import hs.mediasystem.domain.stream.StreamPrint;
+import hs.mediasystem.domain.stream.StreamPrintProvider;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
-import hs.mediasystem.scanner.api.Attribute;
-import hs.mediasystem.scanner.api.BasicStream;
-import hs.mediasystem.scanner.api.MediaType;
-import hs.mediasystem.scanner.api.Scanner;
-import hs.mediasystem.scanner.api.StreamPrint;
-import hs.mediasystem.scanner.api.StreamPrintProvider;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;

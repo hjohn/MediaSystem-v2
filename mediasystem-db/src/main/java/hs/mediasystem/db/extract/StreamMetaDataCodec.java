@@ -12,8 +12,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.db.BasicDataTypesModule;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamMetaData;
+import hs.mediasystem.db.base.BasicDataTypesModule;
+import hs.mediasystem.domain.work.StreamMetaData;
 
 import java.io.IOException;
 

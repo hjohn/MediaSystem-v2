@@ -1,11 +1,8 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.client.Details;
-import hs.mediasystem.client.Sequence;
-import hs.mediasystem.client.Sequence.Type;
-import hs.mediasystem.client.Work;
-import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.WorkId;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
@@ -21,7 +18,10 @@ import hs.mediasystem.plugin.library.scene.overview.SeasonBar.Entry;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.util.LessLoader;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Sequence.Type;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.AsyncImageProperty3;
@@ -109,7 +109,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       poster.setOrientation(Orientation.VERTICAL);
       poster.imageProperty().bind(imageProperty);
 
-      Label titleLabel = Labels.create(work.getDetails().getName(), "title");
+      Label titleLabel = Labels.create("title", work.getDetails().getName());
 
       if(titleLabel.getText().length() > 40) {
         titleLabel.getStyleClass().add("smaller");
@@ -117,8 +117,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       VBox leftTitleBox = Containers.vbox(
         titleLabel,
-        Labels.create(WorkBinder.createYearRange(work), "release-year"),
-        Labels.create(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")), "genres")
+        Labels.create("release-year", WorkBinder.createYearRange(work)),
+        Labels.create("genres", work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")))
       );
 
       TransitionPane dynamicBoxContainer = new TransitionPane(new TransitionPane.FadeIn(), createDynamicBox());
@@ -172,10 +172,10 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           VBox leftBox = Containers.vbox();
 
           details.getTagline().ifPresent(tl -> {
-            leftBox.getChildren().add(Labels.create("“" + tl + "”", "tag-line"));
+            leftBox.getChildren().add(Labels.create("tag-line", "“" + tl + "”"));
           });
 
-          leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create(details.getDescription().orElse(""), "description"), 12000, 40));
+          leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create("description", details.getDescription().orElse("")), 12000, 40));
 
           Region castPane = castPaneFactory.create(work.getId());
 
@@ -327,7 +327,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       VBox titleBox = Containers.vbox(
         titleLabel,
-        Labels.create(subtitle, "subtitle")
+        Labels.create("subtitle", subtitle)
       );
 
       HBox.setHgrow(titleBox, Priority.ALWAYS);
@@ -337,7 +337,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           titleBox,
           createStarRating(work.getDetails().getReception().orElse(null), 10, 4)
         ),
-        new AutoVerticalScrollPane(Labels.create(work.getDetails().getDescription().orElse(""), "description"), 12000, 40)
+        new AutoVerticalScrollPane(Labels.create("description", work.getDetails().getDescription().orElse("")), 12000, 40)
       );
 
       HBox hbox = Containers.hbox("episode-panel", vbox, poster);
@@ -457,10 +457,10 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
   private static Button create(String title, String subtitle, EventHandler<ActionEvent> eventHandler) {
     Button button = Buttons.create("", eventHandler);
 
-    VBox vbox = Containers.vbox("vbox", Labels.create(title, "title"));
+    VBox vbox = Containers.vbox("vbox", Labels.create("title", title));
 
     if(subtitle != null) {
-      vbox.getChildren().add(Labels.create(subtitle, "subtitle"));
+      vbox.getChildren().add(Labels.create("subtitle", subtitle));
     }
 
     button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);

@@ -1,20 +1,14 @@
 package hs.mediasystem.plugin.library.scene.base;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
-import hs.mediasystem.ext.basicmediatypes.domain.Reception;
-import hs.mediasystem.ext.basicmediatypes.domain.Release;
-import hs.mediasystem.ext.basicmediatypes.domain.Season;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Participation;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Person;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
+import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.runner.grouping.WorksGroup;
+import hs.mediasystem.ui.api.domain.Classification;
+import hs.mediasystem.ui.api.domain.Contribution;
+import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Participation;
+import hs.mediasystem.ui.api.domain.Person;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
@@ -28,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -50,15 +45,6 @@ public class ContextLayout {
   @Inject private ImageHandleFactory imageHandleFactory;
 
   public BasePanel create(Object item) {
-    if(item instanceof PersonRole) {
-      return create(((PersonRole)item).getDetails());
-    }
-    if(item instanceof ProductionCollection) {
-      return create((ProductionCollection)item);
-    }
-    if(item instanceof Release) {
-      return create(((Release)item).getDetails());
-    }
     if(item instanceof Work) {
       return create((Work)item);
     }
@@ -69,7 +55,7 @@ public class ContextLayout {
       return create(((Participation)item).getWork());
     }
     if(item instanceof WorksGroup) {
-      return create(((WorksGroup)item).getDetails());
+      return create(((WorksGroup)item));
     }
 
     return null;
@@ -78,88 +64,29 @@ public class ContextLayout {
   public BasePanel create(Work work) {
     BasePanel panel = create(work.getDetails());
 
-    return panel;
-  }
-
-  public BasePanel create(Details details) {
-    BasePanel panel = new BasePanel();
-
-    panel.title.set(details.getName());
-    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getDate().orElse(null)));
-    panel.overview.set(details.getDescription().orElse(null));
-    panel.imageURI.set(details.getImage().orElse(null));
+    panel.subtitle.set(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")));
+    work.getDetails().getReception().ifPresent(reception -> setReception(panel.rating, reception));
 
     return panel;
   }
 
-  public BasePanel create(Serie serie, int seasonNumber) {
-    BasePanel panel = create(serie.getDetails());
+  private BasePanel create(WorksGroup wg) {
+    BasePanel panel = create(wg.getDetails());
+    LocalDate now = LocalDate.now();
 
-    panel.season.set(seasonNumber == 0 ? "Specials" : "" + seasonNumber);
+    wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).min(Comparator.naturalOrder()).ifPresent(earliest -> {
+      wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).max(Comparator.naturalOrder()).ifPresent(latest -> {
+        int minYear = earliest.getYear();
+        int maxYear = latest.getYear();
 
-    setReception(panel.rating, serie.findSeason(seasonNumber).map(Season::getReception).orElse(null));
+        panel.releaseDate.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
+      });
+    });
 
-    return panel;
-  }
-
-  public BasePanel create(Episode episode, String groupTitle) {
-    BasePanel panel = create(episode.getDetails());
-
-    panel.groupTitle.set(groupTitle);
-    panel.season.set("" + episode.getSeasonNumber());
-    panel.episodeNumber.set("" + episode.getNumber());
-
-    setReception(panel.rating, episode.getReception());
-
-    return panel;
-  }
-
-  public BasePanel create(Production production) {
-    BasePanel panel = create(production.getDetails());
-
-    panel.subtitle.set(production.getGenres().stream().collect(Collectors.joining(" / ")));
-
-    setReception(panel.rating, production.getReception());
-
-    return panel;
-  }
-
-  public BasePanel create(ProductionCollection collection) {
-    Details details = collection.getCollectionDetails().getDetails();
-    BasePanel panel = create(details);
-
-    panel.totalEntries.set("" + collection.getItems().size());
-
-    LocalDate first = collection.getFirstReleaseDate();
-    LocalDate last = collection.getLastReleaseDate();
-    LocalDate next = collection.getNextReleaseDate();
-
-    if(first != null) {
-      LocalDate max = last != null ? last : next != null ? next : first;
-      int minYear = first.getYear();
-      int maxYear = max.getYear();
-
-      panel.releaseDate.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
-    }
-
-    double totalRating = 0;
-    int count = 0;
-
-    for(Production production : collection.getItems()) {
-      Reception reception = production.getReception();
-
-      if(reception != null && reception.getVoteCount() > 0) {
-        totalRating += reception.getRating();
-        count++;
-      }
-    }
-
-    if(count != 0) {
-      panel.rating.set(String.format("%.1f", totalRating / count));
-    }
-
-    Map<String, Long> genreCounts = collection.getItems().stream()
-      .map(Production::getGenres)
+    Map<String, Long> genreCounts = wg.getChildren().stream()
+      .map(Work::getDetails)
+      .map(Details::getClassification)
+      .map(Classification::getGenres)
       .flatMap(Collection::stream)
       .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
@@ -172,11 +99,13 @@ public class ContextLayout {
     return panel;
   }
 
-  public BasePanel create(hs.mediasystem.ext.basicmediatypes.domain.Person person) {
+  private BasePanel create(Details details) {
     BasePanel panel = new BasePanel();
 
-    panel.title.set(person.getName());
-    panel.imageURI.set(person.getImage());
+    panel.title.set(details.getName());
+    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getReleaseDate().orElse(null)));
+    panel.overview.set(details.getDescription().orElse(null));
+    panel.imageURI.set(details.getImage().orElse(null));
 
     return panel;
   }
@@ -237,41 +166,41 @@ public class ContextLayout {
         Containers.hbox(
           "hbox",
           Containers.vbox(
-            Labels.create("SEASON", "header", season.isEmpty().not()),
+            Labels.create("header", "SEASON", season.isEmpty().not()),
             Labels.create("season", season, season.isEmpty().not())
           ),
           Containers.vbox(
-            Labels.create("EPISODE NUMBER", "header", episodeNumber.isEmpty().not()),
+            Labels.create("header", "EPISODE NUMBER", episodeNumber.isEmpty().not()),
             Labels.create("episode-number", episodeNumber, episodeNumber.isEmpty().not())
           )
         ),
         Containers.vbox(
-          Labels.create("BIRTH PLACE", "header", birthPlace.isEmpty().not()),
+          Labels.create("header", "BIRTH PLACE", birthPlace.isEmpty().not()),
           Labels.create("birth-place", birthPlace, birthPlace.isEmpty().not())
         ),
         Containers.vbox(
-          Labels.create("BIRTH DATE", "header", birthDate.isEmpty().not()),
+          Labels.create("header", "BIRTH DATE", birthDate.isEmpty().not()),
           Labels.create("birth-date", birthDate, birthDate.isEmpty().not())
         ),
         Containers.hbox(
           "hbox",
           Containers.vbox(
             totalEntries.isEmpty().not(),
-            Labels.create("TOTAL", "header", totalEntries.isEmpty().not()),
+            Labels.create("header", "TOTAL", totalEntries.isEmpty().not()),
             Labels.create("total-entries", totalEntries, totalEntries.isEmpty().not())
           ),
           Containers.vbox(
-            Labels.create("RELEASE DATE", "header", releaseDate.isEmpty().not()),
+            Labels.create("header", "RELEASE DATE", releaseDate.isEmpty().not()),
             Labels.create("release-date", releaseDate, releaseDate.isEmpty().not())
           ),
           Containers.vbox(
-            Labels.create("RATING", "header", rating.isEmpty().not()),
+            Labels.create("header", "RATING", rating.isEmpty().not()),
             Labels.create("rating", rating, rating.isEmpty().not())
           )
         ),
         vgrow(Priority.ALWAYS, Containers.vbox(
           overview.isEmpty().not(),
-          Labels.create("OVERVIEW", "header"),
+          Labels.create("header", "OVERVIEW"),
           vgrow(Priority.ALWAYS, new AutoVerticalScrollPane(Labels.create("overview", overview), 8000, 40) {{
             setMinSize(1, 1);
             setPrefSize(10, 10);
@@ -279,7 +208,7 @@ public class ContextLayout {
         )),
         vgrow(Priority.ALWAYS, Containers.vbox(
           biography.isEmpty().not(),
-          Labels.create("BIOGRAPHY", "header"),
+          Labels.create("header", "BIOGRAPHY"),
           vgrow(Priority.ALWAYS, new AutoVerticalScrollPane(Labels.create("overview", biography), 8000, 40) {{
             setMinSize(1, 1);
             setPrefSize(10, 10);

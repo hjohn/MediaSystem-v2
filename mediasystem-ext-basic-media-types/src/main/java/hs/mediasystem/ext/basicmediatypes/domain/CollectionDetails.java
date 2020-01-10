@@ -1,7 +1,5 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import hs.mediasystem.ext.basicmediatypes.Identifier;
-
 public class CollectionDetails {
   private final Identifier identifier;
   private final Details details;

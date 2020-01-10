@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.tmdb;
 
-import hs.mediasystem.ext.basicmediatypes.DataSource;
-import hs.mediasystem.scanner.api.MediaType;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.DataSource;
 
 public class DataSources {
   public static final DataSource TMDB_MOVIE = DataSource.instance(MediaType.of("MOVIE"), "TMDB");

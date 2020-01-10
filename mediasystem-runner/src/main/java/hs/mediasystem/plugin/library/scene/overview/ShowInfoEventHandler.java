@@ -1,16 +1,16 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.client.Work;
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.Identification.MatchType;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.AudioStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.MediaStream;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Parent;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.VideoStream;
+import hs.mediasystem.domain.stream.StreamPrint;
+import hs.mediasystem.domain.stream.StreamPrintProvider;
+import hs.mediasystem.domain.work.AudioStream;
+import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.Identification.MatchType;
+import hs.mediasystem.domain.work.MediaStream;
+import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.VideoStream;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
-import hs.mediasystem.scanner.api.StreamPrint;
-import hs.mediasystem.scanner.api.StreamPrintProvider;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -40,14 +40,14 @@ public class ShowInfoEventHandler {
   @Inject private StreamPrintProvider streamPrintProvider;
 
   public void handle(Event event, Work work) {
-    Label titleLabel = Labels.create(work.getDetails().getName(), "title");
+    Label titleLabel = Labels.create("title", work.getDetails().getName());
 
     if(titleLabel.getText().length() > 40) {
       titleLabel.getStyleClass().add("smaller");
     }
 
     VBox titleBox = Containers.vbox("title-panel",
-      Labels.create(work.getParent().map(Parent::getName).orElse(""), "serie-title", Feature.HIDE_IF_EMPTY),
+      Labels.create("serie-title", work.getParent().map(Parent::getName).orElse(""), Feature.HIDE_IF_EMPTY),
       titleLabel
     );
     VBox listBox = Containers.vbox("list-panel");
@@ -66,32 +66,32 @@ public class ShowInfoEventHandler {
       path = addLineFeeds(path, 100);
 
       gridPane.addRow(
-        Labels.create("Path", "title"),
-        Labels.create(path, "value"),
+        Labels.create("title", "Path"),
+        Labels.create("value", path),
         GridPane.FILL,
         GridPane.FILL
       );
 
       if(streamPrint.getSize() != null) {
         gridPane.addRow(
-          Labels.create("File Size", "title"),
-          Labels.create(SizeFormatter.BYTES_THREE_SIGNIFICANT.format(streamPrint.getSize()), "value"),
+          Labels.create("title", "File Size"),
+          Labels.create("value", SizeFormatter.BYTES_THREE_SIGNIFICANT.format(streamPrint.getSize())),
           GridPane.FILL,
           GridPane.FILL
         );
       }
 
       gridPane.addRow(
-        Labels.create("Last Modified", "title"),
-        Labels.create("" + DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(streamPrint.getLastModificationTime()).atOffset(ZoneOffset.UTC)), "value"),
+        Labels.create("title", "Last Modified"),
+        Labels.create("value", "" + DATE_TIME_FORMATTER.format(Instant.ofEpochMilli(streamPrint.getLastModificationTime()).atOffset(ZoneOffset.UTC))),
         GridPane.FILL,
         GridPane.FILL
       );
 
       stream.getIdentification().ifPresent(identification -> {
         gridPane.addRow(
-          Labels.create("Identification", "title"),
-          Labels.create("" + toText(identification), "value"),
+          Labels.create("title", "Identification"),
+          Labels.create("value", "" + toText(identification)),
           GridPane.FILL,
           GridPane.FILL
         );
@@ -100,8 +100,8 @@ public class ShowInfoEventHandler {
       stream.getMetaData().ifPresent(metaData -> {
         if(metaData.getLength() != Duration.ZERO) {
           gridPane.addRow(
-            Labels.create("Duration", "title"),
-            Labels.create(SizeFormatter.DURATION.format(metaData.getLength().toSeconds()), "value"),
+            Labels.create("title", "Duration"),
+            Labels.create("value", SizeFormatter.DURATION.format(metaData.getLength().toSeconds())),
             GridPane.FILL,
             GridPane.FILL
           );
@@ -112,17 +112,17 @@ public class ShowInfoEventHandler {
         for(int i = 0; i < videoStreams.size(); i++) {
           VideoStream videoStream = videoStreams.get(i);
 
-          gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("Video Streams", "title"));
-          gridPane.at(1).align(VPos.TOP).add(Labels.create("#" + (i + 1), "title"));
+          gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Video Streams"));
+          gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
 
           if(videoStream.getTitle() != null) {
-            gridPane.at(2).align(VPos.TOP).add(Labels.create("Title", "title"));
-            gridPane.at(3).add(Labels.create(addLineFeeds(videoStream.getTitle(), 80), "value"));
+            gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(videoStream.getTitle(), 80)));
             gridPane.nextRow();
           }
 
-          gridPane.at(2).align(VPos.TOP).add(Labels.create("Format", "title"));
-          gridPane.at(3).add(Labels.create(addLineFeeds(videoStream.getCodec(), 80), "value"));
+          gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(videoStream.getCodec(), 80)));
           gridPane.nextRow();
         }
 
@@ -131,22 +131,22 @@ public class ShowInfoEventHandler {
         for(int i = 0; i < audioStreams.size(); i++) {
           AudioStream audioStream = audioStreams.get(i);
 
-          gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("Audio Streams", "title"));
-          gridPane.at(1).align(VPos.TOP).add(Labels.create("#" + (i + 1), "title"));
+          gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Audio Streams"));
+          gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
 
           if(audioStream.getTitle() != null) {
-            gridPane.at(2).align(VPos.TOP).add(Labels.create("Title", "title"));
-            gridPane.at(3).add(Labels.create(addLineFeeds(audioStream.getTitle(), 80), "value"));
+            gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(audioStream.getTitle(), 80)));
             gridPane.nextRow();
           }
 
-          gridPane.at(2).align(VPos.TOP).add(Labels.create("Format", "title"));
-          gridPane.at(3).add(Labels.create(addLineFeeds(audioStream.getCodec(), 80), "value"));
+          gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(audioStream.getCodec(), 80)));
           gridPane.nextRow();
 
           if(audioStream.getLanguage() != null) {
-            gridPane.at(2).align(VPos.TOP).add(Labels.create("Language", "title"));
-            gridPane.at(3).add(Labels.create(audioStream.getLanguage(), "value"));
+            gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Language"));
+            gridPane.at(3).add(Labels.create("value", audioStream.getLanguage()));
             gridPane.nextRow();
           }
         }
