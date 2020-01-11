@@ -1,4 +1,4 @@
-package hs.mediasystem.domain.stream;
+package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
 public interface Attribute {
   public static final String TITLE = "title";

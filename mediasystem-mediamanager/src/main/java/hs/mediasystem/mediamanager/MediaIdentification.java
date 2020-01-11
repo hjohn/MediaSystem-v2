@@ -1,9 +1,9 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.work.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.Tuple.Tuple3;
 

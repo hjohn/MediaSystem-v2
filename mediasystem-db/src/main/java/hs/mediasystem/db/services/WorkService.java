@@ -4,7 +4,6 @@ import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
 import hs.mediasystem.db.base.StreamStateService;
 import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
@@ -27,7 +26,10 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
@@ -73,6 +75,7 @@ public class WorkService {
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
   @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
   @Inject private StreamCacheUpdateService updateService;
+  @Inject private StreamPrintProvider streamPrintProvider;
 
   private static final List<String> dataSourcePriorities = List.of("TMDB", "LOCAL");
   private static final Comparator<Map.Entry<Identifier, Identification>> DATA_SOURCE_PRIORITY =
@@ -343,10 +346,12 @@ public class WorkService {
       md = new StreamMetaData(streamId, Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
+    StreamPrint streamPrint = streamPrintProvider.get(streamId);
+
     return new MediaStream(
       streamId,
       parentId,
-      new StreamAttributes(bs.getUri(), streamStore.findCreationTime(streamId).orElseThrow(), bs.getAttributes()),
+      new StreamAttributes(bs.getUri(), streamStore.findCreationTime(streamId).orElseThrow(), Instant.ofEpochMilli(streamPrint.getLastModificationTime()), streamPrint.getSize(), bs.getAttributes()),
       state,
       md,
       identification

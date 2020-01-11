@@ -5,7 +5,7 @@ import hs.mediasystem.db.streamids.StreamIdDatabase;
 import hs.mediasystem.db.streamids.StreamIdRecord;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.domain.stream.StreamPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
 import hs.mediasystem.util.MediaHash;
 import hs.mediasystem.util.PostConstructCaller;
 import hs.mediasystem.util.StringURI;

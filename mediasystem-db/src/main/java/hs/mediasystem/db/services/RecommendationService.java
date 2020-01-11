@@ -1,6 +1,5 @@
 package hs.mediasystem.db.services;
 
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
@@ -9,6 +8,7 @@ import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.mediamanager.BasicStreamStore;

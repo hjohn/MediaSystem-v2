@@ -1,5 +1,7 @@
-package hs.mediasystem.domain.stream;
+package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
 

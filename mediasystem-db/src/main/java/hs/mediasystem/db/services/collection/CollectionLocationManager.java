@@ -11,8 +11,8 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.mediasystem.db.base.ImportSource;
 import hs.mediasystem.db.base.ImportSourceProvider;
-import hs.mediasystem.domain.stream.Scanner;
 import hs.mediasystem.domain.work.CollectionDefinition;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 

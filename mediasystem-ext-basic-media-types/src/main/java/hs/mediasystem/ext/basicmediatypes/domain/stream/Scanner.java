@@ -1,4 +1,4 @@
-package hs.mediasystem.domain.stream;
+package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
 import hs.mediasystem.util.Exceptional;
 

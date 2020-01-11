@@ -3,8 +3,8 @@ package hs.mediasystem.db.services;
 import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.db.base.StreamState;
 import hs.mediasystem.db.base.StreamStateProvider;
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
 

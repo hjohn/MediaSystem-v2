@@ -1,6 +1,6 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;

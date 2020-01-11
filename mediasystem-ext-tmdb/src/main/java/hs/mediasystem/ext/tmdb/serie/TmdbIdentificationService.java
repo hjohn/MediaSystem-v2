@@ -2,11 +2,11 @@ package hs.mediasystem.ext.tmdb.serie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.domain.stream.Attribute;
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.work.Identification;
 import hs.mediasystem.domain.work.Identification.MatchType;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractIdentificationService;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.TextMatcher;

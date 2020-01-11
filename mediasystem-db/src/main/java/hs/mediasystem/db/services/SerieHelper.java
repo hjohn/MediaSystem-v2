@@ -1,9 +1,6 @@
 package hs.mediasystem.db.services;
 
-import hs.mediasystem.domain.stream.Attribute;
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.Attribute.ChildType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.StreamMetaData;
@@ -12,6 +9,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
 import hs.mediasystem.mediamanager.BasicStreamStore;
 import hs.mediasystem.mediamanager.DescriptorStore;
 import hs.mediasystem.mediamanager.LocalSerie;

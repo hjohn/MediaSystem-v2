@@ -1,8 +1,8 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.work.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 
 import java.util.Collections;
 import java.util.HashMap;

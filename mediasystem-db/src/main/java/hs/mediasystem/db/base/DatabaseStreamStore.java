@@ -1,10 +1,10 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.mediamanager.BasicStreamStore;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.util.Throwables;

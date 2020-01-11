@@ -3,13 +3,13 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import hs.mediasystem.domain.stream.Attribute;
-import hs.mediasystem.domain.stream.BasicStream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Identification;
 import hs.mediasystem.domain.work.Identification.MatchType;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.tmdb.movie.TmdbIdentificationService;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;

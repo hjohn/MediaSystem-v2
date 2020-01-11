@@ -1,6 +1,6 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.domain.stream.Scanner;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.mediamanager.StreamSource;
 
 import java.nio.file.Path;
