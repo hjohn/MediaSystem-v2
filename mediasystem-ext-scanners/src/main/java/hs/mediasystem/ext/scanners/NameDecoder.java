@@ -30,7 +30,8 @@ public class NameDecoder {
 
   private static final String EPISODE = "([0-9]{1,2})";
   private static final String SEASON = "([0-9]{1,2}|(?:19|20)[0-9]{2})";
-  private static final String EPISODE_WITH_RANGE = EPISODE + "(?:(?:-|-?[Ee])([0-9]{1,2}))?";   // "2", "12", "13-14", "15E16", "15-E16", !"1516"
+  private static final String EPISODE_WITH_RANGE = EPISODE + "(?:(?:-|-?[Ee]| [Ee])([0-9]{1,2}))?";   // "2", "12", "13-14", "15E16", "15-E16", "15 E16", !"1516"
+  private static final String EPISODE_WITHOUT_RANGE = EPISODE + "()";
   private static final String NOT_PRECEDED_BY_DIGIT = "(?<!\\d)";
   private static final String NOT_SUCCEEDED_BY_DIGIT_OR_LETTER = "(?!(?:\\d|\\p{L}))";
 
@@ -38,7 +39,7 @@ public class NameDecoder {
    * Patterns define 5 groups: Pre-text, Season Number, Episode Number, Episode End Number, Post-text
    */
 
-  private static final Set<Pattern> SEASON_EPISODE_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
+  private static final Set<Pattern> SEASON_EPISODE_WITH_RANGE_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
     // Season + Episode patterns:
     add(Pattern.compile("(.*?)" + "-" + SEASON + "[Xx]" + EPISODE_WITH_RANGE + "-" + "(.*?)"));
     add(Pattern.compile("(.*?)" + "\\(" + SEASON + "[Xx]" + EPISODE_WITH_RANGE + "\\)" + "(.*?)"));
@@ -48,6 +49,18 @@ public class NameDecoder {
     add(Pattern.compile("(.*?)" + "\\[[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITH_RANGE + "\\]" + "(.*?)"));
     add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITH_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
     add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + SEASON + "[Xx]" + EPISODE_WITH_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
+  }};
+
+  private static final Set<Pattern> SEASON_EPISODE_WITHOUT_RANGE_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
+    // Season + Episode patterns:
+    add(Pattern.compile("(.*?)" + "-" + SEASON + "[Xx]" + EPISODE_WITHOUT_RANGE + "-" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\(" + SEASON + "[Xx]" + EPISODE_WITHOUT_RANGE + "\\)" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\[" + SEASON + "[Xx]" + EPISODE_WITHOUT_RANGE + "\\]" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "-[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITHOUT_RANGE + "-" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\([Ss]" + SEASON + " ?[Ee]" + EPISODE_WITHOUT_RANGE + "\\)" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + "\\[[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITHOUT_RANGE + "\\]" + "(.*?)"));
+    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + "[Ss]" + SEASON + " ?[Ee]" + EPISODE_WITHOUT_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
+    add(Pattern.compile("(.*?)" + NOT_PRECEDED_BY_DIGIT + SEASON + "[Xx]" + EPISODE_WITHOUT_RANGE + NOT_SUCCEEDED_BY_DIGIT_OR_LETTER + "(.*?)"));
   }};
 
   private static final Set<Pattern> EPISODE_ONLY_SEQUENCE_PATTERNS = new LinkedHashSet<>() {{
@@ -110,7 +123,8 @@ public class NameDecoder {
   public NameDecoder(Mode mode) {
     switch(mode) {
     case EPISODE:
-      sequencePatternsToCheck.addAll(SEASON_EPISODE_SEQUENCE_PATTERNS);
+      sequencePatternsToCheck.addAll(SEASON_EPISODE_WITH_RANGE_SEQUENCE_PATTERNS);
+      sequencePatternsToCheck.addAll(SEASON_EPISODE_WITHOUT_RANGE_SEQUENCE_PATTERNS);
       sequencePatternsToCheck.addAll(EPISODE_ONLY_SEQUENCE_PATTERNS);
       sequencePatternsToCheck.addAll(DANGEROUS_SEASON_EPISODE_SEQUENCE_PATTERNS);
       extractYear = false;
@@ -132,7 +146,8 @@ public class NameDecoder {
       extractExtension = false;
       break;
     case SPECIAL:
-      sequencePatternsToCheck.addAll(SEASON_EPISODE_SEQUENCE_PATTERNS);
+      sequencePatternsToCheck.addAll(SEASON_EPISODE_WITH_RANGE_SEQUENCE_PATTERNS);
+      sequencePatternsToCheck.addAll(SEASON_EPISODE_WITHOUT_RANGE_SEQUENCE_PATTERNS);
       sequencePatternsToCheck.addAll(SEASON_ONLY_SEQUENCE_PATTERNS);
       extractAlternativeTitle = false;
       extractSubtitle = true;
@@ -295,6 +310,15 @@ public class NameDecoder {
       String[] groups = match(pattern, text);
 
       if(groups != null) {
+        String episode = groups[2];
+        String episodeEnd = groups[3];
+
+        if(episode != null && !episode.isBlank() && episodeEnd != null && !episodeEnd.isBlank()) {
+          if(Integer.parseInt(episode) >= Integer.parseInt(episodeEnd)) {  // reject this situation
+            continue;
+          }
+        }
+
         return groups;
       }
     }
