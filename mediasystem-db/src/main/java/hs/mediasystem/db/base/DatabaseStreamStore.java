@@ -238,7 +238,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
   synchronized void put(int importSourceId, BasicStream stream) {
     CachedStream existingCS = cache.get(stream.getId());
     IdentifiedStream identifiedStream = new IdentifiedStream(stream, existingCS == null ? Collections.emptyMap() : existingCS.getIdentifiedStream().getIdentifications());
-    CachedStream newCS = new CachedStream(identifiedStream, importSourceId, Instant.now(), null, null);
+    CachedStream newCS = new CachedStream(identifiedStream, importSourceId, existingCS == null ? Instant.now() : existingCS.getCreationTime(), null, null);
 
     database.store(codec.toRecord(newCS));
 
