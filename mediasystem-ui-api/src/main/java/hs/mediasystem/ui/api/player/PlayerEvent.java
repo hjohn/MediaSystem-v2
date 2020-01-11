@@ -1,4 +1,4 @@
-package hs.mediasystem.domain;
+package hs.mediasystem.ui.api.player;
 
 import javafx.event.Event;
 import javafx.event.EventType;

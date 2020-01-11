@@ -2,12 +2,12 @@ package hs.mediasystem.ext.vlc;
 
 import com.sun.jna.Memory;
 
-import hs.mediasystem.domain.AudioTrack;
-import hs.mediasystem.domain.PlayerEvent;
-import hs.mediasystem.domain.PlayerEvent.Type;
-import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.domain.PlayerWindowIdSupplier;
-import hs.mediasystem.domain.Subtitle;
+import hs.mediasystem.ui.api.player.AudioTrack;
+import hs.mediasystem.ui.api.player.PlayerEvent;
+import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
+import hs.mediasystem.ui.api.player.Subtitle;
+import hs.mediasystem.ui.api.player.PlayerEvent.Type;
 import hs.mediasystem.util.javafx.Events;
 import hs.mediasystem.util.javafx.beans.Accessor;
 import hs.mediasystem.util.javafx.beans.BeanBooleanProperty;

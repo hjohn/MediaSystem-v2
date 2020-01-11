@@ -1,9 +1,9 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.util.StringURI;
 
 import java.time.Duration;

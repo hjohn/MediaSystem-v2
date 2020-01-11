@@ -2,10 +2,10 @@ package hs.mediasystem.ext.vlc;
 
 import com.sun.jna.NativeLibrary;
 
-import hs.mediasystem.domain.PlayerWindowIdSupplier;
-import hs.mediasystem.domain.PlayerFactory;
-import hs.mediasystem.domain.PlayerPresentation;
 import hs.mediasystem.ext.vlc.VLCPlayer.Mode;
+import hs.mediasystem.ui.api.player.PlayerFactory;
+import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 

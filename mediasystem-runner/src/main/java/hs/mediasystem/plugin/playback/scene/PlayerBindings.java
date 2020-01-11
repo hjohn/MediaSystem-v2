@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.domain.AudioTrack;
-import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.domain.Subtitle;
+import hs.mediasystem.ui.api.player.AudioTrack;
+import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.StringBinding;
 

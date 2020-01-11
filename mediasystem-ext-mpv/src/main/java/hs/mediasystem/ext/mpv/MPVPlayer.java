@@ -3,13 +3,13 @@ package hs.mediasystem.ext.mpv;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.LongByReference;
 
-import hs.mediasystem.domain.AudioTrack;
-import hs.mediasystem.domain.PlayerEvent;
-import hs.mediasystem.domain.PlayerEvent.Type;
-import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.domain.PlayerWindowIdSupplier;
-import hs.mediasystem.domain.Subtitle;
 import hs.mediasystem.ext.mpv.MPV.mpv_event;
+import hs.mediasystem.ui.api.player.AudioTrack;
+import hs.mediasystem.ui.api.player.PlayerEvent;
+import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
+import hs.mediasystem.ui.api.player.Subtitle;
+import hs.mediasystem.ui.api.player.PlayerEvent.Type;
 import hs.mediasystem.util.javafx.Events;
 
 import java.net.URI;

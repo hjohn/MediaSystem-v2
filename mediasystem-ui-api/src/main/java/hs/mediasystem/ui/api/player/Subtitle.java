@@ -1,4 +1,4 @@
-package hs.mediasystem.domain;
+package hs.mediasystem.ui.api.player;
 
 public class Subtitle {
   public static final Subtitle DISABLED = new Subtitle(-1, "Disabled");

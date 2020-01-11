@@ -1,4 +1,4 @@
-package hs.mediasystem.domain;
+package hs.mediasystem.ui.api.player;
 
 public class AudioTrack {
   public static final AudioTrack NO_AUDIO_TRACK = new AudioTrack(-1, "Disabled");

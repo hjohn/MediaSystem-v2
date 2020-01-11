@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.vlc;
 
-import hs.mediasystem.domain.PlayerWindowIdSupplier;
 import hs.mediasystem.ext.vlc.VLCPlayer.Mode;
+import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

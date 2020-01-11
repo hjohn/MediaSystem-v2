@@ -1,4 +1,4 @@
-package hs.mediasystem.domain;
+package hs.mediasystem.ui.api.player;
 
 import hs.mediasystem.util.ini.Ini;
 

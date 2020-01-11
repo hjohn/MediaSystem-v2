@@ -14,8 +14,17 @@ import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -64,6 +73,8 @@ public class FrontEndRunner extends Application {
 
     injector.registerInstance(sceneManager);
 
+    loadPlayerPlugins(injector);
+
     ServiceConfigurer.configure(injector);
 
     Annotations.initialize();
@@ -76,5 +87,41 @@ public class FrontEndRunner extends Application {
 
     sceneManager.display();
     sceneManager.getRootPane().fireEvent(NavigateEvent.to(provider.get()));
+  }
+
+  private static void loadPlayerPlugins(Injector injector) throws IOException {
+    PluginManager pluginManager = new PluginManager(injector);
+
+    Path root = Paths.get("ui-plugins");
+
+    if(Files.exists(root)) {
+      Files.find(root, 1, (p, a) -> !p.equals(root)).forEach(p -> {
+        try {
+          List<URL> urls = Files.find(p, 1, (cp, a) -> !cp.equals(p)).map(Path::toUri).map(uri -> {
+            try {
+              return uri.toURL();
+            }
+            catch(MalformedURLException e) {
+              throw new IllegalStateException(e);
+            }
+          }).collect(Collectors.toList());
+
+          pluginManager.loadPluginAndScan(urls.toArray(new URL[] {}));
+        }
+        catch(IOException e) {
+          throw new IllegalStateException(e);
+        }
+      });
+    }
+    else {
+      pluginManager.loadPluginAndScan(
+        URI.create("file:/P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/classes/").toURL(),
+        new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/dependencies-only.jar")
+      );
+      pluginManager.loadPluginAndScan(
+        URI.create("file:/P:/Dev/git/MediaSystem-v2/mediasystem-ext-mpv/target/classes/").toURL(),
+        new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-mpv/target/dependencies-only.jar")
+      );
+    }
   }
 }

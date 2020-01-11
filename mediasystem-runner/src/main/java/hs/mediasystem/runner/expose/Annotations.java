@@ -1,8 +1,5 @@
 package hs.mediasystem.runner.expose;
 
-import hs.mediasystem.domain.AudioTrack;
-import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.domain.Subtitle;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
 import hs.mediasystem.plugin.library.scene.grid.WorkCellPresentation;
 import hs.mediasystem.plugin.library.scene.overview.EpisodePresentation;
@@ -10,6 +7,9 @@ import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.runner.root.RootPresentation;
 import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.ui.api.player.AudioTrack;
+import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.expose.Expose;
 
 import org.reactfx.value.Val;

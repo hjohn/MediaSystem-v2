@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.domain.PlayerEvent;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.ui.api.player.PlayerEvent;
 import hs.mediasystem.util.ImageHandleFactory;
 
 import javafx.application.Platform;

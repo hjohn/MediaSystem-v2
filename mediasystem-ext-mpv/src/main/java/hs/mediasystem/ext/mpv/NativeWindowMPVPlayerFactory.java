@@ -1,8 +1,8 @@
 package hs.mediasystem.ext.mpv;
 
-import hs.mediasystem.domain.PlayerFactory;
-import hs.mediasystem.domain.PlayerPresentation;
-import hs.mediasystem.domain.PlayerWindowIdSupplier;
+import hs.mediasystem.ui.api.player.PlayerFactory;
+import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.util.ini.Ini;
 
 import javax.inject.Inject;

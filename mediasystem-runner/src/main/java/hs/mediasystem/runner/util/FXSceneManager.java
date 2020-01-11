@@ -4,7 +4,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef;
 
-import hs.mediasystem.domain.PlayerWindowIdSupplier;
+import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.util.javafx.SceneUtil;
 
 import javafx.beans.property.ObjectProperty;
