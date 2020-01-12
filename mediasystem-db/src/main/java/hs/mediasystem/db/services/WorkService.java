@@ -16,6 +16,7 @@ import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
@@ -267,8 +268,19 @@ public class WorkService {
         .map(bs -> toMediaStream(bs, null))  // TODO Might want to provide Identification here based on parent
         .collect(Collectors.toList());
 
+      Episode ep = (Episode)descriptor;
+      Episode episode = new Episode(  // New Episode created here to add backdrop to Episode if one is missing
+        (EpisodeIdentifier)ep.getIdentifier(),
+        new Details(ep.getName(), ep.getDescription().orElse(null), ep.getDate().orElse(null), ep.getImage().orElse(null), ep.getBackdrop().or(() -> parentDescriptor.getDetails().getBackdrop()).orElse(null)),
+        ep.getReception(),
+        ep.getDuration(),
+        ep.getSeasonNumber(),
+        ep.getNumber(),
+        ep.getPersonRoles()
+      );
+
       return new Work(
-        descriptor,
+        episode,
         new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), parentDescriptor.getDetails().getName()),
         mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
         mediaStreams
