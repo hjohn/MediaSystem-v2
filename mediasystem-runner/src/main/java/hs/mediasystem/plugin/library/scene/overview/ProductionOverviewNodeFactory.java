@@ -393,9 +393,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
                   Buttons.create(presentation.play),
             presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
               Buttons.create("Related", e -> presentation.toRelatedButtonState()) :
-              Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.get())),
-            Buttons.create(presentation.playTrailer)
+              Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.get()))
           );
+          if(presentation.state.get() == State.OVERVIEW) {
+            hbox.getChildren().add(Buttons.create(presentation.playTrailer));
+          }
           break;
         case PLAY_RESUME:
           hbox.getChildren().addAll(

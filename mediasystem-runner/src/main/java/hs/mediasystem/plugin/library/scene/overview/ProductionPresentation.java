@@ -364,39 +364,16 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   private void playTrailer(Event event) {
     VideoLink videoLink = trailerVideoLink.get();
-    Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(getPlayableWork(), new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
+    Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(rootItem, new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
   }
 
   public void update() {
-    Work work = getWorkForTrailer();
-
     trailerVideoLink.set(null);
 
-    if(work != null) {
-      CompletableFuture.supplyAsync(() -> workClient.findVideoLinks(work.getId()))
-        .thenAccept(videoLinks -> {
-          videoLinks.stream().filter(vl -> vl.getType() == VideoLink.Type.TRAILER).findFirst().ifPresent(videoLink -> Platform.runLater(() -> {
-            if(work.equals(getWorkForTrailer())) {
-              trailerVideoLink.set(videoLink);
-            }
-          }));
-        });
-    }
-  }
-
-  private Work getWorkForTrailer() {
-    if(internalState.get() == State.OVERVIEW) {
-      return rootItem;
-    }
-    if(internalState.get() == State.EPISODE) {
-      return episodeItem.get();
-    }
-
-    return null;
-  }
-
-  private Work getPlayableWork() {
-    return rootItem.getType().equals(SERIE) ? episodeItem.get() : rootItem;
+    CompletableFuture.supplyAsync(() -> workClient.findVideoLinks(rootItem.getId()))
+      .thenAccept(videoLinks -> {
+        videoLinks.stream().filter(vl -> vl.getType() == VideoLink.Type.TRAILER).findFirst().ifPresent(videoLink -> Platform.runLater(() -> trailerVideoLink.set(videoLink)));
+      });
   }
 
   public Map<Integer, Var<SeasonWatchState>> getSeasonWatchStates() {
