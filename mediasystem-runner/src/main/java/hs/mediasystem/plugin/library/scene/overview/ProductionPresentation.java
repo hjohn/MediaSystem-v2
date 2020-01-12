@@ -204,6 +204,10 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     this.internalState.set(State.LIST);
   }
 
+  public void toMainButtonState() {
+    this.internalButtonState.set(ButtonState.MAIN);
+  }
+
   public void toPlayResumeButtonState() {
     this.internalButtonState.set(ButtonState.PLAY_RESUME);
   }

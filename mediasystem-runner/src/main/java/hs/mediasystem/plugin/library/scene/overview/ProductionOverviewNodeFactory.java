@@ -84,6 +84,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
   @Override
   public Node create(ProductionPresentation presentation) {
+    presentation.toMainButtonState();  // Resets presentation to normal buttons when Node is created again
+
     MainPanel mainPanel = new MainPanel(presentation);
 
     presentation.showInfo.conditionOnShowing(mainPanel).subscribe(e -> showInfoEventHandler.handle(e, presentation.state.get() == State.OVERVIEW ? presentation.rootItem : presentation.episodeItem.get()));
