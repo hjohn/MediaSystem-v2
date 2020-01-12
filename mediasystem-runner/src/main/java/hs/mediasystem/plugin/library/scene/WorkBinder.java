@@ -8,10 +8,11 @@ import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.Binder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Sequence.Type;
+import hs.mediasystem.ui.api.domain.Serie;
 import hs.mediasystem.ui.api.domain.Stage;
 import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
@@ -113,7 +114,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
     }
 
     Stage stage = details.getClassification().getStage();
-    LocalDate lastAirDate = details.getLastAirDate().orElse(null);
+    LocalDate lastAirDate = details.getSerie().flatMap(Serie::getLastAirDate).orElse(null);
 
     if(stage == Stage.ENDED && lastAirDate != null && lastAirDate.getYear() != date.getYear()) {
       return date.getYear() + " - " + lastAirDate.getYear();

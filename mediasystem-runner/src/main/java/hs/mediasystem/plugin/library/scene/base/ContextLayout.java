@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.base;
 
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.runner.grouping.WorksGroup;
@@ -8,6 +9,9 @@ import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
+import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Sequence.Type;
+import hs.mediasystem.ui.api.domain.Serie;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
@@ -64,8 +68,20 @@ public class ContextLayout {
   public BasePanel create(Work work) {
     BasePanel panel = create(work.getDetails());
 
+    work.getParent().map(Parent::getName).ifPresent(panel.groupTitle::set);
     panel.subtitle.set(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")));
     work.getDetails().getReception().ifPresent(reception -> setReception(panel.rating, reception));
+
+    // Add season and episode number:
+    Optional<Sequence> seq = work.getDetails().getSequence().filter(s -> s.getType().equals(Type.EPISODE));
+
+    seq.map(Sequence::getNumber).map(Object::toString).ifPresent(panel.episodeNumber::set);
+    seq.flatMap(Sequence::getSeasonNumber).map(Object::toString).ifPresent(panel.season::set);
+
+    // Add total seasons and episodes:
+    work.getDetails().getSerie().map(Serie::getTotalEpisodes).ifPresent(episodeCount -> {
+      panel.totalEpisodes.set("" + episodeCount + work.getDetails().getSerie().flatMap(Serie::getTotalSeasons).map(seasonCount -> " (" + seasonCount + " seasons)").orElse(""));
+    });
 
     return panel;
   }
@@ -118,7 +134,7 @@ public class ContextLayout {
     person.getImage().ifPresent(panel.imageURI::set);
     person.getBiography().ifPresent(panel.biography::set);
     person.getBirthPlace().ifPresent(panel.birthPlace::set);
-    person.getBirthDate().ifPresent(bd -> panel.birthDate.set(MediaItemFormatter.formattedLocalDate(bd) + person.getDeathDate().map(MediaItemFormatter::formattedLocalDate).orElse("")));
+    person.getBirthDate().ifPresent(bd -> panel.birthDate.set(MediaItemFormatter.formattedLocalDate(bd) + person.getDeathDate().map(MediaItemFormatter::formattedLocalDate).map(x -> " - " + x).orElse("")));
 
     return panel;
   }
@@ -140,6 +156,7 @@ public class ContextLayout {
     public final StringProperty season = new SimpleStringProperty();
     public final StringProperty episodeNumber = new SimpleStringProperty();
     public final StringProperty totalEntries = new SimpleStringProperty();
+    public final StringProperty totalEpisodes = new SimpleStringProperty();
     public final StringProperty rating = new SimpleStringProperty();
     public final StringProperty overview = new SimpleStringProperty();
     public final ObjectProperty<ImageURI> imageURI = new SimpleObjectProperty<>();
@@ -196,6 +213,14 @@ public class ContextLayout {
           Containers.vbox(
             Labels.create("header", "RATING", rating.isEmpty().not()),
             Labels.create("rating", rating, rating.isEmpty().not())
+          )
+        ),
+        Containers.hbox(
+          "hbox",
+          Containers.vbox(
+            totalEpisodes.isEmpty().not(),
+            Labels.create("header", "EPISODES", totalEpisodes.isEmpty().not()),
+            Labels.create("total-episodes", totalEpisodes, totalEpisodes.isEmpty().not())
           )
         ),
         vgrow(Priority.ALWAYS, Containers.vbox(

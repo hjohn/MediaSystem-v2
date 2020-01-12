@@ -10,6 +10,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.Release;
+import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ui.api.WorksClient;
 import hs.mediasystem.ui.api.domain.Classification;
@@ -22,6 +23,7 @@ import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -79,10 +81,10 @@ public class LocalWorksClient implements WorksClient {
       descriptor.getDetails().getName(),
       descriptor.getDetails().getDescription().orElse(null),
       descriptor.getDetails().getDate().orElse(null),
-      descriptor instanceof Serie ? ((Serie)descriptor).getLastAirDate() : null,
       descriptor.getDetails().getImage().or(() -> streamId.map(StreamID::asInt).map(id -> new ImageURI("localdb://" + id + "/2"))).orElse(null),
       descriptor.getDetails().getBackdrop().orElse(parent == null ? null : parent.getDetails().getBackdrop().orElse(null)),
       descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
+      descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,
       descriptor instanceof Episode ? createSequence((Episode)descriptor) : null,
       descriptor instanceof Release ? ((Release)descriptor).getReception() : null,
       descriptor instanceof Production ? ((Production)descriptor).getPopularity() : null,
@@ -113,6 +115,14 @@ public class LocalWorksClient implements WorksClient {
   private static Stage toStage(Movie.State state) {
     return state == Movie.State.IN_PRODUCTION ? Stage.IN_PRODUCTION :
       state == Movie.State.PLANNED ? Stage.PLANNED : Stage.RELEASED;
+  }
+
+  private static hs.mediasystem.ui.api.domain.Serie createSerie(Serie serie) {
+    return new hs.mediasystem.ui.api.domain.Serie(
+      serie.getLastAirDate(),
+      (int)serie.getSeasons().stream().filter(s -> s.getNumber() > 0).count(),
+      (int)serie.getSeasons().stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count()
+    );
   }
 
   private static Sequence createSequence(Episode episode) {

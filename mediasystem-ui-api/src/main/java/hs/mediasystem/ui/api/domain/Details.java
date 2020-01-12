@@ -10,16 +10,16 @@ public class Details {
   private final String name;
   private final Optional<String> description;
   private final Optional<LocalDate> releaseDate;
-  private final Optional<LocalDate> lastAirDate;
   private final Optional<ImageURI> image;
   private final Optional<ImageURI> backdrop;
   private final Optional<String> tagline;
+  private final Optional<Serie> serie;
   private final Optional<Sequence> sequence;
   private final Optional<Reception> reception;
   private final Optional<Double> popularity;
   private final Classification classification;
 
-  public Details(String name, String description, LocalDate releaseDate, LocalDate lastAirDate, ImageURI image, ImageURI backdrop, String tagline, Sequence sequence, Reception reception, Double popularity, Classification classification) {
+  public Details(String name, String description, LocalDate releaseDate, ImageURI image, ImageURI backdrop, String tagline, Serie serie, Sequence sequence, Reception reception, Double popularity, Classification classification) {
     if(name == null || name.isBlank()) {
       throw new IllegalArgumentException("name cannot be null or blank: " + name);
     }
@@ -30,10 +30,10 @@ public class Details {
     this.name = name;
     this.description = Optional.ofNullable(description);
     this.releaseDate = Optional.ofNullable(releaseDate);
-    this.lastAirDate = Optional.ofNullable(lastAirDate);
     this.image = Optional.ofNullable(image);
     this.backdrop = Optional.ofNullable(backdrop);
     this.tagline = Optional.ofNullable(tagline);
+    this.serie = Optional.ofNullable(serie);
     this.sequence = Optional.ofNullable(sequence);
     this.reception = Optional.ofNullable(reception);
     this.popularity = Optional.ofNullable(popularity);
@@ -52,10 +52,6 @@ public class Details {
     return releaseDate;
   }
 
-  public Optional<LocalDate> getLastAirDate() {
-    return lastAirDate;
-  }
-
   public Optional<ImageURI> getImage() {
     return image;
   }
@@ -66,6 +62,10 @@ public class Details {
 
   public Optional<String> getTagline() {
     return tagline;
+  }
+
+  public Optional<Serie> getSerie() {
+    return serie;
   }
 
   public Optional<Sequence> getSequence() {
