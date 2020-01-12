@@ -41,7 +41,7 @@ public class MultiImageURIHandler implements ImageURIHandler {
   private static final Pattern SPLIT_PATTERN = Pattern.compile(",");
   private static final Pattern SEMI_COLON_PATTERN = Pattern.compile(";");
   private static final Pattern MAIN_PATTERN = Pattern.compile(":");
-  private static final Pattern POSITIONAL_PATTERN = Pattern.compile("([0-9]+,[0-9]+)(;[0-9]+,[0-9]+,[0-9]+,[0-9]+)+");
+  private static final Pattern POSITIONAL_PATTERN = Pattern.compile("([0-9]+,[0-9]+)(;[-0-9]+,[-0-9]+,[0-9]+,[0-9]+)+");
 
   @Inject private Provider<ImageHandleFactory> factoryProvider;
 

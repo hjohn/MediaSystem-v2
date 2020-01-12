@@ -2,6 +2,7 @@ package hs.mediasystem.db.services;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Resolution;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
@@ -10,13 +11,14 @@ import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.mediamanager.BasicStreamStore;
 import hs.mediasystem.mediamanager.DescriptorStore;
 import hs.mediasystem.mediamanager.LocalSerie;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.Attributes;
+import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.Tuple;
 import hs.mediasystem.util.Tuple.Tuple2;
 import hs.mediasystem.util.WeightedNgramDistance;
@@ -41,6 +43,7 @@ public class SerieHelper {
   private static final DataSource LOCAL_RELEASE = DataSource.instance(MediaType.of("RELEASE"), "LOCAL");
   private static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadScheduledExecutor();
   private static final List<BasicStream> EMPTY_LIST = Collections.emptyList();
+  private static final MediaType EPISODE = MediaType.of("EPISODE");
 
   @Inject private BasicStreamStore streamStore;  // Only stores top level items, not children
   @Inject private DescriptorStore descriptorStore;
@@ -177,13 +180,40 @@ public class SerieHelper {
     Optional<StreamMetaData> metaData = metaDataProvider.find(stream.getId());
     String subtitle = stream.getAttributes().get(Attribute.SUBTITLE);
 
+    ImageURI image;
+    ImageURI backdrop = null;
+
+    if(stream.getType().equals(EPISODE)) {
+      image = metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 1).map(list -> list.get(1)).map(Snapshot::getImageUri).orElse(null);
+    }
+    else {
+      image = metaData.map(SerieHelper::createImage).orElse(null);
+      backdrop = metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 2).map(list -> list.get(2)).map(Snapshot::getImageUri).orElse(null);
+    }
+
     return new Details(
       stream.getAttributes().get(Attribute.TITLE) + (subtitle == null ? "" : ": " + subtitle),
       null,
       null,
-      metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 1).map(list -> list.get(1)).map(Snapshot::getImageUri).orElse(null),
-      null
+      image,
+      backdrop
     );
+  }
+
+  private static ImageURI createImage(StreamMetaData metaData) {
+    List<Snapshot> snapshots = metaData.getSnapshots();
+
+    if(metaData.getVideoStreams().isEmpty() || snapshots.size() < 2) {
+      return null;
+    }
+
+    Resolution resolution = metaData.getVideoStreams().get(0).getResolution();
+
+    int h = 900;
+    int w = h * resolution.getWidth() / resolution.getHeight() / 2;
+    int x = (600 - w) / 2;
+
+    return new ImageURI("multi:600,900;" + x + ",0," + w + ",450;" + x + ",450," + w + ",450:" + snapshots.get(0).getImageUri().getUri() + "," + snapshots.get(1).getImageUri().getUri());
   }
 
   private static LocalEpisodeIdentifier createLocalId(Serie serie, BasicStream stream) {

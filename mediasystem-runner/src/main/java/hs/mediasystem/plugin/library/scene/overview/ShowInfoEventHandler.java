@@ -87,10 +87,18 @@ public class ShowInfoEventHandler {
         GridPane.FILL
       );
 
-      stream.getIdentification().ifPresent(identification -> {
+      stream.getIdentification().ifPresentOrElse(identification -> {
         gridPane.addRow(
           Labels.create("title", "Identification"),
           Labels.create("value", "" + toText(identification)),
+          GridPane.FILL,
+          GridPane.FILL
+        );
+      },
+      () -> {
+        gridPane.addRow(
+          Labels.create("title", "Identification"),
+          Labels.create("value", "- (Unable to identify)"),
           GridPane.FILL,
           GridPane.FILL
         );

@@ -60,6 +60,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class WorkService {
+  private static final String DEFAULT_DATA_SOURCE_NAME = "DEFAULT";
   private static final MediaType SERIE = MediaType.of("SERIE");
   private static final MediaType MOVIE = MediaType.of("MOVIE");
   private static final MediaType EPISODE = MediaType.of("EPISODE");
@@ -99,7 +100,7 @@ public class WorkService {
   }
 
   public synchronized Optional<Work> find(WorkId workId) {
-    if(workId.getDataSource().getName().equals("STREAM_ID")) {
+    if(workId.getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
       return find(new StreamID(Integer.parseInt(workId.getKey())));
     }
     if(workId.getType().equals(COLLECTION)) {
@@ -150,7 +151,7 @@ public class WorkService {
        * Case 3: Identifier is has no stream associated with it whatsoever
        */
 
-      if(workId.getDataSource().getName().equals("STREAM_ID")) {
+      if(workId.getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
         return findChildren(new StreamID(Integer.parseInt(workId.getKey())));
       }
 
@@ -400,7 +401,7 @@ public class WorkService {
 
   private MediaDescriptor createMinimalDescriptor(BasicStream basicStream) {
     return new Production(
-      new ProductionIdentifier(DataSource.instance(basicStream.getType(), "DEFAULT"), "" + basicStream.getId().asInt()),
+      new ProductionIdentifier(DataSource.instance(basicStream.getType(), DEFAULT_DATA_SOURCE_NAME), "" + basicStream.getId().asInt()),
       serieHelper.createMinimalDetails(basicStream),
       null,
       List.of(),
