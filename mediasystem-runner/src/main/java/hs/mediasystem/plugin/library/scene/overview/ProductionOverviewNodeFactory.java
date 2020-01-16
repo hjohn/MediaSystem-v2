@@ -45,6 +45,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -140,138 +141,134 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
     }
 
-    private VBox createDynamicBox() {
-      VBox box = Containers.vbox("dynamic-panel");
-
-      State state = presentation.state.get();
-      Work work = presentation.rootItem;
-
-      switch(state) {
-      case OVERVIEW:
-        {
-          BorderPane borderPane = new BorderPane();
-          Details details = work.getDetails();
-
-          box.getChildren().add(borderPane);
-
-          VBox leftBox = Containers.vbox();
-
-          details.getTagline().ifPresent(tl -> {
-            leftBox.getChildren().add(Labels.create("tag-line", "“" + tl + "”"));
-          });
-
-          leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create("description", details.getDescription().orElse("")), 12000, 40));
-
-          Region castPane = castPaneFactory.create(work.getId());
-
-          leftBox.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
-          castPane.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
-
-          HBox.setHgrow(leftBox, Priority.ALWAYS);
-          HBox.setHgrow(castPane, Priority.ALWAYS);
-
-          HBox outer = Containers.hbox("overview-panel", leftBox, castPane);
-
-          borderPane.setMinHeight(1);
-          borderPane.setPrefHeight(1);
-          borderPane.setCenter(outer);
-          borderPane.setBottom(navigationButtonsFactory.create(presentation));
-          borderPane.getStyleClass().add("overview-dynamic-panel");
-
-          VBox.setVgrow(borderPane, Priority.ALWAYS);
-        }
-        break;
+    private Pane createDynamicBox() {
+      switch(presentation.state.get()) {
       case LIST:
-        MediaGridView<Work> gridView = new MediaGridView<>();
-        MediaGridViewCellFactory<Work> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
-
-        gridView.visibleRows.set(1);
-        gridView.visibleColumns.set(3);
-        gridView.setOrientation(Orientation.HORIZONTAL);
-        gridView.onItemSelected.set(e -> presentation.toEpisodeState());
-        gridView.pageByGroup.set(true);
-        gridView.showHeaders.set(false);
-        gridView.scrollBarVisible.set(false);
-        gridView.groupDisplayMode.set(GroupDisplayMode.FOCUSED);
-        gridView.setCellFactory(cellFactory);
-
-        Nodes.visible(gridView).values().observe(visible -> {
-          gridView.itemsProperty().set(visible ? FXCollections.observableList(presentation.episodeItems) : FXCollections.emptyObservableList());
-
-          if(visible) {
-            gridView.getSelectionModel().select(presentation.episodeItem.getValue());
-          }
-        });
-
-        cellFactory.setPlaceHolderAspectRatio(9.0 / 16.0);
-        cellFactory.setMinRatio(4.0 / 3.0);
-
-        VBox.setVgrow(gridView, Priority.ALWAYS);
-
-        Set<Integer> knownSeasons = new HashSet<>();
-        List<Group> groups = new ArrayList<>();
-        List<Entry> entries = new ArrayList<>();
-        Map<Integer, Integer> seasonNumberToIndex = new HashMap<>();
-
-        for(int i = 0; i < presentation.episodeItems.size(); i++) {
-          Work episode = presentation.episodeItems.get(i);
-          int seasonNumber = toSeasonBarIndex(episode);
-
-          if(!knownSeasons.contains(seasonNumber)) {
-            knownSeasons.add(seasonNumber);
-
-            groups.add(new Group(seasonNumber == 0 ? "Specials" : seasonNumber == -1 ? "Extras" : "Season " + seasonNumber, i));
-
-            Entry entry;
-
-            switch(seasonNumber) {
-            case 0:
-              seasonNumberToIndex.put(0, entries.size());
-              entry = new Entry("Specials", null, false);
-              break;
-            case -1:
-              seasonNumberToIndex.put(-1, entries.size());
-              entry = new Entry("Extras", null, false);
-              break;
-            default:
-              seasonNumberToIndex.put(seasonNumber, entries.size());
-              entry = new Entry("" + seasonNumber, null, true);
-            }
-
-            Val<SeasonWatchState> val = presentation.getSeasonWatchStates().get(seasonNumber).conditionOnShowing(gridView);
-
-            // Unsafe binding, Presentation strongly refers to UI (solved with conditionOnShowing)
-            entry.mediaStatus.bind(val.map(sws -> sws.totalEpisodes == sws.missingEpisodes ? MediaStatus.UNAVAILABLE : sws.totalEpisodes == sws.watchedEpisodes ? MediaStatus.WATCHED : MediaStatus.AVAILABLE));
-            entries.add(entry);
-          }
-        }
-
-        SeasonBar seasonsBar = new SeasonBar();
-
-        seasonsBar.getStyleClass().add("season-bar");
-        seasonsBar.setMinWidth(1);
-        seasonsBar.setPrefWidth(1);
-        seasonsBar.entries.setValue(entries);
-
-        gridView.groups.set(groups);
-        gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
-          if(current != null) {
-            seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(toSeasonBarIndex(current)));
-            presentation.episodeItem.setValue(current);
-          }
-        });
-
-        box.getChildren().addAll(seasonsBar, gridView);
-        break;
+        return buildEpisodeListUI();
       case EPISODE:
-        buildEpisodeDynamicUI(box);
-        break;
+        return buildEpisodeDynamicUI();
+      default:
+        return buildOverviewUI();
       }
-
-      return box;
     }
 
-    private void buildEpisodeDynamicUI(VBox box) {
+    private Pane buildOverviewUI() {
+      Work work = presentation.rootItem;
+      Details details = work.getDetails();
+
+      VBox leftBox = Containers.vbox();
+
+      details.getTagline().ifPresent(tl -> leftBox.getChildren().add(Labels.create("tag-line", "“" + tl + "”")));
+
+      leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create("description", details.getDescription().orElse("")), 12000, 40));
+
+      Region castPane = castPaneFactory.create(work.getId());
+
+      leftBox.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
+      castPane.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
+
+      HBox.setHgrow(leftBox, Priority.ALWAYS);
+      HBox.setHgrow(castPane, Priority.ALWAYS);
+
+      HBox outer = Containers.hbox("overview-panel", leftBox, castPane);
+
+      BorderPane borderPane = new BorderPane();
+
+      borderPane.setMinHeight(1);
+      borderPane.setPrefHeight(1);
+      borderPane.setCenter(outer);
+      borderPane.setBottom(navigationButtonsFactory.create(presentation));
+      borderPane.getStyleClass().add("overview-dynamic-panel");
+
+      VBox.setVgrow(borderPane, Priority.ALWAYS);
+
+      return Containers.vbox("dynamic-panel", borderPane);
+    }
+
+    private Pane buildEpisodeListUI() {
+      MediaGridView<Work> gridView = new MediaGridView<>();
+      MediaGridViewCellFactory<Work> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
+
+      gridView.visibleRows.set(1);
+      gridView.visibleColumns.set(3);
+      gridView.setOrientation(Orientation.HORIZONTAL);
+      gridView.onItemSelected.set(e -> presentation.toEpisodeState());
+      gridView.pageByGroup.set(true);
+      gridView.showHeaders.set(false);
+      gridView.scrollBarVisible.set(false);
+      gridView.groupDisplayMode.set(GroupDisplayMode.FOCUSED);
+      gridView.setCellFactory(cellFactory);
+
+      Nodes.visible(gridView).values().observe(visible -> {
+        gridView.itemsProperty().set(visible ? FXCollections.observableList(presentation.episodeItems) : FXCollections.emptyObservableList());
+
+        if(visible) {
+          gridView.getSelectionModel().select(presentation.episodeItem.getValue());
+        }
+      });
+
+      cellFactory.setPlaceHolderAspectRatio(9.0 / 16.0);
+      cellFactory.setMinRatio(4.0 / 3.0);
+
+      VBox.setVgrow(gridView, Priority.ALWAYS);
+
+      Set<Integer> knownSeasons = new HashSet<>();
+      List<Group> groups = new ArrayList<>();
+      List<Entry> entries = new ArrayList<>();
+      Map<Integer, Integer> seasonNumberToIndex = new HashMap<>();
+
+      for(int i = 0; i < presentation.episodeItems.size(); i++) {
+        Work episode = presentation.episodeItems.get(i);
+        int seasonNumber = toSeasonBarIndex(episode);
+
+        if(!knownSeasons.contains(seasonNumber)) {
+          knownSeasons.add(seasonNumber);
+
+          groups.add(new Group(seasonNumber == 0 ? "Specials" : seasonNumber == -1 ? "Extras" : "Season " + seasonNumber, i));
+
+          Entry entry;
+
+          switch(seasonNumber) {
+          case 0:
+            seasonNumberToIndex.put(0, entries.size());
+            entry = new Entry("Specials", null, false);
+            break;
+          case -1:
+            seasonNumberToIndex.put(-1, entries.size());
+            entry = new Entry("Extras", null, false);
+            break;
+          default:
+            seasonNumberToIndex.put(seasonNumber, entries.size());
+            entry = new Entry("" + seasonNumber, null, true);
+          }
+
+          Val<SeasonWatchState> val = presentation.getSeasonWatchStates().get(seasonNumber).conditionOnShowing(gridView);
+
+          // Unsafe binding, Presentation strongly refers to UI (solved with conditionOnShowing)
+          entry.mediaStatus.bind(val.map(sws -> sws.totalEpisodes == sws.missingEpisodes ? MediaStatus.UNAVAILABLE : sws.totalEpisodes == sws.watchedEpisodes ? MediaStatus.WATCHED : MediaStatus.AVAILABLE));
+          entries.add(entry);
+        }
+      }
+
+      SeasonBar seasonsBar = new SeasonBar();
+
+      seasonsBar.getStyleClass().add("season-bar");
+      seasonsBar.setMinWidth(1);
+      seasonsBar.setPrefWidth(1);
+      seasonsBar.entries.setValue(entries);
+
+      gridView.groups.set(groups);
+      gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
+        if(current != null) {
+          seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(toSeasonBarIndex(current)));
+          presentation.episodeItem.setValue(current);
+        }
+      });
+
+      return Containers.vbox("dynamic-panel", seasonsBar, gridView);
+    }
+
+    private Pane buildEpisodeDynamicUI() {
       presentation.episodeItem.unbind();
 
       List<Work> episodes = presentation.episodeItems;
@@ -289,7 +286,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       VBox.setVgrow(borderPane, Priority.ALWAYS);
 
-      box.getChildren().add(borderPane);
+      return Containers.vbox("dynamic-panel", borderPane);
     }
 
     private HBox buildEpisodeUI() {
@@ -321,11 +318,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       titleLabel.setMinHeight(Region.USE_PREF_SIZE);  // With reflowed labels, sometimes not enough vertical space is assigned and the reflow fails to use the next line and adds an ellipsis instead...
 
-      VBox titleBox = Containers.vbox(
-        titleLabel,
-        Labels.create("subtitle", subtitle)
-      );
-
+      VBox titleBox = Containers.vbox(titleLabel, Labels.create("subtitle", subtitle));
       HBox.setHgrow(titleBox, Priority.ALWAYS);
 
       VBox vbox = Containers.vbox(
