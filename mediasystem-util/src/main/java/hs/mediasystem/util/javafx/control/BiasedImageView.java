@@ -1,5 +1,7 @@
 package hs.mediasystem.util.javafx.control;
 
+import hs.mediasystem.util.javafx.Nodes;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -149,7 +151,16 @@ public class BiasedImageView extends Region {
 
     imageProperty().addListener((obs, old, current) -> {
       if(current != null) {
-        timeline.play();
+        if(Nodes.isTreeVisibleAndShowing(this)) {
+          timeline.play();
+        }
+        else {
+          imageView.setOpacity(1);
+          effectRegion.setOpacity(1);
+          if(placeHolder != null) {
+            placeHolder.setOpacity(0);
+          }
+        }
       }
       else {
         // Reset opacities when image becomes null, so a clean fade-in is possible later
