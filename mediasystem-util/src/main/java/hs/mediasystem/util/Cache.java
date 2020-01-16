@@ -1,4 +1,4 @@
-package hs.mediasystem.util.javafx;
+package hs.mediasystem.util;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
@@ -30,7 +30,7 @@ public class Cache {
 
   public synchronized void add(Object key, Object obj, long approximateSize) {
     cleanReferenceQueue();
-System.out.println("Current cache size: " + approximateTotalSize / 1024 + "k");
+
     Item item = byKey.get(key);
 
     if(item != null) {

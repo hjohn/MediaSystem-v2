@@ -1,5 +1,6 @@
 package hs.mediasystem.util.javafx;
 
+import hs.mediasystem.util.Cache;
 import hs.mediasystem.util.ImageHandle;
 
 import java.awt.Dimension;
