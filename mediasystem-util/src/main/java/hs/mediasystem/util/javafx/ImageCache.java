@@ -26,6 +26,7 @@ import javax.imageio.stream.ImageInputStream;
 public class ImageCache {
   private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
   private static final NavigableMap<String, WeakReference<?>> CACHE = new TreeMap<>();
+  private static final Cache REF_CACHE = new Cache(500 * 1024 * 1024, 300 * 1000);
 
   public static Image loadImage(ImageHandle handle) {
     cleanReferenceQueue();
@@ -192,6 +193,7 @@ public class ImageCache {
 
       synchronized(CACHE) {
         CACHE.put(key, new ImageWeakReference(key, image, REFERENCE_QUEUE));  // Put Image directly in cache
+        REF_CACHE.add(key, image, (long)image.getWidth() * (long)image.getHeight() * 4);
       }
 
       return image;
