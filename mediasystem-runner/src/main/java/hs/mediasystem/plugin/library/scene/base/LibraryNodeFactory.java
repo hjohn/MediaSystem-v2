@@ -4,6 +4,7 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ViewPortFactory;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.util.Exceptional;
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 
 import javafx.animation.KeyFrame;
@@ -88,14 +89,22 @@ public class LibraryNodeFactory implements NodeFactory<LibraryPresentation> {
         new KeyFrame(Duration.seconds(fadeOutDelay + 7), new KeyValue(center.opacityProperty(), 0.0))
       );
 
-      timeline.playFromStart();
-
       this.addEventFilter(KeyEvent.ANY, e -> {
         if(timeline.getCurrentTime().greaterThan(Duration.seconds(fadeOutDelay))) {
           e.consume();  // consume first key event when fade out started
         }
 
         timeline.playFromStart();
+      });
+
+      // Make sure timeline is only active when node is visible (to prevent leaks):
+      Nodes.visible(center).values().observe(visible -> {
+        if(visible) {
+          timeline.playFromStart();
+        }
+        else {
+          timeline.stop();
+        }
       });
     }
 
