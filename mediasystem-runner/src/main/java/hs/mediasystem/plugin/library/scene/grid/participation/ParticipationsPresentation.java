@@ -1,8 +1,10 @@
 package hs.mediasystem.plugin.library.scene.grid.participation;
 
 import hs.mediasystem.domain.work.PersonId;
+import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
 import hs.mediasystem.ui.api.PersonClient;
+import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
@@ -42,16 +44,23 @@ public class ParticipationsPresentation extends GridViewPresentation<Participati
   @Singleton
   public static class Factory {
     @Inject private PersonClient personClient;
+    @Inject private SettingsClient settingsClient;
+    @Inject private BinderProvider binderProvider;
 
     public ParticipationsPresentation create(PersonId id) {
       Person person = personClient.findPerson(id).orElseThrow();
 
-      return new ParticipationsPresentation(person, FXCollections.observableList(person.getParticipations()));
+      return new ParticipationsPresentation(
+        settingsClient,
+        binderProvider,
+        person,
+        FXCollections.observableList(person.getParticipations())
+      );
     }
   }
 
-  protected ParticipationsPresentation(Person person, ObservableList<Participation> items) {
-    super(items, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
+  protected ParticipationsPresentation(SettingsClient settingsClient, BinderProvider binderProvider, Person person, ObservableList<Participation> items) {
+    super(settingsClient.of(SYSTEM_PREFIX + "Roles"), binderProvider, items, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
 
     this.person = person;
   }

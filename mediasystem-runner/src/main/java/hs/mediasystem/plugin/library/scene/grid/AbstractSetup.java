@@ -8,7 +8,6 @@ import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Parent;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.ResourceManager;
-import hs.mediasystem.ui.api.domain.SettingsSource;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.control.AreaPane2;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -67,8 +66,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
   }
 
   public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
-    setupPersistence(presentation);
-
     MediaGridView<Object> listView = new MediaGridView<>();
 
     listView.setOrientation(Orientation.VERTICAL);
@@ -138,43 +135,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       });
 
     updateSelectedItem(listView, presentation, presentation.selectedItem.getValue());
-  }
-
-  private void setupPersistence(P p) {
-    SettingsSource ss = getSettingsSource(p);
-
-    p.sortOrder.setValue(p.availableSortOrders.get(ss.getIntSettingOrDefault("sort-order", 0, 0, p.availableSortOrders.size() - 1)));
-    p.filter.setValue(p.availableFilters.get(ss.getIntSettingOrDefault("filter", 0, 0, p.availableFilters.size() - 1)));
-    p.stateFilter.setValue(p.availableStateFilters.get(ss.getIntSettingOrDefault("state-filter", 0, 0, p.availableStateFilters.size() - 1)));
-    if(p.availableGroupings.size() > 0) {
-      p.grouping.setValue(p.availableGroupings.get(ss.getIntSettingOrDefault("grouping", 0, 0, p.availableGroupings.size() - 1)));
-    }
-
-    p.sortOrder.addListener(obs -> ss.storeIntSetting("sort-order", p.availableSortOrders.indexOf(p.sortOrder.getValue())));
-    p.filter.addListener(obs -> ss.storeIntSetting("filter", p.availableFilters.indexOf(p.filter.getValue())));
-    p.stateFilter.addListener(obs -> ss.storeIntSetting("state-filter", p.availableStateFilters.indexOf(p.stateFilter.getValue())));
-    p.grouping.addListener(obs -> {
-      if(p.availableGroupings.size() > 1) {
-        ss.storeIntSetting("grouping", p.availableGroupings.indexOf(p.grouping.getValue()));
-      }
-    });
-
-    String selectedId = ss.getSetting("last-selected");
-
-    if(selectedId != null) {
-      p.items.stream()
-        .filter(i -> binderProvider.map(IDBinder.class, IDBinder<Object>::toId, i).equals(selectedId))
-        .findFirst()
-        .ifPresent(p::selectItem);
-    }
-
-    p.selectedItem.addListener((obs, old, current) -> {
-      if(current != null) {
-        String id = binderProvider.map(IDBinder.class, IDBinder<Object>::toId, current);
-
-        ss.storeSetting("last-selected", id);
-      }
-    });
   }
 
   private void updateSelectedItem(MediaGridView<Object> listView, P presentation, Object selectedItem) {
@@ -332,7 +292,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<T> event, P presentation);
-  protected abstract SettingsSource getSettingsSource(P presentation);
 
   protected Node createContextPanel(P presentation) {
     Object item = presentation.contextItem.getValue();

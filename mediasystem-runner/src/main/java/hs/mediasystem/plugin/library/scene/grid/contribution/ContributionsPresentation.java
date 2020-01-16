@@ -1,6 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
+import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
+import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role;
@@ -34,17 +36,21 @@ public class ContributionsPresentation extends GridViewPresentation<Contribution
   @Singleton
   public static class Factory {
     @Inject private WorkClient workClient;
+    @Inject private SettingsClient settingsClient;
+    @Inject private BinderProvider binderProvider;
 
     public ContributionsPresentation create(Work work) {
       return new ContributionsPresentation(
+        settingsClient,
+        binderProvider,
         work,
         workClient.findContributions(work.getId())
       );
     }
   }
 
-  protected ContributionsPresentation(Work work, List<Contribution> contributors) {
-    super(FXCollections.observableList(contributors), new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
+  protected ContributionsPresentation(SettingsClient settingsClient, BinderProvider binderProvider, Work work, List<Contribution> contributors) {
+    super(settingsClient.of(SYSTEM_PREFIX + "CastAndCrew"), binderProvider, FXCollections.observableList(contributors), new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
 
     this.work = work;
   }

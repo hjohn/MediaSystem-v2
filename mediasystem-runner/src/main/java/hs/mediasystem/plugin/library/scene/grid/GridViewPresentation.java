@@ -1,9 +1,11 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.grouping.Grouping;
 import hs.mediasystem.runner.grouping.NoGrouping;
+import hs.mediasystem.ui.api.domain.SettingsSource;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
 
 import java.util.ArrayList;
@@ -81,7 +83,7 @@ public class GridViewPresentation<T> extends AbstractPresentation implements Nav
   private List<Object> rawBaseItems;  // Currently active items, either the root items or a set of children (unsorted, unfiltered)
   private List<Object> baseItems;     // Currently active items, either the root items or a set of children (sorted, filtered)
 
-  protected GridViewPresentation(List<T> inputItems, ViewOptions<T> viewOptions, Object rootContextItem) {
+  protected GridViewPresentation(SettingsSource settingsSource, BinderProvider binderProvider, List<T> inputItems, ViewOptions<T> viewOptions, Object rootContextItem) {
     this.inputItems = inputItems;
     this.rootContextItem = rootContextItem;
     this.contextItem.setValue(rootContextItem);
@@ -98,6 +100,7 @@ public class GridViewPresentation<T> extends AbstractPresentation implements Nav
     this.grouping.setValue(viewOptions.groupings.get(0));
 
     setupSortingAndFiltering();  // Sets up grouping
+    setupPersistence(settingsSource, binderProvider);
   }
 
   @Override
@@ -106,6 +109,41 @@ public class GridViewPresentation<T> extends AbstractPresentation implements Nav
       this.contextItem.setValue(rootContextItem);
       e.consume();
     }
+  }
+
+  private void setupPersistence(SettingsSource ss, BinderProvider binderProvider) {
+    this.sortOrder.setValue(this.availableSortOrders.get(ss.getIntSettingOrDefault("sort-order", 0, 0, this.availableSortOrders.size() - 1)));
+    this.filter.setValue(this.availableFilters.get(ss.getIntSettingOrDefault("filter", 0, 0, this.availableFilters.size() - 1)));
+    this.stateFilter.setValue(this.availableStateFilters.get(ss.getIntSettingOrDefault("state-filter", 0, 0, this.availableStateFilters.size() - 1)));
+    if(this.availableGroupings.size() > 0) {
+      this.grouping.setValue(this.availableGroupings.get(ss.getIntSettingOrDefault("grouping", 0, 0, this.availableGroupings.size() - 1)));
+    }
+
+    this.sortOrder.addListener(obs -> ss.storeIntSetting("sort-order", this.availableSortOrders.indexOf(this.sortOrder.getValue())));
+    this.filter.addListener(obs -> ss.storeIntSetting("filter", this.availableFilters.indexOf(this.filter.getValue())));
+    this.stateFilter.addListener(obs -> ss.storeIntSetting("state-filter", this.availableStateFilters.indexOf(this.stateFilter.getValue())));
+    this.grouping.addListener(obs -> {
+      if(this.availableGroupings.size() > 1) {
+        ss.storeIntSetting("grouping", this.availableGroupings.indexOf(this.grouping.getValue()));
+      }
+    });
+
+    String selectedId = ss.getSetting("last-selected");
+
+    if(selectedId != null) {
+      this.items.stream()
+        .filter(i -> binderProvider.map(IDBinder.class, IDBinder<Object>::toId, i).equals(selectedId))
+        .findFirst()
+        .ifPresent(this::selectItem);
+    }
+
+    this.selectedItem.addListener((obs, old, current) -> {
+      if(current != null) {
+        String id = binderProvider.map(IDBinder.class, IDBinder<Object>::toId, current);
+
+        ss.storeSetting("last-selected", id);
+      }
+    });
   }
 
   /**

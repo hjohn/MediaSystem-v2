@@ -1,6 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
+import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 
@@ -35,16 +37,20 @@ public class RecommendationsPresentation extends GridViewPresentation<Work> {
   @Singleton
   public static class Factory {
     @Inject private WorkClient workClient;
+    @Inject private SettingsClient settingsClient;
+    @Inject private BinderProvider binderProvider;
 
     public RecommendationsPresentation create(Work work) {
       return new RecommendationsPresentation(
+        settingsClient,
+        binderProvider,
         work,
         FXCollections.observableList(workClient.findRecommendations(work.getId()))
       );
     }
   }
 
-  protected RecommendationsPresentation(Work work, ObservableList<Work> recommendations) {
-    super(recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), work);
+  protected RecommendationsPresentation(SettingsClient settingsClient, BinderProvider binderProvider, Work work, ObservableList<Work> recommendations) {
+    super(settingsClient.of(SYSTEM_PREFIX + "Recommendations"), binderProvider, recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), work);
   }
 }
