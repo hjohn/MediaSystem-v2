@@ -85,7 +85,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   public final ReadOnlyObjectProperty<ButtonState> buttonState = new SimpleReadOnlyObjectProperty<>(internalButtonState);
 
   public final List<Work> episodeItems;
-  public final ObjectProperty<Work> episodeItem = new SimpleObjectProperty<>();
+  public final Var<Work> episodeItem = Var.newSimpleVar(null);
 
   public final Work rootItem;
 
@@ -187,7 +187,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   public void toEpisodeState() {
-    if(this.episodeItem.get() == null) {
+    if(this.episodeItem.getValue() == null) {
       throw new IllegalStateException("Cannot go to Episode state without an episode set");
     }
 
@@ -279,7 +279,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   public Var<Boolean> episodeWatchedProperty() {
     if(internalState.get() != State.OVERVIEW) {
-      Work work = episodeItem.get();
+      Work work = episodeItem.getValue();
 
       if(work != null && !work.getStreams().isEmpty()) {
         return isWatched(work);
@@ -290,7 +290,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   private void updateSeasonWatchedFraction() {
-    Work currentItem = episodeItem.get();
+    Work currentItem = episodeItem.getValue();
 
     if(internalState.get() == State.OVERVIEW || currentItem == null || currentItem.getStreams().isEmpty()) {
       seasonWatchedFraction.setValue(null);
@@ -319,7 +319,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   public Property<Boolean> seasonWatchedProperty() {
-    Work currentItem = episodeItem.get();
+    Work currentItem = episodeItem.getValue();
 
     if(internalState.get() == State.OVERVIEW || currentItem == null || currentItem.getStreams().isEmpty()) {
       return null;

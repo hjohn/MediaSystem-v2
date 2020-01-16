@@ -10,18 +10,18 @@ public class EpisodePresentation implements Presentation {
   }
 
   public void previous() {
-    int index = presentation.episodeItems.indexOf(presentation.episodeItem.get());
+    int index = presentation.episodeItems.indexOf(presentation.episodeItem.getValue());
 
     if(index > 0) {
-      presentation.episodeItem.set(presentation.episodeItems.get(index - 1));
+      presentation.episodeItem.setValue(presentation.episodeItems.get(index - 1));
     }
   }
 
   public void next() {
-    int index = presentation.episodeItems.indexOf(presentation.episodeItem.get());
+    int index = presentation.episodeItems.indexOf(presentation.episodeItem.getValue());
 
     if(index < presentation.episodeItems.size() - 1) {
-      presentation.episodeItem.set(presentation.episodeItems.get(index + 1));
+      presentation.episodeItem.setValue(presentation.episodeItems.get(index + 1));
     }
   }
 }

@@ -88,7 +88,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
     MainPanel mainPanel = new MainPanel(presentation);
 
-    presentation.showInfo.conditionOnShowing(mainPanel).subscribe(e -> showInfoEventHandler.handle(e, presentation.state.get() == State.OVERVIEW ? presentation.rootItem : presentation.episodeItem.get()));
+    presentation.showInfo.conditionOnShowing(mainPanel).subscribe(e -> showInfoEventHandler.handle(e, presentation.state.get() == State.OVERVIEW ? presentation.rootItem : presentation.episodeItem.getValue()));
 
     return mainPanel;
   }
@@ -266,7 +266,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
         box.getChildren().addAll(seasonsBar, gridView);
 
-        gridView.getSelectionModel().select(presentation.episodeItem.get());
+        gridView.getSelectionModel().select(presentation.episodeItem.getValue());
         presentation.episodeItem.bind(gridView.getSelectionModel().selectedItemProperty());
         break;
       case EPISODE:
@@ -299,7 +299,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private HBox buildEpisodeUI() {
-      Work work = presentation.episodeItem.get();
+      Work work = presentation.episodeItem.getValue();
       AsyncImageProperty3 imageProperty = new AsyncImageProperty3(840, 840);
 
       imageProperty.imageHandleProperty().set(work.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
@@ -323,7 +323,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       String formattedDate = MediaItemFormatter.formattedLocalDate(work.getDetails().getReleaseDate().orElse(null));
       String subtitle = createSeasonEpisodeText(work) + (formattedDate == null ? "" : " • " + formattedDate);
 
-      Label titleLabel = Labels.create("title", presentation.episodeItem.get().getDetails().getName());
+      Label titleLabel = Labels.create("title", presentation.episodeItem.getValue().getDetails().getName());
 
       titleLabel.setMinHeight(Region.USE_PREF_SIZE);  // With reflowed labels, sometimes not enough vertical space is assigned and the reflow fails to use the next line and adds an ellipsis instead...
 
@@ -393,7 +393,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
                   Buttons.create(presentation.play),
             presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
               Buttons.create("Related", e -> presentation.toRelatedButtonState()) :
-              Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.get()))
+              Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.getValue()))
           );
           if(presentation.state.get() == State.OVERVIEW) {
             hbox.getChildren().add(Buttons.create(presentation.playTrailer));
