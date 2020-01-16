@@ -43,18 +43,22 @@ public class StreamMetaDataFactory {
       int index = 0;
 
       for(long offset = frameCount / 5; offset < frameCount * 9 / 10; offset += frameCount * 3 / 20) {
-        LOGGER.finest("Grabbing frame #" + index + " at frame " + offset + "/" + frameCount);
+        if(!store.existsSnapshot(streamId, index)) {
+          LOGGER.finest("Grabbing frame #" + index + " at frame " + offset + "/" + frameCount);
 
-        grabber.setFrameNumber((int)offset);
+          grabber.setFrameNumber((int)offset);
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ImageIO.write(toBufferedImage(grabber.grabKeyFrame()), "jpg", baos);
+          ByteArrayOutputStream baos = new ByteArrayOutputStream();
+          ImageIO.write(toBufferedImage(grabber.grabKeyFrame()), "jpg", baos);
 
-        store.storeImage(streamId.asInt(), index++, baos.toByteArray());
+          store.storeImage(streamId, index, baos.toByteArray());
+        }
+
+        index++;
         snapshots.add(new Snapshot(new ImageURI("localdb://" + streamId.asInt() + "/" + index), (int)offset));
       }
 
-      return new StreamMetaData(streamId, duration, grabber.getVideoStreams(), grabber.getAudioStreams(), snapshots);
+      return new StreamMetaData(streamId, duration, grabber.getVideoStreams(), grabber.getAudioStreams(), grabber.getSubtitleStreams(), snapshots);
     }
     finally {
       grabber.stop();

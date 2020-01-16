@@ -95,7 +95,7 @@ public class MediaMetaDataExtractor {
       LOGGER.fine("Extracting metadata from: " + file);
 
       if(file.isDirectory()) {
-        StreamMetaData metaData = new StreamMetaData(streamId, Duration.ZERO, Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        StreamMetaData metaData = new StreamMetaData(streamId, Duration.ZERO, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
         metaDataStore.store(metaData);
       }

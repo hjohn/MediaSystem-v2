@@ -12,9 +12,10 @@ public class StreamMetaData {
   private final Duration duration;
   private final List<VideoStream> videoStreams;
   private final List<AudioStream> audioStreams;
+  private final List<SubtitleStream> subtitleStreams;
   private final List<Snapshot> snapshots;
 
-  public StreamMetaData(StreamID streamId, Duration duration, List<VideoStream> videoStreams, List<AudioStream> audioStreams, List<Snapshot> snapshots) {
+  public StreamMetaData(StreamID streamId, Duration duration, List<VideoStream> videoStreams, List<AudioStream> audioStreams, List<SubtitleStream> subtitleStreams, List<Snapshot> snapshots) {
     if(streamId == null) {
       throw new IllegalArgumentException("streamId cannot be null");
     }
@@ -23,6 +24,9 @@ public class StreamMetaData {
     }
     if(audioStreams == null) {
       throw new IllegalArgumentException("audioStreams cannot be null");
+    }
+    if(subtitleStreams == null) {
+      throw new IllegalArgumentException("subtitleStreams cannot be null");
     }
     if(duration == null) {
       throw new IllegalArgumentException("duration cannot be null");
@@ -38,6 +42,7 @@ public class StreamMetaData {
     this.duration = duration;
     this.videoStreams = Collections.unmodifiableList(videoStreams);
     this.audioStreams = Collections.unmodifiableList(audioStreams);
+    this.subtitleStreams = Collections.unmodifiableList(subtitleStreams);
     this.snapshots = Collections.unmodifiableList(snapshots);
   }
 
@@ -55,6 +60,10 @@ public class StreamMetaData {
 
   public List<AudioStream> getAudioStreams() {
     return audioStreams;
+  }
+
+  public List<SubtitleStream> getSubtitleStreams() {
+    return subtitleStreams;
   }
 
   public List<Snapshot> getSnapshots() {

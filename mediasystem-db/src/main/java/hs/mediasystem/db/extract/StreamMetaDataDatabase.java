@@ -52,6 +52,12 @@ public class StreamMetaDataDatabase {
     }
   }
 
+  public boolean existsSnapshot(int id, int snapshotIndex) {
+    try(Transaction tx = database.beginReadOnlyTransaction()) {
+      return tx.selectUnique("stream_id", "stream_metadata_snapshots", "stream_id = ? AND index = ?", id, snapshotIndex) != null;
+    }
+  }
+
   public void storeImage(int streamId, int index, byte[] image) {
     try(Transaction tx = database.beginTransaction()) {
       StreamMetaDataSnapshotRecord record = new StreamMetaDataSnapshotRecord();

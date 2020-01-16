@@ -356,7 +356,7 @@ public class WorkService {
     int totalDuration = stateService.getTotalDuration(streamId);
 
     if(md == null && totalDuration != -1) {
-      md = new StreamMetaData(streamId, Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+      md = new StreamMetaData(streamId, Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
     StreamPrint streamPrint = streamPrintProvider.get(streamId);

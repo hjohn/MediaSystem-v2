@@ -61,8 +61,8 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     return database.streamUnindexedStreamIds();
   }
 
-  public void storeImage(int streamId, int index, byte[] image) {
-    database.storeImage(streamId, index, image);
+  public void storeImage(StreamID streamId, int index, byte[] image) {
+    database.storeImage(streamId.asInt(), index, image);
   }
 
   private StreamMetaDataRecord toRecord(StreamMetaData streamMetaData) {
@@ -89,5 +89,9 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Override
   public byte[] readSnapshot(StreamID streamId, int snapshotIndex) {
     return database.readSnapshot(streamId.asInt(), snapshotIndex);
+  }
+
+  public boolean existsSnapshot(StreamID streamId, int snapshotIndex) {
+    return database.existsSnapshot(streamId.asInt(), snapshotIndex);
   }
 }

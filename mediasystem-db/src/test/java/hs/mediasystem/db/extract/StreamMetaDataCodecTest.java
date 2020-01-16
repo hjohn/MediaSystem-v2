@@ -7,6 +7,7 @@ import hs.mediasystem.domain.work.AudioStream;
 import hs.mediasystem.domain.work.Resolution;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.StreamMetaData;
+import hs.mediasystem.domain.work.SubtitleStream;
 import hs.mediasystem.domain.work.VideoStream;
 import hs.mediasystem.util.ImageURI;
 
@@ -44,6 +45,9 @@ class StreamMetaDataCodecTest {
         new AudioStream("audiotitle", "audiolang", "mp3", 3)
       ),
       List.of(
+        new SubtitleStream("subtitle", "sublang", "srt")
+      ),
+      List.of(
         new Snapshot(new ImageURI("localdb://12345/1"), 34222)
       )
     ));
@@ -54,6 +58,7 @@ class StreamMetaDataCodecTest {
     assertEquals(Duration.ofSeconds(999), metaData.getLength());
     assertEquals("title", metaData.getVideoStreams().get(0).getTitle());
     assertEquals("mp3", metaData.getAudioStreams().get(0).getCodec());
+    assertEquals("srt", metaData.getSubtitleStreams().get(0).getCodec());
     assertEquals(new ImageURI("localdb://12345/1"), metaData.getSnapshots().get(0).getImageUri());
   }
 

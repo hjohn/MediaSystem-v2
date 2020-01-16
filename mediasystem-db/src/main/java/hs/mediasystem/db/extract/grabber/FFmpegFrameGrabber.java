@@ -51,6 +51,7 @@ package hs.mediasystem.db.extract.grabber;
 
 import hs.mediasystem.domain.work.AudioStream;
 import hs.mediasystem.domain.work.Resolution;
+import hs.mediasystem.domain.work.SubtitleStream;
 import hs.mediasystem.domain.work.VideoStream;
 
 import java.io.BufferedInputStream;
@@ -121,6 +122,7 @@ import static org.bytedeco.javacpp.avformat.avformat_open_input;
 import static org.bytedeco.javacpp.avformat.avformat_seek_file;
 import static org.bytedeco.javacpp.avformat.avio_alloc_context;
 import static org.bytedeco.javacpp.avutil.AVMEDIA_TYPE_AUDIO;
+import static org.bytedeco.javacpp.avutil.AVMEDIA_TYPE_SUBTITLE;
 import static org.bytedeco.javacpp.avutil.AVMEDIA_TYPE_VIDEO;
 import static org.bytedeco.javacpp.avutil.AV_NOPTS_VALUE;
 import static org.bytedeco.javacpp.avutil.AV_PICTURE_TYPE_I;
@@ -939,6 +941,25 @@ public class FFmpegFrameGrabber extends FrameGrabber {
             samples_ptr = new BytePointer[] { null };
             samples_buf = new Buffer[] { null };
         }
+    }
+
+    public List<SubtitleStream> getSubtitleStreams() {
+      List<SubtitleStream> streams = new ArrayList<>();
+      int nb_streams = oc.nb_streams();
+
+      for (int i = 0; i < nb_streams; i++) {
+          AVStream st = oc.streams(i);
+          AVCodecParameters par = st.codecpar();
+
+          if (par.codec_type() == AVMEDIA_TYPE_SUBTITLE) {
+            String language = createLanguageString(st);
+            String codec = createCodecString(par);
+
+            streams.add(new SubtitleStream(createTitleString(st), language, codec));
+          }
+      }
+
+      return streams;
     }
 
     public List<AudioStream> getAudioStreams() {
