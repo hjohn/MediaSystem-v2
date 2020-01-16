@@ -25,6 +25,7 @@ import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.AsyncImageProperty3;
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Buttons;
@@ -67,7 +68,6 @@ import javax.inject.Singleton;
 import org.reactfx.EventStreams;
 import org.reactfx.util.Interpolator;
 import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 @Singleton
 public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPresentation> {
@@ -211,7 +211,14 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         gridView.scrollBarVisible.set(false);
         gridView.groupDisplayMode.set(GroupDisplayMode.FOCUSED);
         gridView.setCellFactory(cellFactory);
-        gridView.setItems(FXCollections.observableList(presentation.episodeItems));
+
+        Nodes.visible(gridView).values().observe(visible -> {
+          gridView.itemsProperty().set(visible ? FXCollections.observableList(presentation.episodeItems) : FXCollections.emptyObservableList());
+
+          if(visible) {
+            gridView.getSelectionModel().select(presentation.episodeItem.getValue());
+          }
+        });
 
         cellFactory.setPlaceHolderAspectRatio(9.0 / 16.0);
         cellFactory.setMinRatio(4.0 / 3.0);
@@ -228,8 +235,9 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           int seasonNumber = toSeasonBarIndex(episode);
 
           if(!knownSeasons.contains(seasonNumber)) {
-            groups.add(new Group(seasonNumber == 0 ? "Specials" : seasonNumber == -1 ? "Extras" : "Season " + seasonNumber, i));
             knownSeasons.add(seasonNumber);
+
+            groups.add(new Group(seasonNumber == 0 ? "Specials" : seasonNumber == -1 ? "Extras" : "Season " + seasonNumber, i));
 
             Entry entry;
 
@@ -247,9 +255,10 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
               entry = new Entry("" + seasonNumber, null, true);
             }
 
-            Var<SeasonWatchState> var = presentation.getSeasonWatchStates().get(seasonNumber);
+            Val<SeasonWatchState> val = presentation.getSeasonWatchStates().get(seasonNumber).conditionOnShowing(gridView);
 
-            entry.mediaStatus.bind(var.map(sws -> sws.totalEpisodes == sws.missingEpisodes ? MediaStatus.UNAVAILABLE : sws.totalEpisodes == sws.watchedEpisodes ? MediaStatus.WATCHED : MediaStatus.AVAILABLE));
+            // Unsafe binding, Presentation strongly refers to UI (solved with conditionOnShowing)
+            entry.mediaStatus.bind(val.map(sws -> sws.totalEpisodes == sws.missingEpisodes ? MediaStatus.UNAVAILABLE : sws.totalEpisodes == sws.watchedEpisodes ? MediaStatus.WATCHED : MediaStatus.AVAILABLE));
             entries.add(entry);
           }
         }
@@ -262,12 +271,14 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         seasonsBar.entries.setValue(entries);
 
         gridView.groups.set(groups);
-        gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(toSeasonBarIndex(current))));
+        gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
+          if(current != null) {
+            seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(toSeasonBarIndex(current)));
+            presentation.episodeItem.setValue(current);
+          }
+        });
 
         box.getChildren().addAll(seasonsBar, gridView);
-
-        gridView.getSelectionModel().select(presentation.episodeItem.getValue());
-        presentation.episodeItem.bind(gridView.getSelectionModel().selectedItemProperty());
         break;
       case EPISODE:
         buildEpisodeDynamicUI(box);
@@ -285,7 +296,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       BorderPane borderPane = new BorderPane();
 
       EventStreams.changesOf(presentation.episodeItem)
-        .conditionOnShowing(this)
+        .conditionOnShowing(borderPane)
         .subscribe(c -> transitionPane.add(episodes.indexOf(c.getOldValue()) > episodes.indexOf(c.getNewValue()) ? 0 : -1, buildEpisodeUI()));
 
       borderPane.setCenter(transitionPane);
@@ -314,7 +325,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         return w ? 1.0 :
                m ? -0.01 :
                    rp.toSeconds() / (double)td;
-      });
+      }).conditionOnShowing(poster);
 
       StackPane indicatorPane = createMediaStatusIndicatorPane(percentage.animate(Duration.ofSeconds(2), Interpolator.EASE_BOTH_DOUBLE), Val.constant(0.0));
 
@@ -373,8 +384,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       indicator.setAlignment(Pos.BOTTOM_RIGHT);
       indicator.getStyleClass().add("indicator-pane");
-      indicator.value.bind(percentage.conditionOnShowing(this));
-      indicator.missingFraction.bind(missingFraction.conditionOnShowing(this));
+      indicator.value.bind(percentage.conditionOnShowing(indicator));
+      indicator.missingFraction.bind(missingFraction.conditionOnShowing(indicator));
 
       return indicator;
     }
@@ -424,7 +435,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       HBox hbox = Containers.hbox("navigation-area");
 
       EventStreams.merge(EventStreams.invalidationsOf(presentation.buttonState), EventStreams.invalidationsOf(presentation.episodeItem))
-        .conditionOnShowing(this)
+        .conditionOnShowing(hbox)
         .withDefaultEvent(null)
         .subscribe(e -> updateButtons(hbox));
 

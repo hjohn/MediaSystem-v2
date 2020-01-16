@@ -9,6 +9,7 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.AreaPane2;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -30,6 +31,7 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
+import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
@@ -120,21 +122,24 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       .map(list -> list.isEmpty() ? null : list)
       .feedTo(listView.groups);
 
-    listView.setItems(presentation.items);
+    Nodes.visible(listView).values().map(visible -> visible ? presentation.items : FXCollections.emptyObservableList()).feedTo(listView.itemsProperty());
+
     listView.setCellFactory(cellFactory);
     listView.requestFocus();
 
     setupStatusBar(areaPane, presentation);
 
-    listView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> presentation.selectItem(current));
+    listView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
+      if(current != null) {
+        presentation.selectItem(current);
+      }
+    });
 
-    EventStreams.changesOf(presentation.selectedItem)
+    EventStreams.valuesOf(presentation.selectedItem)
+      .withDefaultEvent(presentation.selectedItem.getValue())
+      .repeatOn(EventStreams.changesOf(listView.itemsProperty()))
       .conditionOnShowing(listView)
-      .observe(c -> {
-        updateSelectedItem(listView, presentation, c.getNewValue());
-      });
-
-    updateSelectedItem(listView, presentation, presentation.selectedItem.getValue());
+      .observe(item -> updateSelectedItem(listView, presentation, item));
   }
 
   private void updateSelectedItem(MediaGridView<Object> listView, P presentation, Object selectedItem) {
