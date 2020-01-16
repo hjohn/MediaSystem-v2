@@ -51,7 +51,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
   private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
 
   @Inject private ContextLayout contextLayout;
-  @Inject private WorkCellPresentation.Factory factory;
+  @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
   @Inject private BinderProvider binderProvider;
 
   public enum Area {
@@ -93,7 +93,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
 
     areaPane.add(Area.CENTER, listView);
 
-    listView.getProperties().put("presentation2", factory.create(listView));
+    listView.getProperties().put("presentation2", workCellPresentationFactory.create(listView));
 
     MediaGridViewCellFactory<Object> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
 
