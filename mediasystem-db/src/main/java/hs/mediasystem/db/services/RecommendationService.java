@@ -102,7 +102,7 @@ public class RecommendationService {
 
     boolean watched = state.isConsumed();
     Duration position = state.getResumePosition();
-    Duration length = stream.getMetaData().orElseThrow().getLength();
+    Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
     return getBestIdentifier(parentId).flatMap(

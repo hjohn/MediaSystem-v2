@@ -66,7 +66,7 @@ public class ObjectFactory {
       node.path("genres").findValuesAsText("name"),
       StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new Identifier(DataSources.TMDB_KEYWORD, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
       node.path("popularity").doubleValue(),
-      node.path("tagline").textValue(),
+      node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       toMovieState(node.path("status").textValue()),
       relatedIdentifiers
     );
