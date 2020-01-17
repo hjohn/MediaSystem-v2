@@ -12,6 +12,8 @@ import hs.mediasystem.ui.api.CollectionClient;
 import hs.mediasystem.ui.api.RecommendationClient;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.ImageHandleFactory;
+import hs.mediasystem.util.Tuple;
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -23,6 +25,7 @@ import hs.mediasystem.util.javafx.control.carousel.LinearLayout;
 import hs.mediasystem.util.javafx.control.transitionpane.TransitionPane;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -51,6 +54,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 @Singleton
 public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
@@ -89,15 +93,17 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
         int index = menuListView.getSelectionModel().getSelectedIndex();
 
         if(KeyCode.UP == e.getCode() && index > 0) {
-          menuListView.getSelectionModel().select(index - 1);
+          presentation.selectedItem.setValue(Tuple.of(menuListView.getItems().get(index - 1), 0));
           e.consume();
         }
         else if(KeyCode.DOWN == e.getCode() && index < menuListView.getItems().size() - 1) {
-          menuListView.getSelectionModel().select(index + 1);
+          presentation.selectedItem.setValue(Tuple.of(menuListView.getItems().get(index + 1), 0));
           e.consume();
         }
       }
     });
+
+    Var<ActionListView<MenuOption>> activeListView = Var.newSimpleVar(null);
 
     menuListView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
       ActionListView<MenuOption> listView;
@@ -127,9 +133,23 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
           .map(imageHandleFactory::fromURI)
         );
       }
+
+      activeListView.setValue(listView);
     });
 
-    menuListView.getSelectionModel().select(0);
+    presentation.selectedItem.values()
+      .repeatOn(Nodes.visible(menuListView).values())
+      .conditionOnShowing(menuListView)
+      .observe(t -> {
+        menuListView.getSelectionModel().select(t.a);
+        activeListView.filter(Objects::nonNull).ifPresent(lv -> lv.getSelectionModel().select(t.b));
+      });
+
+    activeListView.flatMap(lv -> lv.getSelectionModel().selectedIndexProperty()).values().observe(i -> {
+      if(i != null) {
+        presentation.selectedItem.setValue(Tuple.of(menuListView.getSelectionModel().getSelectedItem(), (Integer)i));
+      }
+    });
 
     Label menuBackgroundLabel = Labels.create("menu-background", ">");
     StackPane.setAlignment(menuBackgroundLabel, Pos.CENTER_LEFT);
