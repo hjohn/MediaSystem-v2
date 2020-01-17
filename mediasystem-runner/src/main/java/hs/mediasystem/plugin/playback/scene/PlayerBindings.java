@@ -4,8 +4,8 @@ import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.SizeFormatter;
-import hs.mediasystem.util.javafx.StringBinding;
 
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
@@ -115,5 +115,11 @@ public class PlayerBindings {
         return SizeFormatter.SECONDS_AS_POSITION.format(length.getValue() / 1000);
       }
     };
+  }
+
+  static abstract class StringBinding extends javafx.beans.binding.StringBinding {
+    public StringBinding(Observable... observables) {
+      bind(observables);
+    }
   }
 }

@@ -1,4 +1,4 @@
-package hs.mediasystem.util.javafx.beans;
+package hs.mediasystem.ext.vlc.util;
 
 public interface Accessor<T> {
   T read();

@@ -2,6 +2,8 @@ package hs.mediasystem.ext.vlc;
 
 import com.sun.jna.Memory;
 
+import hs.mediasystem.ext.vlc.util.Accessor;
+import hs.mediasystem.ext.vlc.util.BeanBooleanProperty;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerEvent;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
@@ -9,8 +11,6 @@ import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.ui.api.player.PlayerEvent.Type;
 import hs.mediasystem.util.javafx.Events;
-import hs.mediasystem.util.javafx.beans.Accessor;
-import hs.mediasystem.util.javafx.beans.BeanBooleanProperty;
 import hs.mediasystem.util.javafx.control.ResizableWritableImageView;
 
 import java.nio.ByteBuffer;

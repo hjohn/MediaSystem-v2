@@ -1,4 +1,4 @@
-package hs.mediasystem.util.javafx.beans;
+package hs.mediasystem.ext.vlc.util;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
