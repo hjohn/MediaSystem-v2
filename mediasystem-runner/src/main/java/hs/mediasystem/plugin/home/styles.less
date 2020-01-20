@@ -30,6 +30,8 @@
   }
   
   .overlay {
+    -fx-layout: "status-indicator, Stack:stack-box { hgrow=ALWAYS }";
+    
     -fx-background-color: @glass-color;
     -fx-fill-height: true;
     -fx-spacing: 10px;
@@ -60,8 +62,27 @@
       }
     }
     
+    .stack-box {
+      -fx-layout: "VBox:title-box, sequence { align=CENTER_RIGHT }, age { align=BOTTOM_RIGHT }";
+    
+      .sequence {
+        -fx-font-size: 32;
+        .black;
+        -fx-padding: 0 10 0 0;
+        -fx-text-fill: rgba(255, 255, 255, 0.3);
+      }
+      
+      .age {
+        -fx-font-size: 12;
+        -fx-text-fill: rgba(255, 255, 255, 0.3);
+      }
+    }
+    
     .title-box {
+      -fx-layout: "parent-title, title, subtitle";
+      
       -fx-alignment: CENTER_LEFT;
+      -fx-spacing: -0.25em;
       
       .label {
         -fx-wrap-text: true;
@@ -72,7 +93,8 @@
         -fx-font-size: 22;
         -fx-text-fill: @text-primary-highlight;
       }
-      
+                  
+      .parent-title,
       .subtitle {
         -fx-font-size: 16;
         -fx-text-fill: @text-accent;
