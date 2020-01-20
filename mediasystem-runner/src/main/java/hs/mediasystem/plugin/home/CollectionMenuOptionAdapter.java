@@ -4,6 +4,7 @@ import hs.mediasystem.domain.work.Collection;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.util.ImageURI;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -22,6 +23,11 @@ public class CollectionMenuOptionAdapter implements MenuOption {
   }
 
   @Override
+  public String getParentTitle() {
+    return null;
+  }
+
+  @Override
   public String getTitle() {
     return collection.getTitle();
   }
@@ -29,6 +35,16 @@ public class CollectionMenuOptionAdapter implements MenuOption {
   @Override
   public String getSubtitle() {
     return null;
+  }
+
+  @Override
+  public String getSequence() {
+    return null;
+  }
+
+  @Override
+  public Optional<Instant> getRecommendationLastTimeWatched() {
+    return Optional.empty();
   }
 
   @Override

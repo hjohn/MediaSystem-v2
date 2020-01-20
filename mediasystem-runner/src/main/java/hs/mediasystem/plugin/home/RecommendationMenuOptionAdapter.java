@@ -7,6 +7,8 @@ import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.ImageURI;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -32,13 +34,36 @@ public class RecommendationMenuOptionAdapter implements MenuOption {
   }
 
   @Override
+  public String getParentTitle() {
+    return recommendation.getWork().getParent()
+      .filter(p -> p.getType().equals(SERIE))
+      .map(Parent::getName)
+      .orElse(null);
+  }
+
+  @Override
   public String getTitle() {
     return getDetails().getName();
   }
 
   @Override
   public String getSubtitle() {
-    return recommendation.getWork().getParent().map(Parent::getName).orElse(null);
+    return recommendation.getWork().getParent()
+      .filter(p -> p.getType().equals(SERIE))
+      .map(p -> "")
+      .orElseGet(() -> recommendation.getWork().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null));
+  }
+
+  @Override
+  public String getSequence() {
+    return recommendation.getWork().getDetails().getSequence()
+      .map(seq -> seq.getSeasonNumber().map(s -> s + "x").orElse("") + seq.getNumber())
+      .orElse(null);
+  }
+
+  @Override
+  public Optional<Instant> getRecommendationLastTimeWatched() {
+    return Optional.of(recommendation.getLastTimeWatched());
   }
 
   @Override
