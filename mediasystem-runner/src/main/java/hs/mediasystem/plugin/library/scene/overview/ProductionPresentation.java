@@ -49,11 +49,15 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     @Inject private ResumeAction.Factory resumeActionFactory;
     @Inject private WorkClient workClient;
 
-    public ProductionPresentation create(WorkId id) {
-      return create(workClient.find(id).orElseThrow());
+    public ProductionPresentation create(WorkId id, State state, WorkId childId) {
+      return create(workClient.find(id).orElseThrow(), state, childId);
     }
 
-    private ProductionPresentation create(Work work) {
+    public ProductionPresentation create(WorkId id) {
+      return create(id, State.OVERVIEW, null);
+    }
+
+    private ProductionPresentation create(Work work, State state, WorkId childId) {
       return new ProductionPresentation(
         playbackOverlayPresentationFactory,
         episodesPresentationProvider,
@@ -61,7 +65,9 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
         resumeActionFactory,
         workClient,
         work,
-        workClient.findChildren(work.getId())
+        workClient.findChildren(work.getId()),
+        state,
+        childId
       );
     }
   }
@@ -113,8 +119,11 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     ResumeAction.Factory resumeActionFactory,
     WorkClient workClient,
     Work rootItem,
-    List<Work> children
+    List<Work> children,
+    State initialState,
+    WorkId childId
   ) {
+    this.internalState.set(initialState);
     this.playbackOverlayPresentationFactory = playbackOverlayPresentationFactory;
     this.workClient = workClient;
     this.rootItem = rootItem;
@@ -130,6 +139,15 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     if(episodesPresentation != null) {
       this.episodeItem.bindBidirectional(episodesPresentation.episodeItem);
       this.episodeItem.addListener(obs -> internalButtonState.set(ButtonState.MAIN));
+
+      if(childId != null) {
+        for(Work episode : episodeItems) {
+          if(episode.getId().equals(childId)) {
+            this.episodeItem.setValue(episode);
+            break;
+          }
+        }
+      }
     }
 
     this.episodeWatched = Val.wrap(episodeItem).flatMap(r -> isWatched(r));

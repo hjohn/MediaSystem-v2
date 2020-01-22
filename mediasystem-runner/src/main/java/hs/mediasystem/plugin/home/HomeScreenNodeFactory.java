@@ -5,6 +5,7 @@ import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.base.BackgroundPane;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation.State;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.util.LessLoader;
@@ -164,11 +165,12 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   }
 
   private Supplier<ProductionPresentation> createProductionPresentationSupplier(Recommendation recommendation) {
-    WorkId id = recommendation.getWork().getType().equals(EPISODE) ?
+    boolean isEpisode = recommendation.getWork().getType().equals(EPISODE);
+    WorkId id = isEpisode ?
         recommendation.getWork().getParent().map(Parent::getId).orElseThrow() :
         recommendation.getWork().getId();
 
-    return () -> productionPresentationFactory.create(id);
+    return () -> productionPresentationFactory.create(id, isEpisode ? State.EPISODE : State.OVERVIEW, isEpisode ? recommendation.getWork().getId() : null);
   }
 
   private ActionListView<MenuOption> createWatchRecommendationView() {
