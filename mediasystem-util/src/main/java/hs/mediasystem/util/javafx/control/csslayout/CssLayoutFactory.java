@@ -74,6 +74,7 @@ public class CssLayoutFactory {
           node = Labels.create("", "Unknown container type: " + childDef.getType());
         }
 
+        node.getStyleClass().add(childDef.getName());
         node.getProperties().put(POTENTIALS, children);
       }
 
@@ -95,7 +96,6 @@ public class CssLayoutFactory {
         StackPane.setAlignment(node, Pos.valueOf(align));
       }
 
-      node.getStyleClass().add(childDef.getName());
       newChildren.add(node);
     }
 
