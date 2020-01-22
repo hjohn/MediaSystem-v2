@@ -2,6 +2,7 @@ package hs.mediasystem.runner;
 
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.util.expose.ExposedControl;
+import hs.mediasystem.util.expose.Trigger;
 import hs.mediasystem.util.ini.Ini;
 import hs.mediasystem.util.ini.Section;
 
@@ -12,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCodeCombination;
@@ -50,11 +50,10 @@ public class InputActionHandler {
       ActionTarget actionTarget = action.getActionTarget();
 
       if(actionTarget.getActionClass().isAssignableFrom(root.getClass())) {
-        Task<Object> task = actionTarget.doAction(action.getAction(), root, event);
+        Trigger<Object> trigger = actionTarget.doAction(action.getAction(), root, event);
 
-        if(task != null) {
-          // Action only returned a Task, that must be executed asynchronously (otherwise it was already completed on FX thread).
-          Dialogs.showProgressDialog(event, task);
+        if(trigger != null) {
+          trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
         }
       }
     }

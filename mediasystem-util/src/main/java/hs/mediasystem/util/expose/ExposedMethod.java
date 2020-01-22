@@ -1,20 +1,24 @@
 package hs.mediasystem.util.expose;
 
 import java.util.ArrayList;
-import java.util.function.BiFunction;
-
-import javafx.concurrent.Task;
-import javafx.event.Event;
+import java.util.function.Function;
 
 public class ExposedMethod<P, V> extends AbstractExposedControl<P> {
-  private final BiFunction<P, Event, Task<V>> function;
+  private final Function<P, Trigger<V>> function;
 
-  public ExposedMethod(BiFunction<P, Event, Task<V>> function) {
+  public ExposedMethod(Function<P, Trigger<V>> function) {
     this.function = function;
   }
 
-  public Task<V> call(P parent, Event event) {
-    return function.apply(parent, event);
+  /**
+   * Returns a Trigger or <code>null</code> if the action is unavailable
+   * rigt now.
+   *
+   * @param parent the parent where the method returning the trigger is part of
+   * @return a {@link Trigger} or <code>null</code> if the action is unavailable
+   */
+  public Trigger<V> getTrigger(P parent) {
+    return function.apply(parent);
   }
 
   public class ActionParentBuilder {

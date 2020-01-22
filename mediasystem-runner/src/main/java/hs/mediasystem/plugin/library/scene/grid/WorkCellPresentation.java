@@ -3,9 +3,8 @@ package hs.mediasystem.plugin.library.scene.grid;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.util.expose.Trigger;
 
-import javafx.concurrent.Task;
-import javafx.event.Event;
 import javafx.scene.control.ListView;
 
 import javax.inject.Inject;
@@ -43,28 +42,16 @@ public class WorkCellPresentation implements Presentation {
     return null;  // Indicates no state possible as there is no stream
   }
 
-  public Task<Void> reidentify(Event event) {
-    event.consume();
-
+  public Trigger<Void> reidentify() {
     Object obj = listView.getSelectionModel().getSelectedItem();
 
     if(obj instanceof Work) {
       Work work = (Work)obj;
 
       if(!work.getStreams().isEmpty()) {
-        return new Task<>() {
-          @Override
-          protected Void call() throws Exception {
-            workClient.reidentify(work.getId());
-
-            return null;
-          }
-        };
-
-        // TODO after reidentify reload
-        // 1) Replace item in list (or reload entire thing)
-        // 2) Position may jump, depending on sorting
-        // 3) Remember, task method may be called async...
+        return Trigger.asynchronous(event -> {
+          workClient.reidentify(work.getId());
+        });
       }
     }
 

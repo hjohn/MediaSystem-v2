@@ -128,7 +128,7 @@ public class Annotations {
       .of(WorkCellPresentation.class)
       .as("watched");
 
-    Expose.action(WorkCellPresentation::reidentify)
+    Expose.indirectAction(WorkCellPresentation::reidentify)
       .of(WorkCellPresentation.class)
       .as("reidentify");
 

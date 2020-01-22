@@ -13,6 +13,8 @@ import hs.mediasystem.util.expose.ExposedListProperty;
 import hs.mediasystem.util.expose.ExposedLongProperty;
 import hs.mediasystem.util.expose.ExposedMethod;
 import hs.mediasystem.util.expose.Formatter;
+import hs.mediasystem.util.expose.Trigger;
+import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 
@@ -26,9 +28,7 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -193,27 +193,13 @@ public class ContextMenuHandler {
     }
 
     if(control instanceof ExposedMethod) {
-      Button button = new Button(actionTarget.getLabel());
+      Trigger<Object> trigger = actionTarget.getTrigger(root);
 
-      button.setOnAction(e -> {
+      if(trigger == null) {
+        return null;  // Nothing to do, don't show control
+      }
 
-        /*
-         * ActionTarget#doAction can do two things:
-         *
-         * 1) Complete the action immediately on the FX thread (where this runs now); null is returned in that case
-         * 2) Return a Task that must be executed asynchronously
-         */
-
-        Task<Object> task = actionTarget.doAction("trigger", root, e);
-
-        if(task != null) {
-          // Action only returned a Task, that must be executed asynchronously (otherwise it was already completed on FX thread).
-
-          Dialogs.showProgressDialog(e, task);
-        }
-      });
-
-      return button;
+      return Buttons.create(actionTarget.getLabel(), event -> trigger.run(event, task -> Dialogs.showProgressDialog(event, task)));
     }
 
     return new Label(actionTarget.getLabel());

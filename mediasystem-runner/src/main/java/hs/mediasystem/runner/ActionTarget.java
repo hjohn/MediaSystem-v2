@@ -10,6 +10,7 @@ import hs.mediasystem.util.expose.ExposedLongProperty;
 import hs.mediasystem.util.expose.ExposedMethod;
 import hs.mediasystem.util.expose.ExposedNode;
 import hs.mediasystem.util.expose.ExposedNumberProperty;
+import hs.mediasystem.util.expose.Trigger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,7 +22,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.Property;
-import javafx.concurrent.Task;
 import javafx.event.Event;
 
 /**
@@ -33,7 +33,7 @@ public class ActionTarget {
 
   private static final Map<Class<?>, Map<String, TaskHandler<?>>> TASK_HANDLERS = Map.of(
     ExposedMethod.class, Map.of(
-      "trigger", (ActionEvent<ExposedMethod<Object, Object>> e) -> e.exposedProperty.call(e.parent, e.event)
+      "trigger", (ActionEvent<ExposedMethod<Object, Object>> e) -> e.exposedProperty.getTrigger(e.parent)
     )
   );
 
@@ -159,13 +159,16 @@ public class ActionTarget {
   }
 
   /**
-   * Triggers the given action.
+   * Starts the given action and returns a {@link Trigger} to complete the action or <code>null</code>
+   * if action was completed.  If a {@link Trigger} is returned, it must be executed to complete the
+   * action.
    *
    * @param action the action to trigger
    * @param root the root object this actionTarget is nested under via its path
    * @param event an {@link Event}
+   * @return a {@link Trigger} or <code>null</code> if action was completed already or unavailable
    */
-  public Task<Object> doAction(String action, Object root, Event event) {
+  public Trigger<Object> doAction(String action, Object root, Event event) {
     Object parent = findDirectParentFromRoot(root);
     ExposedControl<?> exposedControl = getExposedControl();
 
@@ -208,11 +211,31 @@ public class ActionTarget {
     throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
   }
 
+  /**
+   * Returns a {@link Trigger} which can be used to run the action.  If <code>null</code>
+   * the action is unavailable.
+   * 
+   * @param root the object that supplies the trigger
+   * @return a {@link Trigger} which can be used to run the action, or <code>null</code> if action is currently unavailable
+   */
+  public <V> Trigger<V> getTrigger(Object root) {
+    ExposedControl<?> exposedControl = getExposedControl();
+
+    if(exposedControl instanceof ExposedMethod) {
+      @SuppressWarnings("unchecked")
+      ExposedMethod<Object, V> exposedMethod = (ExposedMethod<Object, V>)exposedControl;
+      
+      return exposedMethod.getTrigger(root);
+    }
+
+    return null;
+  }
+
   @SuppressWarnings("unchecked")
   public <T> Property<T> getProperty(Object root) {
     Object parent = findDirectParentFromRoot(root);
 
-    return ((AbstractExposedProperty<Object, T>)path.get(path.size() - 1)).getProperty(parent);
+    return ((AbstractExposedProperty<Object, T>)getExposedControl()).getProperty(parent);
   }
 
   public ExposedControl<?> getExposedControl() {
@@ -253,7 +276,7 @@ public class ActionTarget {
   }
 
   private interface TaskHandler<T> {
-    Task<Object> handle(ActionEvent<T> event);
+    Trigger<Object> handle(ActionEvent<T> event);
   }
 
   class ActionEvent<T> {
