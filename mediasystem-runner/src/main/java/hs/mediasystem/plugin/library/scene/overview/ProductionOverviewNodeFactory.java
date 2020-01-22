@@ -160,7 +160,17 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       details.getTagline().ifPresent(tl -> leftBox.getChildren().add(Labels.create("tag-line", "“" + tl + "”")));
 
-      leftBox.getChildren().add(new AutoVerticalScrollPane(Labels.create("description", details.getDescription().orElse("")), 12000, 40));
+      AutoVerticalScrollPane pane = new AutoVerticalScrollPane(Labels.create("description", details.getDescription().orElse("")), 12000, 40);
+
+      /*
+       * Limit height of ScrollPane, but at same time give it the rest of the space in the leftBox VBox; this allows
+       * the tag-line to wrap if need be, instead of tag-line and description competing for max space
+       */
+
+      pane.setPrefHeight(100);
+      VBox.setVgrow(pane, Priority.ALWAYS);
+
+      leftBox.getChildren().add(pane);
 
       Region castPane = castPaneFactory.create(work.getId());
 
