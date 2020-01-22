@@ -15,6 +15,6 @@ public class ImageService {
   public Optional<byte[]> findImage(String id) {
     String[] parts = id.split(":");
 
-    return Optional.ofNullable(store.readSnapshot(new StreamID(Integer.parseInt(parts[0])), Integer.parseInt(parts[1])));
+    return Optional.ofNullable(store.readSnapshot(new StreamID(Integer.parseInt(parts[0])), Integer.parseInt(parts[1]) - 1));
   }
 }
