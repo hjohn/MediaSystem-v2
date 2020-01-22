@@ -5,6 +5,7 @@ import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import java.io.ByteArrayInputStream;
+import java.util.Base64;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -25,7 +26,7 @@ public class BackgroundPane extends StackPane {
   private static final long SETTLE_MILLIS = 1000;   // How long to atleast wait for a new image to be selected (when image changes rapidly)
   private static final long LOAD_MILLIS = 5000;    // How long to wait for a new image to be loaded before displaying an empty image
   private static final Duration MAX_LOAD_DURATION = Duration.millis(LOAD_MILLIS);
-  private static final Image EMPTY_IMAGE = new Image(new ByteArrayInputStream(new byte[0]));
+  private static final Image EMPTY_IMAGE = new Image(new ByteArrayInputStream(Base64.getDecoder().decode("R0lGODlhAQABAHAAACH5BAUAAAAALAAAAAABAAEAAAICRAEAOw==")));  // Tiny transparent gif
   private static final Image DEFAULT_IMAGE = new Image(BackgroundPane.class.getResourceAsStream("curtain.jpg"));
 
   private final ObjectProperty<ImageHandle> backdropProperty = new SimpleObjectProperty<>();
