@@ -7,7 +7,7 @@ import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
-import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.State;
@@ -80,8 +80,8 @@ public class WorkService {
   @Inject private StreamPrintProvider streamPrintProvider;
 
   private static final List<String> dataSourcePriorities = List.of("TMDB", "LOCAL");
-  private static final Comparator<Map.Entry<Identifier, Identification>> DATA_SOURCE_PRIORITY =
-      Comparator.comparing((Map.Entry<Identifier, Identification> e) -> dataSourcePriorities.indexOf(e.getKey().getDataSource().getName()));
+  private static final Comparator<Map.Entry<Identifier, Match>> DATA_SOURCE_PRIORITY =
+      Comparator.comparing((Map.Entry<Identifier, Match> e) -> dataSourcePriorities.indexOf(e.getKey().getDataSource().getName()));
   private static final State UNWATCHED_STATE = new State(null, false, Duration.ZERO);
 
   synchronized Optional<Work> find(StreamID streamId) {
@@ -348,7 +348,7 @@ public class WorkService {
     return new State(lastWatchedTime, watched, resumePosition);
   }
 
-  private MediaStream toMediaStream(BasicStream bs, Identification identification) {
+  private MediaStream toMediaStream(BasicStream bs, Match match) {
     StreamID streamId = bs.getId();
     StreamID parentId = streamStore.findParentId(streamId).orElse(null);
     State state = toState(bs);
@@ -367,13 +367,13 @@ public class WorkService {
       new StreamAttributes(bs.getUri(), streamStore.findCreationTime(streamId).orElseThrow(), Instant.ofEpochMilli(streamPrint.getLastModificationTime()), streamPrint.getSize(), bs.getAttributes()),
       state,
       md,
-      identification
+      match
     );
   }
 
   Work toWork(BasicStream bs) {
     StreamID streamId = bs.getId();
-    Optional<Tuple2<MediaDescriptor, Identification>> tuple = findBestDescriptor(streamId);
+    Optional<Tuple2<MediaDescriptor, Match>> tuple = findBestDescriptor(streamId);
     State state = toState(bs);
 
     List<MediaStream> mediaStreams = tuple.map(t -> t.a)
@@ -411,7 +411,7 @@ public class WorkService {
     );
   }
 
-  private Optional<Tuple2<MediaDescriptor, Identification>> findBestDescriptor(StreamID streamId) {
+  private Optional<Tuple2<MediaDescriptor, Match>> findBestDescriptor(StreamID streamId) {
     StreamID parentId = streamStore.findParentId(streamId).orElse(null);
 
     if(parentId != null) {
@@ -423,18 +423,18 @@ public class WorkService {
       .flatMap(this::identifierToProductioneIdentification);
   }
 
-  private Optional<Entry<Identifier, Identification>> findBestIdentification(StreamID streamId) {
+  private Optional<Entry<Identifier, Match>> findBestIdentification(StreamID streamId) {
     return streamStore.findIdentifications(streamId).entrySet().stream()
       .sorted(DATA_SOURCE_PRIORITY)
       .findFirst();
   }
 
-  private Optional<Tuple2<MediaDescriptor, Identification>> identifierToProductioneIdentification(Entry<Identifier, Identification> e) {
+  private Optional<Tuple2<MediaDescriptor, Match>> identifierToProductioneIdentification(Entry<Identifier, Match> e) {
     return descriptorStore.find(e.getKey())
       .map(ep -> Tuple.of(ep, e.getValue()));
   }
 
-  private Optional<Tuple2<MediaDescriptor, Identification>> identifierToEpisodeIdentification(Entry<Identifier, Identification> e, Attributes childAttributes) {
+  private Optional<Tuple2<MediaDescriptor, Match>> identifierToEpisodeIdentification(Entry<Identifier, Match> e, Attributes childAttributes) {
     return descriptorStore.find(e.getKey())
       .filter(Serie.class::isInstance)
       .map(Serie.class::cast)

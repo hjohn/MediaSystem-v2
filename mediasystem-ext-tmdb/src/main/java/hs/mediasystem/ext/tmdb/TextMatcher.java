@@ -1,6 +1,6 @@
 package hs.mediasystem.ext.tmdb;
 
-import hs.mediasystem.domain.work.Identification.MatchType;
+import hs.mediasystem.domain.work.Match.MatchType;
 import hs.mediasystem.util.WeightedNgramDistance;
 
 import java.time.LocalDate;

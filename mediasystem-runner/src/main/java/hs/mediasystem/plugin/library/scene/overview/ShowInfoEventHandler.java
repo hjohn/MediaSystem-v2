@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.work.AudioStream;
-import hs.mediasystem.domain.work.Identification;
-import hs.mediasystem.domain.work.Identification.MatchType;
+import hs.mediasystem.domain.work.Match;
+import hs.mediasystem.domain.work.Match.MatchType;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.VideoStream;
@@ -87,10 +87,10 @@ public class ShowInfoEventHandler {
         GridPane.FILL
       );
 
-      stream.getIdentification().ifPresentOrElse(identification -> {
+      stream.getMatch().ifPresentOrElse(match -> {
         gridPane.addRow(
           Labels.create("title", "Identification"),
-          Labels.create("value", "" + toText(identification)),
+          Labels.create("value", "" + toText(match)),
           GridPane.FILL,
           GridPane.FILL
         );
@@ -201,17 +201,17 @@ public class ShowInfoEventHandler {
     return output + tail;
   }
 
-  private static String toText(Identification identification) {
+  private static String toText(Match match) {
     StringBuilder builder = new StringBuilder();
 
-    builder.append(identification.getMatchType());
+    builder.append(match.getMatchType());
 
-    if(identification.getMatchType() == MatchType.NAME || identification.getMatchType() == MatchType.NAME_AND_RELEASE_DATE) {
-      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(identification.getMatchAccuracy() * 100) + "% match)");
+    if(match.getMatchType() == MatchType.NAME || match.getMatchType() == MatchType.NAME_AND_RELEASE_DATE) {
+      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(match.getMatchAccuracy() * 100) + "% match)");
     }
 
     builder.append(" at ");
-    builder.append(DATE_TIME_FORMATTER.format(identification.getCreationTime().atOffset(ZoneOffset.UTC)));
+    builder.append(DATE_TIME_FORMATTER.format(match.getCreationTime().atOffset(ZoneOffset.UTC)));
 
     return builder.toString();
   }

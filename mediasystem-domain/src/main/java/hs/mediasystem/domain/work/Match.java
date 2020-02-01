@@ -3,9 +3,9 @@ package hs.mediasystem.domain.work;
 import java.time.Instant;
 import java.util.Objects;
 
-public class Identification {
+public class Match {
 
-  public enum MatchType {
+  public enum MatchType {  // FIXME give simpler names
 
     /**
      * Matched manually by user.
@@ -44,7 +44,7 @@ public class Identification {
   private final double matchAccuracy;
   private final Instant creationTime;
 
-  public Identification(MatchType matchType, double matchAccuracy, Instant creationTime) {
+  public Match(MatchType matchType, double matchAccuracy, Instant creationTime) {
     if(matchType == null) {
       throw new IllegalArgumentException("matchType cannot be null");
     }
@@ -86,7 +86,7 @@ public class Identification {
       return false;
     }
 
-    Identification other = (Identification)obj;
+    Match other = (Match)obj;
 
     if(Double.doubleToLongBits(matchAccuracy) != Double.doubleToLongBits(other.matchAccuracy)) {
       return false;
@@ -103,6 +103,6 @@ public class Identification {
 
   @Override
   public String toString() {
-    return "Identification[" + matchType + " @ " + matchAccuracy * 100 + "%]";
+    return "Match[" + matchType + " @ " + matchAccuracy * 100 + "%]";
   }
 }

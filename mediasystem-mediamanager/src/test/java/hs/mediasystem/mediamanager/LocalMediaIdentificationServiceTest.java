@@ -5,8 +5,8 @@ import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
-import hs.mediasystem.domain.work.Identification;
-import hs.mediasystem.domain.work.Identification.MatchType;
+import hs.mediasystem.domain.work.Match;
+import hs.mediasystem.domain.work.Match.MatchType;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
@@ -92,17 +92,17 @@ public class LocalMediaIdentificationServiceTest {
   public void reidentifyShouldCreateIdentificationWithoutMatchingQueryService() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier = new Identifier(DATA_SOURCE_2, "12345");
-    Identification identification = new Identification(MatchType.ID, 1.0, Instant.now());
+    Match match = new Match(MatchType.ID, 1.0, Instant.now());
     BasicStream stream = createMovie("file://parent/test", attributes);
 
-    when(idServiceForDS2.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
+    when(idServiceForDS2.identify(eq(stream))).thenReturn(Tuple.of(identifier, match));
 
     MediaIdentification mi = db.identify(stream, List.of("D1", "D2", "D5", "D6"));
 
     assertEquals(3, mi.getResults().size());
     assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idServiceForDS1))));
     assertTrue(mi.getResults().contains(Exceptional.ofException(new UnknownStreamException(stream, idService5))));
-    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier, identification, null))));
+    assertTrue(mi.getResults().contains(Exceptional.of(Tuple.of(identifier, match, null))));
   }
 
   @Test
@@ -126,12 +126,12 @@ public class LocalMediaIdentificationServiceTest {
   public void reindentifyShouldHandleQueryException() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
-    Identification identification = new Identification(MatchType.ID, 1.0, Instant.now());
+    Match match = new Match(MatchType.ID, 1.0, Instant.now());
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
     BasicStream stream = createMovie("file://parent/test", attributes);
 
-    when(idServiceForDS1.identify(eq(stream))).thenReturn(Tuple.of(identifier, identification));
+    when(idServiceForDS1.identify(eq(stream))).thenReturn(Tuple.of(identifier, match));
     when(queryServiceForDS1.query(identifier)).thenThrow(illegalStateException);
 
     MediaIdentification mi = db.identify(stream, List.of("D1", "D2", "D5", "D6"));

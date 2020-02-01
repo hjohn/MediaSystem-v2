@@ -2,7 +2,7 @@ package hs.mediasystem.mediamanager;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
-import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
@@ -70,9 +70,9 @@ public class LocalMediaIdentificationService {
     );
   }
 
-  private Set<Exceptional<Tuple3<Identifier, Identification, MediaDescriptor>>> performIdentificationCalls(BasicStream stream, List<IdentificationService> identificationsToPerform) {
+  private Set<Exceptional<Tuple3<Identifier, Match, MediaDescriptor>>> performIdentificationCalls(BasicStream stream, List<IdentificationService> identificationsToPerform) {
     // Get new identifications:
-    List<Exceptional<Tuple2<Identifier, Identification>>> identificationsToQuery = identificationsToPerform.stream()
+    List<Exceptional<Tuple2<Identifier, Match>>> identificationsToQuery = identificationsToPerform.stream()
       .map(identificationService -> Exceptional.from(() ->
         Optional.ofNullable(
           identificationService.identify(stream)
@@ -80,12 +80,12 @@ public class LocalMediaIdentificationService {
       ))
       .collect(Collectors.toList());
 
-    Set<Exceptional<Tuple3<Identifier, Identification, MediaDescriptor>>> results = new HashSet<>();
+    Set<Exceptional<Tuple3<Identifier, Match, MediaDescriptor>>> results = new HashSet<>();
 
     identificationsToQuery
       .forEach(identificationExceptional -> results.add(
         identificationExceptional
-          .map((Tuple2<Identifier, Identification> t) -> queryServicesByDataSource.get(t.a.getDataSource()))
+          .map((Tuple2<Identifier, Match> t) -> queryServicesByDataSource.get(t.a.getDataSource()))
           .map(qs -> qs.query(identificationExceptional.get().a))  // get() is safe here, won't get here if not present
           .map(r -> Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, r))
           .or(() -> Exceptional.of(Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, null)))

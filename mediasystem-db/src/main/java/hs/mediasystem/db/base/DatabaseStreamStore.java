@@ -2,7 +2,7 @@ package hs.mediasystem.db.base;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.mediamanager.BasicStreamStore;
@@ -84,11 +84,11 @@ public class DatabaseStreamStore implements BasicStreamStore {
       .collect(Collectors.toSet());
   }
 
-  public synchronized Map<BasicStream, Identification> findStreamsAndIdentifications(Identifier identifier) {
+  public synchronized Map<BasicStream, Match> findStreamsAndIdentifications(Identifier identifier) {
     return identifierIndex.getOrDefault(identifier, EMPTY_SET).stream()
       .map(sid -> cache.get(sid))
       .map(CachedStream::getIdentifiedStream)
-      .collect(Collectors.toMap(IdentifiedStream::getStream, is -> is.getIdentifications().get(identifier)));
+      .collect(Collectors.toMap(IdentifiedStream::getStream, is -> is.getMatches().get(identifier)));
   }
 
   private Stream<BasicStream> stream(MediaType type, String tag) {
@@ -106,7 +106,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
   }
 
   @Override
-  public synchronized Map<BasicStream, Map<Identifier, Identification>> findIdentifiersByStreams(MediaType type, String tag) {
+  public synchronized Map<BasicStream, Map<Identifier, Match>> findIdentifiersByStreams(MediaType type, String tag) {
     return stream(type, tag)
       .collect(Collectors.toMap(Function.identity(), s -> findIdentifications(s.getId(), type)));
   }
@@ -132,25 +132,25 @@ public class DatabaseStreamStore implements BasicStreamStore {
     return importSourceProvider.getStreamSource(cache.get(streamId).getImportSourceId() & 0xffff).getStreamSource();
   }
 
-  public synchronized Map<Identifier, Identification> findIdentifications(StreamID streamId, MediaType mediaType) {
+  public synchronized Map<Identifier, Match> findIdentifications(StreamID streamId, MediaType mediaType) {
     CachedStream cachedStream = cache.get(streamId);
 
     if(cachedStream == null) {
       return null;
     }
 
-    return cachedStream.getIdentifiedStream().getIdentifications().entrySet().stream().filter(e -> e.getKey().getDataSource().getType().equals(mediaType)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    return cachedStream.getIdentifiedStream().getMatches().entrySet().stream().filter(e -> e.getKey().getDataSource().getType().equals(mediaType)).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   @Override
-  public synchronized Map<Identifier, Identification> findIdentifications(StreamID streamId) {
+  public synchronized Map<Identifier, Match> findIdentifications(StreamID streamId) {
     CachedStream cachedStream = cache.get(streamId);
 
     if(cachedStream == null) {
       return Collections.emptyMap();
     }
 
-    return cachedStream.getIdentifiedStream().getIdentifications();
+    return cachedStream.getIdentifiedStream().getMatches();
   }
 
   @Override
@@ -237,7 +237,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
 
   synchronized void put(int importSourceId, BasicStream stream) {
     CachedStream existingCS = cache.get(stream.getId());
-    IdentifiedStream identifiedStream = new IdentifiedStream(stream, existingCS == null ? Collections.emptyMap() : existingCS.getIdentifiedStream().getIdentifications());
+    IdentifiedStream identifiedStream = new IdentifiedStream(stream, existingCS == null ? Collections.emptyMap() : existingCS.getIdentifiedStream().getMatches());
     CachedStream newCS = new CachedStream(identifiedStream, importSourceId, existingCS == null ? Instant.now() : existingCS.getCreationTime(), null, null);
 
     database.store(codec.toRecord(newCS));
@@ -246,7 +246,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     putInCache(newCS);
   }
 
-  synchronized void putIdentifications(StreamID streamId, Map<Identifier, Identification> identifications) {
+  synchronized void putIdentifications(StreamID streamId, Map<Identifier, Match> identifications) {
     CachedStream cs = cache.get(streamId);
 
     if(cs != null) {
@@ -272,8 +272,8 @@ public class DatabaseStreamStore implements BasicStreamStore {
       IdentifiedStream is = cs.getIdentifiedStream();
 
       // Remove stream from identifier index
-      is.getIdentifications().keySet().forEach(
-        identifier -> identifierIndex.computeIfPresent(identifier, (k, v) -> v.remove(streamId) && v.isEmpty() ? null : v)
+      is.getMatches().keySet().forEach(
+        match -> identifierIndex.computeIfPresent(match, (k, v) -> v.remove(streamId) && v.isEmpty() ? null : v)
       );
 
       // Remove stream from stream id index
@@ -297,7 +297,7 @@ public class DatabaseStreamStore implements BasicStreamStore {
     cache.put(streamId, cs);
 
     // Add stream to identifier index
-    is.getIdentifications().keySet().forEach(i -> identifierIndex.computeIfAbsent(i, k -> new HashSet<>()).add(streamId));
+    is.getMatches().keySet().forEach(m -> identifierIndex.computeIfAbsent(m, k -> new HashSet<>()).add(streamId));
 
     // Add stream to stream id index
     streamIndex.put(is.getStream().getId(), is.getStream());

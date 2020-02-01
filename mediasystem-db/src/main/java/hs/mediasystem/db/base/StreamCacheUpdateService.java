@@ -2,7 +2,7 @@ package hs.mediasystem.db.base;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.domain.work.Identification;
+import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.IdentifierCollection;
@@ -262,18 +262,18 @@ public class StreamCacheUpdateService {
     }
   }
 
-  private Map<Identifier, Tuple2<Identification, MediaDescriptor>> findDescriptorsAndIdentifications(StreamID streamId) {
-    Map<Identifier, Identification> identifications = streamStore.findIdentifications(streamId);
+  private Map<Identifier, Tuple2<Match, MediaDescriptor>> findDescriptorsAndIdentifications(StreamID streamId) {
+    Map<Identifier, Match> identifications = streamStore.findIdentifications(streamId);
 
     return identifications.entrySet().stream()
       .collect(Collectors.toMap(Map.Entry::getKey, e -> Tuple.of(e.getValue(), descriptorStore.find(e.getKey()).orElse(null))));
   }
 
-  private Set<Tuple3<Identifier, Identification, MediaDescriptor>> createMergedRecords(BasicStream stream, Set<Tuple3<Identifier, Identification, MediaDescriptor>> records) {
-    Map<Identifier, Tuple2<Identification, MediaDescriptor>> originalRecords = findDescriptorsAndIdentifications(stream.getId());
+  private Set<Tuple3<Identifier, Match, MediaDescriptor>> createMergedRecords(BasicStream stream, Set<Tuple3<Identifier, Match, MediaDescriptor>> records) {
+    Map<Identifier, Tuple2<Match, MediaDescriptor>> originalRecords = findDescriptorsAndIdentifications(stream.getId());
 
-    for(Tuple3<Identifier, Identification, MediaDescriptor> record : records) {
-      Tuple2<Identification, MediaDescriptor> original = originalRecords.get(record.a);
+    for(Tuple3<Identifier, Match, MediaDescriptor> record : records) {
+      Tuple2<Match, MediaDescriptor> original = originalRecords.get(record.a);
 
       if(original == null || original.b == null || record.c != null) {
         Identifier identifier = record.a;
@@ -295,7 +295,7 @@ public class StreamCacheUpdateService {
       boolean hasExceptions = mediaIdentification.getResults().stream().filter(Exceptional::isException).findAny().isPresent();
 
       // Create final records to store:
-      Set<Tuple3<Identifier, Identification, MediaDescriptor>> records =
+      Set<Tuple3<Identifier, Match, MediaDescriptor>> records =
         replace || (!incremental && !hasExceptions) ?
           mediaIdentification.getResults().stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toSet()) :
           createMergedRecords(mediaIdentification.getStream(), mediaIdentification.getResults().stream().flatMap(Exceptional::ignoreAllAndStream).collect(Collectors.toSet()));
@@ -320,7 +320,7 @@ public class StreamCacheUpdateService {
 
     builder.append("Enrichment results " + (incremental ? "(incremental) " : "") + "for ").append(mediaIdentification.getStream()).append(":");
 
-    for(Exceptional<Tuple3<Identifier, Identification, MediaDescriptor>> exceptional : mediaIdentification.getResults()) {
+    for(Exceptional<Tuple3<Identifier, Match, MediaDescriptor>> exceptional : mediaIdentification.getResults()) {
       if(exceptional.isException()) {
         builder.append("\n - ").append(Throwables.formatAsOneLine(exceptional.getException()));
         warning = true;

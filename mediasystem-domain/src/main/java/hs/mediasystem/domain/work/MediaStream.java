@@ -10,9 +10,9 @@ public class MediaStream {
   private final StreamAttributes attributes;
   private final State state;
   private final Optional<StreamMetaData> metaData;
-  private final Optional<Identification> identification;
+  private final Optional<Match> match;
 
-  public MediaStream(StreamID streamId, StreamID parentId, StreamAttributes attributes, State state, StreamMetaData metaData, Identification identification) {
+  public MediaStream(StreamID streamId, StreamID parentId, StreamAttributes attributes, State state, StreamMetaData metaData, Match match) {
     if(streamId == null) {
       throw new IllegalArgumentException("streamId cannot be null");
     }
@@ -28,7 +28,7 @@ public class MediaStream {
     this.attributes = attributes;
     this.state = state;
     this.metaData = Optional.ofNullable(metaData);
-    this.identification = Optional.ofNullable(identification);
+    this.match = Optional.ofNullable(match);
   }
 
   public StreamID getId() {
@@ -51,7 +51,7 @@ public class MediaStream {
     return metaData;
   }
 
-  public Optional<Identification> getIdentification() {
-    return identification;
+  public Optional<Match> getMatch() {
+    return match;
   }
 }
