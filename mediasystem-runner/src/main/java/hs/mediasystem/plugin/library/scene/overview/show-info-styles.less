@@ -43,6 +43,20 @@
           -fx-wrap-text: true;
         }
       }
+      
+      .snapshots-box {
+        -fx-padding: 0.5em 0;
+        -fx-spacing: 0.5em;  
+        
+        .scaled-image-view {
+          -fx-pref-width: 11em;
+          
+          .image-view {
+            -fx-border-color: @glass-color;
+            -fx-border-width: 2;
+          }
+        }
+      }
     } 
   }
 }

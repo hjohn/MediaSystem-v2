@@ -5,11 +5,16 @@ import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.MatchType;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.Snapshot;
+import hs.mediasystem.domain.work.SubtitleStream;
 import hs.mediasystem.domain.work.VideoStream;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
+import hs.mediasystem.util.javafx.AsyncImageProperty3;
+import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.Labels;
@@ -23,15 +28,20 @@ import java.util.List;
 import java.util.Locale;
 
 import javafx.event.Event;
+import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class ShowInfoEventHandler {
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.UK).withZone(ZoneOffset.systemDefault());
+
+  @Inject private ImageHandleFactory imageHandleFactory;
 
   public void handle(Event event, Work work) {
     Label titleLabel = Labels.create("title", work.getDetails().getName());
@@ -157,7 +167,51 @@ public class ShowInfoEventHandler {
             gridPane.nextRow();
           }
         }
+
+        List<SubtitleStream> subtitleStreams = metaData.getSubtitleStreams();
+
+        for(int i = 0; i < subtitleStreams.size(); i++) {
+          SubtitleStream subtitleStream = subtitleStreams.get(i);
+
+          gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Subtitle Streams"));
+          gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
+
+          if(subtitleStream.getTitle() != null) {
+            gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleStream.getTitle(), 80)));
+            gridPane.nextRow();
+          }
+
+          gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleStream.getCodec(), 80)));
+          gridPane.nextRow();
+
+          if(subtitleStream.getLanguage() != null) {
+            gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Language"));
+            gridPane.at(3).add(Labels.create("value", subtitleStream.getLanguage()));
+            gridPane.nextRow();
+          }
+        }
       });
+
+      HBox snapshotsBox = Containers.hbox("snapshots-box");
+
+      stream.getMetaData().ifPresent(metaData -> {
+        metaData.getSnapshots().stream().map(Snapshot::getImageUri).map(imageHandleFactory::fromURI).forEach(handle -> {
+          BiasedImageView imageView = new BiasedImageView();
+          AsyncImageProperty3 property = new AsyncImageProperty3(600, 400);
+
+          imageView.setOrientation(Orientation.HORIZONTAL);
+          imageView.imageProperty().bind(property);
+//          imageView.setPrefWidth(20);
+//          imageView.setPrefHeight(20);
+          property.imageHandleProperty().set(handle);
+
+          snapshotsBox.getChildren().add(imageView);
+        });
+      });
+
+      gridPane.addRow(Labels.create("title", "Snapshots"), snapshotsBox, GridPane.FILL, GridPane.FILL);
 
       listBox.getChildren().add(gridPane);
     }
