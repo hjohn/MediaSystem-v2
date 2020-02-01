@@ -48,7 +48,7 @@ public class TmdbIdentificationServiceTest {
 
     Tuple2<Identifier, Identification> t = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5")));
 
-    assertEquals(0.98, t.b.getMatchAccuracy(), 0.01f);
+    assertEquals(0.77, t.b.getMatchAccuracy(), 0.01f);
     assertEquals(MatchType.NAME_AND_RELEASE_DATE, t.b.getMatchType());
     assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80000"), t.a);
   }
@@ -70,7 +70,7 @@ public class TmdbIdentificationServiceTest {
 
     Tuple2<Identifier, Identification> t = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")));
 
-    assertEquals(0.418, t.b.getMatchAccuracy(), 0.01f);
+    assertEquals(0.470, t.b.getMatchAccuracy(), 0.01f);
     assertEquals(MatchType.NAME_AND_RELEASE_DATE, t.b.getMatchType());
     assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), t.a);
   }

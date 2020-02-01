@@ -23,6 +23,14 @@
     <module>mediasystem-ext-basic-media-types</module>
     <module>mediasystem-ui-api</module>
     <module>mediasystem-local-client</module>
+    
+    <!-- build in order to run tests, not packaged though -->
+    <module>mediasystem-ext-local</module>
+    <module>mediasystem-ext-mpv</module>
+    <module>mediasystem-ext-scanners</module>
+    <module>mediasystem-ext-tmdb</module>
+    <module>mediasystem-ext-vlc</module>
+    
     <module>mediasystem-package</module>
   </modules>
     
