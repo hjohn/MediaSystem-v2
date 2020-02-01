@@ -2,8 +2,10 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
@@ -12,12 +14,13 @@ import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.TextMatcher;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Tuple;
-import hs.mediasystem.util.Tuple.Tuple2;
 
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,32 +42,31 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
   }
 
   @Override
-  public Tuple2<Identifier, Match> identify(BasicStream stream) {
+  public Map<StreamID, Identification> identify(BasicStream stream) {
     Attributes attributes = stream.getAttributes();
     String imdb = attributes.get(Attribute.ID_PREFIX + "IMDB");
-    Tuple2<Identifier, Match> result = null;
+    Map<StreamID, Identification> result = new HashMap<>();
 
     if(imdb != null) {
-      result = identifyByIMDB(imdb);
+      identifyByIMDB(imdb).ifPresent(t -> result.put(stream.getId(), t));
     }
 
-    if(result == null) {
-      result = identifyByStream(attributes);
+    if(result.isEmpty()) {
+      identifyByStream(attributes).ifPresent(t -> result.put(stream.getId(), t));
     }
 
     return result;
   }
 
-  private Tuple2<Identifier, Match> identifyByIMDB(String imdb) {
+  private Optional<Identification> identifyByIMDB(String imdb) {
     JsonNode node = tmdb.query("3/find/" + imdb, "external_source", "imdb_id");
 
     return StreamSupport.stream(node.path("movie_results").spliterator(), false)
       .findFirst()
-      .map(n -> Tuple.of(new Identifier(DataSources.TMDB_MOVIE, n.get("id").asText()), new Match(MatchType.ID, 1, Instant.now())))
-      .orElse(null);
+      .map(n -> new Identification(new Identifier(DataSources.TMDB_MOVIE, n.get("id").asText()), new Match(MatchType.ID, 1, Instant.now())));
   }
 
-  private Tuple2<Identifier, Match> identifyByStream(Attributes attributes) {
+  private Optional<Identification> identifyByStream(Attributes attributes) {
     List<String> titleVariations = TextMatcher.createVariations(attributes.get(Attribute.TITLE));
     List<String> alternativeTitleVariations = TextMatcher.createVariations(attributes.get(Attribute.ALTERNATIVE_TITLE));
 
@@ -94,7 +96,6 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
         )
       )
       .max(Comparator.comparingDouble(m -> m.getNormalizedScore()))
-      .map(match -> Tuple.of(new Identifier(DataSources.TMDB_MOVIE, match.getId()), new Match(match.getType(), match.getScore() / 100, Instant.now())))
-      .orElse(null);
+      .map(match -> new Identification(new Identifier(DataSources.TMDB_MOVIE, match.getId()), new Match(match.getType(), match.getScore() / 100, Instant.now())));
   }
 }

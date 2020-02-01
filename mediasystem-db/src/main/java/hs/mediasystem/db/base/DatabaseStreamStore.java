@@ -3,6 +3,7 @@ package hs.mediasystem.db.base;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.mediamanager.BasicStreamStore;
@@ -246,12 +247,12 @@ public class DatabaseStreamStore implements BasicStreamStore {
     putInCache(newCS);
   }
 
-  synchronized void putIdentifications(StreamID streamId, Map<Identifier, Match> identifications) {
+  synchronized void putIdentification(StreamID streamId, Identification identification) {
     CachedStream cs = cache.get(streamId);
 
     if(cs != null) {
       CachedStream newCS = new CachedStream(
-        new IdentifiedStream(cs.getIdentifiedStream().getStream(), identifications),
+        new IdentifiedStream(cs.getIdentifiedStream().getStream(), identification == null ? Map.of() : Map.of(identification.getIdentifier(), identification.getMatch())),  // TODO change to only allow single identification
         cs.getImportSourceId(),
         cs.getCreationTime(),
         cs.getLastEnrichTime(),

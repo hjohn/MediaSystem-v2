@@ -1,26 +1,19 @@
 package hs.mediasystem.mediamanager;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
-import hs.mediasystem.domain.work.Match;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
-import hs.mediasystem.util.Exceptional;
-import hs.mediasystem.util.Tuple;
-import hs.mediasystem.util.Tuple.Tuple2;
-import hs.mediasystem.util.Tuple.Tuple3;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -54,49 +47,36 @@ public class LocalMediaIdentificationService {
   }
 
   // Method may block
-  public MediaIdentification identify(BasicStream stream, List<String> allowedDataSourceNames) {
+  public MediaIdentification identify(BasicStream stream, String dataSourceName) {
     MediaType type = stream.getType();
+    DataSource dataSource = DataSource.instance(type, dataSourceName);
+    IdentificationService service = identificationServicesByDataSource.get(dataSource);
 
-    // Create list of identifications to perform:
-    List<IdentificationService> identificationsToPerform = identificationServicesByDataSource.entrySet().stream()
-      .filter(e -> e.getKey().getType().equals(type))
-      .filter(e -> allowedDataSourceNames.contains(e.getKey().getName()))  // Must match data source specified by StreamSource
-      .map(Map.Entry::getValue)
-      .collect(Collectors.toList());
+    if(service == null) {
+      throw new UnknownDataSourceException(dataSource);
+    }
 
-    return new MediaIdentification(
-      stream,
-      performIdentificationCalls(stream, identificationsToPerform)
-    );
+    return performIdentificationCall(stream, service);
   }
 
-  private Set<Exceptional<Tuple3<Identifier, Match, MediaDescriptor>>> performIdentificationCalls(BasicStream stream, List<IdentificationService> identificationsToPerform) {
-    // Get new identifications:
-    List<Exceptional<Tuple2<Identifier, Match>>> identificationsToQuery = identificationsToPerform.stream()
-      .map(identificationService -> Exceptional.from(() ->
-        Optional.ofNullable(
-          identificationService.identify(stream)
-        ).orElseThrow(() -> new UnknownStreamException(stream, identificationService))
-      ))
-      .collect(Collectors.toList());
+  private MediaIdentification performIdentificationCall(BasicStream stream, IdentificationService service) {
+    Map<StreamID, Identification> result = service.identify(stream);
 
-    Set<Exceptional<Tuple3<Identifier, Match, MediaDescriptor>>> results = new HashSet<>();
+    if(result.isEmpty()) {
+      return new MediaIdentification(stream, result, null);
+    }
 
-    identificationsToQuery
-      .forEach(identificationExceptional -> results.add(
-        identificationExceptional
-          .map((Tuple2<Identifier, Match> t) -> queryServicesByDataSource.get(t.a.getDataSource()))
-          .map(qs -> qs.query(identificationExceptional.get().a))  // get() is safe here, won't get here if not present
-          .map(r -> Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, r))
-          .or(() -> Exceptional.of(Tuple.of(identificationExceptional.get().a, identificationExceptional.get().b, null)))
-    ));
-
-    return results;
+    return new MediaIdentification(stream, result, query(result.get(stream.getId()).getIdentifier()));
   }
 
-  public Exceptional<MediaDescriptor> query(Identifier identifier) {
-    return Exceptional.ofNullable(queryServicesByDataSource.get(identifier.getDataSource()))
-      .map(qs -> qs.query(identifier));
+  public MediaDescriptor query(Identifier identifier) {
+    QueryService queryService = queryServicesByDataSource.get(identifier.getDataSource());
+
+    if(queryService == null) {
+      throw new UnknownDataSourceException(identifier.getDataSource());
+    }
+
+    return queryService.query(identifier);
   }
 
   public boolean isQueryServiceAvailable(DataSource dataSource) {

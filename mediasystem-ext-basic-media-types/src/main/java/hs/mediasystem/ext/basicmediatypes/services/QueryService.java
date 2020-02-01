@@ -6,5 +6,13 @@ import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 
 public interface QueryService {
   DataSource getDataSource();
+
+  /**
+   * Queries a descriptor service and returns a {@link MediaDescriptor} if
+   * found or throws an exception otherwise.
+   *
+   * @param identifier an {@link Identifier}, cannot be null
+   * @return a {@link MediaDescriptor}, never null
+   */
   MediaDescriptor query(Identifier identifier);
 }

@@ -5,15 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.tmdb.movie.TmdbIdentificationService;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
-import hs.mediasystem.util.Tuple.Tuple2;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -46,33 +45,33 @@ public class TmdbIdentificationServiceTest {
     when(tmdb.query(eq("3/search/movie"), eq("query"), eq("Terminator, The 5 Genisys"), eq("language"), eq("en"))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
     when(tmdb.query(eq("3/search/movie"), eq("query"), eq("The Terminator 5 Genisys"), eq("language"), eq("en"))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
 
-    Tuple2<Identifier, Match> t = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5")));
+    Identification identification = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5"))).get(new StreamID(1));
 
-    assertEquals(0.77, t.b.getMatchAccuracy(), 0.01f);
-    assertEquals(MatchType.NAME_AND_RELEASE_DATE, t.b.getMatchType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80000"), t.a);
+    assertEquals(0.77, identification.getMatch().getMatchAccuracy(), 0.01f);
+    assertEquals(MatchType.NAME_AND_RELEASE_DATE, identification.getMatch().getMatchType());
+    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80000"), identification.getIdentifier());
   }
 
   @Test
   public void shouldIdentifyMovies2() throws JsonProcessingException, IOException {
     when(tmdb.query(eq("3/search/movie"), eq("query"), eq("Michiel de Ruyter"), eq("language"), eq("en"))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"original_title\":\"Michiel de Ruyter\",\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Tuple2<Identifier, Match> t = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")));
+    Identification identification = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015"))).get(new StreamID(1));
 
-    assertEquals(1.0, t.b.getMatchAccuracy(), 0.01f);
-    assertEquals(MatchType.NAME_AND_RELEASE_DATE, t.b.getMatchType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), t.a);
+    assertEquals(1.0, identification.getMatch().getMatchAccuracy(), 0.01f);
+    assertEquals(MatchType.NAME_AND_RELEASE_DATE, identification.getMatch().getMatchType());
+    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getIdentifier());
   }
 
   @Test
   public void shouldNotFailWhenNoOriginalTitlePresent() throws JsonProcessingException, IOException {
     when(tmdb.query(eq("3/search/movie"), eq("query"), eq("Michiel de Ruyter"), eq("language"), eq("en"))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Tuple2<Identifier, Match> t = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")));
+    Identification identification = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015"))).get(new StreamID(1));
 
-    assertEquals(0.470, t.b.getMatchAccuracy(), 0.01f);
-    assertEquals(MatchType.NAME_AND_RELEASE_DATE, t.b.getMatchType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), t.a);
+    assertEquals(0.470, identification.getMatch().getMatchAccuracy(), 0.01f);
+    assertEquals(MatchType.NAME_AND_RELEASE_DATE, identification.getMatch().getMatchType());
+    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getIdentifier());
   }
 
   @Test
@@ -82,22 +81,22 @@ public class TmdbIdentificationServiceTest {
     when(tmdb.query(eq("3/search/movie"), eq("query"), eq("The Admiral"), eq("language"), eq("en"))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
     when(tmdb.query(eq("3/search/movie"), eq("query"), eq("Admiral"), eq("language"), eq("en"))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Tuple2<Identifier, Match> t = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.ALTERNATIVE_TITLE, "Admiral, The", Attribute.YEAR, "2015")));
+    Identification identification = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.ALTERNATIVE_TITLE, "Admiral, The", Attribute.YEAR, "2015"))).get(new StreamID(1));
 
-    assertEquals(1.0, t.b.getMatchAccuracy(), 0.01f);
-    assertEquals(MatchType.NAME_AND_RELEASE_DATE, t.b.getMatchType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), t.a);
+    assertEquals(1.0, identification.getMatch().getMatchAccuracy(), 0.01f);
+    assertEquals(MatchType.NAME_AND_RELEASE_DATE, identification.getMatch().getMatchType());
+    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getIdentifier());
   }
 
   @Test
   public void shouldIdentifyByImdbId() throws JsonProcessingException, IOException {
     when(tmdb.query(eq("3/find/12345"), eq("external_source"), eq("imdb_id"))).thenReturn(objectMapper.readTree("{\"movie_results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Tuple2<Identifier, Match> t = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015", Attribute.ID_PREFIX + "IMDB", "12345")));
+    Identification identification = service.identify(basicStream(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015", Attribute.ID_PREFIX + "IMDB", "12345"))).get(new StreamID(1));
 
-    assertEquals(1.0, t.b.getMatchAccuracy(), 0.01f);
-    assertEquals(MatchType.ID, t.b.getMatchType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), t.a);
+    assertEquals(1.0, identification.getMatch().getMatchAccuracy(), 0.01f);
+    assertEquals(MatchType.ID, identification.getMatch().getMatchType());
+    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getIdentifier());
   }
 
   @SuppressWarnings("static-method")
