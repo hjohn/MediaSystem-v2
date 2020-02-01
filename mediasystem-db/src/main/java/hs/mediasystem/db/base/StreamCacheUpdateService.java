@@ -2,6 +2,7 @@ package hs.mediasystem.db.base;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.IdentifierCollection;
@@ -175,45 +176,42 @@ public class StreamCacheUpdateService {
               asyncEnrichMediaStream(scannedStream.getId());
             }
             else {  // Check if descriptor store contains the relevant descriptors
-              for(Identifier identifier : streamStore.findIdentifications(existingStream.getId()).keySet()) {
-                if(!identificationService.isQueryServiceAvailable(identifier.getDataSource())) {
-                  continue;
-                }
+              streamStore.findIdentification(existingStream.getId()).map(Identification::getIdentifier).ifPresent(identifier -> {
+                if(identificationService.isQueryServiceAvailable(identifier.getDataSource())) {
+                  MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
 
-                MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
+                  if(mediaDescriptor == null) {
+                    // One or more descriptors are missing, enrich:
+                    LOGGER.warning("Existing stream is missing descriptors in cache (" + identifier + ") -> refetching: " + scannedStream);
 
-                if(mediaDescriptor == null) {
-                  // One or more descriptors are missing, enrich:
-                  LOGGER.warning("Existing stream is missing descriptors in cache (" + identifier + ") -> refetching: " + scannedStream);
+                    asyncEnrichMediaStream(scannedStream.getId());
+                  }
+                  else if(mediaDescriptor instanceof Production) {
+                    Production production = (Production)mediaDescriptor;
+                    Identifier collectionIdentifier = production.getCollectionIdentifier().orElse(null);
 
-                  asyncEnrichMediaStream(scannedStream.getId());
-                  break;
-                }
-                else if(mediaDescriptor instanceof Production) {
-                  Production production = (Production)mediaDescriptor;
-                  Identifier collectionIdentifier = production.getCollectionIdentifier().orElse(null);
+                    if(collectionIdentifier != null) {
+                      IdentifierCollection identifierCollection = (IdentifierCollection)descriptorStore.find(collectionIdentifier).orElse(null);
 
-                  if(collectionIdentifier != null) {
-                    IdentifierCollection identifierCollection = (IdentifierCollection)descriptorStore.find(collectionIdentifier).orElse(null);
-
-                    if(identifierCollection == null) {
-                      LOGGER.warning("Existing stream is missing collection data in cache (" + collectionIdentifier + ") -> refetching: " + scannedStream);
-
-                      asyncEnrichMediaStream(scannedStream.getId());
-                      break;
-                    }
-
-                    for(Identifier collectionItemIdentifier : identifierCollection.getItems()) {
-                      if(descriptorStore.find(collectionItemIdentifier).orElse(null) == null) {
-                        LOGGER.warning("Existing stream is missing collection items in cache (" + collectionItemIdentifier + " is missing, out of " + identifierCollection.getItems() + " from " + collectionIdentifier + ") -> refetching: " + scannedStream);
+                      if(identifierCollection == null) {
+                        LOGGER.warning("Existing stream is missing collection data in cache (" + collectionIdentifier + ") -> refetching: " + scannedStream);
 
                         asyncEnrichMediaStream(scannedStream.getId());
-                        break;
+                      }
+                      else {
+                        for(Identifier collectionItemIdentifier : identifierCollection.getItems()) {
+                          if(descriptorStore.find(collectionItemIdentifier).orElse(null) == null) {
+                            LOGGER.warning("Existing stream is missing collection items in cache (" + collectionItemIdentifier + " is missing, out of " + identifierCollection.getItems() + " from " + collectionIdentifier + ") -> refetching: " + scannedStream);
+
+                            asyncEnrichMediaStream(scannedStream.getId());
+                            break;
+                          }
+                        }
                       }
                     }
                   }
                 }
-              }
+              });
             }
           }
           catch(Throwable t) {

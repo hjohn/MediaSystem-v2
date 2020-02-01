@@ -15,6 +15,7 @@ import hs.mediasystem.domain.work.StreamAttributes;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
@@ -47,10 +48,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -79,9 +78,6 @@ public class WorkService {
   @Inject private StreamCacheUpdateService updateService;
   @Inject private StreamPrintProvider streamPrintProvider;
 
-  private static final List<String> dataSourcePriorities = List.of("TMDB", "LOCAL");
-  private static final Comparator<Map.Entry<Identifier, Match>> DATA_SOURCE_PRIORITY =
-      Comparator.comparing((Map.Entry<Identifier, Match> e) -> dataSourcePriorities.indexOf(e.getKey().getDataSource().getName()));
   private static final State UNWATCHED_STATE = new State(null, false, Duration.ZERO);
 
   synchronized Optional<Work> find(StreamID streamId) {
@@ -289,7 +285,7 @@ public class WorkService {
     }
 
     List<MediaStream> mediaStreams = streamStore.findStreams(descriptor.getIdentifier()).stream()
-      .map(bs -> toMediaStream(bs, streamStore.findIdentifications(bs.getId()).getOrDefault(descriptor.getIdentifier(), null)))
+      .map(bs -> toMediaStream(bs, streamStore.findIdentification(bs.getId()).map(Identification::getMatch).orElse(null)))
       .collect(Collectors.toList());
 
     return new Work(
@@ -423,26 +419,24 @@ public class WorkService {
       .flatMap(this::identifierToProductioneIdentification);
   }
 
-  private Optional<Entry<Identifier, Match>> findBestIdentification(StreamID streamId) {
-    return streamStore.findIdentifications(streamId).entrySet().stream()
-      .sorted(DATA_SOURCE_PRIORITY)
-      .findFirst();
+  private Optional<Identification> findBestIdentification(StreamID streamId) {
+    return streamStore.findIdentification(streamId);
   }
 
-  private Optional<Tuple2<MediaDescriptor, Match>> identifierToProductioneIdentification(Entry<Identifier, Match> e) {
-    return descriptorStore.find(e.getKey())
-      .map(ep -> Tuple.of(ep, e.getValue()));
+  private Optional<Tuple2<MediaDescriptor, Match>> identifierToProductioneIdentification(Identification identification) {
+    return descriptorStore.find(identification.getIdentifier())
+      .map(ep -> Tuple.of(ep, identification.getMatch()));
   }
 
-  private Optional<Tuple2<MediaDescriptor, Match>> identifierToEpisodeIdentification(Entry<Identifier, Match> e, Attributes childAttributes) {
-    return descriptorStore.find(e.getKey())
+  private Optional<Tuple2<MediaDescriptor, Match>> identifierToEpisodeIdentification(Identification identification, Attributes childAttributes) {
+    return descriptorStore.find(identification.getIdentifier())
       .filter(Serie.class::isInstance)
       .map(Serie.class::cast)
       .map(s -> serieHelper.findChildDescriptors(s, childAttributes))
       .orElse(List.of())
       .stream()
       .findFirst()  // If multiple episodes are found, a reduce could be done (2 episodes matching a single stream)
-      .map(ep -> Tuple.of(ep, e.getValue()));
+      .map(ep -> Tuple.of(ep, identification.getMatch()));
   }
 
   private static WorkId toWorkId(Identifier identifier) {

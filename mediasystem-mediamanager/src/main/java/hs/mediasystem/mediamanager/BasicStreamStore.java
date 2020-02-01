@@ -3,11 +3,11 @@ package hs.mediasystem.mediamanager;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -23,14 +23,13 @@ public interface BasicStreamStore {
   Optional<BasicStream> findStream(StreamID streamId);
 
   /**
-   * Finds {@link Identifier}s and {@link Match}s for the given
-   * {@link StreamID}.  This only works for top level streams as child streams
-   * donot have associated {@link Match}s.
+   * Finds the {@link Identification} for the given {@link StreamID}.  This only works
+   * for top level streams as child streams donot have associated {@link Match}es.
    *
    * @param streamId a {@link StreamID} to find, cannot be null
-   * @return a {@link Map} containing all found {@link Identifier}s, never null but can be empty
+   * @return a {@link Optional} containing a {@link Identification}, never null but can be empty
    */
-  Map<Identifier, Match> findIdentifications(StreamID streamId);
+  Optional<Identification> findIdentification(StreamID streamId);
 
   /**
    * Finds all {@link BasicStream}s matching the given {@link Identifier}.  This
@@ -62,6 +61,5 @@ public interface BasicStreamStore {
   Optional<StreamID> findParentId(StreamID streamId);
 
   StreamSource findStreamSource(StreamID streamId);
-  Map<BasicStream, Map<Identifier, Match>> findIdentifiersByStreams(MediaType type, String tag);
   List<BasicStream> findNewest(int maximum);
 }

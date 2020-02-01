@@ -5,6 +5,7 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.State;
 import hs.mediasystem.domain.work.StreamMetaData;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
@@ -57,7 +58,7 @@ public class RecommendationService {
     Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
     boolean watched = state.isConsumed();
 
-    return getBestIdentifier(streamId)
+    return getIdentifier(streamId)
       .flatMap(descriptorStore::find)
       .map(descriptor -> new Recommendation(stream.getAttributes().getCreationTime(), work, null, descriptor, streamId, length, position, watched));
   }
@@ -82,7 +83,7 @@ public class RecommendationService {
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
     boolean watched = state.isConsumed();
 
-    return getBestIdentifier(streamId).flatMap(descriptorStore::find).map(descriptor -> {
+    return getIdentifier(streamId).flatMap(descriptorStore::find).map(descriptor -> {
       if(watched) {
         // TODO Must be a movie, find collection for "next"
       }
@@ -105,7 +106,7 @@ public class RecommendationService {
     Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
-    return getBestIdentifier(parentId).flatMap(
+    return getIdentifier(parentId).flatMap(
       identifier -> descriptorStore.find(identifier).map(Serie.class::cast).map(serie -> {
         // Stream(Attributes) to Episode
         List<Episode> episodes = serieHelper.findChildDescriptors(serie, stream.getAttributes().getAttributes());
@@ -136,7 +137,7 @@ public class RecommendationService {
     );
   }
 
-  private Optional<Identifier> getBestIdentifier(StreamID streamId) {  // TODO use a specific type of identifier preferably?
-    return streamStore.findIdentifications(streamId).keySet().stream().findFirst();
+  private Optional<Identifier> getIdentifier(StreamID streamId) {
+    return streamStore.findIdentification(streamId).map(Identification::getIdentifier);
   }
 }

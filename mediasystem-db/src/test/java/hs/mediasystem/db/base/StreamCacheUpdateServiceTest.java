@@ -113,7 +113,7 @@ public class StreamCacheUpdateServiceTest {
     when(streamStore.findByImportSourceId(1)).thenReturn(new HashMap<>(Map.of(
       new StreamID(20), basicStream(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
     )));
-    when(streamStore.findIdentifications(new StreamID(20))).thenReturn(Map.of(new Identifier(MOVIE_DATASOURCE, "10001"), MATCH));
+    when(streamStore.findIdentification(new StreamID(20))).thenReturn(Optional.of(new Identification(new Identifier(MOVIE_DATASOURCE, "10001"), MATCH)));
 
     BasicStream stream1 = basicStream(20, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica Renamed");
 

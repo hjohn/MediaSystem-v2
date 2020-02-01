@@ -1,27 +1,24 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
 public class IdentifiedStream {
   private final BasicStream stream;
-  private final Map<Identifier, Match> matches;
+  private final Optional<Identification> identification;
 
-  public IdentifiedStream(BasicStream stream, Map<Identifier, Match> matches) {
+  public IdentifiedStream(BasicStream stream, Identification identification) {
     this.stream = stream;
-    this.matches = Collections.unmodifiableMap(new HashMap<>(matches));
+    this.identification = Optional.ofNullable(identification);
   }
 
   public BasicStream getStream() {
     return stream;
   }
 
-  public Map<Identifier, Match> getMatches() {
-    return matches;
+  public Optional<Identification> getIdentification() {
+    return identification;
   }
 }
