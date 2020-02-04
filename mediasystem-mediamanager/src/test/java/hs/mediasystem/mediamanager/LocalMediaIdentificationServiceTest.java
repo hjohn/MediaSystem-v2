@@ -95,7 +95,7 @@ public class LocalMediaIdentificationServiceTest {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier1 = new Identifier(DATA_SOURCE_1, "12345");
     Identifier identifier2 = new Identifier(DATA_SOURCE_2, "12345");
-    Match match = new Match(MatchType.ID, 1.0, Instant.now());
+    Match match = new Match(MatchType.ID, 1.0f, Instant.now());
     BasicStream stream = createMovie("file://parent/test", attributes);
 
     when(idServiceForDS1.identify(eq(stream))).thenReturn(Map.of(stream.getId(), new Identification(identifier1, match)));
@@ -137,7 +137,7 @@ public class LocalMediaIdentificationServiceTest {
   public void reindentifyShouldHandleQueryException() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
-    Match match = new Match(MatchType.ID, 1.0, Instant.now());
+    Match match = new Match(MatchType.ID, 1.0f, Instant.now());
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
     BasicStream stream = createMovie("file://parent/test", attributes);

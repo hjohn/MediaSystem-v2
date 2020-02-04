@@ -41,10 +41,10 @@ public class Match {
   }
 
   private final MatchType matchType;
-  private final double matchAccuracy;
+  private final float matchAccuracy;
   private final Instant creationTime;
 
-  public Match(MatchType matchType, double matchAccuracy, Instant creationTime) {
+  public Match(MatchType matchType, float matchAccuracy, Instant creationTime) {
     if(matchType == null) {
       throw new IllegalArgumentException("matchType cannot be null");
     }
@@ -64,7 +64,7 @@ public class Match {
     return matchType;
   }
 
-  public double getMatchAccuracy() {
+  public float getMatchAccuracy() {
     return matchAccuracy;
   }
 

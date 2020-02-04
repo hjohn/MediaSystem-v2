@@ -48,7 +48,7 @@ public class StreamCacheUpdateServiceTest {
   private final String allowedDataSource = "TMDB";
 
   private static final DataSource MOVIE_DATASOURCE = DataSource.instance(MediaType.of("MOVIE") ,"TMDB");
-  private static final Match MATCH = new Match(MatchType.NAME, 1.0, Instant.now());
+  private static final Match MATCH = new Match(MatchType.NAME, 1.0f, Instant.now());
   private static final Movie MOVIE = Movies.create();
 
   @BeforeEach

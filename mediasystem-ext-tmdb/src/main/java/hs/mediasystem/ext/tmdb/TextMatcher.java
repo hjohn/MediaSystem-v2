@@ -16,7 +16,7 @@ public class TextMatcher {
     Integer movieYear = extractYear(releaseDate);
 
     MatchType nameMatchType = MatchType.NAME;
-    double score = WeightedNgramDistance.calculate(nodeTitle.toLowerCase(), titleToMatch.toLowerCase());
+    float score = (float)WeightedNgramDistance.calculate(nodeTitle.toLowerCase(), titleToMatch.toLowerCase());
 
     if(year != null && movieYear != null) {
       if(year.equals(movieYear)) {
@@ -70,9 +70,9 @@ public class TextMatcher {
     private final MatchType type;
     private final String id;
     private final String name;
-    private final double score;
+    private final float score;
 
-    Match(LocalDate releaseDate, MatchType matchType, String id, String name, double score) {
+    Match(LocalDate releaseDate, MatchType matchType, String id, String name, float score) {
       this.releaseDate = releaseDate;
       this.type = matchType;
       this.id = id;
@@ -88,7 +88,7 @@ public class TextMatcher {
       return type;
     }
 
-    public double getScore() {
+    public float getScore() {
       return score;
     }
 

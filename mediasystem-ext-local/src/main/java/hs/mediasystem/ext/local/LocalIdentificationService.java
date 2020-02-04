@@ -27,7 +27,7 @@ public class LocalIdentificationService extends AbstractIdentificationService {
   public Map<StreamID, Identification> identify(BasicStream stream) {
     return Map.of(
       stream.getId(),
-      new Identification(new ProductionIdentifier(SERIE, "" + stream.getId().asInt()), new Match(MatchType.MANUAL, 1.0, Instant.now()))
+      new Identification(new ProductionIdentifier(SERIE, "" + stream.getId().asInt()), new Match(MatchType.MANUAL, 1.0f, Instant.now()))
     );
   }
 }

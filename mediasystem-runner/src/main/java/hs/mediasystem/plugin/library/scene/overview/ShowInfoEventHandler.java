@@ -261,7 +261,7 @@ public class ShowInfoEventHandler {
     builder.append(match.getMatchType());
 
     if(match.getMatchType() == MatchType.NAME || match.getMatchType() == MatchType.NAME_AND_RELEASE_DATE) {
-      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(match.getMatchAccuracy() * 100) + "% match)");
+      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(match.getMatchAccuracy() * 100.0) + "% match)");
     }
 
     builder.append(" at ");
