@@ -26,9 +26,13 @@ public class Series {
   }
 
   public static Serie create(List<Episode> episodes) {
+    return create(new ProductionIdentifier(DataSource.instance(MediaType.of("SERIE"), "TMDB"), "12345"), "Charmed", episodes);
+  }
+
+  public static Serie create(ProductionIdentifier identifier, String title, List<Episode> episodes) {
     return new Serie(
-      new ProductionIdentifier(DataSource.instance(MediaType.of("SERIE"), "TMDB"), "12345"),
-      new Details("Charmed", "Power of 3", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
+      identifier,
+      new Details(title, "Power of 3", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
       new Reception(8, 12345),
       Arrays.asList("en"),
       Arrays.asList("Action", "Science-Fiction"),

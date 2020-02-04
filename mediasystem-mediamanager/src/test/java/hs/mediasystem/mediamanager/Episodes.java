@@ -34,9 +34,13 @@ public class Episodes {
   }
 
   public static Episode create(EpisodeIdentifier identifier, int season, int episodeNumber) {
+    return create(identifier, "The Nightwatch", season, episodeNumber);
+  }
+
+  public static Episode create(EpisodeIdentifier identifier, String title, int season, int episodeNumber) {
     return new Episode(
       identifier,
-      new Details("The Nightwatch", "Stuff", LocalDate.of(2012, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
+      new Details(title, "Stuff", LocalDate.of(2012, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
       new Reception(8, 12345),
       Duration.ofMinutes(40),
       season,

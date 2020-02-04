@@ -22,9 +22,13 @@ public class Movies {
   }
 
   public static Movie create(ProductionIdentifier identifier) {
+    return create(identifier, "The Terminator");
+  }
+
+  public static Movie create(ProductionIdentifier identifier, String title) {
     return new Movie(
       identifier,
-      new Details("The Terminator", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
+      new Details(title, "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
       new Reception(8, 12345),
       Duration.ofHours(2),
       Arrays.asList("en"),
