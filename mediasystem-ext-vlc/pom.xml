@@ -22,11 +22,6 @@
       <version>2.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>1</version>
-    </dependency>
-    <dependency>
       <groupId>uk.co.caprica</groupId>
       <artifactId>vlcj</artifactId>
       <version>3.9.0</version>
@@ -52,44 +47,25 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
         </configuration>
       </plugin>
-
-      <plugin>
-        <groupId>com.googlecode.addjars-maven-plugin</groupId>
-        <artifactId>addjars-maven-plugin</artifactId>
-        <version>1.0.2</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>add-jars</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>${basedir}/lib</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.2</version>
         <executions>
           <execution>
             <id>main</id>
             <configuration>
               <artifactSet>
                 <includes>
-                  <include>*</include>
+                  <include>hs.mediasystem:mediasystem-ext-vlc</include>
+                  <include>uk.co.caprica:*</include>
+                  <include>net.java.dev.jna:*</include>
+                  <include>org.slf4j:*</include>
                 </includes>
               </artifactSet>
             </configuration>
@@ -104,8 +80,13 @@
               <finalName>dependencies-only</finalName>
               <artifactSet>
                 <excludes>
-                  <exclude>hs.mediasystem:*</exclude>
+                  <exclude>hs.mediasystem:mediasystem-ext-vlc</exclude>
                 </excludes>
+                <includes>
+                  <include>uk.co.caprica:*</include>
+                  <include>net.java.dev.jna:*</include>
+                  <include>org.slf4j:*</include>
+                </includes>
               </artifactSet>
             </configuration>
             <phase>package</phase>
