@@ -12,7 +12,7 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
@@ -139,7 +139,7 @@ public class DatabaseIT {
 
     @Override
     public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(MOVIE_DS, "T" + streamable.getId().asInt())), new Match(MatchType.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+      return Optional.of(new Identification(List.of(new ProductionIdentifier(MOVIE_DS, "T" + streamable.getId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
@@ -150,7 +150,7 @@ public class DatabaseIT {
 
     @Override
     public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE_DS, "S" + streamable.getId().asInt())), new Match(MatchType.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+      return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE_DS, "S" + streamable.getId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
@@ -161,7 +161,7 @@ public class DatabaseIT {
 
     @Override
     public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(EPISODE_DS, "S4/E" + streamable.getId().asInt())), new Match(MatchType.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+      return Optional.of(new Identification(List.of(new ProductionIdentifier(EPISODE_DS, "S4/E" + streamable.getId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 

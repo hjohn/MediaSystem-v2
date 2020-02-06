@@ -3,7 +3,7 @@ package hs.mediasystem.ext.local;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
@@ -26,6 +26,6 @@ public class LocalIdentificationService extends AbstractIdentificationService {
 
   @Override
   public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-    return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE, "" + streamable.getId().asInt())), new Match(MatchType.MANUAL, 1.0f, Instant.now())));
+    return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE, "" + streamable.getId().asInt())), new Match(Type.MANUAL, 1.0f, Instant.now())));
   }
 }

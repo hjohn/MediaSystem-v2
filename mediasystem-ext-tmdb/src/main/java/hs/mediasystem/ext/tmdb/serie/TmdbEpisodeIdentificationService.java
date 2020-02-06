@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.tmdb.serie;
 
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
@@ -46,7 +46,7 @@ public class TmdbEpisodeIdentificationService extends AbstractIdentificationServ
       List<Episode> list = attemptMatch(serie, sequence);  // This will also match specials of the TMDB supported form, with season 0 and an episode number
 
       if(!list.isEmpty()) {
-        return Optional.of(new Identification(list.stream().map(Episode::getIdentifier).collect(Collectors.toList()), new Match(MatchType.DERIVED, 1.0f, Instant.now())));
+        return Optional.of(new Identification(list.stream().map(Episode::getIdentifier).collect(Collectors.toList()), new Match(Type.DERIVED, 1.0f, Instant.now())));
       }
     }
 
@@ -54,7 +54,7 @@ public class TmdbEpisodeIdentificationService extends AbstractIdentificationServ
       Tuple2<Float, Episode> match = attemptSpecialsMatch(serie, childAttributes.get(Attribute.TITLE), childAttributes.get(Attribute.SUBTITLE), sequence);
 
       if(match != null) {
-        return Optional.of(new Identification(Collections.singletonList(match.b.getIdentifier()), new Match(MatchType.NAME, match.a, Instant.now())));
+        return Optional.of(new Identification(Collections.singletonList(match.b.getIdentifier()), new Match(Type.NAME, match.a, Instant.now())));
       }
     }
 

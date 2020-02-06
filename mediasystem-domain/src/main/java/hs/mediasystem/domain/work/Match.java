@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class Match {
 
-  public enum MatchType {  // FIXME give simpler names
+  public enum Type {
 
     /**
      * Matched manually by user.
@@ -40,32 +40,32 @@ public class Match {
     NAME
   }
 
-  private final MatchType matchType;
-  private final float matchAccuracy;
+  private final Type type;
+  private final float accuracy;
   private final Instant creationTime;
 
-  public Match(MatchType matchType, float matchAccuracy, Instant creationTime) {
-    if(matchType == null) {
-      throw new IllegalArgumentException("matchType cannot be null");
+  public Match(Type type, float accuracy, Instant creationTime) {
+    if(type == null) {
+      throw new IllegalArgumentException("type cannot be null");
     }
-    if(matchAccuracy < 0 || matchAccuracy > 1) {
-      throw new IllegalArgumentException("matchAccuracy must be between 0 and 1.0: " + matchAccuracy);
+    if(accuracy < 0 || accuracy > 1) {
+      throw new IllegalArgumentException("accuracy must be between 0 and 1.0: " + accuracy);
     }
     if(creationTime == null) {
       throw new IllegalArgumentException("creationTime cannot be null");
     }
 
-    this.matchType = matchType;
-    this.matchAccuracy = matchAccuracy;
+    this.type = type;
+    this.accuracy = accuracy;
     this.creationTime = creationTime;
   }
 
-  public MatchType getMatchType() {
-    return matchType;
+  public Type getType() {
+    return type;
   }
 
-  public float getMatchAccuracy() {
-    return matchAccuracy;
+  public float getAccuracy() {
+    return accuracy;
   }
 
   public Instant getCreationTime() {
@@ -74,7 +74,7 @@ public class Match {
 
   @Override
   public int hashCode() {
-    return Objects.hash(matchType, matchAccuracy, creationTime);
+    return Objects.hash(type, accuracy, creationTime);
   }
 
   @Override
@@ -88,10 +88,10 @@ public class Match {
 
     Match other = (Match)obj;
 
-    if(Double.doubleToLongBits(matchAccuracy) != Double.doubleToLongBits(other.matchAccuracy)) {
+    if(Double.doubleToLongBits(accuracy) != Double.doubleToLongBits(other.accuracy)) {
       return false;
     }
-    if(matchType != other.matchType) {
+    if(type != other.type) {
       return false;
     }
     if(creationTime != other.creationTime) {
@@ -103,6 +103,6 @@ public class Match {
 
   @Override
   public String toString() {
-    return "Match[" + matchType + " @ " + matchAccuracy * 100 + "%]";
+    return "Match[" + type + " @ " + accuracy * 100 + "%]";
   }
 }

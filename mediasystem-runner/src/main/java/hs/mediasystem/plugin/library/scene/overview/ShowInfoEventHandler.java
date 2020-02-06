@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.work.AudioStream;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Snapshot;
@@ -258,10 +258,10 @@ public class ShowInfoEventHandler {
   private static String toText(Match match) {
     StringBuilder builder = new StringBuilder();
 
-    builder.append(match.getMatchType());
+    builder.append(match.getType());
 
-    if(match.getMatchType() == MatchType.NAME || match.getMatchType() == MatchType.NAME_AND_RELEASE_DATE) {
-      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(match.getMatchAccuracy() * 100.0) + "% match)");
+    if(match.getType() == Type.NAME || match.getType() == Type.NAME_AND_RELEASE_DATE) {
+      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(match.getAccuracy() * 100.0) + "% match)");
     }
 
     builder.append(" at ");

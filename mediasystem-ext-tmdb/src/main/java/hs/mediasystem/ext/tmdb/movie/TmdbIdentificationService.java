@@ -3,7 +3,7 @@ package hs.mediasystem.ext.tmdb.movie;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
@@ -53,7 +53,7 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
 
     return StreamSupport.stream(node.path("movie_results").spliterator(), false)
       .findFirst()
-      .map(n -> new Identification(List.of(new Identifier(DataSources.TMDB_MOVIE, n.get("id").asText())), new Match(MatchType.ID, 1, Instant.now())));
+      .map(n -> new Identification(List.of(new Identifier(DataSources.TMDB_MOVIE, n.get("id").asText())), new Match(Type.ID, 1, Instant.now())));
   }
 
   private Optional<Identification> identifyByStream(Attributes attributes) {

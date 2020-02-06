@@ -6,7 +6,7 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
@@ -94,7 +94,7 @@ public class LocalMediaIdentificationServiceTest {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier1 = new Identifier(DATA_SOURCE_1, "12345");
     Identifier identifier2 = new Identifier(DATA_SOURCE_2, "12345");
-    Match match = new Match(MatchType.ID, 1.0f, Instant.now());
+    Match match = new Match(Type.ID, 1.0f, Instant.now());
     Streamable streamable = createMovie("file://parent/test", attributes);
 
     when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(identifier1), match)));
@@ -135,7 +135,7 @@ public class LocalMediaIdentificationServiceTest {
   public void reindentifyShouldHandleQueryException() {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
-    Match match = new Match(MatchType.ID, 1.0f, Instant.now());
+    Match match = new Match(Type.ID, 1.0f, Instant.now());
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
     Streamable streamable = createMovie("file://parent/test", attributes);

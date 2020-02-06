@@ -12,7 +12,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
@@ -45,7 +45,7 @@ public class CachedStreamCodec {
     Identification identification = record.getIdentifiers() == null || record.getIdentifiers().isEmpty() ? null
       : new Identification(
           record.getIdentifiers().stream().map(Identifier::fromString).collect(Collectors.toList()),
-          new Match(MatchType.valueOf(record.getMatchType()), record.getMatchAccuracy(), Instant.ofEpochMilli(record.getMatchMillis()))
+          new Match(Type.valueOf(record.getMatchType()), record.getMatchAccuracy(), Instant.ofEpochMilli(record.getMatchMillis()))
         );
 
     return new CachedStream(
@@ -72,8 +72,8 @@ public class CachedStreamCodec {
 
       stream.getIdentification().ifPresent(i -> {
         record.setIdentifiers(i.getIdentifiers().stream().map(Object::toString).collect(Collectors.toList()));
-        record.setMatchType(i.getMatch().getMatchType().toString());
-        record.setMatchAccuracy(i.getMatch().getMatchAccuracy());
+        record.setMatchType(i.getMatch().getType().toString());
+        record.setMatchAccuracy(i.getMatch().getAccuracy());
         record.setMatchMillis(i.getMatch().getCreationTime().toEpochMilli());
       });
 

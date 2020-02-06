@@ -1,6 +1,6 @@
 package hs.mediasystem.ext.tmdb;
 
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.util.WeightedNgramDistance;
 
 import java.time.LocalDate;
@@ -15,17 +15,17 @@ public class TextMatcher {
   public static Match createMatch(LocalDate releaseDate, String titleToMatch, Integer year, String nodeTitle, String id) {
     Integer movieYear = extractYear(releaseDate);
 
-    MatchType nameMatchType = MatchType.NAME;
+    Type nameMatchType = Type.NAME;
     float score = (float)WeightedNgramDistance.calculate(nodeTitle.toLowerCase(), titleToMatch.toLowerCase());
 
     if(year != null && movieYear != null) {
       if(year.equals(movieYear)) {
-        nameMatchType = MatchType.NAME_AND_RELEASE_DATE;
+        nameMatchType = Type.NAME_AND_RELEASE_DATE;
         score *= MATCH_NAME_SCORE;
         score += MATCH_YEAR_SCORE;
       }
       else if(Math.abs(year - movieYear) == 1) {
-        nameMatchType = MatchType.NAME_AND_RELEASE_DATE;
+        nameMatchType = Type.NAME_AND_RELEASE_DATE;
         score *= MATCH_NAME_SCORE;
         score += MATCH_ADJACENT_YEAR_SCORE;
       }
@@ -67,14 +67,14 @@ public class TextMatcher {
 
   public static class Match {
     private final LocalDate releaseDate;
-    private final MatchType type;
+    private final Type type;
     private final String id;
     private final String name;
     private final float score;
 
-    Match(LocalDate releaseDate, MatchType matchType, String id, String name, float score) {
+    Match(LocalDate releaseDate, Type type, String id, String name, float score) {
       this.releaseDate = releaseDate;
-      this.type = matchType;
+      this.type = type;
       this.id = id;
       this.name = name;
       this.score = score;
@@ -84,7 +84,7 @@ public class TextMatcher {
       return id;
     }
 
-    public MatchType getType() {
+    public Type getType() {
       return type;
     }
 
@@ -93,7 +93,7 @@ public class TextMatcher {
     }
 
     public double getNormalizedScore() {
-      return type == MatchType.NAME ? score * 0.6 : score;
+      return type == Type.NAME ? score * 0.6 : score;
     }
 
     @Override

@@ -4,7 +4,7 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
@@ -47,7 +47,7 @@ public class StreamCacheUpdateServiceTest {
   private final String allowedDataSource = "TMDB";
 
   private static final DataSource MOVIE_DATASOURCE = DataSource.instance(MediaType.of("MOVIE") ,"TMDB");
-  private static final Match MATCH = new Match(MatchType.NAME, 1.0f, Instant.now());
+  private static final Match MATCH = new Match(Type.NAME, 1.0f, Instant.now());
   private static final Movie MOVIE = Movies.create();
 
   @BeforeEach
