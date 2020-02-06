@@ -28,10 +28,10 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
@@ -39,8 +39,6 @@ import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.mediamanager.DescriptorStore;
-import hs.mediasystem.mediamanager.LocalSerie;
-import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Tuple;
 import hs.mediasystem.util.Tuple.Tuple2;
 
@@ -151,10 +149,10 @@ public class WorkService {
         return findChildren(new StreamID(Integer.parseInt(workId.getKey())));
       }
 
-      Set<BasicStream> streams = streamStore.findStreams(toIdentifier(workId));
+      Set<Streamable> streamables = streamStore.findStreams(toIdentifier(workId));
 
-      if(!streams.isEmpty()) {
-        return findChildren(streams.stream().findFirst().get().getId());  // TODO if multiple Series have the same identifier, this picks one at random
+      if(!streamables.isEmpty()) {
+        return findChildren(streamables.stream().findFirst().get().getId());  // TODO if multiple Series have the same identifier, this picks one at random
       }
 
       return findChildren((ProductionIdentifier)toIdentifier(workId));
@@ -172,14 +170,12 @@ public class WorkService {
   // as extras!
   private synchronized List<Work> findChildren(StreamID streamId) {
     Serie serie = (Serie)findBestDescriptor(streamId).map(t -> t.a).get();
-    LocalSerie localSerie = serieHelper.toLocalSerie(serie);
-
-    List<Episode> episodes = localSerie.getSeasons().stream()
+    List<Episode> episodes = serie.getSeasons().stream()
       .map(Season::getEpisodes)
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
 
-    episodes.addAll(localSerie.getExtras());
+    episodes.addAll(serieHelper.createExtras(serie, streamId));
 
     return episodes.stream()
       .map(ep -> toWork(ep, serie))
@@ -250,7 +246,7 @@ public class WorkService {
 
   Work toWork(MediaDescriptor descriptor, MediaDescriptor parentDescriptor) {
     if(parentDescriptor != null) {
-      List<BasicStream> childStreams = serieHelper.findChildStreams(parentDescriptor.getIdentifier(), descriptor.getIdentifier());
+      Set<Streamable> childStreams = streamStore.findStreams(descriptor.getIdentifier());
 
       /*
        * When multiple streams are returned for an Episode, there are two cases:
@@ -262,7 +258,7 @@ public class WorkService {
        */
 
       List<MediaStream> mediaStreams = childStreams.stream()
-        .map(bs -> toMediaStream(bs, null))  // TODO Might want to provide Identification here based on parent
+        .map(ms -> toMediaStream(ms, null))  // TODO Might want to provide Identification here based on parent
         .collect(Collectors.toList());
 
       Episode ep = (Episode)descriptor;
@@ -285,7 +281,7 @@ public class WorkService {
     }
 
     List<MediaStream> mediaStreams = streamStore.findStreams(descriptor.getIdentifier()).stream()
-      .map(bs -> toMediaStream(bs, streamStore.findIdentification(bs.getId()).map(Identification::getMatch).orElse(null)))
+      .map(ms -> toMediaStream(ms, streamStore.findIdentification(ms.getId()).map(Identification::getMatch).orElse(null)))
       .collect(Collectors.toList());
 
     return new Work(
@@ -315,27 +311,10 @@ public class WorkService {
     return null;
   }
 
-  private State toState(BasicStream bs) {
-    StreamID streamId = bs.getId();
+  private State toState(Streamable streamable) {
+    StreamID streamId = streamable.getId();
 
-    if(bs.getType().equals(SERIE)) {
-      Instant lastWatchedTime = null;
-      int consumed = 0;
-
-      for(BasicStream childStream : bs.getChildren()) {
-        Instant lwt = stateService.getLastWatchedTime(childStream.getId());
-
-        if(lastWatchedTime == null || (lwt != null && lwt.isAfter(lastWatchedTime))) {
-          lastWatchedTime = lwt;
-        }
-
-        if(stateService.isWatched(childStream.getId())) {
-          consumed++;
-        }
-      }
-
-      return new State(lastWatchedTime, consumed >= bs.getChildren().size(), Duration.ZERO);
-    }
+    // TODO for Series, need to compute last watched time and watched status based on its children
 
     Instant lastWatchedTime = stateService.getLastWatchedTime(streamId);
     boolean watched = stateService.isWatched(streamId);
@@ -344,10 +323,10 @@ public class WorkService {
     return new State(lastWatchedTime, watched, resumePosition);
   }
 
-  private MediaStream toMediaStream(BasicStream bs, Match match) {
-    StreamID streamId = bs.getId();
+  private MediaStream toMediaStream(Streamable streamable, Match match) {
+    StreamID streamId = streamable.getId();
     StreamID parentId = streamStore.findParentId(streamId).orElse(null);
-    State state = toState(bs);
+    State state = toState(streamable);
     StreamMetaData md = metaDataStore.find(streamId).orElse(null);
     int totalDuration = stateService.getTotalDuration(streamId);
 
@@ -360,17 +339,17 @@ public class WorkService {
     return new MediaStream(
       streamId,
       parentId,
-      new StreamAttributes(bs.getUri(), streamStore.findCreationTime(streamId).orElseThrow(), Instant.ofEpochMilli(streamPrint.getLastModificationTime()), streamPrint.getSize(), bs.getAttributes()),
+      new StreamAttributes(streamable.getUri(), streamStore.findCreationTime(streamId).orElseThrow(), Instant.ofEpochMilli(streamPrint.getLastModificationTime()), streamPrint.getSize(), streamable.getAttributes()),
       state,
       md,
       match
     );
   }
 
-  Work toWork(BasicStream bs) {
-    StreamID streamId = bs.getId();
+  Work toWork(Streamable streamable) {
+    StreamID streamId = streamable.getId();
     Optional<Tuple2<MediaDescriptor, Match>> tuple = findBestDescriptor(streamId);
-    State state = toState(bs);
+    State state = toState(streamable);
 
     List<MediaStream> mediaStreams = tuple.map(t -> t.a)
       .map(MediaDescriptor::getIdentifier)
@@ -382,10 +361,10 @@ public class WorkService {
 
     // TODO need to find a descriptor directly in DescriptorStore even for Episodes...
     if(mediaStreams == null || mediaStreams.isEmpty()) {
-      mediaStreams = List.of(toMediaStream(bs, tuple.map(t -> t.b).orElse(null)));
+      mediaStreams = List.of(toMediaStream(streamable, tuple.map(t -> t.b).orElse(null)));
     }
 
-    MediaDescriptor descriptor = tuple.map(t -> t.a).orElseGet(() -> createMinimalDescriptor(bs));
+    MediaDescriptor descriptor = tuple.map(t -> t.a).orElseGet(() -> createMinimalDescriptor(streamable));
 
     return new Work(
       descriptor,
@@ -395,10 +374,10 @@ public class WorkService {
     );
   }
 
-  private MediaDescriptor createMinimalDescriptor(BasicStream basicStream) {
+  private MediaDescriptor createMinimalDescriptor(Streamable streamable) {
     return new Production(
-      new ProductionIdentifier(DataSource.instance(basicStream.getType(), DEFAULT_DATA_SOURCE_NAME), "" + basicStream.getId().asInt()),
-      serieHelper.createMinimalDetails(basicStream),
+      new ProductionIdentifier(DataSource.instance(streamable.getType(), DEFAULT_DATA_SOURCE_NAME), "" + streamable.getId().asInt()),
+      serieHelper.createMinimalDetails(streamable),
       null,
       List.of(),
       List.of(),
@@ -408,35 +387,14 @@ public class WorkService {
   }
 
   private Optional<Tuple2<MediaDescriptor, Match>> findBestDescriptor(StreamID streamId) {
-    StreamID parentId = streamStore.findParentId(streamId).orElse(null);
 
-    if(parentId != null) {
-      return findBestIdentification(parentId)
-        .flatMap(e -> identifierToEpisodeIdentification(e, streamStore.findStream(streamId).get().getAttributes()));
-    }
+    /*
+     * Note: this uses the first identifier for a Stream (and thus the first descriptor).
+     * A Stream can have multiple identifiers when a Stream spans multiple episodes,
+     * but the Enrichment Data Source has them listed separately.
+     */
 
-    return findBestIdentification(streamId)
-      .flatMap(this::identifierToProductioneIdentification);
-  }
-
-  private Optional<Identification> findBestIdentification(StreamID streamId) {
-    return streamStore.findIdentification(streamId);
-  }
-
-  private Optional<Tuple2<MediaDescriptor, Match>> identifierToProductioneIdentification(Identification identification) {
-    return descriptorStore.find(identification.getIdentifier())
-      .map(ep -> Tuple.of(ep, identification.getMatch()));
-  }
-
-  private Optional<Tuple2<MediaDescriptor, Match>> identifierToEpisodeIdentification(Identification identification, Attributes childAttributes) {
-    return descriptorStore.find(identification.getIdentifier())
-      .filter(Serie.class::isInstance)
-      .map(Serie.class::cast)
-      .map(s -> serieHelper.findChildDescriptors(s, childAttributes))
-      .orElse(List.of())
-      .stream()
-      .findFirst()  // If multiple episodes are found, a reduce could be done (2 episodes matching a single stream)
-      .map(ep -> Tuple.of(ep, identification.getMatch()));
+    return streamStore.findIdentification(streamId).flatMap(identification -> descriptorStore.find(identification.getPrimaryIdentifier()).map(d -> Tuple.of(d,identification.getMatch())));
   }
 
   private static WorkId toWorkId(Identifier identifier) {

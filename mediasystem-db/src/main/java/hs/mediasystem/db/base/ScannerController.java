@@ -1,6 +1,6 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
@@ -10,8 +10,10 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Singleton
@@ -21,10 +23,12 @@ public class ScannerController {
 
   @Inject private StreamCacheUpdateService updateService;
   @Inject private ImportSourceProvider importSourceProvider;
+  @Inject @Nullable @Named("scanners.initialDelay") private Long initialDelay = 15L;  // After 15 seconds start scans
+  @Inject @Nullable @Named("scanners.delay") private Long delay = 5 * 60L;  // Time in between scans: 5 minutes
 
   @PostConstruct
   private void postConstruct() {
-    EXECUTOR.scheduleWithFixedDelay(this::scanAll, 15, 5 * 60, TimeUnit.SECONDS);  // After 15 seconds, start scans with pauses of 5 minutes
+    EXECUTOR.scheduleWithFixedDelay(this::scanAll, initialDelay, delay, TimeUnit.SECONDS);
   }
 
   public void scanNow() {
@@ -43,10 +47,10 @@ public class ScannerController {
       String scannerName = source.getScanner().getClass().getSimpleName();
 
       try {
-        List<Exceptional<List<BasicStream>>> results = source.getScanner().scan(source.getRoots());
+        List<Exceptional<List<Streamable>>> results = source.getScanner().scan(source.getRoots());
 
         for(int i = 0; i < results.size(); i++) {
-          Exceptional<List<BasicStream>> result = results.get(i);
+          Exceptional<List<Streamable>> result = results.get(i);
 
           if(result.isException()) {
             LOGGER.warning(scannerName + " failed while scanning '" + source.getRoots().get(i) + "' with: " + result.getException());

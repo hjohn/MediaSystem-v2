@@ -9,10 +9,10 @@ import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
-import hs.mediasystem.mediamanager.BasicStreamStore;
+import hs.mediasystem.mediamanager.StreamableStore;
 import hs.mediasystem.mediamanager.DescriptorStore;
 
 import java.time.Duration;
@@ -30,9 +30,8 @@ public class RecommendationService {
 
   @Inject private WorksService worksService;
   @Inject private WorkService workService;
-  @Inject private BasicStreamStore streamStore;  // Only stores top level items, not children
+  @Inject private StreamableStore streamStore;
   @Inject private DescriptorStore descriptorStore;
-  @Inject private SerieHelper serieHelper;
 
   public List<Recommendation> findRecommendations(int maximum) {
     return worksService.findLastWatched(maximum * 2, null).stream()    // Find twice as much matched last watched Works, as Works that are consecutive will get filtered and only last one is added
@@ -108,14 +107,13 @@ public class RecommendationService {
 
     return getIdentifier(parentId).flatMap(
       identifier -> descriptorStore.find(identifier).map(Serie.class::cast).map(serie -> {
-        // Stream(Attributes) to Episode
-        List<Episode> episodes = serieHelper.findChildDescriptors(serie, stream.getAttributes().getAttributes());
+        Episode episode = (Episode)descriptorStore.find(work.getDescriptor().getIdentifier()).orElse(null);
 
-        if(!episodes.isEmpty()) {
+        if(episode != null) {
           if(watched) {
-            return serie.findNextEpisode(episodes.get(episodes.size() - 1))
-              .flatMap(nextEpisode -> serieHelper.findChildStreams(identifier, nextEpisode.getIdentifier()).stream().findFirst()  // Episode to Stream
-                .map(BasicStream::getId)
+            return serie.findNextEpisode((Episode)descriptorStore.find(work.getDescriptor().getIdentifier()).orElse(null))
+              .flatMap(nextEpisode -> streamStore.findStreams(nextEpisode.getIdentifier()).stream().findFirst()  // Episode to Stream
+                .map(Streamable::getId)
                 .flatMap(workService::find)
                 .map(r -> {
                   if(!r.getState().isConsumed() && r.getState().getResumePosition().isZero()) {
@@ -128,7 +126,7 @@ public class RecommendationService {
               .orElse(null);
           }
           else if(!position.isZero()) {
-            return new Recommendation(lastWatchedTime, work, serie, episodes.get(0), streamId, length, position, false);
+            return new Recommendation(lastWatchedTime, work, serie, episode, streamId, length, position, false);
           }
         }
 
@@ -138,6 +136,6 @@ public class RecommendationService {
   }
 
   private Optional<Identifier> getIdentifier(StreamID streamId) {
-    return streamStore.findIdentification(streamId).map(Identification::getIdentifier);
+    return streamStore.findIdentification(streamId).map(Identification::getPrimaryIdentifier);
   }
 }

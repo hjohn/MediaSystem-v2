@@ -20,9 +20,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
-import hs.mediasystem.mediamanager.BasicStreamStore;
+import hs.mediasystem.mediamanager.StreamableStore;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.Throwables;
 
@@ -58,7 +58,7 @@ public class LocalQueryService extends AbstractQueryService {
     .registerModule(new JavaTimeModule())
     .registerModule(new ParameterNamesModule(Mode.PROPERTIES));
 
-  @Inject private BasicStreamStore streamStore;
+  @Inject private StreamableStore streamStore;
 
   public LocalQueryService() {
     super(SERIE);
@@ -67,10 +67,10 @@ public class LocalQueryService extends AbstractQueryService {
   @Override
   public Serie query(Identifier identifier) {
     StreamID streamId = new StreamID(Integer.parseInt(identifier.getId()));
-    BasicStream stream = streamStore.findStream(streamId).orElseThrow();
+    Streamable streamable = streamStore.findStream(streamId).orElseThrow();
     Map<Integer, List<Episode>> episodes = new HashMap<>();
 
-    for(BasicStream childStream : stream.getChildren()) {
+    for(Streamable childStream : streamStore.findChildren(streamId)) {
       Matcher matcher = PATTERN.matcher(childStream.getAttributes().get(Attribute.SEQUENCE, ""));
 
       if(matcher.matches()) {
@@ -108,16 +108,16 @@ public class LocalQueryService extends AbstractQueryService {
       e.getValue()
     )).collect(Collectors.toList());
 
-    Description description = loadDescription(stream);
+    Description description = loadDescription(streamable);
 
     return new Serie(
       (ProductionIdentifier)identifier,
       new Details(
-        description == null || description.getTitle() == null ? stream.getAttributes().get(Attribute.TITLE) : description.getTitle(),
+        description == null || description.getTitle() == null ? streamable.getAttributes().get(Attribute.TITLE) : description.getTitle(),
         description == null ? null : description.getDescription(),
         description == null ? null : description.getDate(),
-        new ImageURI(stream.getUri().toString() + "/cover.jpg"),
-        new ImageURI(stream.getUri().toString() + "/backdrop.jpg")
+        new ImageURI(streamable.getUri().toString() + "/cover.jpg"),
+        new ImageURI(streamable.getUri().toString() + "/backdrop.jpg")
       ),
       null,
       Collections.emptyList(),
@@ -131,8 +131,8 @@ public class LocalQueryService extends AbstractQueryService {
     );
   }
 
-  private static Description loadDescription(BasicStream stream) {
-    String urlText = stream.getUri().toString() + "/description.yaml";
+  private static Description loadDescription(Streamable streamable) {
+    String urlText = streamable.getUri().toString() + "/description.yaml";
 
     try {
       return OBJECT_MAPPER.readValue(new URL(urlText), Description.class);

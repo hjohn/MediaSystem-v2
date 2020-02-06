@@ -2,10 +2,10 @@ package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
@@ -20,7 +20,6 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -36,15 +35,15 @@ public class MoviesScanner implements Scanner {
   @Inject private StreamPrintProvider streamPrintProvider;
 
   @Override
-  public List<Exceptional<List<BasicStream>>> scan(List<Path> roots) {
-    List<Exceptional<List<BasicStream>>> rootResults = new ArrayList<>();
+  public List<Exceptional<List<Streamable>>> scan(List<Path> roots) {
+    List<Exceptional<List<Streamable>>> rootResults = new ArrayList<>();
 
     LOGGER.info("Scanning " + roots);
 
     for(Path root : roots) {
       try {
         List<Path> scanResults = new PathFinder(1).find(root);
-        List<BasicStream> results = new ArrayList<>();
+        List<Streamable> results = new ArrayList<>();
 
         WORKLOAD.start(scanResults.size());
 
@@ -72,7 +71,7 @@ public class MoviesScanner implements Scanner {
               Attribute.ID_PREFIX + "IMDB", imdbNumber
             );
 
-            results.add(new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), streamPrint.getId(), attributes, Collections.emptyList()));
+            results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), streamPrint.getId(), null, attributes));
           }
           catch(RuntimeException | IOException e) {
             LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
@@ -85,8 +84,6 @@ public class MoviesScanner implements Scanner {
         rootResults.add(Exceptional.of(results));
       }
       catch(RuntimeException | IOException e) {
-        LOGGER.warning("Exception while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
-
         WORKLOAD.reset();
 
         rootResults.add(Exceptional.ofException(e));

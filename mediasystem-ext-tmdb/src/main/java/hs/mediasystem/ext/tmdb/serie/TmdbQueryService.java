@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class TmdbQueryService extends AbstractQueryService {
   @Inject private TheMovieDatabase tmdb;
   @Inject private PersonRoles personRoles;

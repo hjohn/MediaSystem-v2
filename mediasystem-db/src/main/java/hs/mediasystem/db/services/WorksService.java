@@ -4,7 +4,7 @@ import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.db.base.StreamState;
 import hs.mediasystem.db.base.StreamStateProvider;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
 
@@ -39,7 +39,7 @@ public class WorksService {
 
   public synchronized List<Work> findNewest(int maximum) {
     return streamStore.findNewest(maximum).stream()
-      .map(BasicStream::getId)
+      .map(Streamable::getId)
       .map(workService::find)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());

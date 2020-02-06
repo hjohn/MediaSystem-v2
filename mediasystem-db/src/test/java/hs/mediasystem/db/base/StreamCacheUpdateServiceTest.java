@@ -9,7 +9,7 @@ import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
 import hs.mediasystem.mediamanager.MediaIdentification;
 import hs.mediasystem.mediamanager.Movies;
@@ -20,7 +20,6 @@ import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,12 +59,12 @@ public class StreamCacheUpdateServiceTest {
 
   @Test
   void shouldAddMedia() throws InterruptedException {
-    BasicStream stream1 = basicStream(1234, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
+    Streamable stream1 = streamable(1234, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
 
     when(streamStore.findStream(new StreamID(1234))).thenReturn(Optional.of(stream1));
-    when(identificationService.identify(stream1, allowedDataSource)).thenReturn(new MediaIdentification(
+    when(identificationService.identify(stream1, null, allowedDataSource)).thenReturn(new MediaIdentification(
       stream1,
-      Map.of(stream1.getId(), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH)),
+      new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH),
       MOVIE
     ));
 
@@ -76,21 +75,21 @@ public class StreamCacheUpdateServiceTest {
     Thread.sleep(100);  // Part of calls is async
 
     verify(streamStore).put(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
-    verify(streamStore).putIdentification(new StreamID(1234), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH));
+    verify(streamStore).putIdentification(new StreamID(1234), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
 
   @Test
   void shouldAddAndRemoveMedia() throws InterruptedException {
     when(streamStore.findByImportSourceId(1)).thenReturn(new HashMap<>(Map.of(
-      new StreamID(20), basicStream(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
+      new StreamID(20), streamable(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
     )));
 
-    BasicStream stream1 = basicStream(21, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica");
+    Streamable stream1 = streamable(21, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica");
 
-    when(identificationService.identify(stream1, allowedDataSource)).thenReturn(new MediaIdentification(
+    when(identificationService.identify(stream1, null, allowedDataSource)).thenReturn(new MediaIdentification(
       stream1,
-      Map.of(stream1.getId(), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH)),
+      new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH),
       MOVIE
     ));
 
@@ -104,23 +103,23 @@ public class StreamCacheUpdateServiceTest {
 
     verify(streamStore).put(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
     verify(streamStore).remove(new StreamID(20));
-    verify(streamStore).putIdentification(new StreamID(21), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH));
+    verify(streamStore).putIdentification(new StreamID(21), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
 
   @Test
   void shouldMergeExistingMediaWithoutDuplicateDataSources() throws InterruptedException {
     when(streamStore.findByImportSourceId(1)).thenReturn(new HashMap<>(Map.of(
-      new StreamID(20), basicStream(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
+      new StreamID(20), streamable(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
     )));
-    when(streamStore.findIdentification(new StreamID(20))).thenReturn(Optional.of(new Identification(new Identifier(MOVIE_DATASOURCE, "10001"), MATCH)));
+    when(streamStore.findIdentification(new StreamID(20))).thenReturn(Optional.of(new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10001")), MATCH)));
 
-    BasicStream stream1 = basicStream(20, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica Renamed");
+    Streamable stream1 = streamable(20, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica Renamed");
 
     // There already exists TMDB:10001 in store, now return TMDB:10000; only that one should be kept, as there should be no duplicate data sources in a record...
-    when(identificationService.identify(stream1, allowedDataSource)).thenReturn(new MediaIdentification(
+    when(identificationService.identify(stream1, null, allowedDataSource)).thenReturn(new MediaIdentification(
       stream1,
-      Map.of(stream1.getId(), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH)),
+      new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH),
       MOVIE
     ));
 
@@ -134,21 +133,21 @@ public class StreamCacheUpdateServiceTest {
 
     verify(streamStore).put(eq(1), argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
 //    verify(streamStore).remove(new StreamID(20));
-    verify(streamStore).putIdentification(new StreamID(20), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH));
+    verify(streamStore).putIdentification(new StreamID(20), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
 
   @Test
   public void shouldReplaceExistingMediaIfAttributesDiffer() throws InterruptedException {
     when(streamStore.findByImportSourceId(1)).thenReturn(new HashMap<>(Map.of(
-      new StreamID(123), basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
+      new StreamID(123), streamable(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica")
     )));
 
-    BasicStream stream1 = basicStream(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica v2");
+    Streamable stream1 = streamable(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica v2");
 
-    when(identificationService.identify(stream1, allowedDataSource)).thenReturn(new MediaIdentification(
+    when(identificationService.identify(stream1, null, allowedDataSource)).thenReturn(new MediaIdentification(
       stream1,
-      Map.of(stream1.getId(), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH)),
+      new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH),
       MOVIE
     ));
     when(streamStore.findStream(new StreamID(123))).thenReturn(Optional.of(stream1));
@@ -160,17 +159,13 @@ public class StreamCacheUpdateServiceTest {
     Thread.sleep(100);  // Part of calls is async
 
     verify(streamStore).put(eq(1), argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
-    verify(streamStore).putIdentification(new StreamID(123), new Identification(new Identifier(MOVIE_DATASOURCE, "10000"), MATCH));
+    verify(streamStore).putIdentification(new StreamID(123), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
 
-  private static BasicStream basicStream(int identifier, String uri, String title, List<BasicStream> childStreams) {
+  private static Streamable streamable(int identifier, String uri, String title) {
     Attributes attributes = Attributes.of(Attribute.TITLE, title);
 
-    return new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), new StreamID(identifier), attributes, childStreams);
-  }
-
-  private static BasicStream basicStream(int identifier, String uri, String title) {
-    return basicStream(identifier, uri, title, Collections.emptyList());
+    return new Streamable(MediaType.of("MOVIE"), new StringURI(uri), new StreamID(identifier), null, attributes);
   }
 }

@@ -1,12 +1,13 @@
 package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
@@ -26,7 +27,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,12 +43,14 @@ public class SeriesScanner implements Scanner {
   private static final NameDecoder SIMPLE_NAME_DECODER = new NameDecoder(Mode.SIMPLE);
   private static final Set<FileVisitOption> FILE_VISIT_OPTIONS = new HashSet<>(Arrays.asList(FileVisitOption.FOLLOW_LINKS));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Scanning series");
-
+	private static final MediaType SERIE = MediaType.of("SERIE");
+	private static final MediaType EPISODE = MediaType.of("EPISODE");
+	
   @Inject private StreamPrintProvider streamPrintProvider;
 
   @Override
-  public List<Exceptional<List<BasicStream>>> scan(List<Path> roots) {
-    List<Exceptional<List<BasicStream>>> rootResults = new ArrayList<>();
+  public List<Exceptional<List<Streamable>>> scan(List<Path> roots) {
+    List<Exceptional<List<Streamable>>> rootResults = new ArrayList<>();
 
     LOGGER.info("Scanning " + roots);
 
@@ -58,7 +60,7 @@ public class SeriesScanner implements Scanner {
 
         WORKLOAD.start(scanResults.size());
 
-        List<BasicStream> results = new ArrayList<>();
+        List<Streamable> results = new ArrayList<>();
 
         for(Path path : scanResults) {
           DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
@@ -80,9 +82,8 @@ public class SeriesScanner implements Scanner {
             Attribute.ID_PREFIX + "IMDB", imdbNumber
           );
 
-          List<BasicStream> children = scanSerie(path);
-
-          results.add(new BasicStream(MediaType.of("SERIE"), uri, streamPrint.getId(), attributes, children));
+          results.add(new Streamable(SERIE, uri, streamPrint.getId(), null, attributes));
+          results.addAll(scanSerie(path, streamPrint.getId()));
 
           WORKLOAD.complete();
         }
@@ -90,8 +91,6 @@ public class SeriesScanner implements Scanner {
         rootResults.add(Exceptional.of(results));
       }
       catch(RuntimeException | IOException e) {
-        LOGGER.warning("Exception while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility
-
         WORKLOAD.reset();
 
         rootResults.add(Exceptional.ofException(e));
@@ -101,8 +100,8 @@ public class SeriesScanner implements Scanner {
     return rootResults;
   }
 
-  private List<BasicStream> scanSerie(Path root) {
-    List<BasicStream> results = new ArrayList<>();
+  private List<Streamable> scanSerie(Path root, StreamID parentId) {
+    List<Streamable> results = new ArrayList<>();
 
     try {
       List<Path> scanResults = new PathFinder(5).find(root);
@@ -139,7 +138,7 @@ public class SeriesScanner implements Scanner {
           Attribute.CHILD_TYPE, type == null ? null : type.toString()
         );
 
-        results.add(new BasicStream(MediaType.of("EPISODE"), new StringURI(path.toUri()), streamPrint.getId(), attributes, Collections.emptyList()));
+        results.add(new Streamable(EPISODE, new StringURI(path.toUri()), streamPrint.getId(), parentId, attributes));
       }
     }
     catch(RuntimeException | IOException e) {

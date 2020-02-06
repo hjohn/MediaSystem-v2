@@ -1,12 +1,11 @@
 package hs.mediasystem.mediamanager;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 
@@ -46,9 +45,21 @@ public class LocalMediaIdentificationService {
     }
   }
 
-  // Method may block
-  public MediaIdentification identify(BasicStream stream, String dataSourceName) {
-    MediaType type = stream.getType();
+  /**
+   * Returns {@link MediaIdentification}, never null.  If there were no errors but the streamable
+   * wasn't identifiable, an UnknownStreamableException is thrown.<p>
+   *
+   * This call may block to do I/O.
+   *
+   * @param streamable a {@link Streamable} to identify, cannot be null
+   * @param parent a parent {@link MediaDescriptor}, if applicable, can be null
+   * @param dataSourceName a data source name, cannot be null
+   * @throws UnknownStreamableException when given streamable could not be identified
+   * @throws UnknownDataSourceException when the given data source name is not known
+   * @return a {@link MediaIdentification}, never null
+   */
+  public MediaIdentification identify(Streamable streamable, MediaDescriptor parent, String dataSourceName) {
+    MediaType type = streamable.getType();
     DataSource dataSource = DataSource.instance(type, dataSourceName);
     IdentificationService service = identificationServicesByDataSource.get(dataSource);
 
@@ -56,17 +67,13 @@ public class LocalMediaIdentificationService {
       throw new UnknownDataSourceException(dataSource);
     }
 
-    return performIdentificationCall(stream, service);
+    return performIdentificationCall(streamable, parent, service);
   }
 
-  private MediaIdentification performIdentificationCall(BasicStream stream, IdentificationService service) {
-    Map<StreamID, Identification> result = service.identify(stream);
+  private MediaIdentification performIdentificationCall(Streamable streamable, MediaDescriptor parent, IdentificationService service) {
+    Identification identification = service.identify(streamable, parent).orElseThrow(() -> new UnknownStreamableException(streamable, service));
 
-    if(result.isEmpty()) {
-      return new MediaIdentification(stream, result, null);
-    }
-
-    return new MediaIdentification(stream, result, query(result.get(stream.getId()).getIdentifier()));
+    return new MediaIdentification(streamable, identification, parent == null ? query(identification.getPrimaryIdentifier()) : null);
   }
 
   public MediaDescriptor query(Identifier identifier) {

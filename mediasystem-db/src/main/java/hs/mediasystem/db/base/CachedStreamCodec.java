@@ -10,8 +10,16 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
+import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.Match;
+import hs.mediasystem.domain.work.Match.MatchType;
+import hs.mediasystem.ext.basicmediatypes.Identification;
+import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
+
 import java.io.IOException;
 import java.time.Instant;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Singleton;
@@ -34,8 +42,15 @@ public class CachedStreamCodec {
   }
 
   public CachedStream fromRecord(StreamRecord record) throws IOException {
+    Identification identification = record.getIdentifiers() == null || record.getIdentifiers().isEmpty() ? null
+      : new Identification(
+          record.getIdentifiers().stream().map(Identifier::fromString).collect(Collectors.toList()),
+          new Match(MatchType.valueOf(record.getMatchType()), record.getMatchAccuracy(), Instant.ofEpochMilli(record.getMatchMillis()))
+        );
+
     return new CachedStream(
-      objectMapper.readValue(record.getJson(), IdentifiedStream.class),
+      objectMapper.readValue(record.getJson(), Streamable.class),
+      identification,
       record.getImportSourceId(),
       Instant.ofEpochMilli(record.getCreationMillis()),
       record.getLastEnrichTime() == null ? null : Instant.ofEpochSecond(record.getLastEnrichTime()),
@@ -47,12 +62,20 @@ public class CachedStreamCodec {
     try {
       StreamRecord record = new StreamRecord();
 
-      record.setStreamId(stream.getIdentifiedStream().getStream().getId().asInt());
+      record.setStreamId(stream.getStreamable().getId().asInt());
+      record.setParentStreamId(stream.getStreamable().getParentStreamId().map(StreamID::asInt).orElse(null));
       record.setImportSourceId(stream.getImportSourceId());
       record.setCreationMillis(stream.getCreationTime().toEpochMilli());
       record.setLastEnrichTime(stream.getLastEnrichTime() == null ? null : stream.getLastEnrichTime().getEpochSecond());
       record.setNextEnrichTime(stream.getNextEnrichTime() == null ? null : stream.getNextEnrichTime().getEpochSecond());
-      record.setJson(objectMapper.writeValueAsBytes(stream.getIdentifiedStream()));
+      record.setJson(objectMapper.writeValueAsBytes(stream.getStreamable()));
+
+      stream.getIdentification().ifPresent(i -> {
+        record.setIdentifiers(i.getIdentifiers().stream().map(Object::toString).collect(Collectors.toList()));
+        record.setMatchType(i.getMatch().getMatchType().toString());
+        record.setMatchAccuracy(i.getMatch().getMatchAccuracy());
+        record.setMatchMillis(i.getMatch().getCreationTime().toEpochMilli());
+      });
 
       return record;
     }

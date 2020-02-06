@@ -2,13 +2,13 @@ package hs.mediasystem.ext.tmdb.serie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.MatchType;
 import hs.mediasystem.ext.basicmediatypes.Identification;
+import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractIdentificationService;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.TextMatcher;
@@ -17,9 +17,7 @@ import hs.mediasystem.util.Attributes;
 
 import java.time.Instant;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -42,22 +40,12 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
   }
 
   @Override
-  public Map<StreamID, Identification> identify(BasicStream stream) {
-    Attributes attributes = stream.getAttributes();
-    String imdb = attributes.get(Attribute.ID_PREFIX + "IMDB");
-    Map<StreamID, Identification> result = new HashMap<>();
+  public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
+    Attributes attributes = streamable.getAttributes();
 
-    if(imdb != null) {
-      identifyByIMDB(imdb).ifPresent(t -> result.put(stream.getId(), t));
-    }
-
-    if(result.isEmpty()) {
-      identifyByStream(attributes).ifPresent(t -> result.put(stream.getId(), t));
-    }
-
-    // FIXME add additional identifiers
-
-    return result;
+    return Optional.ofNullable((String)attributes.get(Attribute.ID_PREFIX + "IMDB"))
+      .flatMap(this::identifyByIMDB)
+      .or(() -> identifyByStream(attributes));
   }
 
   private Optional<Identification> identifyByIMDB(String imdb) {
@@ -65,7 +53,7 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
 
     return StreamSupport.stream(node.path("tv_results").spliterator(), false)
       .findFirst()
-      .map(n -> new Identification(new Identifier(DataSources.TMDB_SERIE, n.get("id").asText()), new Match(MatchType.ID, 1, Instant.now())));
+      .map(n -> new Identification(List.of(new Identifier(DataSources.TMDB_SERIE, n.get("id").asText())), new Match(MatchType.ID, 1, Instant.now())));
   }
 
   private Optional<Identification> identifyByStream(Attributes attributes) {
@@ -98,6 +86,6 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
         )
       )
       .max(Comparator.comparingDouble(m -> m.getNormalizedScore()))
-      .map(match -> new Identification(new Identifier(DataSources.TMDB_SERIE, match.getId()), new Match(match.getType(), match.getScore() / 100, Instant.now())));
+      .map(match -> new Identification(List.of(new Identifier(DataSources.TMDB_SERIE, match.getId())), new Match(match.getType(), match.getScore() / 100, Instant.now())));
   }
 }

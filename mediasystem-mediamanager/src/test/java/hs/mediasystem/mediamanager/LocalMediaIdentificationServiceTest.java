@@ -10,7 +10,7 @@ import hs.mediasystem.domain.work.Match.MatchType;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.BasicStream;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.util.Attributes;
@@ -18,8 +18,8 @@ import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Map;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,6 @@ import org.mockito.MockitoAnnotations;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -96,18 +95,18 @@ public class LocalMediaIdentificationServiceTest {
     Identifier identifier1 = new Identifier(DATA_SOURCE_1, "12345");
     Identifier identifier2 = new Identifier(DATA_SOURCE_2, "12345");
     Match match = new Match(MatchType.ID, 1.0f, Instant.now());
-    BasicStream stream = createMovie("file://parent/test", attributes);
+    Streamable streamable = createMovie("file://parent/test", attributes);
 
-    when(idServiceForDS1.identify(eq(stream))).thenReturn(Map.of(stream.getId(), new Identification(identifier1, match)));
-    when(idServiceForDS2.identify(eq(stream))).thenReturn(Map.of(stream.getId(), new Identification(identifier2, match)));
+    when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(identifier1), match)));
+    when(idServiceForDS2.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(identifier2), match)));
     when(queryServiceForDS1.query(eq(identifier1))).thenReturn(Movies.create());
 
-    MediaIdentification mi1 = db.identify(stream, "D1");  // id service available and query works
-    Exceptional<MediaIdentification> mi2 = Exceptional.from(() -> db.identify(stream, "D2"));  // id service available and returns result, but query fails
-    Exceptional<MediaIdentification> mi5 = Exceptional.from(() -> db.identify(stream, "D5"));  // no id service at all
+    MediaIdentification mi1 = db.identify(streamable, null, "D1");  // id service available and query works
+    Exceptional<MediaIdentification> mi2 = Exceptional.from(() -> db.identify(streamable, null, "D2"));  // id service available and returns result, but query fails
+    Exceptional<MediaIdentification> mi5 = Exceptional.from(() -> db.identify(streamable, null, "D5"));  // no id service at all
 
-    assertEquals(stream, mi1.getStream());
-    assertEquals(Map.of(stream.getId(), new Identification(identifier1, match)), mi1.getIdentifications());
+    assertEquals(streamable, mi1.getStreamable());
+    assertEquals(new Identification(List.of(identifier1), match), mi1.getIdentification());
     assertNotNull(mi1.getDescriptor());
     assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_2)), mi2);
     assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_5)), mi5);
@@ -118,17 +117,16 @@ public class LocalMediaIdentificationServiceTest {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
-    BasicStream stream = createMovie("file://parent/test", attributes);
+    Streamable streamable = createMovie("file://parent/test", attributes);
 
-    when(idServiceForDS2.identify(eq(stream))).thenThrow(illegalStateException);
+    when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.empty());
+    when(idServiceForDS2.identify(eq(streamable), eq(null))).thenThrow(illegalStateException);
 
-    MediaIdentification mi1 = db.identify(stream, "D1");  // id service available, but unable to identify
-    Exceptional<MediaIdentification> mi2 = Exceptional.from(() -> db.identify(stream, "D2"));  // id service available, but throws exception
-    Exceptional<MediaIdentification> mi5 = Exceptional.from(() -> db.identify(stream, "D5"));  // no id service at all
+    Exceptional<MediaIdentification> mi1 = Exceptional.from(() -> db.identify(streamable, null, "D1"));  // id service available, but unable to identify
+    Exceptional<MediaIdentification> mi2 = Exceptional.from(() -> db.identify(streamable, null, "D2"));  // id service available, but throws exception
+    Exceptional<MediaIdentification> mi5 = Exceptional.from(() -> db.identify(streamable, null, "D5"));  // no id service at all
 
-    assertEquals(stream, mi1.getStream());
-    assertEquals(Map.of(), mi1.getIdentifications());
-    assertNull(mi1.getDescriptor());
+    assertEquals(Exceptional.ofException(new UnknownStreamableException(streamable, idServiceForDS1)), mi1);
     assertEquals(Exceptional.ofException(illegalStateException), mi2);
     assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_5)), mi5);
   }
@@ -140,23 +138,22 @@ public class LocalMediaIdentificationServiceTest {
     Match match = new Match(MatchType.ID, 1.0f, Instant.now());
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
-    BasicStream stream = createMovie("file://parent/test", attributes);
+    Streamable streamable = createMovie("file://parent/test", attributes);
 
-    when(idServiceForDS1.identify(eq(stream))).thenReturn(Map.of(stream.getId(), new Identification(identifier, match)));
+    when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(identifier), match)));
+    when(idServiceForDS2.identify(eq(streamable), eq(null))).thenReturn(Optional.empty());
     when(queryServiceForDS1.query(identifier)).thenThrow(illegalStateException);
 
-    Exceptional<MediaIdentification> mi1 = Exceptional.from(() -> db.identify(stream, "D1"));  // id service available, returns result, but query throws exception
-    MediaIdentification mi2 = db.identify(stream, "D2");  // id service available, but unable to identify
-    Exceptional<MediaIdentification> mi5 = Exceptional.from(() -> db.identify(stream, "D5"));  // no id service at all
+    Exceptional<MediaIdentification> mi1 = Exceptional.from(() -> db.identify(streamable, null, "D1"));  // id service available, returns result, but query throws exception
+    Exceptional<MediaIdentification> mi2 = Exceptional.from(() -> db.identify(streamable, null, "D2"));  // id service available, but unable to identify
+    Exceptional<MediaIdentification> mi5 = Exceptional.from(() -> db.identify(streamable, null, "D5"));  // no id service at all
 
     assertEquals(Exceptional.ofException(illegalStateException), mi1);
-    assertEquals(stream, mi2.getStream());
-    assertEquals(Map.of(), mi2.getIdentifications());
-    assertNull(mi2.getDescriptor());
+    assertEquals(Exceptional.ofException(new UnknownStreamableException(streamable, idServiceForDS2)), mi2);
     assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_5)), mi5);
   }
 
-  private static BasicStream createMovie(String uri, Attributes attributes) {
-    return new BasicStream(MediaType.of("MOVIE"), new StringURI(uri), STREAM_ID, attributes, Collections.emptyList());
+  private static Streamable createMovie(String uri, Attributes attributes) {
+    return new Streamable(MediaType.of("MOVIE"), new StringURI(uri), STREAM_ID, null, attributes);
   }
 }

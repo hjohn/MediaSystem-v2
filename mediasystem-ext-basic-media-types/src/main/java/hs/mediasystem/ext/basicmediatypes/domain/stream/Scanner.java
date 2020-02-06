@@ -19,5 +19,5 @@ public interface Scanner {
    * @return a {@link List} per root of {@link Exceptional} lists, never null and
    *         always contains the same number of entries as the number of roots passed in.
    */
-  List<Exceptional<List<BasicStream>>> scan(List<Path> roots);
+  List<Exceptional<List<Streamable>>> scan(List<Path> roots);
 }

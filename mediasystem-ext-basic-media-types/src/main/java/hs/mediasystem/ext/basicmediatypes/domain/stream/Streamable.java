@@ -5,18 +5,15 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
-public class BasicStream {
+public class Streamable {
   private final MediaType type;
   private final StringURI uri;
   private final StreamID streamId;
+  private final Optional<StreamID> parentStreamId;
   private final Attributes attributes;
-  private final List<BasicStream> children;
 
   /**
    * Constructs a new instance.
@@ -24,10 +21,10 @@ public class BasicStream {
    * @param type a {@link MediaType}, cannot be null
    * @param uri a {@link StringURI}, cannot be null
    * @param streamId a {@link StreamID}, cannot be null
+   * @param parentStreamId a parent {@link StreamID}, can be null
    * @param attributes an {@link Attributes}, cannot be null
-   * @param children a {@link List} of child streams, cannot be null but can be empty
    */
-  public BasicStream(MediaType type, StringURI uri, StreamID streamId, Attributes attributes, List<BasicStream> children) {
+  public Streamable(MediaType type, StringURI uri, StreamID streamId, StreamID parentStreamId, Attributes attributes) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
@@ -43,23 +40,12 @@ public class BasicStream {
     if(!attributes.contains(Attribute.TITLE)) {
       throw new IllegalArgumentException("attributes must contain Attribute.TITLE");
     }
-    if(children == null) {
-      throw new IllegalArgumentException("children cannot be null");
-    }
 
     this.type = type;
     this.uri = uri;
     this.streamId = streamId;
+    this.parentStreamId = Optional.ofNullable(parentStreamId);
     this.attributes = attributes;
-    this.children = Collections.unmodifiableList(children.stream()
-      .sorted(Comparator.comparing(BasicStream::getUri))  // Sort so that equals/hashcode is stable
-      .filter(Objects::nonNull)
-      .collect(Collectors.toList())
-    );
-
-    if(this.children.size() != children.size()) {
-      throw new IllegalArgumentException("children cannot contain nulls");
-    }
   }
 
   public StringURI getUri() {
@@ -74,17 +60,17 @@ public class BasicStream {
     return streamId;
   }
 
+  public Optional<StreamID> getParentStreamId() {
+    return parentStreamId;
+  }
+
   public Attributes getAttributes() {
     return attributes;
   }
 
-  public List<BasicStream> getChildren() {
-    return children;
-  }
-
   @Override
   public int hashCode() {
-    return Objects.hash(attributes, streamId, type, children);
+    return Objects.hash(attributes, parentStreamId, streamId, type, uri);
   }
 
   @Override
@@ -96,12 +82,13 @@ public class BasicStream {
       return false;
     }
 
-    BasicStream other = (BasicStream)obj;
+    Streamable other = (Streamable)obj;
 
     return Objects.equals(attributes, other.attributes)
-      && Objects.equals(streamId, other.streamId)
-      && Objects.equals(type, other.type)
-      && Objects.equals(children, other.children);
+        && Objects.equals(parentStreamId, other.parentStreamId)
+        && Objects.equals(streamId, other.streamId)
+        && Objects.equals(type, other.type)
+        && Objects.equals(uri, other.uri);
   }
 
   @Override
