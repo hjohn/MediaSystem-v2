@@ -25,14 +25,18 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Singleton
 public class CollectionLocationManager {
+  private static final Logger LOGGER = Logger.getLogger(CollectionLocationManager.class.getName());
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory())
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     .setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
@@ -41,6 +45,7 @@ public class CollectionLocationManager {
 
   @Inject private List<Scanner> scanners;
   @Inject private ImportSourceProvider importSourceProvider;
+  @Inject @Nullable @Named("general.basedir") private String baseDir = ".";
 
   private List<CollectionDefinition> collectionDefinitions = new ArrayList<>();
   private List<ImportDefinition> importDefinitions = new ArrayList<>();
@@ -51,7 +56,7 @@ public class CollectionLocationManager {
   }
 
   public void reinstall() {
-    File file = new File("mediasystem-collections.yaml");
+    File file = new File(baseDir, "mediasystem-collections.yaml");
 
     try {
       collectionDefinitions = OBJECT_MAPPER.readValue(file, new TypeReference<List<CollectionDefinition>>() {});
@@ -60,7 +65,9 @@ public class CollectionLocationManager {
       throw new IllegalStateException("Error parsing " + file, e);
     }
 
-    file = new File("mediasystem-imports.yaml");
+    LOGGER.info("Loaded " + file);
+
+    file = new File(baseDir, "mediasystem-imports.yaml");
 
     try {
       importDefinitions = OBJECT_MAPPER.readValue(file, new TypeReference<List<ImportDefinition>>() {});
@@ -68,6 +75,8 @@ public class CollectionLocationManager {
     catch(IOException e) {
       throw new IllegalStateException("Error parsing " + file, e);
     }
+
+    LOGGER.info("Loaded " + file);
 
     List<ImportSource> sources = new ArrayList<>();
 

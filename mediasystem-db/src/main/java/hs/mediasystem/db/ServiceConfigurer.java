@@ -16,14 +16,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Configures and runs the back-end services.
  */
 public class ServiceConfigurer {
+  private static final Logger LOGGER = Logger.getLogger(CollectionLocationManager.class.getName());
 
-  public static Injector configure(Injector injector) throws SecurityException, IOException {
+  @Inject private Injector injector;
+  @Inject @Nullable @Named("general.basedir") private String baseDir = ".";
+
+  @PostConstruct
+  private void postConstruct() throws IOException {
     PluginManager pluginManager = new PluginManager(injector);
 
     pluginManager.loadPluginAndScan("hs.mediasystem.db", "hs.mediasystem.mediamanager");
@@ -34,7 +45,7 @@ public class ServiceConfigurer {
 
     configureResponseCache(injector);
 
-    Path root = Paths.get("plugins");
+    Path root = Paths.get(baseDir, "plugins");
 
     if(Files.exists(root)) {
       Files.find(root, 1, (p, a) -> !p.equals(root)).forEach(p -> {
@@ -61,11 +72,11 @@ public class ServiceConfigurer {
       pluginManager.loadPluginAndScan(URI.create("file://P/Dev/git/MediaSystem-v2/mediasystem-ext-local/target/classes/").toURL());
     }
 
+    LOGGER.info("Plugins loaded from " + root);
+
     injector.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
     injector.getInstance(ScannerController.class);       // Triggers background thread
     injector.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
-
-    return injector;
   }
 
   private static void configureResponseCache(Injector injector) {

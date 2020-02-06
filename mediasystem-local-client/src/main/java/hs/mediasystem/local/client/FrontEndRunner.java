@@ -75,7 +75,7 @@ public class FrontEndRunner extends Application {
 
     loadPlayerPlugins(injector);
 
-    ServiceConfigurer.configure(injector);
+    injector.getInstance(ServiceConfigurer.class);  // Triggers configuration of service layer
 
     Annotations.initialize();
 
