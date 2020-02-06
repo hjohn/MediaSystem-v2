@@ -1,0 +1,11 @@
+- type: "Movies"
+  paths: ["testdata/movies"]
+  identification: "TMDB"
+  tags: ["movie"]
+  id: 1
+
+- type: "Series"
+  paths: ["testdata/series"]
+  identification: "TMDB"
+  tags: ["serie"]
+  id: 2

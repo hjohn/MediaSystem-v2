@@ -1,0 +1,7 @@
+- title: "Movies"
+  type: "Movie"
+  tag: "movie"
+
+- title: "TV Shows"
+  type: "Serie"  
+  tag: "serie"
