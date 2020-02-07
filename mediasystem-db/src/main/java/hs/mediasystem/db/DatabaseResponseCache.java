@@ -33,10 +33,13 @@ import javax.inject.Singleton;
  * A {@link ResponseCache} that keeps track of request/responses in a database, and
  * returns responses from cache when possible.<p>
  *
- * The requests can be parameterized with two parameters:<p>
+ * The requests can be parameterized with some parameters:<p>
  *
- * "!time-out": How fresh the data must be to be returned from cache (in seconds)
- * "!rate-limit": Used to specify a maximum rate at which resources can be accessed (format is two semi-colon separated parameters for a {@link PriorityRateLimiter})
+ * "!time-out": How fresh the data must be to be returned from cache (in seconds)<p>
+ *
+ * "!rate-limit": Used to specify a maximum rate at which resources can be accessed.  The rate limit is
+ * specified as three semi-colon separated parameters: [name];[maxBurstPermits];[permitRefreshRatePerSecond].<p>
+ *
  * "!safe-url": A URL for logging requests stripped off sensitive data (passwords, API key's)
  */
 @Singleton
@@ -47,8 +50,19 @@ public class DatabaseResponseCache extends ResponseCache {
   private static final List<String> DEFAULT_TIME_OUT = List.of(Integer.toString(Integer.MAX_VALUE));
   private static final List<String> DEFAULT_NULL = Arrays.asList((String)null);
   private static final Map<String, PriorityRateLimiter> RATE_LIMITERS = new HashMap<>();
+  private static final ThreadLocal<Boolean> FORCE_CACHE_USE = ThreadLocal.withInitial(() -> false);
 
   @Inject private ImageDatabase store;
+
+  /**
+   * Allows per thread control to force the use of the cache, ignoring the <code>!time-out</code> set
+   * on a request.
+   *
+   * @param forceCacheUse <code>true</code> if this thread should always try use the cache, no matter how old
+   */
+  public static void forceCacheUse(boolean forceCacheUse) {
+    FORCE_CACHE_USE.set(forceCacheUse);
+  }
 
   @Override
   public CacheResponse get(URI uri, String method, Map<String, List<String>> requestHeaders) throws IOException {
@@ -60,7 +74,7 @@ public class DatabaseResponseCache extends ResponseCache {
     int timeOut = Integer.parseInt(requestHeaders.getOrDefault("!time-out", DEFAULT_TIME_OUT).get(0));
     String safeURL = Optional.ofNullable(requestHeaders.getOrDefault("!safe-url", DEFAULT_NULL).get(0)).orElse(uri.toURL().toString());
 
-    if(image != null && image.getCreationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now())) {
+    if(image != null && (FORCE_CACHE_USE.get() || image.getCreationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now()))) {
       // fresh enough, return it
       CacheResponse response = decodeCacheResponse(image.getImage(), safeURL);
 
