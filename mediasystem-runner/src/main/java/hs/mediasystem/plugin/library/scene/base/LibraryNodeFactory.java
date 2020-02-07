@@ -3,7 +3,6 @@ package hs.mediasystem.plugin.library.scene.base;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ViewPortFactory;
 import hs.mediasystem.runner.util.LessLoader;
-import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 
@@ -27,12 +26,11 @@ import javax.inject.Singleton;
 @Singleton
 public class LibraryNodeFactory implements NodeFactory<LibraryPresentation> {
   @Inject private ViewPortFactory viewPortFactory;
-  @Inject @Named("general.library.fade-out-delay") @Nullable private String fadeOutDelayText;
+  @Inject @Nullable @Named("general.library.fade-out-delay") private Long fadeOutDelay = 30L;
 
   @Override
   public Node create(LibraryPresentation presentation) {
-    int fadeOutDelay = Exceptional.ofNullable(fadeOutDelayText).map(Integer::parseInt).ignore(NumberFormatException.class).orElse(30);
-    EntityView node = new EntityView(viewPortFactory, presentation, fadeOutDelay);
+    EntityView node = new EntityView(viewPortFactory, presentation, fadeOutDelay.intValue());
 
     node.backgroundPane.backdropProperty().bindBidirectional(presentation.backdrop);
     node.getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
