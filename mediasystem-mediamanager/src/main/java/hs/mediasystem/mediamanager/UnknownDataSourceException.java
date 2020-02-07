@@ -8,6 +8,8 @@ public class UnknownDataSourceException extends RuntimeException {
   private final DataSource dataSource;
 
   public UnknownDataSourceException(DataSource dataSource) {
+    super("" + dataSource);
+
     if(dataSource == null) {
       throw new IllegalArgumentException("dataSource cannot be null");
     }
