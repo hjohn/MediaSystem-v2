@@ -2,7 +2,6 @@ package hs.mediasystem.db.base;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
@@ -81,12 +80,6 @@ public class DatabaseStreamStore implements StreamableStore {
       .map(sid -> cache.get(sid))
       .map(CachedStream::getStreamable)
       .collect(Collectors.toSet());
-  }
-
-  public synchronized Map<Streamable, Match> findStreamsAndIdentifications(Identifier identifier) {
-    return identifierIndex.getOrDefault(identifier, EMPTY_SET).stream()
-      .map(sid -> cache.get(sid))
-      .collect(Collectors.toMap(sid -> sid.getStreamable(), sid -> sid.getIdentification().map(Identification::getMatch).orElse(null)));
   }
 
   private Stream<Streamable> stream(MediaType type, String tag) {
