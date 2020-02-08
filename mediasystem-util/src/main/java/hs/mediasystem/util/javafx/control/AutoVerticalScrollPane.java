@@ -45,9 +45,12 @@ public class AutoVerticalScrollPane extends ScrollPane {
     topFadePercentage.addListener(obs -> updateClip());
     bottomFadePercentage.addListener(obs -> updateClip());
 
-    ((Region)getContent()).heightProperty().addListener(listener);
-    heightProperty().addListener(listener);
+    layoutBoundsProperty().addListener(listener);
+    ((Region)getContent()).layoutBoundsProperty().addListener(listener);
     sceneProperty().addListener(listener);
+
+    topFadePercentage.addListener(e -> updateClip());
+    bottomFadePercentage.addListener(e -> updateClip());
   }
 
   private void createTimeline(double contentHeight) {
@@ -78,6 +81,10 @@ public class AutoVerticalScrollPane extends ScrollPane {
 
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
+      }
+      else {
+        bottomFadePercentage.set(0);
+        topFadePercentage.set(0);
       }
     }
   }
