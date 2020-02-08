@@ -31,14 +31,11 @@ import javafx.stage.Stage;
 
 public class FrontEndRunner extends Application {
   private static final Logger LOGGER = Logger.getLogger(FrontEndRunner.class.getName());
-//  private static final Comparator<PlayerFactory> PLAYER_FACTORY_COMPARATOR = (o1, o2) -> o1.getName().compareTo(o2.getName());
 
   public static void main(String[] args) {
-    //System.setProperty("http.proxyHost", "127.0.0.1");
-    //System.setProperty("http.proxyPort", "8080");
     //System.setProperty("prism.text", "t2k");  // With Segoe UI will result in pixel jumping letters with numbers that change, ie: "1:15 / 1:43:34" May render slightly differently with different spacing in the last fixed part!
     System.setProperty("prism.lcdtext", "false");
-    System.setProperty("com.sun.javafx.twoLevelFocus", "true");
+    //System.setProperty("com.sun.javafx.twoLevelFocus", "true");
     //System.setProperty("javafx.animation.pulse", "2");
     //System.setProperty("javafx.pulseLogger", "true");
 
