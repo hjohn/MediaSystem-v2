@@ -6,7 +6,6 @@ import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.AsyncImageProperty2;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.javafx.control.Labels.Feature;
 import hs.mediasystem.util.javafx.control.carousel.CarouselListCell;
 import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
 import hs.mediasystem.util.javafx.control.csslayout.StylableHBox;
@@ -42,11 +41,11 @@ public class MenuOptionCellFactory implements Callback<ListView<MenuOption>, Lis
       private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2(600, 400);
 
       private final StatusIndicator indicator = new StatusIndicator();
-      private final Label parentTitle = Labels.create("parent-title", Feature.HIDE_IF_EMPTY);
+      private final Label parentTitle = Labels.create("parent-title", Labels.HIDE_IF_EMPTY);
       private final Label title = Labels.create("title");
-      private final Label subtitle = Labels.create("subtitle", Feature.HIDE_IF_EMPTY);
-      private final Label sequence = Labels.create("sequence", Feature.HIDE_IF_EMPTY);
-      private final Label age = Labels.create("age", Feature.HIDE_IF_EMPTY);
+      private final Label subtitle = Labels.create("subtitle", Labels.HIDE_IF_EMPTY);
+      private final Label sequence = Labels.create("sequence", Labels.HIDE_IF_EMPTY);
+      private final Label age = Labels.create("age", Labels.HIDE_IF_EMPTY);
 
       private final StylableHBox overlay = StylableContainers.hbox("overlay", indicator, parentTitle, title, subtitle, sequence, age);
 

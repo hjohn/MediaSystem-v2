@@ -18,7 +18,6 @@ import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.javafx.control.Labels.Feature;
 
 import java.time.Duration;
 import java.time.ZoneOffset;
@@ -51,7 +50,7 @@ public class ShowInfoEventHandler {
     }
 
     VBox titleBox = Containers.vbox("title-panel",
-      Labels.create("serie-title", work.getParent().map(Parent::getName).orElse(""), Feature.HIDE_IF_EMPTY),
+      Labels.create("serie-title", work.getParent().map(Parent::getName).orElse(""), Labels.HIDE_IF_EMPTY),
       titleLabel
     );
     VBox listBox = Containers.vbox("list-panel");

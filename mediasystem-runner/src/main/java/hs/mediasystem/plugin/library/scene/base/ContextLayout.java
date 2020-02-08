@@ -177,50 +177,56 @@ public class ContextLayout {
       }};
 
       getChildren().addAll(
-        Labels.create("groupTitle", groupTitle, groupTitle.isEmpty().not()),
+        Labels.create("groupTitle", groupTitle, Labels.HIDE_IF_EMPTY),
         Labels.create("title", title),
-        Labels.create("subtitle", subtitle, subtitle.isEmpty().not()),
+        Labels.create("subtitle", subtitle, Labels.HIDE_IF_EMPTY),
         Containers.hbox(
           "hbox",
           Containers.vbox(
-            Labels.create("header", "SEASON", season.isEmpty().not()),
-            Labels.create("season", season, season.isEmpty().not())
+            season.isEmpty().not(),
+            Labels.create("header", "SEASON"),
+            Labels.create("season", season)
           ),
           Containers.vbox(
-            Labels.create("header", "EPISODE NUMBER", episodeNumber.isEmpty().not()),
-            Labels.create("episode-number", episodeNumber, episodeNumber.isEmpty().not())
+            episodeNumber.isEmpty().not(),
+            Labels.create("header", "EPISODE NUMBER"),
+            Labels.create("episode-number", episodeNumber)
           )
         ),
         Containers.vbox(
-          Labels.create("header", "BIRTH PLACE", birthPlace.isEmpty().not()),
-          Labels.create("birth-place", birthPlace, birthPlace.isEmpty().not())
+          birthPlace.isEmpty().not(),
+          Labels.create("header", "BIRTH PLACE"),
+          Labels.create("birth-place", birthPlace)
         ),
         Containers.vbox(
-          Labels.create("header", "BIRTH DATE", birthDate.isEmpty().not()),
-          Labels.create("birth-date", birthDate, birthDate.isEmpty().not())
+          birthDate.isEmpty().not(),
+          Labels.create("header", "BIRTH DATE"),
+          Labels.create("birth-date", birthDate)
         ),
         Containers.hbox(
           "hbox",
           Containers.vbox(
             totalEntries.isEmpty().not(),
-            Labels.create("header", "TOTAL", totalEntries.isEmpty().not()),
-            Labels.create("total-entries", totalEntries, totalEntries.isEmpty().not())
+            Labels.create("header", "TOTAL"),
+            Labels.create("total-entries", totalEntries)
           ),
           Containers.vbox(
-            Labels.create("header", "RELEASE DATE", releaseDate.isEmpty().not()),
-            Labels.create("release-date", releaseDate, releaseDate.isEmpty().not())
+            releaseDate.isEmpty().not(),
+            Labels.create("header", "RELEASE DATE"),
+            Labels.create("release-date", releaseDate)
           ),
           Containers.vbox(
-            Labels.create("header", "RATING", rating.isEmpty().not()),
-            Labels.create("rating", rating, rating.isEmpty().not())
+            rating.isEmpty().not(),
+            Labels.create("header", "RATING"),
+            Labels.create("rating", rating)
           )
         ),
         Containers.hbox(
           "hbox",
           Containers.vbox(
             totalEpisodes.isEmpty().not(),
-            Labels.create("header", "EPISODES", totalEpisodes.isEmpty().not()),
-            Labels.create("total-episodes", totalEpisodes, totalEpisodes.isEmpty().not())
+            Labels.create("header", "EPISODES"),
+            Labels.create("total-episodes", totalEpisodes)
           )
         ),
         vgrow(Priority.ALWAYS, Containers.vbox(

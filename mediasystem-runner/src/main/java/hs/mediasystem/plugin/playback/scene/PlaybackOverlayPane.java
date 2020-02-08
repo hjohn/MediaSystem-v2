@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.playback.scene;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Details;
@@ -10,6 +11,7 @@ import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.SpecialEffects;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
+import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import javafx.animation.KeyFrame;
@@ -25,7 +27,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.effect.Blend;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Reflection;
@@ -43,6 +44,8 @@ import javafx.util.Duration;
 import org.reactfx.value.Val;
 
 public class PlaybackOverlayPane extends StackPane {
+  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
+
   public final ObjectProperty<PlayerPresentation> player = new SimpleObjectProperty<>();
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
 
@@ -121,21 +124,14 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          final Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).map(Parent::getName);
-          final Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getDetails).map(Details::getName);
+          Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).filter(p -> !p.getType().equals(COLLECTION)).map(Parent::getName);
+          Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getDetails).map(Details::getName);
 
           HBox.setHgrow(this, Priority.ALWAYS);
-          getChildren().add(new Label() {{
-            setWrapText(true);
-            textProperty().bind(serieName.orElse(title));
-            getStyleClass().add("video-title");
-            setEffect(SpecialEffects.createNeonEffect(64));
-          }});
-          getChildren().add(new Label() {{
-            setWrapText(true);
-            textProperty().bind(serieName.flatMap(x -> title).orElseConst(""));
-            getStyleClass().add("video-subtitle");
-          }});
+          getChildren().addAll(
+            Labels.create("video-title", title, Labels.apply(label -> label.setEffect(SpecialEffects.createNeonEffect(64)))),
+            Labels.create("video-subtitle", serieName.orElseConst(""), Labels.HIDE_IF_EMPTY)
+          );
         }});
       }});
     }}, 3, 1);

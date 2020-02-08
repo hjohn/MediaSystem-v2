@@ -290,10 +290,10 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       gridPane.at(2, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.resourceKey)).orElseConst("Unknown")));
     }
 
-    BooleanBinding visibility = Bindings.size(presentation.availableGroupings).greaterThan(1);
+    BooleanBinding hidden = Bindings.size(presentation.availableGroupings).lessThan(2);
 
-    gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create("header", RESOURCES.getText("header.grouping"), visibility), Labels.create("remote-shortcut, blue", "", visibility)));
-    gridPane.at(3, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.grouping).map(g -> RESOURCES.getText("grouping", g.getClass().getSimpleName())).orElseConst("Unknown"), visibility));
+    gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create("header", RESOURCES.getText("header.grouping"), Labels.hide(hidden)), Labels.create("remote-shortcut, blue", "", Labels.hide(hidden))));
+    gridPane.at(3, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.grouping).map(g -> RESOURCES.getText("grouping", g.getClass().getSimpleName())).orElseConst("Unknown"), Labels.hide(hidden)));
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<T> event, P presentation);

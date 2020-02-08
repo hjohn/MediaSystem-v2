@@ -1,63 +1,60 @@
 package hs.mediasystem.util.javafx.control;
 
-import java.util.Set;
+import java.util.function.Consumer;
 
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.StringExpression;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
 
 public class Labels {
-  public enum Feature {
-    HIDE_IF_EMPTY;
+  public static final Option HIDE_IF_EMPTY = label -> hideIfEmpty(label.textProperty()).accept(label);
+
+  public static final Option hideIfEmpty(StringExpression x) {
+    return hide(x.isEmpty());
   }
 
-  public static Label create(String styleClass, String text, Feature... features) {
-    return create(styleClass, text, null, features);
+  public static final Option hide(BooleanExpression x) {
+    return label -> {
+      label.managedProperty().bind(x.not());
+      label.visibleProperty().bind(x.not());
+    };
   }
 
-  public static Label create(String styleClass, String text, BooleanExpression visibility, Feature... features) {
-    Set<Feature> f = Set.of(features);
-    Label label = new Label(text);
+  public static final Option apply(Consumer<Label> labelConsumer) {
+    return label -> labelConsumer.accept(label);
+  }
 
-    label.getStyleClass().addAll(styleClass.split(",(?: *)"));
+  public interface Option extends Consumer<Label> {
+  }
 
-    BooleanExpression v = visibility;
+  public static Label create(String styleClass, String text, Option... options) {
+    Label label = createLabel(styleClass, options);
 
-    if(f.contains(Feature.HIDE_IF_EMPTY)) {
-      if(v == null) {
-        v = label.textProperty().isEmpty().not();
-      }
-      else {
-        v.and(label.textProperty().isEmpty().not());
-      }
-    }
-
-    if(v != null) {
-      label.managedProperty().bind(v);
-      label.visibleProperty().bind(v);
-    }
+    label.setText(text);
 
     return label;
   }
 
-  public static Label create(String styleClass, Feature... features) {
-    return create(styleClass, "", features);
+  public static Label create(String styleClass, Option... options) {
+    return create(styleClass, "", options);
   }
 
-  public static Label create(String styleClass, ObservableValue<? extends String> observable) {
-    return create(styleClass, observable, null);
-  }
+  public static Label create(String styleClass, ObservableValue<? extends String> observable, Option... options) {
+    Label label = createLabel(styleClass, options);
 
-  public static Label create(String styleClass, ObservableValue<? extends String> observable, BooleanBinding visibility) {
-    Label label = new Label();
-
-    label.getStyleClass().addAll(styleClass.split(","));
     label.textProperty().bind(observable);
 
-    if(visibility != null) {
-      label.managedProperty().bind(visibility);
-      label.visibleProperty().bind(visibility);
+    return label;
+  }
+
+  private static Label createLabel(String styleClass, Option... options) {
+    Label label = new Label();
+
+    label.getStyleClass().addAll(styleClass.split(",(?: *)"));
+
+    for(Option option : options) {
+      option.accept(label);
     }
 
     return label;

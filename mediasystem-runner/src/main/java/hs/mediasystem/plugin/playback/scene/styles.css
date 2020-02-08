@@ -8,6 +8,7 @@
   -fx-font-size: 64px;
   -fx-font-weight: bold;
   -fx-text-fill: white;
+  -fx-wrap-text: true;  
 }
 
 #video-overlay .video-subtitle {
@@ -15,6 +16,7 @@
   -fx-font-weight: bold;
   -fx-text-fill: white;
   -fx-padding: 0 0 20 0;
+  -fx-wrap-text: true;
 }
 
 #video-overlay {
