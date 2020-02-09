@@ -42,15 +42,14 @@ import javax.inject.Singleton;
 public class StreamCacheUpdateService {
   private static final Logger LOGGER = Logger.getLogger(StreamCacheUpdateService.class.getName());
   private static final Map<StreamID, CompletableFuture<MediaIdentification>> RECENT_IDENTIFICATIONS = new ConcurrentHashMap<>();
-  private static final LinkedBlockingQueue<Runnable> QUEUE = new LinkedBlockingQueue<>();
   private static final Executor FORCE_CACHE_USE_EXECUTOR = createExecutor("StreamCacheUS-cached", true);  // forces cache use for any requests done
   private static final Executor NORMAL_CACHING_EXECUTOR = createExecutor("StreamCacheUS-refresh", false);  // normal cache use for any requests done
-  private static final Executor DELAYED_EXECUTOR = CompletableFuture.delayedExecutor(5, TimeUnit.MINUTES, FORCE_CACHE_USE_EXECUTOR);
+  private static final Executor DELAYED_EXECUTOR = CompletableFuture.delayedExecutor(2, TimeUnit.MINUTES, FORCE_CACHE_USE_EXECUTOR);
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Downloading Metadata");
   private static final MediaType COLLECTION_MEDIA_TYPE = MediaType.of("COLLECTION");
 
   private static Executor createExecutor(String name, boolean forceCacheUse) {
-    Executor executor = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS, QUEUE, new NamedThreadFactory(name, Thread.NORM_PRIORITY - 2, true));
+    Executor executor = new ThreadPoolExecutor(5, 5, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new NamedThreadFactory(name, Thread.NORM_PRIORITY - 2, true));
 
     return r -> executor.execute(() -> {
       DatabaseResponseCache.forceCacheUse(forceCacheUse);
@@ -88,7 +87,7 @@ public class StreamCacheUpdateService {
       }
 
       for(;;) {
-        if(QUEUE.size() < 10) {
+        if(RECENT_IDENTIFICATIONS.size() < 10) {
           streamStore.findStreamsNeedingRefresh(40).stream().forEach(s -> asyncEnrich(s, NORMAL_CACHING_EXECUTOR));
         }
 

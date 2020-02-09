@@ -225,7 +225,7 @@ public class DatabaseStreamStore implements StreamableStore {
     putInCache(updatedCachedStream);
   }
 
-  synchronized void putIdentification(StreamID streamId, Identification identification) {  // TODO Merge markEnriched in this?
+  synchronized void putIdentification(StreamID streamId, Identification identification) {
     toIdentifiedCachedStream(streamId, identification).ifPresent(ucs -> {
       database.store(codec.toRecord(ucs));
 
