@@ -117,16 +117,25 @@ public class StreamCacheUpdateService {
    * its parent completes.
    *
    * @param streamable a Streamable to identify, cannot be null
-   * @param executor the {@link Executor} to use
+   * @param executor the {@link Executor} to use, cannot be null
    * @return the (future) result, never null
    */
   private CompletableFuture<MediaIdentification> asyncEnrich(Streamable streamable, Executor executor) {
-    return RECENT_IDENTIFICATIONS.computeIfAbsent(
-      streamable.getId(),
-      k -> streamable.getParentStreamId()
-        .map(pid -> createChildTask(getParentFuture(pid, executor), k, executor))
-        .orElseGet(() -> createTask(k, executor))
-    );
+    StreamID id = streamable.getId();
+    CompletableFuture<MediaIdentification> activeIdentification = RECENT_IDENTIFICATIONS.get(id);
+
+    if(activeIdentification != null) {
+      return activeIdentification;
+    }
+
+    // this code may modify RECENT_IDENTIFICATIONS map, so compute it first before modifying it ourselves:
+    activeIdentification = streamable.getParentStreamId()
+      .map(pid -> createChildTask(getParentFuture(pid, executor), id, executor))
+      .orElseGet(() -> createTask(id, executor));
+
+    RECENT_IDENTIFICATIONS.put(id, activeIdentification);
+
+    return activeIdentification;
   }
 
   private CompletableFuture<MediaIdentification> asyncEnrich(Streamable streamable) {
