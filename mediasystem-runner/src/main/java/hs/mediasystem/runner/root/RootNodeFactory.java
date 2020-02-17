@@ -3,6 +3,7 @@ package hs.mediasystem.runner.root;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ViewPort;
 import hs.mediasystem.presentation.ViewPortFactory;
+import hs.mediasystem.runner.root.ParentalControlsProvider.ParentalControls;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
@@ -19,6 +20,7 @@ import java.time.format.FormatStyle;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javafx.animation.KeyFrame;
@@ -34,6 +36,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -42,15 +45,17 @@ import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Singleton
 public class RootNodeFactory implements NodeFactory<RootPresentation> {
-  @Inject private SceneManager sceneManager;
-  @Inject private ViewPortFactory viewPortFactory;
-
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG);
+
+  @Inject private SceneManager sceneManager;
+  @Inject private ViewPortFactory viewPortFactory;
+  @Inject private Provider<ParentalControls> parentalControlsProvider;
 
   @Override
   public Node create(RootPresentation presentation) {
@@ -132,7 +137,51 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
 
     frameRateMeter.start();
 */
-    return new StackPane(viewPort, logoPane, createProgressPane(presentation), clockPane); //, fpsPane);
+    StackPane stackPane = new StackPane(viewPort, logoPane, createProgressPane(presentation), clockPane); //, fpsPane);
+    ParentalControls parentalControls = parentalControlsProvider.get();
+
+    if(parentalControls.passcode != null && !parentalControls.passcode.isEmpty()) {
+      stackPane.addEventHandler(KeyEvent.KEY_TYPED, new PinCodeEventHandler(presentation, parentalControls.passcode));
+    }
+
+    return stackPane;
+  }
+
+  private static class PinCodeEventHandler implements EventHandler<KeyEvent> {
+    private static final Logger LOGGER = Logger.getLogger(PinCodeEventHandler.class.getName());
+
+    private final RootPresentation presentation;
+    private final String pinCode;
+
+    private String lastCharsTyped;
+    private long lastEventMillis;
+
+    public PinCodeEventHandler(RootPresentation presentation, String pinCode) {
+      this.presentation = presentation;
+      this.pinCode = pinCode;
+    }
+
+    @Override
+    public void handle(KeyEvent e) {
+      long eventMillis = System.currentTimeMillis();
+
+      if(eventMillis > lastEventMillis + 5000) {  // discard buffer if last event was more than 5 seconds ago
+        lastCharsTyped = "";
+      }
+
+      lastCharsTyped += e.getCharacter();
+
+      if(lastCharsTyped.endsWith(pinCode)) {
+        boolean value = !presentation.hiddenItemsVisible.getValue();
+
+        presentation.hiddenItemsVisible.setValue(value);
+        lastCharsTyped = "";
+
+        LOGGER.info("Toggled visibility of hidden items to: " + value);
+      }
+
+      lastEventMillis = eventMillis;
+    }
   }
 
   public StackPane createProgressPane(RootPresentation presentation) {

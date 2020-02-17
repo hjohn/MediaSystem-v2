@@ -8,6 +8,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 
 public class RootPresentation extends ParentPresentation {
   public final BooleanProperty clockVisible = new SimpleBooleanProperty(true);
+  public final BooleanProperty hiddenItemsVisible = new SimpleBooleanProperty(false);
 
   public void toggleDebug() {
     boolean enabled = !DebugFX.getEnabled();
