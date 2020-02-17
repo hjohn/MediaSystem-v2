@@ -6,3 +6,4 @@ logging.properties
 /mediasystem-collections.yaml
 db/
 derby.log
+/mediasystem.yaml

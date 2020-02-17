@@ -3,8 +3,6 @@ package hs.mediasystem.runner;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.util.expose.ExposedControl;
 import hs.mediasystem.util.expose.Trigger;
-import hs.mediasystem.util.ini.Ini;
-import hs.mediasystem.util.ini.Section;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,13 +20,14 @@ import javafx.scene.input.KeyEvent;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Singleton
 public class InputActionHandler {
   private static final Logger LOGGER = Logger.getLogger(InputActionHandler.class.getName());
 
-  @Inject private Ini ini;
+  @Inject @Named("input-mappings") private Map<String, Object> inputMappings;
   @Inject private ActionTargetProvider actionTargetProvider;
 
   private final Map<KeyCombination, List<Action>> actions = new HashMap<>();
@@ -81,9 +80,7 @@ public class InputActionHandler {
   private void createMappings() {
     actions.clear();
 
-    Section section = ini.getSection("input-mappings");
-
-    for(String key : section) {
+    for(String key : inputMappings.keySet()) {
       KeyCombination combination = KeyCombination.valueOf(key);
 
       if(combination instanceof KeyCharacterCombination) {
@@ -93,7 +90,7 @@ public class InputActionHandler {
 
       LOGGER.info("Input Mapping Key '" + key + "' converted to valid key combination: " + combination);
 
-      for(String action : section.getAll(key)) {
+      for(String action : inputMappings.get(key) instanceof List ? (List<String>)inputMappings.get(key) : List.of(inputMappings.get(key).toString())) {
         String[] parts = action.split(":");
 
         try {

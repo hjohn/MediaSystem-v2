@@ -1,73 +1,77 @@
 package hs.mediasystem.runner.config;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.core.util.AnnotationDescriptor;
-import hs.mediasystem.util.ini.Ini;
-import hs.mediasystem.util.ini.Section;
 
 import java.io.File;
-import java.util.List;
-
-import javax.inject.Provider;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 public class BasicSetup {
-  public static Injector create() {
-    Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
-    Ini ini = new Ini(new File("mediasystem.ini"));
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
 
-    injector.registerInstance(ini);
+  public static Injector create() throws IOException {
+    Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
+    JsonNode node = OBJECT_MAPPER.readTree(new File("mediasystem.yaml"));
+
+    injector.registerInstance(node, AnnotationDescriptor.named("configuration"));
     injector.registerInstance(injector);  // Register injector with itself
 
     /*
-     * Add INI fields to Injector
+     * Add configuration fields to Injector
      */
 
-    for(List<Section> sections : ini) {
-      for(Section section : sections) {
-        for(String key : section) {
-          String value = section.get(key);
-
-          if(value.matches("-?[0-9]+")) {
-            injector.registerInstance(new LongProvider(Long.valueOf(value)), AnnotationDescriptor.named(section.getName() + "." + key));
-          }
-          else {
-            if((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
-              value = value.substring(1, value.length() - 1);
-            }
-
-            injector.registerInstance(new StringProvider(value), AnnotationDescriptor.named(section.getName() + "." + key));
-          }
-        }
-      }
-    }
+    addConfigurationToInjector(injector, node, "");
 
     return injector;
   }
 
-  private static class StringProvider implements Provider<String> {
-    private final String value;
+  private static void addConfigurationToInjector(Injector injector, JsonNode parent, String prefix) {
+    Iterator<Entry<String, JsonNode>> fields = parent.fields();
 
-    public StringProvider(String value) {
-      this.value = value;
-    }
+    while(fields.hasNext()) {
+      Entry<String, JsonNode> entry = fields.next();
+      JsonNode node = entry.getValue();
 
-    @Override
-    public String get() {
-      return value;
+      if(node.isObject()) {
+        addConfigurationToInjector(injector, node, prefix + entry.getKey() + ".");
+
+        injector.registerInstance(
+          new ConfigurationMap(OBJECT_MAPPER.convertValue(node, new TypeReference<Map<String, Object>>() {})),
+          AnnotationDescriptor.named(prefix + entry.getKey())
+        );
+      }
+      else if(node.isArray()) {
+        for(JsonNode item : node) {
+          injector.registerInstance(item.asText(), AnnotationDescriptor.named(prefix + entry.getKey()));
+        }
+      }
+      else {
+        if(node.isIntegralNumber()) {
+          injector.registerInstance(node.asLong(), AnnotationDescriptor.named(prefix + entry.getKey()));
+        }
+        else if(node.isBoolean()) {
+          injector.registerInstance(node.asBoolean(), AnnotationDescriptor.named(prefix + entry.getKey()));
+        }
+        else {
+          injector.registerInstance(node.asText(), AnnotationDescriptor.named(prefix + entry.getKey()));
+        }
+      }
     }
   }
 
-  private static class LongProvider implements Provider<Long> {
-    private final Long value;
-
-    public LongProvider(Long value) {
-      this.value = value;
-    }
-
-    @Override
-    public Long get() {
-      return value;
+  private static class ConfigurationMap extends HashMap<String, Object> {
+    public ConfigurationMap(Map<String, Object> map) {
+      super(map);
     }
   }
 }

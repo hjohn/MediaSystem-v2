@@ -11,8 +11,6 @@ import hs.mediasystem.runner.config.LoggingConfigurer;
 import hs.mediasystem.runner.expose.Annotations;
 import hs.mediasystem.runner.util.FXSceneManager;
 import hs.mediasystem.runner.util.SceneManager;
-import hs.mediasystem.util.ini.Ini;
-import hs.mediasystem.util.ini.Section;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -28,6 +26,10 @@ import java.util.stream.Collectors;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 public class FrontEndRunner extends Application {
   private static final Logger LOGGER = Logger.getLogger(FrontEndRunner.class.getName());
@@ -61,12 +63,11 @@ public class FrontEndRunner extends Application {
     LoggingConfigurer.configure();
 
     Injector injector = BasicSetup.create();
-    Ini ini = injector.getInstance(Ini.class);
+    FXSceneManagerConfiguration configuration = injector.getInstance(FXSceneManagerConfiguration.class);
 
-    Section generalSection = ini.getSection("general");
-    int screenNumber = generalSection == null ? 0 : Integer.parseInt(generalSection.getDefault("screen", "0"));
-    boolean alwaysOnTop = generalSection == null ? true : Boolean.parseBoolean(generalSection.getDefault("alwaysOnTop", "true"));
-    SceneManager sceneManager = new FXSceneManager("MediaSystem", screenNumber, alwaysOnTop);
+    LOGGER.info("Creating Scene on screen " + configuration.screenNumber + " with always on top set to " + configuration.alwaysOnTop);
+
+    SceneManager sceneManager = new FXSceneManager("MediaSystem", configuration.screenNumber.intValue(), configuration.alwaysOnTop);
 
     injector.registerInstance(sceneManager);
 
@@ -84,6 +85,11 @@ public class FrontEndRunner extends Application {
 
     sceneManager.display();
     sceneManager.getRootPane().fireEvent(NavigateEvent.to(provider.get()));
+  }
+
+  public static class FXSceneManagerConfiguration {
+    @Inject @Nullable @Named("general.screen") public Long screenNumber = 0L;
+    @Inject @Nullable @Named("general.alwaysOnTop") public Boolean alwaysOnTop = false;
   }
 
   private static void loadPlayerPlugins(Injector injector) throws IOException {

@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * referenced files and setting their hash without changing their StreamID.
  */
 public class HashUpdater {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws IOException {
     Injector injector = BasicSetup.create();
 
     StreamIdDatabase store = injector.getInstance(StreamIdDatabase.class);
