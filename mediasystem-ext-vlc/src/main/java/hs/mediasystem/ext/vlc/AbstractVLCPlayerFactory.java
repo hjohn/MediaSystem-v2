@@ -6,13 +6,9 @@ import hs.mediasystem.ext.vlc.VLCPlayer.Mode;
 import hs.mediasystem.ui.api.player.PlayerFactory;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
-import hs.mediasystem.util.ini.Ini;
-import hs.mediasystem.util.ini.Section;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class AbstractVLCPlayerFactory implements PlayerFactory {
   private final String name;
@@ -26,7 +22,7 @@ public abstract class AbstractVLCPlayerFactory implements PlayerFactory {
   }
 
   @Override
-  public PlayerPresentation create(Ini ini) {
+  public PlayerPresentation create() {
     Path libVlcPath;
 
     if(System.getProperty("os.arch").equals("x86")) {
@@ -38,17 +34,7 @@ public abstract class AbstractVLCPlayerFactory implements PlayerFactory {
 
     NativeLibrary.addSearchPath("libvlc", libVlcPath.toString());
 
-    List<String> args = new ArrayList<>();
-    Section vlcArgsSection = ini.getSection("vlc.args");
-
-    if(vlcArgsSection != null) {
-      for(String key : vlcArgsSection) {
-        args.add(key);
-        args.add(vlcArgsSection.get(key));
-      }
-    }
-
-    return new VLCPlayer(mode, supplier, args.toArray(new String[args.size()]));
+    return new VLCPlayer(mode, supplier);
   }
 
   @Override

@@ -29,14 +29,14 @@ public class BasicSetup {
           String value = section.get(key);
 
           if(value.matches("-?[0-9]+")) {
-            injector.register(new LongProvider(Long.valueOf(value)), AnnotationDescriptor.named(section.getName() + "." + key));
+            injector.registerInstance(new LongProvider(Long.valueOf(value)), AnnotationDescriptor.named(section.getName() + "." + key));
           }
           else {
             if((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
               value = value.substring(1, value.length() - 1);
             }
 
-            injector.register(new StringProvider(value), AnnotationDescriptor.named(section.getName() + "." + key));
+            injector.registerInstance(new StringProvider(value), AnnotationDescriptor.named(section.getName() + "." + key));
           }
         }
       }
