@@ -1,6 +1,7 @@
 package hs.mediasystem.local.client;
 
 import hs.ddif.core.Injector;
+import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.ServiceConfigurer;
 import hs.mediasystem.runner.NavigateEvent;
@@ -71,13 +72,13 @@ public class FrontEndRunner extends Application {
 
     injector.registerInstance(sceneManager);
 
-    loadPlayerPlugins(injector);
+    loadPlayerPlugins(injector.getStore());
 
     injector.getInstance(ServiceConfigurer.class);  // Triggers configuration of service layer
 
     Annotations.initialize();
 
-    new PluginManager(injector).loadPluginAndScan("hs.mediasystem");
+    new PluginManager(injector.getStore()).loadPluginAndScan("hs.mediasystem");
 
     StartupPresentationProvider provider = injector.getInstance(StartupPresentationProvider.class);
 
@@ -92,8 +93,8 @@ public class FrontEndRunner extends Application {
     @Inject @Nullable @Named("general.alwaysOnTop") public Boolean alwaysOnTop = false;
   }
 
-  private static void loadPlayerPlugins(Injector injector) throws IOException {
-    PluginManager pluginManager = new PluginManager(injector);
+  private static void loadPlayerPlugins(BeanDefinitionStore store) throws IOException {
+    PluginManager pluginManager = new PluginManager(store);
 
     Path root = Paths.get("ui-plugins");
 

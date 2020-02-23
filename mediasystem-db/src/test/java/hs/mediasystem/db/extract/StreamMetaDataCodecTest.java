@@ -2,6 +2,7 @@ package hs.mediasystem.db.extract;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.AudioStream;
 import hs.mediasystem.domain.work.Resolution;
@@ -27,7 +28,7 @@ class StreamMetaDataCodecTest {
   private StreamMetaDataCodec codec;
 
   @BeforeEach
-  void beforeEach() {
+  void beforeEach() throws BeanResolutionException {
     Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
 
     codec = injector.getInstance(StreamMetaDataCodec.class);

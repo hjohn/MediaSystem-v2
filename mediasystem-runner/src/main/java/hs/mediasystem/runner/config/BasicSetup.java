@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
+import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.core.util.AnnotationDescriptor;
 
 import java.io.File;
@@ -24,18 +25,19 @@ public class BasicSetup {
     JsonNode node = OBJECT_MAPPER.readTree(new File("mediasystem.yaml"));
 
     injector.registerInstance(node, AnnotationDescriptor.named("configuration"));
-    injector.registerInstance(injector);  // Register injector with itself
+    injector.registerInstance(injector.getInstantiator());  // Register instantiator
+    injector.registerInstance(injector.getStore());  // Register store
 
     /*
      * Add configuration fields to Injector
      */
 
-    addConfigurationToInjector(injector, node, "");
+    addConfigurationToInjector(injector.getStore(), node, "");
 
     return injector;
   }
 
-  private static void addConfigurationToInjector(Injector injector, JsonNode parent, String prefix) {
+  private static void addConfigurationToInjector(BeanDefinitionStore store, JsonNode parent, String prefix) {
     Iterator<Entry<String, JsonNode>> fields = parent.fields();
 
     while(fields.hasNext()) {
@@ -43,27 +45,27 @@ public class BasicSetup {
       JsonNode node = entry.getValue();
 
       if(node.isObject()) {
-        addConfigurationToInjector(injector, node, prefix + entry.getKey() + ".");
+        addConfigurationToInjector(store, node, prefix + entry.getKey() + ".");
 
-        injector.registerInstance(
+        store.registerInstance(
           new ConfigurationMap(OBJECT_MAPPER.convertValue(node, new TypeReference<Map<String, Object>>() {})),
           AnnotationDescriptor.named(prefix + entry.getKey())
         );
       }
       else if(node.isArray()) {
         for(JsonNode item : node) {
-          injector.registerInstance(item.asText(), AnnotationDescriptor.named(prefix + entry.getKey()));
+          store.registerInstance(item.asText(), AnnotationDescriptor.named(prefix + entry.getKey()));
         }
       }
       else {
         if(node.isIntegralNumber()) {
-          injector.registerInstance(node.asLong(), AnnotationDescriptor.named(prefix + entry.getKey()));
+          store.registerInstance(node.asLong(), AnnotationDescriptor.named(prefix + entry.getKey()));
         }
         else if(node.isBoolean()) {
-          injector.registerInstance(node.asBoolean(), AnnotationDescriptor.named(prefix + entry.getKey()));
+          store.registerInstance(node.asBoolean(), AnnotationDescriptor.named(prefix + entry.getKey()));
         }
         else {
-          injector.registerInstance(node.asText(), AnnotationDescriptor.named(prefix + entry.getKey()));
+          store.registerInstance(node.asText(), AnnotationDescriptor.named(prefix + entry.getKey()));
         }
       }
     }

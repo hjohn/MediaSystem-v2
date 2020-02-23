@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.ddif.core.Injector;
-import hs.ddif.core.NoSuchBeanException;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.ddif.core.util.Value;
 import hs.mediasystem.plugin.home.HomePresentation;
@@ -38,7 +38,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class BasicTheme implements Theme {
-  @Inject private Injector injector;
+  @Inject private Instantiator instantiator;
 
   @Override
   public Class<? extends Presentation> findParent(Class<? extends Presentation> cls) {
@@ -114,7 +114,12 @@ public class BasicTheme implements Theme {
 
   @Override
   public <P extends Presentation> P createPresentation(Class<P> presentationClass) {
-    return injector.getInstance(presentationClass);
+    try {
+      return instantiator.getInstance(presentationClass);
+    }
+    catch(BeanResolutionException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   @Override
@@ -133,22 +138,27 @@ public class BasicTheme implements Theme {
         );
 
         @SuppressWarnings("unchecked")
-        Placer<P, C> instance = injector.getInstance(Placer.class, descriptor);
+        Placer<P, C> instance = instantiator.getInstance(Placer.class, descriptor);
 
         return instance;
       }
-      catch(NoSuchBeanException e) {
+      catch(BeanResolutionException e) {
         // Fall-through
       }
     }
 
-    NodeFactory<C> nodeFactory = injector.getInstance(childNodeFactoryClass);
+    try {
+      NodeFactory<C> nodeFactory = instantiator.getInstance(childNodeFactoryClass);
 
-    return new Placer<>() {
-      @Override
-      public Node place(P parentPresentation, C presentation) {
-        return nodeFactory.create(presentation);
-      }
-    };
+      return new Placer<>() {
+        @Override
+        public Node place(P parentPresentation, C presentation) {
+          return nodeFactory.create(presentation);
+        }
+      };
+    }
+    catch(BeanResolutionException e) {
+      throw new IllegalStateException(e);
+    }
   }
 }

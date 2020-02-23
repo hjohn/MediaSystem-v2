@@ -1,7 +1,9 @@
 package hs.mediasystem.db;
 
 import hs.database.schema.DatabaseUpdater;
-import hs.ddif.core.Injector;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
+import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.base.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
@@ -30,20 +32,21 @@ import javax.inject.Named;
 public class ServiceConfigurer {
   private static final Logger LOGGER = Logger.getLogger(CollectionLocationManager.class.getName());
 
-  @Inject private Injector injector;
+  @Inject private Instantiator instantiator;
+  @Inject private BeanDefinitionStore store;
   @Inject @Nullable @Named("general.basedir") private String baseDir = ".";
 
   @PostConstruct
-  private void postConstruct() throws IOException {
-    PluginManager pluginManager = new PluginManager(injector);
+  private void postConstruct() throws IOException, BeanResolutionException {
+    PluginManager pluginManager = new PluginManager(store);
 
     pluginManager.loadPluginAndScan("hs.mediasystem.db", "hs.mediasystem.mediamanager");
 
-    DatabaseUpdater updater = injector.getInstance(DatabaseUpdater.class);
+    DatabaseUpdater updater = instantiator.getInstance(DatabaseUpdater.class);
 
     updater.updateDatabase("db-scripts");
 
-    configureResponseCache(injector);
+    configureResponseCache(instantiator);
 
     Path root = Paths.get(baseDir, "plugins");
 
@@ -74,12 +77,12 @@ public class ServiceConfigurer {
 
     LOGGER.info("Plugins loaded from " + root);
 
-    injector.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
-    injector.getInstance(ScannerController.class);       // Triggers background thread
-    injector.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
+    instantiator.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
+    instantiator.getInstance(ScannerController.class);       // Triggers background thread
+    instantiator.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
   }
 
-  private static void configureResponseCache(Injector injector) {
-    ResponseCache.setDefault(injector.getInstance(DatabaseResponseCache.class));
+  private static void configureResponseCache(Instantiator instantiator) throws BeanResolutionException {
+    ResponseCache.setDefault(instantiator.getInstance(DatabaseResponseCache.class));
   }
 }

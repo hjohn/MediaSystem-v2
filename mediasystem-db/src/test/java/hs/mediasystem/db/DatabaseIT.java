@@ -2,6 +2,7 @@ package hs.mediasystem.db;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.JustInTimeDiscoveryPolicy;
+import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.mediasystem.db.base.ImportSource;
 import hs.mediasystem.db.base.ImportSourceProvider;
@@ -87,7 +88,7 @@ public class DatabaseIT {
   private static StreamPrint streamPrint6;
 
   @BeforeAll
-  static void beforeAll() throws SecurityException, IOException {
+  static void beforeAll() throws SecurityException, IOException, BeanResolutionException {
     Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
 
     injector.registerInstance("org.postgresql.Driver", AnnotationDescriptor.named("database.driverClass"));
