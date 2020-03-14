@@ -1,6 +1,5 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.db.base.DatabaseStreamPrintProvider;
 import hs.mediasystem.db.streamids.StreamIdDatabase;
 import hs.mediasystem.db.streamids.StreamIdRecord;
 import hs.mediasystem.db.uris.UriDatabase;

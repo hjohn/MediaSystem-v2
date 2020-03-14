@@ -62,6 +62,7 @@ public class DatabaseIT {
 
   @RegisterExtension
   public static PreparedDbExtension pg = EmbeddedPostgresExtension.preparedDatabase(new DatabasePreparer() {
+    @SuppressWarnings("resource")
     @Override
     public void prepare(javax.sql.DataSource ds) throws SQLException {
       try(Connection connection = ds.getConnection()) {

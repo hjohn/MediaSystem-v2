@@ -110,36 +110,39 @@ public class DatabaseResponseCache extends ResponseCache {
 
     baos.write(ByteBuffer.allocate(8).putInt(ID).putInt(headerBuf.size()).array());
     headerBuf.writeTo(baos);
-    conn.getInputStream().transferTo(baos);
 
-    byte[] buf = baos.toByteArray();
+    try(InputStream is = conn.getInputStream()) {
+      is.transferTo(baos);
 
-    if(!(conn instanceof HttpURLConnection) || ((HttpURLConnection)conn).getResponseCode() == 200) {
-      // Store the result, if it was succesful:
-      store.store(uri.toURL(), buf);
+      byte[] buf = baos.toByteArray();
+
+      if(!(conn instanceof HttpURLConnection) || ((HttpURLConnection)conn).getResponseCode() == 200) {
+        // Store the result, if it was succesful:
+        store.store(uri.toURL(), buf);
+      }
+      else if(image != null) {
+        // If unsuccesful, for whatever reason, and there is an (expired) cached response, return that:
+        LOGGER.warning("Direct fetch failed, falling back to cache: " + safeURL);
+
+        CacheResponse response = decodeCacheResponse(image.getImage(), safeURL);
+
+        if(response != null) {
+          return response;
+        }
+      }
+
+      return new CacheResponse() {
+        @Override
+        public Map<String, List<String>> getHeaders() throws IOException {
+          return conn.getHeaderFields();
+        }
+
+        @Override
+        public InputStream getBody() throws IOException {
+          return new ByteArrayInputStream(buf, 8 + headerBuf.size(), buf.length - 8 - headerBuf.size());
+        }
+      };
     }
-    else if(image != null) {
-      // If unsuccesful, for whatever reason, and there is an (expired) cached response, return that:
-      LOGGER.warning("Direct fetch failed, falling back to cache: " + safeURL);
-
-      CacheResponse response = decodeCacheResponse(image.getImage(), safeURL);
-
-      if(response != null) {
-        return response;
-      }
-    }
-
-    return new CacheResponse() {
-      @Override
-      public Map<String, List<String>> getHeaders() throws IOException {
-        return conn.getHeaderFields();
-      }
-
-      @Override
-      public InputStream getBody() throws IOException {
-        return new ByteArrayInputStream(buf, 8 + headerBuf.size(), buf.length - 8 - headerBuf.size());
-      }
-    };
   }
 
   private static synchronized PriorityRateLimiter determineRateLimiter(List<String> list) {

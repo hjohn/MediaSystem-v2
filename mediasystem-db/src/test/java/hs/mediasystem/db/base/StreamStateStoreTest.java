@@ -2,8 +2,6 @@ package hs.mediasystem.db.base;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.db.base.StreamStateRecord;
-import hs.mediasystem.db.base.StreamStateStore;
 import hs.mediasystem.domain.stream.StreamID;
 
 import java.nio.charset.StandardCharsets;
@@ -26,6 +24,7 @@ class StreamStateStoreTest {
   @Mock private Database database;
   @InjectMocks private StreamStateStore store;
 
+  @SuppressWarnings("resource")
   @BeforeEach
   public void before() {
     MockitoAnnotations.initMocks(this);
@@ -33,7 +32,7 @@ class StreamStateStoreTest {
     when(database.beginReadOnlyTransaction()).thenReturn(tx);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "resource"})
   @Test
   void shouldStoreAndRetrieve() {
     StreamStateRecord record = new StreamStateRecord();
