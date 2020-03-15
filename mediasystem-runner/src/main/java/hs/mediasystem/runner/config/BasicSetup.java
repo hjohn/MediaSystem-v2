@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.core.util.AnnotationDescriptor;
 
@@ -21,7 +20,7 @@ public class BasicSetup {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
 
   public static Injector create() throws IOException {
-    Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
+    Injector injector = new Injector(true);
     JsonNode node = OBJECT_MAPPER.readTree(new File("mediasystem.yaml"));
 
     injector.registerInstance(node, AnnotationDescriptor.named("configuration"));

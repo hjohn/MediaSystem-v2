@@ -1,9 +1,12 @@
 package hs.mediasystem.db;
 
 import hs.database.core.ConnectionPool;
+import hs.database.core.Database;
 import hs.database.core.SimpleConnectionPoolDataSource;
 import hs.database.core.SimpleDatabaseStatementTranslator;
 import hs.database.schema.DatabaseStatementTranslator;
+import hs.database.schema.DatabaseUpdater;
+import hs.ddif.core.Produces;
 
 import java.sql.Connection;
 import java.util.Map;
@@ -19,8 +22,8 @@ import javax.inject.Singleton;
 import javax.sql.ConnectionPoolDataSource;
 
 @Singleton
-public class DatabaseSetup implements Provider<Connection>, DatabaseStatementTranslator {
-  private static final Logger LOGGER = Logger.getLogger(DatabaseSetup.class.getName());
+public class DatabaseFactory {
+  private static final Logger LOGGER = Logger.getLogger(DatabaseFactory.class.getName());
 
   @Inject @Nullable @Named("database.driverClass") private String driverClass;
   @Inject @Nullable @Named("database.url") private String url;
@@ -29,14 +32,30 @@ public class DatabaseSetup implements Provider<Connection>, DatabaseStatementTra
   @Inject @Nullable @Named("database.postConnectSql") private String postConnectSql;
 
   private ConnectionPool pool;
-  private DatabaseStatementTranslator databaseStatementTranslator;
 
   @PostConstruct
   private void postConstruct() {
     ConnectionPoolDataSource dataSource = url == null ? createDerbyDataSource() : createUserDataSource();
 
     pool = new ConnectionPool(dataSource, 5);
+  }
 
+  @Produces
+  Connection createConnection() {
+    return pool.getConnection();
+  }
+
+  @Produces
+  @Singleton
+  Database createDatabase(DatabaseStatementTranslator translator, Provider<Connection> connectionProvider) {
+    new DatabaseUpdater(connectionProvider, translator).updateDatabase("db-scripts");
+
+    return new Database(connectionProvider);
+  }
+
+  @Produces
+  @Singleton
+  DatabaseStatementTranslator createTranslator() {
     String databaseName = url == null ? "derby" : url.split(":")[1].toLowerCase();
 
     LOGGER.info(url == null ? "Using embedded Derby database" : "Using database URL: " + url);
@@ -60,17 +79,7 @@ public class DatabaseSetup implements Provider<Connection>, DatabaseStatementTra
       );
     }
 
-    databaseStatementTranslator = new SimpleDatabaseStatementTranslator(translations);
-  }
-
-  @Override
-  public Connection get() {
-    return pool.getConnection();
-  }
-
-  @Override
-  public String translate(String statement) {
-    return databaseStatementTranslator.translate(statement);
+    return new SimpleDatabaseStatementTranslator(translations);
   }
 
   private static ConnectionPoolDataSource createDerbyDataSource() {

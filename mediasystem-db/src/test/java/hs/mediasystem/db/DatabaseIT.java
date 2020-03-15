@@ -1,7 +1,6 @@
 package hs.mediasystem.db;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
 import hs.mediasystem.db.base.ImportSource;
@@ -90,7 +89,7 @@ public class DatabaseIT {
 
   @BeforeAll
   static void beforeAll() throws SecurityException, IOException, BeanResolutionException {
-    Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
+    Injector injector = new Injector(true);
 
     injector.registerInstance("org.postgresql.Driver", AnnotationDescriptor.named("database.driverClass"));
     injector.registerInstance(databaseURL, AnnotationDescriptor.named("database.url"));
@@ -105,8 +104,10 @@ public class DatabaseIT {
     injector.register(SerieQueryService.class);
     injector.register(EpisodeIdentificationService.class);
     injector.registerInstance(injector);
+    injector.registerInstance(injector.getStore());
+    injector.registerInstance(injector.getInstantiator());
 
-    injector.getInstance(ServiceConfigurer.class);  // Triggers service layer configuration
+    ServiceRunner.start(injector);
 
     updateService = injector.getInstance(StreamCacheUpdateService.class);
     workService = injector.getInstance(WorkService.class);

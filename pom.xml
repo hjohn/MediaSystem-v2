@@ -12,6 +12,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.jackson>2.9.9</version.jackson>
     <version.javafx>11.0.2</version.javafx>
+    <version.ddif>1.1.0</version.ddif>
   </properties>
 
   <modules>
@@ -23,19 +24,29 @@
     <module>mediasystem-ext-basic-media-types</module>
     <module>mediasystem-ui-api</module>
     <module>mediasystem-local-client</module>
-    
+
     <!-- build in order to run tests, not packaged though -->
     <module>mediasystem-ext-local</module>
     <module>mediasystem-ext-mpv</module>
     <module>mediasystem-ext-scanners</module>
     <module>mediasystem-ext-tmdb</module>
     <module>mediasystem-ext-vlc</module>
-    
+
     <module>mediasystem-package</module>
   </modules>
-    
+
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>com.github.hjohn.ddif</groupId>
+        <artifactId>ddif-core</artifactId>
+        <version>${version.ddif}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.hjohn.ddif</groupId>
+        <artifactId>ddif-plugins</artifactId>
+        <version>${version.ddif}</version>
+      </dependency>
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-controls</artifactId>
@@ -90,8 +101,8 @@
         <version>${version.jackson}</version>
       </dependency>
     </dependencies>
-  </dependencyManagement>  
-    
+  </dependencyManagement>
+
   <build>
     <resources>
       <resource>
@@ -109,8 +120,8 @@
       <resource>
         <directory>src/main/resources</directory>
       </resource>
-    </resources>   
-    
+    </resources>
+
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -126,18 +137,18 @@
         </executions>
       </plugin>
     </plugins>
-      
+
     <pluginManagement>
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>      
+          <artifactId>maven-shade-plugin</artifactId>
           <version>3.2.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.8.0</version>      
+          <version>3.8.0</version>
           <configuration>
             <source>11</source>
             <target>11</target>
@@ -147,14 +158,14 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>3.1.1</version>    
+          <version>3.1.1</version>
           <executions>
             <execution>
               <goals>
                 <goal>test-jar</goal>
               </goals>
             </execution>
-          </executions>  
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>

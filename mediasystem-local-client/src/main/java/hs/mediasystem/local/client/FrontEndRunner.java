@@ -3,7 +3,7 @@ package hs.mediasystem.local.client;
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.plugins.PluginManager;
-import hs.mediasystem.db.ServiceConfigurer;
+import hs.mediasystem.db.ServiceRunner;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.runner.RootPresentationHandler;
 import hs.mediasystem.runner.StartupPresentationProvider;
@@ -74,11 +74,17 @@ public class FrontEndRunner extends Application {
 
     loadPlayerPlugins(injector.getStore());
 
-    injector.getInstance(ServiceConfigurer.class);  // Triggers configuration of service layer
+    ServiceRunner.start(injector);  // Triggers configuration of service layer
 
     Annotations.initialize();
 
-    new PluginManager(injector.getStore()).loadPluginAndScan("hs.mediasystem");
+    new PluginManager(injector.getStore()).loadPluginAndScan(
+      "hs.mediasystem.runner",
+      "hs.mediasystem.presentation",
+      "hs.mediasystem.plugin",
+      "hs.mediasystem.ui.api",
+      "hs.mediasystem.local.client.service"
+    );
 
     StartupPresentationProvider provider = injector.getInstance(StartupPresentationProvider.class);
 

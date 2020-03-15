@@ -1,7 +1,6 @@
 package hs.mediasystem.mediamanager;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.JustInTimeDiscoveryPolicy;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
@@ -73,7 +72,7 @@ public class LocalMediaIdentificationServiceTest {
     when(queryServiceForDS3.getDataSource()).thenReturn(DATA_SOURCE_3);
     when(queryServiceForDS6.getDataSource()).thenReturn(DATA_SOURCE_6);
 
-    Injector injector = new Injector(new JustInTimeDiscoveryPolicy());
+    Injector injector = new Injector(true);
 
     injector.registerInstance(idServiceForDS1);
     injector.registerInstance(idServiceForDS2);

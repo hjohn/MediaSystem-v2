@@ -2,24 +2,23 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
   xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  
+
   <parent>
     <groupId>hs.mediasystem</groupId>
     <artifactId>mediasystem-parent</artifactId>
     <version>2.0.0-SNAPSHOT</version>
   </parent>
-  
+
   <artifactId>mediasystem-db</artifactId>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
-  
+
   <dependencies>
     <dependency>
-      <groupId>hs.ddif</groupId>
+      <groupId>com.github.hjohn.ddif</groupId>
       <artifactId>ddif-core</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>hs.mediasystem</groupId>
@@ -31,7 +30,7 @@
       <artifactId>database-core</artifactId>
       <version>1.0.0-SNAPSHOT</version>
     </dependency>
-    
+
      <!-- Frame grab dependencies -->
     <dependency>
       <groupId>org.bytedeco</groupId>
@@ -103,7 +102,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>io.zonky.test</groupId>
       <artifactId>embedded-postgres</artifactId>
@@ -116,7 +115,7 @@
       <version>1.6.4</version>
       <scope>test</scope>
     </dependency>
-   
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -136,7 +135,7 @@
       <scope>test</scope>
     </dependency>    
   </dependencies>
-    
+
   <build>
     <plugins>
       <plugin>
