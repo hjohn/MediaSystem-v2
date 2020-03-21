@@ -81,19 +81,19 @@ public class CssLayoutFactory {
       String hgrow = childDef.getOptions().get("hgrow");
 
       if(hgrow != null) {
-        HBox.setHgrow(node, Priority.valueOf(hgrow));
+        HBox.setHgrow(node, Priority.valueOf(hgrow.toUpperCase()));
       }
 
       String vgrow = childDef.getOptions().get("vgrow");
 
       if(vgrow != null) {
-        VBox.setVgrow(node, Priority.valueOf(hgrow));
+        VBox.setVgrow(node, Priority.valueOf(vgrow.toUpperCase()));
       }
 
       String align = childDef.getOptions().get("align");
 
       if(align != null) {
-        StackPane.setAlignment(node, Pos.valueOf(align));
+        StackPane.setAlignment(node, Pos.valueOf(align.toUpperCase()));
       }
 
       newChildren.add(node);
