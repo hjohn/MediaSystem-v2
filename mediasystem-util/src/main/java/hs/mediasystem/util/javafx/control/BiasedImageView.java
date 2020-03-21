@@ -132,26 +132,29 @@ public class BiasedImageView extends Region {
 
   private void setupFadeIn(Node placeHolder) {
     imageView.setOpacity(0);
-    effectRegion.setOpacity(0);
 
     Timeline timeline;
 
     if(placeHolder == null) {
+      effectRegion.setOpacity(0);
+
       timeline = new Timeline(
         new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(effectRegion.opacityProperty(), 0)),
         new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(effectRegion.opacityProperty(), 1))
       );
     }
     else {
+      effectRegion.setOpacity(1);
+
       timeline = new Timeline(
-        new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(effectRegion.opacityProperty(), 0), new KeyValue(placeHolder.opacityProperty(), 1)),
-        new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(effectRegion.opacityProperty(), 1), new KeyValue(placeHolder.opacityProperty(), 0))
+        new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(placeHolder.opacityProperty(), 1)),
+        new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(placeHolder.opacityProperty(), 0))
       );
     }
 
     imageProperty().addListener((obs, old, current) -> {
       if(current != null) {
-        if(Nodes.isTreeVisibleAndShowing(this)) {
+        if(Nodes.isTreeVisibleAndShowing(this) && imageView.getOpacity() == 0) {
           timeline.play();
         }
         else {
