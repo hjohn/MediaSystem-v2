@@ -340,21 +340,15 @@ public class BiasedImageView extends Region {
       throw new IllegalArgumentException("height cannot be negative");
     }
 
+    calculateImageSize();
+
     Insets insets = effectRegion.getInsets();
 
     double insetsWidth = insets.getLeft() + insets.getRight();
     double insetsHeight = insets.getTop() + insets.getBottom();
+    double r = imageWidth != 0 && imageHeight != 0 ? ratio : expectedAspectRatio;
 
-    calculateImageSize();
-
-    if(imageWidth != 0 && imageHeight != 0) {  // Use the ratio from Image:
-      return snapSizeX((height - insetsHeight) * ratio + insetsWidth);
-    }
-    else if(placeHolder != null) {  // No image, use PlaceHolder calculation instead:
-      return placeHolder.prefWidth(height);
-    }
-
-    return height * expectedAspectRatio;
+    return snapSizeX((height - insetsHeight) * r + insetsWidth);
   }
 
   private double calcHeightGivenWidth(double width) {
@@ -362,21 +356,15 @@ public class BiasedImageView extends Region {
       throw new IllegalArgumentException("width cannot be negative: " + width);
     }
 
+    calculateImageSize();
+
     Insets insets = effectRegion.getInsets();
 
     double insetsWidth = insets.getLeft() + insets.getRight();
     double insetsHeight = insets.getTop() + insets.getBottom();
+    double r = imageWidth != 0 && imageHeight != 0 ? ratio : expectedAspectRatio;
 
-    calculateImageSize();
-
-    if(imageWidth != 0 && imageHeight != 0) {  // Use the ratio from Image:
-      return snapSizeY((width - insetsWidth) / ratio + insetsHeight);
-    }
-    else if(placeHolder != null) {  // No image, use PlaceHolder calculation instead:
-      return placeHolder.prefHeight(width);
-    }
-
-    return width / expectedAspectRatio;
+    return snapSizeY((width - insetsWidth) / r + insetsHeight);
   }
 
   @Override
