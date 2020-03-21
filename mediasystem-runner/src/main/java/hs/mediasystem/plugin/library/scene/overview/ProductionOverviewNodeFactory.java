@@ -217,7 +217,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         }
       });
 
-      cellFactory.setPlaceHolderAspectRatio(9.0 / 16.0);
+      cellFactory.setPlaceHolderAspectRatio(16.0 / 9.0);
       cellFactory.setMinRatio(4.0 / 3.0);
 
       VBox.setVgrow(gridView, Priority.ALWAYS);

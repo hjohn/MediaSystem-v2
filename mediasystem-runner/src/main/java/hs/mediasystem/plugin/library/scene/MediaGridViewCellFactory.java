@@ -6,6 +6,9 @@ import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.VerticalLabel;
+import hs.mediasystem.util.javafx.control.VerticalLabels;
+import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
+import hs.mediasystem.util.javafx.control.csslayout.StylableVBox;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,20 +24,14 @@ import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
-import javafx.geometry.VerticalDirection;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Callback;
 import javafx.util.Duration;
@@ -51,7 +48,6 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
     default Function<T, ObservableValue<? extends String>> sideBarTopLeftBindProvider() { return null; }
     default Function<T, ObservableValue<? extends String>> sideBarCenterBindProvider() { return null; }
     default Function<T, String> detailExtractor() { return null; }
-    default Function<T, String> sequenceNumberExtractor() { return null; }
     default Var<Boolean> watchedProperty(@SuppressWarnings("unused") T item) { return Var.newSimpleVar(false); }
     default Optional<Boolean> hasStream(@SuppressWarnings("unused") T item) { return Optional.empty(); }
   }
@@ -59,7 +55,9 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
   private final BinderProvider bindersProvider;
 
   private Orientation orientation = Orientation.HORIZONTAL;
-  private double aspectRatio = 1.5;
+  private double aspectRatio = 2.0 / 3.0;
+  private double maxRatio = Double.MAX_VALUE;
+  private double minRatio = 0;
 
   public MediaGridViewCellFactory(BinderProvider bindersProvider) {
     this.bindersProvider = bindersProvider;
@@ -73,9 +71,6 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
     this.aspectRatio = aspectRatio;
   }
 
-  private double maxRatio = Double.MAX_VALUE;
-  private double minRatio = 0;
-
   public void setMinRatio(double minRatio) {
     this.minRatio = minRatio;
   }
@@ -87,151 +82,61 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
   @Override
   public ListCell<T> call(ListView<T> param) {
     return new ListCell<>() {
-      private final Label placeHolderLabel = new AspectCorrectLabel("?", aspectRatio, orientation, 1000, 1000);
-      private final BiasedImageView imageView = new BiasedImageView(placeHolderLabel);
-      private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2(400, 400);
+      private final Label placeHolderLabel = Labels.create("place-holder", "");
       private final Label name = Labels.create("name");
-      private final Label detail = Labels.create("detail");
-      private final Label indicator = Labels.create("indicator");
-      private final Label indicatorBackground = Labels.create("indicator-background");
-      private final StackPane indicatorPane = new StackPane(indicatorBackground, indicator);
-      private final Label sequenceNumber = Labels.create("sequence-number");
-      private final StackPane sequenceNumberPane = new StackPane(sequenceNumber);
-      private final BooleanProperty watchedProperty = new SimpleBooleanProperty();
-      private final BooleanProperty hasStreamProperty = new SimpleBooleanProperty();
-      private final DropShadow dropShadow = new DropShadow(BlurType.GAUSSIAN, new Color(1, 1, 1, 0.8), 0, 0.0, 0, 0);
+      private final Label detail = Labels.create("detail", Labels.HIDE_IF_EMPTY);
+      private final StackPane indicatorPane = Containers.stack("indicator-pane", Labels.create("indicator-background"), Labels.create("indicator"));
+      private final VerticalLabel extraVertical1 = VerticalLabels.create("extra-vertical-1", VerticalLabels.HIDE_IF_EMPTY);
+      private final VerticalLabel extraVertical2 = VerticalLabels.create("extra-vertical-2", VerticalLabels.HIDE_IF_EMPTY);
+      private final Label extraHorizontal1 = Labels.create("extra-horizontal-1", Labels.HIDE_IF_EMPTY);
+      private final Label extraHorizontal2 = Labels.create("extra-horizontal-2", Labels.HIDE_IF_EMPTY);
 
+      private final BiasedImageView imageView;
+      private final StylableVBox container;
+
+      private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2(400, 400);
       private final StringProperty sideBarTopLeftText = new SimpleStringProperty();
       private final StringProperty sideBarCenterText = new SimpleStringProperty();
+      private final BooleanProperty watchedProperty = new SimpleBooleanProperty();
+      private final BooleanProperty hasStreamProperty = new SimpleBooleanProperty();
 
-      private final Pane sideDetail;
-
-      {
-        if(orientation == Orientation.VERTICAL) {
-          sideDetail = new VBox();
-
-          VerticalLabel topLeft = new VerticalLabel(VerticalDirection.DOWN);
-          VerticalLabel center = new VerticalLabel(VerticalDirection.DOWN);
-
-          sideDetail.getChildren().addAll(topLeft, center, indicatorPane);
-
-          topLeft.textProperty().bind(sideBarTopLeftText);
-          topLeft.getStyleClass().add("top-left");
-          topLeft.setMinWidth(Region.USE_PREF_SIZE);
-          topLeft.setMinHeight(Region.USE_PREF_SIZE);
-
-          center.textProperty().bind(sideBarCenterText);
-          center.getStyleClass().add("center");
-          center.setMinWidth(Region.USE_PREF_SIZE);
-          center.setMaxHeight(Double.MAX_VALUE);
-
-          VBox.setVgrow(center, Priority.ALWAYS);
-        }
-        else {
-          sideDetail = new HBox();
-
-          Label topLeft = new Label();
-          Label center = new Label();
-
-          topLeft.textProperty().bind(sideBarTopLeftText);
-          topLeft.getStyleClass().add("top-left");
-
-          center.textProperty().bind(sideBarCenterText);
-          center.getStyleClass().add("center");
-          center.setMaxWidth(Double.MAX_VALUE);
-
-          sideDetail.getChildren().addAll(topLeft, center, indicatorPane);
-
-          HBox.setHgrow(center, Priority.ALWAYS);
-        }
-
-        sideDetail.getStyleClass().add("image-detail-bar");
-      }
-
-      private final Pane imageBox;
+      private final ChangeListener<Boolean> updateIndicatorListener = (obs, old, watched) -> updateMediaStateStyles();
+      private final DropShadow dropShadow = new DropShadow(BlurType.GAUSSIAN, new Color(1, 1, 1, 0.8), 0, 0.0, 0, 0);
 
       {
-        if(orientation == Orientation.VERTICAL) {
-          imageBox = Containers.hbox("image-box,vertical", imageView, sideDetail);
-        }
-        else {
-          imageBox = Containers.vbox("image-box,horizontal", imageView, sideDetail);
-          VBox.setVgrow(imageView, Priority.ALWAYS);
-        }
-       // sideDetail.setPrefHeight(Double.MAX_VALUE);
+        imageView = new BiasedImageView(placeHolderLabel, aspectRatio);
 
-//        hbox.setMaxHeight(Double.MAX_VALUE);
-//hbox.setMinHeight(1);
-//hbox.setPrefHeight(1E5);
-//hbox.setFillHeight(true);
-     //   HBox.setHgrow(imageView, Priority.ALWAYS);
-      }
-
-      private final VBox vbox = Containers.vbox("cell-box", new VBox() {{
-        getChildren().add(imageBox);
-        getChildren().add(name);
-        getChildren().add(detail);
-
-        getStyleClass().add("container-box");
-
-        imageView.setOrientation(orientation);
         imageView.setMinRatio(minRatio);
         imageView.setMaxRatio(maxRatio);
-//        imageView.setMaxWidth(Region.USE_PREF_SIZE);  // Fucks up horizontal version
+        imageView.setOrientation(orientation);
+        imageView.setPreserveRatio(true);
+        imageView.imageProperty().bind(asyncImageProperty);
+
+        container = StylableContainers.vbox(
+          "container",
+          imageView, name, detail, indicatorPane, extraHorizontal1, extraHorizontal2, extraVertical1, extraVertical2
+        );
 
         name.setMinHeight(Region.USE_PREF_SIZE);  // Always fit entire (reflowed) text
         detail.setMinHeight(Region.USE_PREF_SIZE);  // Always fit entire (reflowed) text
 
-        if(orientation == Orientation.VERTICAL) {
-//          VBox.setVgrow(imageView, Priority.ALWAYS);
-          VBox.setVgrow(imageBox, Priority.ALWAYS);
-//          VBox.setVgrow(detail, Priority.ALWAYS);
-        }
-        else {
-          HBox.setHgrow(imageView, Priority.ALWAYS);
-        //  this.setMaxHeight(1);
-        }
-      }});
+        // first extra label doesn't reflow, force it to always display full:
+        extraHorizontal1.setMinWidth(Region.USE_PREF_SIZE);
+        extraVertical1.setMinHeight(Region.USE_PREF_SIZE);
 
-      private final ChangeListener<Boolean> updateIndicatorListener = (obs, old, watched) -> updateMediaStateStyles();
+        // second extra label does reflow, force it to always get enough lines to display full:
+        extraHorizontal2.setMinHeight(Region.USE_PREF_SIZE);
+        extraVertical2.setMinWidth(Region.USE_PREF_SIZE);
 
-      private void updateMediaStateStyles() {
-        getStyleClass().removeAll(MEDIA_STATE_STYLES);
+        extraHorizontal1.textProperty().bind(sideBarTopLeftText);
+        extraHorizontal2.textProperty().bind(sideBarCenterText);
+        extraVertical1.textProperty().bind(sideBarTopLeftText);
+        extraVertical2.textProperty().bind(sideBarCenterText);
 
-        if(watchedProperty.get()) {
-          getStyleClass().add("watched");
-        }
-        else if(hasStreamProperty.get()) {
-          getStyleClass().add("available");
-        }
-        else {
-          getStyleClass().add("unavailable");
-        }
-      }
+        container.getStyleClass().add(orientation == Orientation.VERTICAL ? "vertical" : "horizontal");
 
-      {
-        imageView.setPreserveRatio(true);
-        imageView.imageProperty().bind(asyncImageProperty);
-        imageView.setAlignment(Pos.BOTTOM_CENTER);
-        //imageView.getOverlayRegion().getChildren().add(indicatorPane);
-        imageView.getOverlayRegion().getChildren().add(sequenceNumberPane);
-
-        placeHolderLabel.getStyleClass().add("media-grid-view-image-place-holder");
-        placeHolderLabel.setAlignment(Pos.CENTER);
-
-        sequenceNumberPane.setAlignment(Pos.BOTTOM_LEFT);
-        sequenceNumberPane.getStyleClass().add("sequence-number-pane");
-        //indicatorPane.setAlignment(Pos.BOTTOM_RIGHT);
-        indicatorPane.getStyleClass().add("indicator-pane");
-
-        detail.managedProperty().bind(detail.textProperty().isNotEqualTo(""));
-        sequenceNumber.managedProperty().bind(sequenceNumber.textProperty().isNotEqualTo(""));
-
-        setAlignment(Pos.CENTER);
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);  // Indicate to cell that it can become as big as possible
-
-        imageBox.setEffect(dropShadow);
 
         focusedProperty().addListener((obs, old, current) -> {
           new Timeline(
@@ -253,6 +158,20 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
         this.watchedProperty.addListener(updateIndicatorListener);
       }
 
+      private void updateMediaStateStyles() {
+        getStyleClass().removeAll(MEDIA_STATE_STYLES);
+
+        if(watchedProperty.get()) {
+          getStyleClass().add("watched");
+        }
+        else if(hasStreamProperty.get()) {
+          getStyleClass().add("available");
+        }
+        else {
+          getStyleClass().add("unavailable");
+        }
+      }
+
       @Override
       protected void updateItem(T item, boolean empty) {
         super.updateItem(item, empty);
@@ -261,17 +180,11 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
           @SuppressWarnings("unchecked")
           Binder<T> binders = bindersProvider.findBinder(Binder.class, item.getClass()).orElseThrow(() -> new IllegalStateException("No binder available for class: " + item.getClass()));
 
-          setGraphic(vbox);
+          setGraphic(container);
 
           name.textProperty().bind(binders.titleBindProvider().apply(item));
           asyncImageProperty.imageHandleProperty().set(binders.imageHandleExtractor().apply(item));
-
-          if(binders.detailExtractor() != null) {
-            detail.setText(binders.detailExtractor().apply(item));
-          }
-          else {
-            detail.setText(null);
-          }
+          detail.setText(binders.detailExtractor() == null ? null : binders.detailExtractor().apply(item));
 
           boolean sideBarVisible = false;
 
@@ -291,26 +204,16 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
             sideBarCenterText.unbind();
           }
 
-          sideDetail.setVisible(sideBarVisible);
-          sideDetail.setManaged(sideBarVisible);
-
           hasStreamProperty.set(binders.hasStream(item).orElse(false));
           watchedProperty.bind(binders.watchedProperty(item));
 
-          if(binders.sequenceNumberExtractor() != null) {
-            sequenceNumber.setText(binders.sequenceNumberExtractor().apply(item));
-          }
-          else {
-            sequenceNumber.setText(null);
-          }
+          indicatorPane.setManaged(sideBarVisible);
+          indicatorPane.setVisible(sideBarVisible);
 
           updateMediaStateStyles();
         }
         else {
           setGraphic(null);
-
-          sideDetail.setVisible(false);
-          sideDetail.setManaged(false);
 
           name.textProperty().unbind();
           sideBarTopLeftText.unbind();
