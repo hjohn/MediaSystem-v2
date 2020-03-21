@@ -1,7 +1,7 @@
 package hs.mediasystem.util;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.util.Objects;
 import java.util.logging.Logger;
 
@@ -14,31 +14,26 @@ public class HttpImageURIHandler implements ImageURIHandler {
   @Override
   public ImageHandle handle(ImageURI uri) {
     if(uri.getUri().startsWith("http:") || uri.getUri().startsWith("https:") || uri.getUri().startsWith("file:")) {
-      try {
-        return new HttpImageHandle(uri.toURL());
-      }
-      catch(MalformedURLException e) {
-        throw new IllegalStateException(e);
-      }
+      return new HttpImageHandle(uri.toURI());
     }
 
     return null;
   }
 
   private class HttpImageHandle implements ImageHandle {
-    private final URL url;
+    private final URI uri;
 
-    public HttpImageHandle(URL url) {
-      this.url = url;
+    public HttpImageHandle(URI uri) {
+      this.uri = uri;
     }
 
     @Override
     public byte[] getImageData() {
       try {
-        return URLs.readAllBytes(url);
+        return URLs.readAllBytes(uri.toURL());
       }
-      catch(RuntimeIOException e) {
-        LOGGER.warning("RuntimeIOException while downloading image: " + url + ": " + Throwables.formatAsOneLine(e));
+      catch(RuntimeIOException | MalformedURLException e) {
+        LOGGER.warning("RuntimeIOException while downloading image: " + uri + ": " + Throwables.formatAsOneLine(e));
 
         return null;
       }
@@ -46,7 +41,7 @@ public class HttpImageURIHandler implements ImageURIHandler {
 
     @Override
     public String getKey() {
-      return url.toExternalForm();
+      return uri.toString();
     }
 
     @Override
@@ -56,7 +51,7 @@ public class HttpImageURIHandler implements ImageURIHandler {
 
     @Override
     public int hashCode() {
-      return Objects.hash(url);
+      return Objects.hash(uri);
     }
 
     @Override
@@ -70,7 +65,7 @@ public class HttpImageURIHandler implements ImageURIHandler {
 
       HttpImageHandle other = (HttpImageHandle)obj;
 
-      if(!url.equals(other.url)) {
+      if(!uri.equals(other.uri)) {
         return false;
       }
 
@@ -79,7 +74,7 @@ public class HttpImageURIHandler implements ImageURIHandler {
 
     @Override
     public String toString() {
-      return "HttpImageHandle[" + url + "]";
+      return "HttpImageHandle[" + uri + "]";
     }
   }
 }
