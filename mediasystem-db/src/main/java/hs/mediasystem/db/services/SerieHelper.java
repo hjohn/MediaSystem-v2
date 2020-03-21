@@ -28,7 +28,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class SerieHelper {
-  private static final DataSource LOCAL_RELEASE = DataSource.instance(MediaType.of("RELEASE"), "LOCAL");
+  private static final DataSource DEFAULT_RELEASE = DataSource.instance(MediaType.of("RELEASE"), "DEFAULT");
   private static final MediaType EPISODE = MediaType.of("EPISODE");
 
   @Inject private StreamableStore streamStore;
@@ -107,7 +107,7 @@ public class SerieHelper {
   }
 
   private static LocalEpisodeIdentifier createLocalId(Serie serie, Streamable stream) {
-    return new LocalEpisodeIdentifier(LOCAL_RELEASE, serie.getIdentifier().getId() + "/" + stream.getId().asInt(), serie.getIdentifier());
+    return new LocalEpisodeIdentifier(DEFAULT_RELEASE, serie.getIdentifier().getId() + "/" + stream.getId().asInt(), serie.getIdentifier());
   }
 
   private static class LocalEpisodeIdentifier extends EpisodeIdentifier {

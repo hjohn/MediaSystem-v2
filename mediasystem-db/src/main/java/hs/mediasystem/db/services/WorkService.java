@@ -246,25 +246,17 @@ public class WorkService {
 
   Work toWork(MediaDescriptor descriptor, MediaDescriptor parentDescriptor) {
     if(parentDescriptor != null) {
-      Set<Streamable> childStreams = streamStore.findStreams(descriptor.getIdentifier());
-
-      /*
-       * When multiple streams are returned for an Episode, there are two cases:
-       * - Stream is split over multiple files
-       * - There are multiple versions of the same episode (or one is a preview)
-       *
-       * The top level State should be a reduction of all the stream states,
-       * but currently we just pick the first stream's State.
-       */
-
-      List<MediaStream> mediaStreams = childStreams.stream()
-        .map(this::toMediaStream)
-        .collect(Collectors.toList());
-
+      Parent parent = new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), parentDescriptor.getDetails().getName());
       Episode ep = (Episode)descriptor;
       Episode episode = new Episode(  // New Episode created here to add backdrop to Episode if one is missing
         (EpisodeIdentifier)ep.getIdentifier(),
-        new Details(ep.getName(), ep.getDescription().orElse(null), ep.getDate().orElse(null), ep.getImage().orElse(null), ep.getBackdrop().or(() -> parentDescriptor.getDetails().getBackdrop()).orElse(null)),
+        new Details(
+          ep.getName(),
+          ep.getDescription().orElse(null),
+          ep.getDate().orElse(null),
+          ep.getImage().orElse(null),
+          ep.getBackdrop().or(() -> parentDescriptor.getDetails().getBackdrop()).orElse(null)
+        ),
         ep.getReception(),
         ep.getDuration(),
         ep.getSeasonNumber(),
@@ -272,9 +264,35 @@ public class WorkService {
         ep.getPersonRoles()
       );
 
+      List<MediaStream> mediaStreams;
+
+      if(descriptor.getIdentifier().getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
+        String id = descriptor.getIdentifier().getId();
+        int slash = id.indexOf("/");
+        StreamID sid = new StreamID(Integer.parseInt(id.substring(slash + 1)));
+
+        mediaStreams = streamStore.findStream(sid).map(this::toMediaStream).stream().collect(Collectors.toList());
+      }
+      else {
+        Set<Streamable> childStreams = streamStore.findStreams(descriptor.getIdentifier());
+
+        /*
+         * When multiple streams are returned for an Episode, there are two cases:
+         * - Stream is split over multiple files
+         * - There are multiple versions of the same episode (or one is a preview)
+         *
+         * The top level State should be a reduction of all the stream states,
+         * but currently we just pick the first stream's State.
+         */
+
+        mediaStreams = childStreams.stream()
+          .map(this::toMediaStream)
+          .collect(Collectors.toList());
+      }
+
       return new Work(
         episode,
-        new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), parentDescriptor.getDetails().getName()),
+        parent,
         mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
         mediaStreams
       );
