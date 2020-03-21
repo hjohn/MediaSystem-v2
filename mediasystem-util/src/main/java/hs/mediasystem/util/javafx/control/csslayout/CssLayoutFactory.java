@@ -1,5 +1,6 @@
 package hs.mediasystem.util.javafx.control.csslayout;
 
+import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.parser.CssStyle;
 import hs.mediasystem.util.parser.Cursor;
@@ -63,12 +64,18 @@ public class CssLayoutFactory {
       else {
         if(childDef.getType().equals("HBox")) {
           node = new StylableHBox();
+
+          Containers.HIDE_IF_EMPTY.accept((Pane)node);
         }
         else if(childDef.getType().equals("VBox")) {
           node = new StylableVBox();
+
+          Containers.HIDE_IF_EMPTY.accept((Pane)node);
         }
         else if(childDef.getType().equals("Stack")) {
           node = new StylableStackPane();
+
+          Containers.HIDE_IF_EMPTY.accept((Pane)node);
         }
         else {
           node = Labels.create("", "Unknown container type: " + childDef.getType());
