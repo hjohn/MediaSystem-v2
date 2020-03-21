@@ -90,7 +90,7 @@ public class CastPaneFactory {
 
       String role = contributor.getRole().getCharacter();
 
-      Label roleLabel = Labels.create("role", "as " + role, Labels.hide(new SimpleBooleanProperty(role != null && !role.isEmpty())));
+      Label roleLabel = Labels.create("role", "as " + role, Labels.hide(new SimpleBooleanProperty(role == null || role.isEmpty())));
 
       photo.setPrefHeight(50);
 
