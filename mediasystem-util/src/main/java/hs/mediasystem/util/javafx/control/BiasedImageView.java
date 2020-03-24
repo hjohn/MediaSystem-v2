@@ -172,7 +172,10 @@ public class BiasedImageView extends Region {
         if(placeHolder != null) {
           placeHolder.setOpacity(1);
         }
-        effectRegion.setOpacity(0);
+        else {
+          effectRegion.setOpacity(0);
+        }
+
         imageView.setOpacity(0);
       }
     });
