@@ -10,8 +10,8 @@ import java.util.List;
 public class StreamRecord {
 
   @Id(generated = false)
-  @Column(name = "stream_id")
-  private int streamId;
+  @Column(name = "content_id")
+  private int contentId;
 
   @Column(name = "scanner_id")
   private int importSourceId;
@@ -39,15 +39,15 @@ public class StreamRecord {
   @Column(name = "match_accuracy")
   private Float matchAccuracy;
 
-  @Column(name = "parent_stream_id")
-  private Integer parentStreamId;
+  @Column(name = "parent_content_id")
+  private Integer parentContentId;
 
-  public int getStreamId() {
-    return streamId;
+  public int getContentId() {
+    return contentId;
   }
 
-  public void setStreamId(int streamId) {
-    this.streamId = streamId;
+  public void setContentId(int contentId) {
+    this.contentId = contentId;
   }
 
   public int getImportSourceId() {
@@ -90,12 +90,12 @@ public class StreamRecord {
     this.json = json;
   }
 
-  public Integer getParentStreamId() {
-    return parentStreamId;
+  public Integer getParentContentId() {
+    return parentContentId;
   }
 
-  public void setParentStreamId(Integer parentStreamId) {
-    this.parentStreamId = parentStreamId;
+  public void setParentContentId(Integer parentContentId) {
+    this.parentContentId = parentContentId;
   }
 
   public List<String> getIdentifiers() {

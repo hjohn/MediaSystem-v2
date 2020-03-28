@@ -1,7 +1,7 @@
 package hs.mediasystem.db.base;
 
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
@@ -34,14 +34,14 @@ import javax.inject.Singleton;
 @Singleton
 public class DatabaseStreamStore implements StreamableStore {
   private static final Logger LOGGER = Logger.getLogger(DatabaseStreamStore.class.getName());
-  private static final Set<StreamID> EMPTY_SET = Collections.emptySet();
+  private static final Set<ContentID> EMPTY_SET = Collections.emptySet();
 
   // Data managed by this store
-  private final Map<StreamID, CachedStream> cache = new HashMap<>();
+  private final Map<ContentID, CachedStream> cache = new HashMap<>();
 
   // Indices on the data
-  private final Map<Identifier, Set<StreamID>> identifierIndex = new HashMap<>();
-  private final Map<StreamID, List<StreamID>> childIndex = new HashMap<>();  // maps a parent id to list of children
+  private final Map<Identifier, Set<ContentID>> identifierIndex = new HashMap<>();
+  private final Map<ContentID, List<ContentID>> childIndex = new HashMap<>();  // maps a parent id to list of children
 
   @Inject private ImportSourceProvider importSourceProvider;
   @Inject private StreamDatabase database;
@@ -58,7 +58,7 @@ public class DatabaseStreamStore implements StreamableStore {
       catch(IOException e) {
         LOGGER.warning("Exception decoding record: " + r + ": " + Throwables.formatAsOneLine(e));
 
-        badIds.add(r.getStreamId());
+        badIds.add(r.getContentId());
       }
     });
 
@@ -67,7 +67,7 @@ public class DatabaseStreamStore implements StreamableStore {
     LOGGER.fine("Loaded " + cache.size() + " cached stream records, deleted " + badIds.size() + " bad ones");
   }
 
-  synchronized Map<StreamID, Streamable> findByImportSourceId(long importSourceId) {
+  synchronized Map<ContentID, Streamable> findByImportSourceId(long importSourceId) {
     return cache.values().stream()
       .filter(cs -> cs.getImportSourceId() == importSourceId)
       .map(CachedStream::getStreamable)
@@ -96,37 +96,37 @@ public class DatabaseStreamStore implements StreamableStore {
   }
 
   @Override
-  public synchronized Optional<Streamable> findStream(StreamID streamId) {
-    return Optional.ofNullable(cache.get(streamId)).map(CachedStream::getStreamable);
+  public synchronized Optional<Streamable> findStream(ContentID contentId) {
+    return Optional.ofNullable(cache.get(contentId)).map(CachedStream::getStreamable);
   }
 
   @Override
-  public synchronized Optional<StreamID> findParentId(StreamID streamId) {
-    return findStream(streamId).flatMap(Streamable::getParentStreamId);
+  public synchronized Optional<ContentID> findParentId(ContentID contentId) {
+    return findStream(contentId).flatMap(Streamable::getParentContentId);
   }
 
   @Override
-  public synchronized List<Streamable> findChildren(StreamID streamId) {
-    return childIndex.getOrDefault(streamId, List.of()).stream()
+  public synchronized List<Streamable> findChildren(ContentID contentId) {
+    return childIndex.getOrDefault(contentId, List.of()).stream()
       .map(cache::get)
       .map(CachedStream::getStreamable)
       .collect(Collectors.toList());
   }
 
   @Override
-  public synchronized StreamSource findStreamSource(StreamID streamId) {
-    CachedStream cachedStream = cache.get(streamId);
+  public synchronized StreamSource findStreamSource(ContentID contentId) {
+    CachedStream cachedStream = cache.get(contentId);
 
     if(cachedStream == null) {
       return null;
     }
 
-    return importSourceProvider.getStreamSource(cache.get(streamId).getImportSourceId() & 0xffff).getStreamSource();
+    return importSourceProvider.getStreamSource(cache.get(contentId).getImportSourceId() & 0xffff).getStreamSource();
   }
 
   @Override
-  public synchronized Optional<Identification> findIdentification(StreamID streamId) {
-    return Optional.ofNullable(cache.get(streamId)).flatMap(CachedStream::getIdentification);
+  public synchronized Optional<Identification> findIdentification(ContentID contentId) {
+    return Optional.ofNullable(cache.get(contentId)).flatMap(CachedStream::getIdentification);
   }
 
   @Override
@@ -138,8 +138,8 @@ public class DatabaseStreamStore implements StreamableStore {
       .collect(Collectors.toList());
   }
 
-  public synchronized Optional<Instant> findCreationTime(StreamID streamId) {
-    return Optional.ofNullable(cache.get(findParentId(streamId).orElse(streamId))).map(CachedStream::getCreationTime);
+  public synchronized Optional<Instant> findCreationTime(ContentID contentId) {
+    return Optional.ofNullable(cache.get(findParentId(contentId).orElse(contentId))).map(CachedStream::getCreationTime);
   }
 
   synchronized Set<Streamable> findUnenrichedStreams() {
@@ -159,8 +159,8 @@ public class DatabaseStreamStore implements StreamableStore {
       .collect(Collectors.toSet());
   }
 
-  synchronized void markEnriched(StreamID streamId) {
-    CachedStream cs = cache.get(streamId);
+  synchronized void markEnriched(ContentID contentId) {
+    CachedStream cs = cache.get(contentId);
 
     if(cs == null) {
       return;
@@ -196,24 +196,24 @@ public class DatabaseStreamStore implements StreamableStore {
       nextEnrichTime
     );
 
-    removeFromCache(streamId);
+    removeFromCache(contentId);
     putInCache(newCS);
 
     database.store(codec.toRecord(newCS));
   }
 
   // Removes children as well
-  synchronized void remove(StreamID streamId) {
-    if(cache.containsKey(streamId)) {
-      database.delete(streamId.asInt());
-      removeAllFromCache(streamId);
+  synchronized void remove(ContentID contentId) {
+    if(cache.containsKey(contentId)) {
+      database.delete(contentId.asInt());
+      removeAllFromCache(contentId);
     }
   }
 
-  private void removeAllFromCache(StreamID streamId) {
-    List.copyOf(childIndex.getOrDefault(streamId, List.of())).forEach(this::removeFromCache);
+  private void removeAllFromCache(ContentID contentId) {
+    List.copyOf(childIndex.getOrDefault(contentId, List.of())).forEach(this::removeFromCache);
 
-    removeFromCache(streamId);
+    removeFromCache(contentId);
   }
 
   synchronized void put(int importSourceId, Streamable streamable) {
@@ -225,11 +225,11 @@ public class DatabaseStreamStore implements StreamableStore {
     putInCache(updatedCachedStream);
   }
 
-  synchronized void putIdentification(StreamID streamId, Identification identification) {
-    toIdentifiedCachedStream(streamId, identification).ifPresent(ucs -> {
+  synchronized void putIdentification(ContentID contentId, Identification identification) {
+    toIdentifiedCachedStream(contentId, identification).ifPresent(ucs -> {
       database.store(codec.toRecord(ucs));
 
-      removeFromCache(streamId);
+      removeFromCache(contentId);
       putInCache(ucs);
     });
   }
@@ -244,8 +244,8 @@ public class DatabaseStreamStore implements StreamableStore {
     return new CachedStream(streamable, existingCS.getIdentification().orElse(null), importSourceId, existingCS.getCreationTime(), null, null);  // enrich times cleared, as new stream attributes means enrichment must be done again
   }
 
-  private Optional<CachedStream> toIdentifiedCachedStream(StreamID streamId, Identification identification) {
-    CachedStream existingCS = cache.get(streamId);
+  private Optional<CachedStream> toIdentifiedCachedStream(ContentID contentId, Identification identification) {
+    CachedStream existingCS = cache.get(contentId);
 
     if(existingCS == null) {
       return Optional.empty();
@@ -254,31 +254,31 @@ public class DatabaseStreamStore implements StreamableStore {
     return Optional.of(new CachedStream(existingCS.getStreamable(), identification, existingCS.getImportSourceId(), existingCS.getCreationTime(), existingCS.getLastEnrichTime(), existingCS.getNextEnrichTime()));
   }
 
-  private void removeFromCache(StreamID streamId) {
-    CachedStream cs = cache.remove(streamId);
+  private void removeFromCache(ContentID contentId) {
+    CachedStream cs = cache.remove(contentId);
 
     if(cs != null) {
       // Remove stream from identifier index
       cs.getIdentification().stream().map(Identification::getIdentifiers).flatMap(Collection::stream).forEach(
-        i -> identifierIndex.computeIfPresent(i, (k, v) -> v.remove(streamId) && v.isEmpty() ? null : v)
+        i -> identifierIndex.computeIfPresent(i, (k, v) -> v.remove(contentId) && v.isEmpty() ? null : v)
       );
 
       // Remove stream from child index (if it has a parent)
-      cs.getStreamable().getParentStreamId().ifPresent(pid -> childIndex.computeIfPresent(pid, (k, v) -> v.remove(cs.getStreamable().getId()) && v.isEmpty() ? null : v));
+      cs.getStreamable().getParentContentId().ifPresent(pid -> childIndex.computeIfPresent(pid, (k, v) -> v.remove(cs.getStreamable().getId()) && v.isEmpty() ? null : v));
     }
   }
 
   private void putInCache(CachedStream cs) {
-    StreamID streamId = cs.getStreamable().getId();
+    ContentID contentId = cs.getStreamable().getId();
 
-    cache.put(streamId, cs);
+    cache.put(contentId, cs);
 
     // Add stream to identifier index
     cs.getIdentification().stream().map(Identification::getIdentifiers).flatMap(Collection::stream).forEach(
-      i -> identifierIndex.computeIfAbsent(i, k -> new HashSet<>()).add(streamId)
+      i -> identifierIndex.computeIfAbsent(i, k -> new HashSet<>()).add(contentId)
     );
 
     // Add stream to child index (if it has a parent)
-    cs.getStreamable().getParentStreamId().ifPresent(pid -> childIndex.computeIfAbsent(pid, k -> new ArrayList<>()).add(cs.getStreamable().getId()));
+    cs.getStreamable().getParentContentId().ifPresent(pid -> childIndex.computeIfAbsent(pid, k -> new ArrayList<>()).add(cs.getStreamable().getId()));
   }
 }

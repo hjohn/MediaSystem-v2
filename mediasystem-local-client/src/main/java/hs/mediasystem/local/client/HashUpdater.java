@@ -2,9 +2,9 @@ package hs.mediasystem.local.client;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.mediasystem.db.streamids.StreamIdDatabase;
+import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.uris.UriDatabase;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.runner.config.BasicSetup;
 import hs.mediasystem.util.MediaHash;
 import hs.mediasystem.util.StringURI;
@@ -20,13 +20,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Mini program to update all hash values in the database, by re-reading all
- * referenced files and setting their hash without changing their StreamID.
+ * referenced files and setting their hash without changing their ContentID.
  */
 public class HashUpdater {
   public static void main(String[] args) throws IOException, BeanResolutionException {
     Injector injector = BasicSetup.create();
 
-    StreamIdDatabase store = injector.getInstance(StreamIdDatabase.class);
+    ContentPrintDatabase store = injector.getInstance(ContentPrintDatabase.class);
     UriDatabase uriStore = injector.getInstance(UriDatabase.class);
     MediaHash mediaHash = injector.getInstance(MediaHash.class);
     AtomicInteger recordsSeen = new AtomicInteger();
@@ -51,7 +51,7 @@ public class HashUpdater {
             if(!Arrays.equals(oldHash, newHash)) {
               hashesChanged.incrementAndGet();
 
-              store.update(new StreamID(r.getId()), r.getSize(), r.getLastModificationTime(), newHash);
+              store.update(new ContentID(r.getId()), r.getSize(), r.getLastModificationTime(), newHash);
               break;  // No further uri's need checking if we found a working one
             }
           }

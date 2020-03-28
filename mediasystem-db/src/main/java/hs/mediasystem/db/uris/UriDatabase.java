@@ -25,7 +25,7 @@ public class UriDatabase {
     }
   }
 
-  public void store(String uri, int streamId) {
+  public void store(String uri, int contentId) {
     try(Transaction tx = database.beginTransaction()) {
       UriRecord record = tx.selectUnique(UriRecord.class, "uri = ?", uri);
 
@@ -34,16 +34,16 @@ public class UriDatabase {
       }
 
       record.setUri(uri);
-      record.setStreamId(streamId);
+      record.setContentId(contentId);
 
       tx.merge(record);
       tx.commit();
     }
   }
 
-  public List<String> findUris(int streamId) {
+  public List<String> findUris(int contentId) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
-      return tx.select(UriRecord.class, UriRecord::getUri, "stream_id = ?", streamId);
+      return tx.select(UriRecord.class, UriRecord::getUri, "content_id = ?", contentId);
     }
   }
 }

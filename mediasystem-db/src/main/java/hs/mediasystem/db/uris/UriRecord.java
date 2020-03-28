@@ -11,8 +11,8 @@ public class UriRecord extends DatabaseObject {
   @Id @Column
   private Integer id;
 
-  @Column(name = "stream_id")
-  private int streamId;
+  @Column(name = "content_id")
+  private int contentId;
 
   @Column
   private String uri;
@@ -33,12 +33,12 @@ public class UriRecord extends DatabaseObject {
     this.uri = uri;
   }
 
-  public int getStreamId() {
-    return streamId;
+  public int getContentId() {
+    return contentId;
   }
 
-  public void setStreamId(int streamId) {
-    this.streamId = streamId;
+  public void setContentId(int contentId) {
+    this.contentId = contentId;
   }
 }
 

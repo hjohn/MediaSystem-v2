@@ -2,7 +2,7 @@ package hs.mediasystem.db.extract;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.AudioStream;
 import hs.mediasystem.domain.work.Resolution;
 import hs.mediasystem.domain.work.Snapshot;
@@ -36,7 +36,7 @@ class StreamMetaDataCodecTest {
   @Test
   void test() throws IOException {
     byte[] data = codec.encode(new StreamMetaData(
-      new StreamID(120),
+      new ContentID(120),
       Duration.ofSeconds(999),
       List.of(
         new VideoStream("title", "lang", "mp4", new Resolution(100, 200, 1.2f), 1234567L, 23.93f)
@@ -54,7 +54,7 @@ class StreamMetaDataCodecTest {
 
     StreamMetaData metaData = codec.decode(data);
 
-    assertEquals(new StreamID(120), metaData.getStreamId());
+    assertEquals(new ContentID(120), metaData.getContentId());
     assertEquals(Duration.ofSeconds(999), metaData.getLength());
     assertEquals("title", metaData.getVideoStreams().get(0).getTitle());
     assertEquals("mp3", metaData.getAudioStreams().get(0).getCodec());

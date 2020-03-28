@@ -1,12 +1,12 @@
-package hs.mediasystem.db.streamids;
+package hs.mediasystem.db.contentprints;
 
 import hs.database.annotations.Column;
 import hs.database.annotations.Id;
 import hs.database.annotations.Table;
 import hs.database.core.DatabaseObject;
 
-@Table(name = "stream_ids")
-public class StreamIdRecord extends DatabaseObject {
+@Table(name = "content_prints")
+public class ContentPrintRecord extends DatabaseObject {
 
   @Id @Column
   private Integer id;

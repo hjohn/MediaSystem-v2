@@ -2,7 +2,7 @@ package hs.mediasystem.db.base;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
@@ -38,7 +38,7 @@ class StreamStateStoreTest {
     StreamStateRecord record = new StreamStateRecord();
 
     record.setJson("{\"total-duration\":9469,\"watched\":true,\"last-watched-time\":\"2019-06-19T14:47:02.925460100\",\"resume-position\":152}".getBytes(StandardCharsets.UTF_8));
-    record.setStreamId(1);
+    record.setContentId(1);
 
     doAnswer(invocation -> {
       ((Consumer<StreamStateRecord>)invocation.getArgument(0)).accept(record);
@@ -46,7 +46,7 @@ class StreamStateStoreTest {
     }).when(tx).select(any(Consumer.class), eq(StreamStateRecord.class));
 
     store.forEach(ss -> {
-      assertEquals(new StreamID(1), ss.getStreamID());
+      assertEquals(new ContentID(1), ss.getContentID());
       assertEquals(9469, ss.getProperties().get("total-duration"));
     });
   }

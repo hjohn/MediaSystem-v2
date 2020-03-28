@@ -1,11 +1,11 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.db.streamids.StreamIdDatabase;
+import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.db.uris.UriRecord;
-import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
+import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.util.AutoReentrantLock;
 import hs.mediasystem.util.AutoReentrantLock.Key;
 import hs.mediasystem.util.MediaHash;
@@ -29,36 +29,36 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class DatabaseStreamPrintProvider implements StreamPrintProvider {
-  private static final Logger LOGGER = Logger.getLogger(DatabaseStreamPrintProvider.class.getName());
+public class DatabaseContentPrintProvider implements ContentPrintProvider {
+  private static final Logger LOGGER = Logger.getLogger(DatabaseContentPrintProvider.class.getName());
 
   @Inject private MediaHash mediaHash;
   @Inject private UriDatabase uriDatabase;
-  @Inject private StreamIdDatabase streamIdDatabase;
+  @Inject private ContentPrintDatabase contentPrintDatabase;
 
   // Note: lock can be held a long time currently (>5 seconds when hashing over network)
   private final AutoReentrantLock lock = new AutoReentrantLock();
-  private final Set<StreamID> seenIds = new HashSet<>();  // contains all id's that have are in database and have been seen recently
-  private final Set<StreamID> markedIds = new HashSet<>();  // contains all id's that have been marked for deletion
-  private final Map<StreamID, StreamPrint> streamPrints = new HashMap<>();
+  private final Set<ContentID> seenIds = new HashSet<>();  // contains all id's that have are in database and have been seen recently
+  private final Set<ContentID> markedIds = new HashSet<>();  // contains all id's that have been marked for deletion
+  private final Map<ContentID, ContentPrint> contentPrints = new HashMap<>();
 
-  private Map<String, StreamID> streamIds;
+  private Map<String, ContentID> contentIds;
 
   @PostConstruct
   private void postConstruct() {
-    streamIds = uriDatabase.findAll(UriRecord::getUri, r -> new StreamID(r.getStreamId()));
+    contentIds = uriDatabase.findAll(UriRecord::getUri, r -> new ContentID(r.getContentId()));
 
-    streamIdDatabase.forEach(r -> {
-      StreamID streamId = new StreamID(r.getId());
+    contentPrintDatabase.forEach(r -> {
+      ContentID contentId = new ContentID(r.getId());
 
-      streamPrints.put(streamId, new StreamPrint(new StreamID(r.getId()), r.getSize(), r.getLastModificationTime(), r.getHash()));
+      contentPrints.put(contentId, new ContentPrint(new ContentID(r.getId()), r.getSize(), r.getLastModificationTime(), r.getHash()));
 
       if(r.getLastSeenTime() != null) {
-        markedIds.add(streamId);
+        markedIds.add(contentId);
       }
     });
 
-    Thread thread = new Thread(this::backgroundStreamIdRemovalThread, "DatabaseStreamPrintProvider");
+    Thread thread = new Thread(this::backgroundContentIdRemovalThread, "DatabaseContentPrintProvider");
 
     thread.setPriority(Thread.NORM_PRIORITY - 2);
     thread.setDaemon(true);
@@ -66,25 +66,25 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
   }
 
   /**
-   * Gets or creates a {@link StreamID} for the given resource.  If the content
-   * (data, size and mod time) was seen before, this will return the same {@link StreamID}.<p>
+   * Gets or creates a {@link ContentID} for the given resource.  If the content
+   * (data, size and mod time) was seen before, this will return the same {@link ContentID}.<p>
    *
-   * For resources that were unknown or couldn't be matched, a new {@link StreamID}
+   * For resources that were unknown or couldn't be matched, a new {@link ContentID}
    * is returned.<p>
    *
-   * Note that it is possible for the same {@link StreamID} to be returned for different
+   * Note that it is possible for the same {@link ContentID} to be returned for different
    * uri's -- this simple means that the two uri's point to resources that are copies.
    */
   @Override
-  public StreamPrint get(StringURI uri, Long size, long lastModificationTime) throws IOException {
+  public ContentPrint get(StringURI uri, Long size, long lastModificationTime) throws IOException {
     try(Key key = lock.lock()) {
-      StreamID existingStreamId = streamIds.get(uri.toString());
+      ContentID existingContentId = contentIds.get(uri.toString());
 
-      if(existingStreamId != null) {
-        StreamPrint print = streamPrints.get(existingStreamId);
+      if(existingContentId != null) {
+        ContentPrint print = contentPrints.get(existingContentId);
 
         if(Objects.equals(print.getSize(), size) && print.getLastModificationTime() == lastModificationTime) {
-          markSeen(existingStreamId);
+          markSeen(existingContentId);
 
           return print;
         }
@@ -92,8 +92,8 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
         if(size == null) {  // is it a directory?
 
           /*
-           * For directories, if the name matched, the StreamPrint is always
-           * simply updated, and the same StreamID is kept.  This is because
+           * For directories, if the name matched, the ContentPrint is always
+           * simply updated, and the same ContentID is kept.  This is because
            * adding or removing files from a directory will change its last
            * modification time and hash, but does not affect how it would be
            * matched.
@@ -102,37 +102,37 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
            * needs to be tracked for, for example, watched state.
            */
 
-          markSeen(existingStreamId);
+          markSeen(existingContentId);
 
-          return updateDirectory(uri, existingStreamId, lastModificationTime);
+          return updateDirectory(uri, existingContentId, lastModificationTime);
         }
       }
 
       /*
-       * There was either no existing stream id for the given uri, or the size
-       * and/or last modification time did not match with an existing stream id
+       * There was either no existing content id for the given uri, or the size
+       * and/or last modification time did not match with an existing content id
        * (and it was not a directory in the second case).
        *
-       * In either case, a new or existing stream id will be found, and linked
+       * In either case, a new or existing content id will be found, and linked
        * to the uri.
        *
        * No attempt will be made to find another uri by doing a reverse look-up
        * using the hash, the uri is simply inserted and linked to a new (or
-       * existing) stream id.
+       * existing) content id.
        */
 
-      StreamPrint streamPrint = link(uri, size, lastModificationTime);
+      ContentPrint contentPrint = link(uri, size, lastModificationTime);
 
-      markSeen(streamPrint.getId());
+      markSeen(contentPrint.getId());
 
-      return streamPrint;
+      return contentPrint;
     }
   }
 
   @Override
-  public StreamPrint get(StreamID streamId) {
+  public ContentPrint get(ContentID contentId) {
     try(Key key = lock.lock()) {
-      return streamPrints.get(streamId);
+      return contentPrints.get(contentId);
     }
   }
 
@@ -142,34 +142,34 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
    *
    * @param id an id to mark as seen
    */
-  private void markSeen(StreamID id) {
+  private void markSeen(ContentID id) {
     seenIds.add(id);
   }
 
   /**
-   * Thread for background removal of StreamID's that have not been seen in a while.<p>
+   * Thread for background removal of ContentID's that have not been seen in a while.<p>
    *
-   * Note that removal of a StreamID also removes all associated data, including meta
+   * Note that removal of a ContentID also removes all associated data, including meta
    * data, viewed status, etc. through cascaded deletes.  Removal therefore should be
    * done conservatively.<p>
    *
    * Policy for now is to first mark items for removal, but only remove them a few
    * months later.
    */
-  private void backgroundStreamIdRemovalThread() {
+  private void backgroundContentIdRemovalThread() {
     for(;;) {
       try {
         Thread.sleep(Duration.ofMinutes(60).toMillis());
 
         try(Key key = lock.lock()) {
           // Create set of ids to mark in database with current time, excluding those already marked or recently seen:
-          Set<StreamID> idsToMark = streamPrints.keySet().stream()
+          Set<ContentID> idsToMark = contentPrints.keySet().stream()
             .filter(id -> !markedIds.contains(id))
             .filter(id -> !seenIds.contains(id))
             .collect(Collectors.toSet());
 
           // Create set of ids that are currently marked but were seen:
-          Set<StreamID> idsToUnmark = markedIds.stream()
+          Set<ContentID> idsToUnmark = markedIds.stream()
             .filter(seenIds::contains)
             .collect(Collectors.toSet());
 
@@ -181,19 +181,19 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
           if(!idsToMark.isEmpty()) {
             LOGGER.fine("Marking " + idsToMark.size() + " items as NOT seen recently: " + idsToMark);
 
-            streamIdDatabase.markSeen(idsToMark);
+            contentPrintDatabase.markSeen(idsToMark);
             markedIds.addAll(idsToMark);
           }
 
           if(!idsToUnmark.isEmpty()) {
             LOGGER.fine("Unmarking " + idsToUnmark.size() + " items: " + idsToUnmark);
 
-            streamIdDatabase.unmarkSeen(idsToUnmark);
+            contentPrintDatabase.unmarkSeen(idsToUnmark);
             markedIds.removeAll(idsToUnmark);
           }
 
-          // TODO streamIdStore.pruneNotSeenSince("3 months");
-          // ...delete from StreamPrints etc.
+          // TODO contentPrintStore.pruneNotSeenSince("3 months");
+          // ...delete from ContentPrints etc.
           // Might be better to only prune on startup
         }
       }
@@ -203,30 +203,30 @@ public class DatabaseStreamPrintProvider implements StreamPrintProvider {
     }
   }
 
-  private StreamPrint updateDirectory(StringURI uri, StreamID streamId, long lastModificationTime) throws IOException {
+  private ContentPrint updateDirectory(StringURI uri, ContentID contentId, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
-    streamIdDatabase.update(streamId, null, lastModificationTime, hash);
+    contentPrintDatabase.update(contentId, null, lastModificationTime, hash);
 
-    StreamPrint streamPrint = new StreamPrint(streamId, null, lastModificationTime, hash);
+    ContentPrint contentPrint = new ContentPrint(contentId, null, lastModificationTime, hash);
 
-    // No need to update streamIds or the uriStore as the name and id remains unchanged.
-    streamPrints.put(streamId, streamPrint);
+    // No need to update contentIds or the uriStore as the name and id remains unchanged.
+    contentPrints.put(contentId, contentPrint);
 
-    return streamPrint;
+    return contentPrint;
   }
 
-  private StreamPrint link(StringURI uri, Long size, long lastModificationTime) throws IOException {
+  private ContentPrint link(StringURI uri, Long size, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
-    int id = streamIdDatabase.findOrAdd(size, lastModificationTime, hash);
+    int id = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
     uriDatabase.store(uri.toString(), id);
 
-    StreamID streamId = new StreamID(id);
-    StreamPrint streamPrint = new StreamPrint(streamId, size, lastModificationTime, hash);
+    ContentID contentId = new ContentID(id);
+    ContentPrint contentPrint = new ContentPrint(contentId, size, lastModificationTime, hash);
 
-    streamIds.put(uri.toString(), streamId);
-    streamPrints.put(streamId, streamPrint);
+    contentIds.put(uri.toString(), contentId);
+    contentPrints.put(contentId, contentPrint);
 
-    return streamPrint;
+    return contentPrint;
   }
 
   private byte[] createHash(StringURI uri) throws IOException {

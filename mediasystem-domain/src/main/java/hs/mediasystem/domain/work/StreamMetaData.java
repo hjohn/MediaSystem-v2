@@ -1,6 +1,6 @@
 package hs.mediasystem.domain.work;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -8,16 +8,16 @@ import java.util.List;
 import java.util.Objects;
 
 public class StreamMetaData {
-  private final StreamID streamId;
+  private final ContentID contentId;
   private final Duration duration;
   private final List<VideoStream> videoStreams;
   private final List<AudioStream> audioStreams;
   private final List<SubtitleStream> subtitleStreams;
   private final List<Snapshot> snapshots;
 
-  public StreamMetaData(StreamID streamId, Duration duration, List<VideoStream> videoStreams, List<AudioStream> audioStreams, List<SubtitleStream> subtitleStreams, List<Snapshot> snapshots) {
-    if(streamId == null) {
-      throw new IllegalArgumentException("streamId cannot be null");
+  public StreamMetaData(ContentID contentId, Duration duration, List<VideoStream> videoStreams, List<AudioStream> audioStreams, List<SubtitleStream> subtitleStreams, List<Snapshot> snapshots) {
+    if(contentId == null) {
+      throw new IllegalArgumentException("contentId cannot be null");
     }
     if(videoStreams == null) {
       throw new IllegalArgumentException("videoStreams cannot be null");
@@ -38,7 +38,7 @@ public class StreamMetaData {
       throw new IllegalArgumentException("snapshots cannot contain nulls");
     }
 
-    this.streamId = streamId;
+    this.contentId = contentId;
     this.duration = duration;
     this.videoStreams = Collections.unmodifiableList(videoStreams);
     this.audioStreams = Collections.unmodifiableList(audioStreams);
@@ -46,8 +46,8 @@ public class StreamMetaData {
     this.snapshots = Collections.unmodifiableList(snapshots);
   }
 
-  public StreamID getStreamId() {
-    return streamId;
+  public ContentID getContentId() {
+    return contentId;
   }
 
   public Duration getLength() {

@@ -1,7 +1,7 @@
 package hs.mediasystem.db.services;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Resolution;
 import hs.mediasystem.domain.work.Snapshot;
@@ -34,7 +34,7 @@ public class SerieHelper {
   @Inject private StreamableStore streamStore;
   @Inject private StreamMetaDataStore metaDataProvider;
 
-  public List<Episode> createExtras(Serie serie, StreamID streamId) {
+  public List<Episode> createExtras(Serie serie, ContentID contentId) {
 
     /*
      * For a serie, additional information is added for video files found in the same folder, but
@@ -42,7 +42,7 @@ public class SerieHelper {
      */
 
     List<Episode> extras = new ArrayList<>();
-    List<Streamable> children = streamStore.findChildren(streamId).stream()
+    List<Streamable> children = streamStore.findChildren(contentId).stream()
         .sorted((a, b) -> a.getAttributes().<String>get(Attribute.TITLE).compareTo(b.getAttributes().get(Attribute.TITLE)))
         .collect(Collectors.toList());
 

@@ -1,12 +1,12 @@
 package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
@@ -46,7 +46,7 @@ public class SeriesScanner implements Scanner {
 	private static final MediaType SERIE = MediaType.of("SERIE");
 	private static final MediaType EPISODE = MediaType.of("EPISODE");
 	
-  @Inject private StreamPrintProvider streamPrintProvider;
+  @Inject private ContentPrintProvider contentPrintProvider;
 
   @Override
   public List<Exceptional<List<Streamable>>> scan(List<Path> roots) {
@@ -73,7 +73,7 @@ public class SeriesScanner implements Scanner {
           String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
           StringURI uri = new StringURI(path.toUri());
 
-          StreamPrint streamPrint = streamPrintProvider.get(uri, null, Files.getLastModifiedTime(path).toMillis());
+          ContentPrint contentPrint = contentPrintProvider.get(uri, null, Files.getLastModifiedTime(path).toMillis());
 
           Attributes attributes = Attributes.of(
             Attribute.TITLE, title,
@@ -82,8 +82,8 @@ public class SeriesScanner implements Scanner {
             Attribute.ID_PREFIX + "IMDB", imdbNumber
           );
 
-          results.add(new Streamable(SERIE, uri, streamPrint.getId(), null, attributes));
-          results.addAll(scanSerie(path, streamPrint.getId()));
+          results.add(new Streamable(SERIE, uri, contentPrint.getId(), null, attributes));
+          results.addAll(scanSerie(path, contentPrint.getId()));
 
           WORKLOAD.complete();
         }
@@ -100,7 +100,7 @@ public class SeriesScanner implements Scanner {
     return rootResults;
   }
 
-  private List<Streamable> scanSerie(Path root, StreamID parentId) {
+  private List<Streamable> scanSerie(Path root, ContentID parentId) {
     List<Streamable> results = new ArrayList<>();
 
     try {
@@ -123,7 +123,7 @@ public class SeriesScanner implements Scanner {
         String imdb = result.getCode();
         String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
 
-        StreamPrint streamPrint = streamPrintProvider.get(new StringURI(path.toUri()), Files.size(path), Files.getLastModifiedTime(path).toMillis());
+        ContentPrint contentPrint = contentPrintProvider.get(new StringURI(path.toUri()), Files.size(path), Files.getLastModifiedTime(path).toMillis());
 
         if(type == null && sequence != null && sequence.contains(",")) {
           type = ChildType.EPISODE;  // sequences with a comma have an episode number in them (",2", "10,15"); ones without comma only had a season or special number in it, or nothing at all
@@ -138,7 +138,7 @@ public class SeriesScanner implements Scanner {
           Attribute.CHILD_TYPE, type == null ? null : type.toString()
         );
 
-        results.add(new Streamable(EPISODE, new StringURI(path.toUri()), streamPrint.getId(), parentId, attributes));
+        results.add(new Streamable(EPISODE, new StringURI(path.toUri()), contentPrint.getId(), parentId, attributes));
       }
     }
     catch(RuntimeException | IOException e) {

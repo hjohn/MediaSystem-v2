@@ -3,8 +3,8 @@ package hs.mediasystem.ext.scanners;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
@@ -32,7 +32,7 @@ public class MoviesScanner implements Scanner {
   private static final NameDecoder NAME_DECODER = new NameDecoder(Mode.MOVIE);
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Scanning movies");
 
-  @Inject private StreamPrintProvider streamPrintProvider;
+  @Inject private ContentPrintProvider contentPrintProvider;
 
   @Override
   public List<Exceptional<List<Streamable>>> scan(List<Path> roots) {
@@ -60,7 +60,7 @@ public class MoviesScanner implements Scanner {
             String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
             URI uri = path.toUri();
 
-            StreamPrint streamPrint = streamPrintProvider.get(new StringURI(uri), Files.size(path), Files.getLastModifiedTime(path).toMillis());
+            ContentPrint contentPrint = contentPrintProvider.get(new StringURI(uri), Files.size(path), Files.getLastModifiedTime(path).toMillis());
 
             Attributes attributes = Attributes.of(
               Attribute.TITLE, title,
@@ -71,7 +71,7 @@ public class MoviesScanner implements Scanner {
               Attribute.ID_PREFIX + "IMDB", imdbNumber
             );
 
-            results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), streamPrint.getId(), null, attributes));
+            results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), contentPrint.getId(), null, attributes));
           }
           catch(RuntimeException | IOException e) {
             LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?

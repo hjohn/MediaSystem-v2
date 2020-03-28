@@ -9,7 +9,7 @@ import hs.mediasystem.db.base.StreamCacheUpdateService;
 import hs.mediasystem.db.services.WorkService;
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
@@ -20,8 +20,8 @@ import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractIdentificationService;
@@ -78,14 +78,14 @@ public class DatabaseIT {
   private static StreamCacheUpdateService updateService;
   private static WorkService workService;
   private static WorksService worksService;
-  private static StreamPrintProvider streamPrintProvider;
+  private static ContentPrintProvider contentPrintProvider;
   private static ImportSourceProvider importSourceProvider;
-  private static StreamPrint streamPrint1;
-  private static StreamPrint streamPrint2;
-  private static StreamPrint streamPrint3;
-  private static StreamPrint streamPrint4;
-  private static StreamPrint streamPrint5;
-  private static StreamPrint streamPrint6;
+  private static ContentPrint contentPrint1;
+  private static ContentPrint contentPrint2;
+  private static ContentPrint contentPrint3;
+  private static ContentPrint contentPrint4;
+  private static ContentPrint contentPrint5;
+  private static ContentPrint contentPrint6;
 
   @BeforeAll
   static void beforeAll() throws SecurityException, IOException, BeanResolutionException {
@@ -113,19 +113,19 @@ public class DatabaseIT {
     workService = injector.getInstance(WorkService.class);
     worksService = injector.getInstance(WorksService.class);
     importSourceProvider = injector.getInstance(ImportSourceProvider.class);
-    streamPrintProvider = injector.getInstance(StreamPrintProvider.class);
+    contentPrintProvider = injector.getInstance(ContentPrintProvider.class);
 
     importSourceProvider.set(List.of(
       new ImportSource(null, 1, List.of(), new StreamSource(new StreamTags(Set.of("movies")), List.of("TMDB"))),
       new ImportSource(null, 2, List.of(), new StreamSource(new StreamTags(Set.of("series")), List.of("TMDB")))
     ));
 
-    streamPrint1 = streamPrintProvider.get(new StringURI(Paths.get("testdata/movies/Terminator.txt").toUri().toString()), 100L, 200L);
-    streamPrint2 = streamPrintProvider.get(new StringURI(Paths.get("testdata/movies/Avatar.txt").toUri().toString()), 101L, 201L);
-    streamPrint3 = streamPrintProvider.get(new StringURI(Paths.get("testdata/movies/Matrix.txt").toUri().toString()), 102L, 202L);
-    streamPrint4 = streamPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends").toUri().toString()), null, 400L);
-    streamPrint5 = streamPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends/friends_1x01.txt").toUri().toString()), 301L, 401L);
-    streamPrint6 = streamPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends/friends_1x02.txt").toUri().toString()), 302L, 402L);
+    contentPrint1 = contentPrintProvider.get(new StringURI(Paths.get("testdata/movies/Terminator.txt").toUri().toString()), 100L, 200L);
+    contentPrint2 = contentPrintProvider.get(new StringURI(Paths.get("testdata/movies/Avatar.txt").toUri().toString()), 101L, 201L);
+    contentPrint3 = contentPrintProvider.get(new StringURI(Paths.get("testdata/movies/Matrix.txt").toUri().toString()), 102L, 202L);
+    contentPrint4 = contentPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends").toUri().toString()), null, 400L);
+    contentPrint5 = contentPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends/friends_1x01.txt").toUri().toString()), 301L, 401L);
+    contentPrint6 = contentPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends/friends_1x02.txt").toUri().toString()), 302L, 402L);
   }
 
   private static final MediaType MOVIE = MediaType.of("MOVIE");
@@ -332,9 +332,9 @@ public class DatabaseIT {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(Exceptional.of(List.of(
-        streamable(MOVIE, "testdata/movies/Terminator.txt", streamPrint1.getId(), "Terminator"),
-        streamable(MOVIE, "testdata/movies/Avatar.txt", streamPrint2.getId(), "Avatar"),
-        streamable(MOVIE, "testdata/movies/Matrix.txt", streamPrint3.getId(), "The Matrix")
+        streamable(MOVIE, "testdata/movies/Terminator.txt", contentPrint1.getId(), "Terminator"),
+        streamable(MOVIE, "testdata/movies/Avatar.txt", contentPrint2.getId(), "Avatar"),
+        streamable(MOVIE, "testdata/movies/Matrix.txt", contentPrint3.getId(), "The Matrix")
       ))));
 
       Thread.sleep(500);
@@ -351,8 +351,8 @@ public class DatabaseIT {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(Exceptional.of(List.of(
-        streamable(MOVIE, "testdata/movies/Terminator.txt", streamPrint1.getId(), "The Terminator"),
-        streamable(MOVIE, "testdata/movies/Matrix.txt", streamPrint3.getId(), "The Matrix")
+        streamable(MOVIE, "testdata/movies/Terminator.txt", contentPrint1.getId(), "The Terminator"),
+        streamable(MOVIE, "testdata/movies/Matrix.txt", contentPrint3.getId(), "The Matrix")
       ))));
 
       Thread.sleep(500);
@@ -364,9 +364,9 @@ public class DatabaseIT {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(2, List.of(Exceptional.of(List.of(
-        streamable(SERIE, "testdata/series/Friends", streamPrint4.getId(), "Friends"),
-        streamable(EPISODE, "testdata/series/Friends/friends_1x01.txt", streamPrint5.getId(), streamPrint4.getId(), "1x01"),
-        streamable(EPISODE, "testdata/series/Friends/friends_1x02.txt", streamPrint6.getId(), streamPrint4.getId(), "1x02")
+        streamable(SERIE, "testdata/series/Friends", contentPrint4.getId(), "Friends"),
+        streamable(EPISODE, "testdata/series/Friends/friends_1x01.txt", contentPrint5.getId(), contentPrint4.getId(), "1x01"),
+        streamable(EPISODE, "testdata/series/Friends/friends_1x02.txt", contentPrint6.getId(), contentPrint4.getId(), "1x02")
       ))));
 
       Thread.sleep(500);
@@ -379,11 +379,11 @@ public class DatabaseIT {
     }
   }
 
-  private static Streamable streamable(MediaType type, String uri, StreamID sid, String title) {
-    return new Streamable(type, new StringURI(uri), sid, null, Attributes.of(Attribute.TITLE, title));
+  private static Streamable streamable(MediaType type, String uri, ContentID cid, String title) {
+    return new Streamable(type, new StringURI(uri), cid, null, Attributes.of(Attribute.TITLE, title));
   }
 
-  private static Streamable streamable(MediaType type, String uri, StreamID sid, StreamID pid, String title) {
-    return new Streamable(type, new StringURI(uri), sid, pid, Attributes.of(Attribute.TITLE, title));
+  private static Streamable streamable(MediaType type, String uri, ContentID cid, ContentID pid, String title) {
+    return new Streamable(type, new StringURI(uri), cid, pid, Attributes.of(Attribute.TITLE, title));
   }
 }

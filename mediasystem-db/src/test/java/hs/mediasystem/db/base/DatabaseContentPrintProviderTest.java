@@ -1,10 +1,10 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.db.streamids.StreamIdDatabase;
-import hs.mediasystem.db.streamids.StreamIdRecord;
+import hs.mediasystem.db.contentprints.ContentPrintDatabase;
+import hs.mediasystem.db.contentprints.ContentPrintRecord;
 import hs.mediasystem.db.uris.UriDatabase;
-import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.StreamPrint;
+import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.util.MediaHash;
 import hs.mediasystem.util.PostConstructCaller;
 import hs.mediasystem.util.StringURI;
@@ -38,14 +38,14 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class DatabaseStreamPrintProviderTest {
+class DatabaseContentPrintProviderTest {
   @TempDir static Path tempDir;
 
-  @Mock StreamIdDatabase idStore;
+  @Mock ContentPrintDatabase idStore;
   @Mock UriDatabase uriStore;
   @Mock MediaHash mediaHash;
 
-  @InjectMocks DatabaseStreamPrintProvider provider;
+  @InjectMocks DatabaseContentPrintProvider provider;
 
   Path newFile = tempDir.resolve("dir/1");
   Path existingFile = tempDir.resolve("dir/2");
@@ -53,15 +53,15 @@ class DatabaseStreamPrintProviderTest {
   byte[] hash1 = new byte[] {1, 2, 3, 4};
   byte[] hash2 = new byte[] {2, 2, 3, 4};
   byte[] existingFileHash = new byte[] {5, 6, 7, 8};
-  StreamPrint existingFileStreamPrint = new StreamPrint(new StreamID(101), 15L, 1201, existingFileHash);
+  ContentPrint existingFileContentPrint = new ContentPrint(new ContentID(101), 15L, 1201, existingFileHash);
 
   @BeforeEach
   void beforeEach() throws IOException {
-    when(uriStore.findAll(any(), any())).thenReturn(new HashMap<>(Map.of(existingFile.toUri().toString(), existingFileStreamPrint.getId())));
+    when(uriStore.findAll(any(), any())).thenReturn(new HashMap<>(Map.of(existingFile.toUri().toString(), existingFileContentPrint.getId())));
     doAnswer(invocation -> {
-      Consumer<StreamIdRecord> consumer = invocation.getArgument(0);
-      consumer.accept(new StreamIdRecord() {{
-        setId(existingFileStreamPrint.getId().asInt());
+      Consumer<ContentPrintRecord> consumer = invocation.getArgument(0);
+      consumer.accept(new ContentPrintRecord() {{
+        setId(existingFileContentPrint.getId().asInt());
         setHash(existingFileHash);
         setSize(15L);
         setLastModificationTime(1201);
@@ -92,18 +92,18 @@ class DatabaseStreamPrintProviderTest {
     long lastModificationTime = Files.getLastModifiedTime(newFile).toMillis();
     long size = Files.size(newFile);
 
-    StreamPrint streamPrint = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
+    ContentPrint contentPrint = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
 
-    assertEquals(lastModificationTime, streamPrint.getLastModificationTime());
-    assertEquals(size, streamPrint.getSize());
-    assertArrayEquals(hash1, streamPrint.getHash());
+    assertEquals(lastModificationTime, contentPrint.getLastModificationTime());
+    assertEquals(size, contentPrint.getSize());
+    assertArrayEquals(hash1, contentPrint.getHash());
   }
 
   @Test
   void shouldFindExistingPrint() throws IOException {
-    StreamPrint streamPrint = provider.get(new StringURI(existingFile.toUri().toString()), 15L, 1201);
+    ContentPrint contentPrint = provider.get(new StringURI(existingFile.toUri().toString()), 15L, 1201);
 
-    assertEquals(existingFileStreamPrint, streamPrint);
+    assertEquals(existingFileContentPrint, contentPrint);
   }
 
   @Test
@@ -111,12 +111,12 @@ class DatabaseStreamPrintProviderTest {
     when(mediaHash.computeFileHash(newFile)).thenReturn(existingFileHash);
     when(idStore.findOrAdd(Long.valueOf(15), 1201L, existingFileHash)).thenReturn(102);
 
-    StreamPrint streamPrint = provider.get(new StringURI(newFile.toUri().toString()), 15L, 1201);
+    ContentPrint contentPrint = provider.get(new StringURI(newFile.toUri().toString()), 15L, 1201);
 
     // Part of the new print should match, but not all (new id)
-    assertEquals(existingFileStreamPrint.getSize(), streamPrint.getSize());
-    assertArrayEquals(existingFileStreamPrint.getHash(), streamPrint.getHash());
-    assertNotEquals(existingFileStreamPrint, streamPrint);
+    assertEquals(existingFileContentPrint.getSize(), contentPrint.getSize());
+    assertArrayEquals(existingFileContentPrint.getHash(), contentPrint.getHash());
+    assertNotEquals(existingFileContentPrint, contentPrint);
   }
 
   @Test
@@ -127,9 +127,9 @@ class DatabaseStreamPrintProviderTest {
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash1);
     when(idStore.findOrAdd(size, lastModificationTime, hash1)).thenReturn(102);
 
-    StreamPrint streamPrint = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
+    ContentPrint contentPrint = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
 
-    assertEquals(new StreamID(102), streamPrint.getId());
+    assertEquals(new ContentID(102), contentPrint.getId());
 
     // Now modify file:
     Files.write(newFile, List.of("Hello World! And thank you!"));
@@ -140,14 +140,14 @@ class DatabaseStreamPrintProviderTest {
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash2);
     when(idStore.findOrAdd(size, lastModificationTime, hash2)).thenReturn(103);
 
-    StreamPrint streamPrintModified = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
+    ContentPrint contentPrintModified = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
 
-    assertFalse(Arrays.equals(streamPrintModified.getHash(), streamPrint.getHash()));
-    assertEquals(new StreamID(103), streamPrintModified.getId());
-    assertNotEquals(streamPrintModified.getSize(), streamPrint.getSize());
-    assertNotEquals(streamPrintModified.getLastModificationTime(), streamPrint.getLastModificationTime());
-    assertNotEquals(streamPrintModified, streamPrint);
-    assertNotEquals(streamPrintModified.getId(), streamPrint.getId());
+    assertFalse(Arrays.equals(contentPrintModified.getHash(), contentPrint.getHash()));
+    assertEquals(new ContentID(103), contentPrintModified.getId());
+    assertNotEquals(contentPrintModified.getSize(), contentPrint.getSize());
+    assertNotEquals(contentPrintModified.getLastModificationTime(), contentPrint.getLastModificationTime());
+    assertNotEquals(contentPrintModified, contentPrint);
+    assertNotEquals(contentPrintModified.getId(), contentPrint.getId());
   }
 
   @Test
@@ -158,9 +158,9 @@ class DatabaseStreamPrintProviderTest {
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash1);
     when(idStore.findOrAdd(size, lastModificationTime, hash1)).thenReturn(102);
 
-    StreamPrint streamPrint = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
+    ContentPrint contentPrint = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
 
-    assertEquals(new StreamID(102), streamPrint.getId());
+    assertEquals(new ContentID(102), contentPrint.getId());
 
     // Now modify file:
     Files.write(newFile, List.of("Hello World!"));  // content same, size same, but date will have changed
@@ -171,13 +171,13 @@ class DatabaseStreamPrintProviderTest {
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash1);
     when(idStore.findOrAdd(size, lastModificationTime, hash1)).thenReturn(103);
 
-    StreamPrint streamPrintModified = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
+    ContentPrint contentPrintModified = provider.get(new StringURI(newFile.toUri().toString()), size, lastModificationTime);
 
-    assertArrayEquals(streamPrintModified.getHash(), streamPrint.getHash());
-    assertEquals(new StreamID(103), streamPrintModified.getId());
-    assertEquals(streamPrintModified.getSize(), streamPrint.getSize());
-    assertNotEquals(streamPrintModified.getLastModificationTime(), streamPrint.getLastModificationTime());
-    assertNotEquals(streamPrintModified, streamPrint);
-    assertNotEquals(streamPrintModified.getId(), streamPrint.getId());
+    assertArrayEquals(contentPrintModified.getHash(), contentPrint.getHash());
+    assertEquals(new ContentID(103), contentPrintModified.getId());
+    assertEquals(contentPrintModified.getSize(), contentPrint.getSize());
+    assertNotEquals(contentPrintModified.getLastModificationTime(), contentPrint.getLastModificationTime());
+    assertNotEquals(contentPrintModified, contentPrint);
+    assertNotEquals(contentPrintModified.getId(), contentPrint.getId());
   }
 }

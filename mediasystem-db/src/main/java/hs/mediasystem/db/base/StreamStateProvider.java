@@ -1,6 +1,6 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.util.NamedThreadFactory;
 
 import java.util.HashMap;
@@ -20,31 +20,31 @@ public class StreamStateProvider {
 
   @Inject private StreamStateStore store;
 
-  private final Map<StreamID, StreamState> streamStates = new HashMap<>();
+  private final Map<ContentID, StreamState> streamStates = new HashMap<>();
 
   @PostConstruct
   private void postConstruct() {
-    store.forEach(ss -> streamStates.put(ss.getStreamID(), ss));
+    store.forEach(ss -> streamStates.put(ss.getContentID(), ss));
   }
 
   @SuppressWarnings("unchecked")
-  public synchronized <T> T getOrDefault(StreamID streamId, String key, T defaultValue) {
-    if(!streamStates.containsKey(streamId)) {  // Prevents modifying map if key didn't exist
+  public synchronized <T> T getOrDefault(ContentID contentId, String key, T defaultValue) {
+    if(!streamStates.containsKey(contentId)) {  // Prevents modifying map if key didn't exist
       return defaultValue;
     }
 
-    StreamState streamState = getStreamState(streamId);  // Modifies map if key didn't exist
+    StreamState streamState = getStreamState(contentId);  // Modifies map if key didn't exist
 
     return (T)streamState.getProperties().getOrDefault(key, defaultValue);
   }
 
-  public synchronized void put(StreamID streamId, String key, Object value) {
-    StreamState streamState = getStreamState(streamId);
+  public synchronized void put(ContentID contentId, String key, Object value) {
+    StreamState streamState = getStreamState(contentId);
 
     streamState.getProperties().put(key, value);
 
     // Make a copy to save, as the entry can be updated asynchronously while this one is being saved:
-    StreamState copy = new StreamState(streamState.getStreamID(), new HashMap<>(streamState.getProperties()));
+    StreamState copy = new StreamState(streamState.getContentID(), new HashMap<>(streamState.getProperties()));
 
     EXECUTOR.execute(() -> store.store(copy));
   }
@@ -53,7 +53,7 @@ public class StreamStateProvider {
     return converter.apply(streamStates.values().stream());
   }
 
-  private StreamState getStreamState(StreamID streamId) {
-    return streamStates.computeIfAbsent(streamId, k -> new StreamState(streamId, new HashMap<>()));
+  private StreamState getStreamState(ContentID contentId) {
+    return streamStates.computeIfAbsent(contentId, k -> new StreamState(contentId, new HashMap<>()));
   }
 }

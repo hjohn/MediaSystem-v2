@@ -8,7 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 
 import java.io.IOException;
 import java.util.Map;
@@ -38,7 +38,7 @@ public class StreamStateStore {
     StreamStateRecord record = toStreamStateRecord(streamState);
 
     try(Transaction tx = database.beginTransaction()) {
-      StreamStateRecord existingRecord = tx.selectUnique(StreamStateRecord.class, "stream_id = ?", record.getStreamId());
+      StreamStateRecord existingRecord = tx.selectUnique(StreamStateRecord.class, "content_id = ?", record.getContentId());
 
       if(existingRecord == null) {
         tx.insert(record);
@@ -55,7 +55,7 @@ public class StreamStateStore {
     try {
       StreamStateRecord record = new StreamStateRecord();
 
-      record.setStreamId(streamState.getStreamID().asInt());
+      record.setContentId(streamState.getContentID().asInt());
       record.setJson(OBJECT_MAPPER.writeValueAsBytes(streamState.getProperties()));
 
       return record;
@@ -68,7 +68,7 @@ public class StreamStateStore {
   @SuppressWarnings("unchecked")
   private static @NonNull StreamState toStreamState(StreamStateRecord record) {
     try {
-      return new StreamState(new StreamID(record.getStreamId()), OBJECT_MAPPER.readValue(record.getJson(), Map.class));
+      return new StreamState(new ContentID(record.getContentId()), OBJECT_MAPPER.readValue(record.getJson(), Map.class));
     }
     catch(IOException e) {
       throw new IllegalStateException(e);

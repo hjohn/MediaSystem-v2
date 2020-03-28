@@ -2,7 +2,7 @@ package hs.mediasystem.db.extract;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.db.streamids.StreamIdRecord;
+import hs.mediasystem.db.contentprints.ContentPrintRecord;
 
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -22,7 +22,7 @@ public class StreamMetaDataDatabase {
 
   public void store(StreamMetaDataRecord record) {
     try(Transaction tx = database.beginTransaction()) {
-      if(tx.selectUnique(StreamMetaDataRecord.class, "stream_id = ?", record.getStreamId()) == null) {
+      if(tx.selectUnique(StreamMetaDataRecord.class, "content_id = ?", record.getContentId()) == null) {
         tx.insert(record);
       }
       else {
@@ -40,13 +40,13 @@ public class StreamMetaDataDatabase {
     }
   }
 
-  public Stream<Integer> streamUnindexedStreamIds() {
-    return database.stream(StreamIdRecord.class, "lastseentime IS NULL AND id NOT IN (SELECT stream_id FROM stream_metadata)").map(StreamIdRecord::getId);
+  public Stream<Integer> streamUnindexedContentIds() {
+    return database.stream(ContentPrintRecord.class, "lastseentime IS NULL AND id NOT IN (SELECT content_id FROM stream_metadata)").map(ContentPrintRecord::getId);
   }
 
   public byte[] readSnapshot(int id, int snapshotIndex) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
-      StreamMetaDataSnapshotRecord record = tx.selectUnique(StreamMetaDataSnapshotRecord.class, "stream_id = ? AND index = ?", id, snapshotIndex);
+      StreamMetaDataSnapshotRecord record = tx.selectUnique(StreamMetaDataSnapshotRecord.class, "content_id = ? AND index = ?", id, snapshotIndex);
 
       return record == null ? null : record.getImage();
     }
@@ -54,15 +54,15 @@ public class StreamMetaDataDatabase {
 
   public boolean existsSnapshot(int id, int snapshotIndex) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
-      return tx.selectUnique("stream_id", "stream_metadata_snapshots", "stream_id = ? AND index = ?", id, snapshotIndex) != null;
+      return tx.selectUnique("content_id", "stream_metadata_snapshots", "content_id = ? AND index = ?", id, snapshotIndex) != null;
     }
   }
 
-  public void storeImage(int streamId, int index, byte[] image) {
+  public void storeImage(int contentId, int index, byte[] image) {
     try(Transaction tx = database.beginTransaction()) {
       StreamMetaDataSnapshotRecord record = new StreamMetaDataSnapshotRecord();
 
-      record.setStreamId(streamId);
+      record.setContentId(contentId);
       record.setIndex(index);
       record.setImage(image);
 

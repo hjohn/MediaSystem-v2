@@ -8,18 +8,18 @@ import hs.database.annotations.Table;
 public class StreamStateRecord {
 
   @Id(generated = false)
-  @Column(name = "stream_id")
-  private int streamId;
+  @Column(name = "content_id")
+  private int contentId;
 
   @Column
   private byte[] json;
 
-  public int getStreamId() {
-    return streamId;
+  public int getContentId() {
+    return contentId;
   }
 
-  public void setStreamId(int streamId) {
-    this.streamId = streamId;
+  public void setContentId(int contentId) {
+    this.contentId = contentId;
   }
 
   public byte[] getJson() {

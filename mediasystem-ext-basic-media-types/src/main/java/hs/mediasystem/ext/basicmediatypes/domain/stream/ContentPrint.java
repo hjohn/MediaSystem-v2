@@ -1,17 +1,17 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class StreamPrint {
-  private final StreamID id;                  // an identifier that never changes for this particular StreamPrint
+public class ContentPrint {
+  private final ContentID id;                  // an identifier that never changes for this particular ContentPrint
   private final Long size;
   private final byte[] hash;
   private final long lastModificationTime;
 
-  public StreamPrint(StreamID id, Long size, long lastModificationTime, byte[] hash) {
+  public ContentPrint(ContentID id, Long size, long lastModificationTime, byte[] hash) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -25,7 +25,7 @@ public class StreamPrint {
     this.hash = hash;
   }
 
-  public StreamID getId() {
+  public ContentID getId() {
     return id;
   }
 
@@ -43,7 +43,7 @@ public class StreamPrint {
 
   @Override
   public String toString() {
-    return "StreamPrint(" + id + ",size=" + size + ",modTime=" + lastModificationTime + ",hash=" + Arrays.toString(hash) + ")";
+    return "ContentPrint(" + id + ",size=" + size + ",modTime=" + lastModificationTime + ",hash=" + Arrays.toString(hash) + ")";
   }
 
   @Override
@@ -60,7 +60,7 @@ public class StreamPrint {
       return false;
     }
 
-    StreamPrint other = (StreamPrint)obj;
+    ContentPrint other = (ContentPrint)obj;
 
     if(!Objects.equals(id, other.id)) {
       return false;

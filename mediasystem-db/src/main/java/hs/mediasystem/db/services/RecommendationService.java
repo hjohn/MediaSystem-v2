@@ -1,7 +1,7 @@
 package hs.mediasystem.db.services;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.State;
 import hs.mediasystem.domain.work.StreamMetaData;
@@ -51,20 +51,20 @@ public class RecommendationService {
 
   private Optional<Recommendation> toNewRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
-    StreamID streamId = stream.getId();
+    ContentID contentId = stream.getId();
     State state = work.getState();
     Duration position = state.getResumePosition();
     Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
     boolean watched = state.isConsumed();
 
-    return getIdentifier(streamId)
+    return getIdentifier(contentId)
       .flatMap(descriptorStore::find)
-      .map(descriptor -> new Recommendation(stream.getAttributes().getCreationTime(), work, null, descriptor, streamId, length, position, watched));
+      .map(descriptor -> new Recommendation(stream.getAttributes().getCreationTime(), work, null, descriptor, contentId, length, position, watched));
   }
 
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
-    StreamID parentId = stream.getParentId().orElse(null);
+    ContentID parentId = stream.getParentId().orElse(null);
 
     if(parentId == null) {
       return toProductionRecommendation(work);
@@ -75,19 +75,19 @@ public class RecommendationService {
 
   private Optional<Recommendation> toProductionRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
-    StreamID streamId = stream.getId();
+    ContentID contentId = stream.getId();
     State state = work.getState();
     Duration position = state.getResumePosition();
     Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
     boolean watched = state.isConsumed();
 
-    return getIdentifier(streamId).flatMap(descriptorStore::find).map(descriptor -> {
+    return getIdentifier(contentId).flatMap(descriptorStore::find).map(descriptor -> {
       if(watched) {
         // TODO Must be a movie, find collection for "next"
       }
       else if(!position.isZero()) {  // Partially watched movie
-        return new Recommendation(lastWatchedTime, work, null, descriptor, streamId, length, position, watched);
+        return new Recommendation(lastWatchedTime, work, null, descriptor, contentId, length, position, watched);
       }
 
       return null;
@@ -96,8 +96,8 @@ public class RecommendationService {
 
   private Optional<Recommendation> toEpisodeRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
-    StreamID parentId = stream.getParentId().orElseThrow(() -> new IllegalArgumentException("work must represent an episode: " + work));
-    StreamID streamId = stream.getId();
+    ContentID parentId = stream.getParentId().orElseThrow(() -> new IllegalArgumentException("work must represent an episode: " + work));
+    ContentID contentId = stream.getId();
     State state = work.getState();
 
     boolean watched = state.isConsumed();
@@ -126,7 +126,7 @@ public class RecommendationService {
               .orElse(null);
           }
           else if(!position.isZero()) {
-            return new Recommendation(lastWatchedTime, work, serie, episode, streamId, length, position, false);
+            return new Recommendation(lastWatchedTime, work, serie, episode, contentId, length, position, false);
           }
         }
 
@@ -135,7 +135,7 @@ public class RecommendationService {
     );
   }
 
-  private Optional<Identifier> getIdentifier(StreamID streamId) {
-    return streamStore.findIdentification(streamId).map(Identification::getPrimaryIdentifier);
+  private Optional<Identifier> getIdentifier(ContentID contentId) {
+    return streamStore.findIdentification(contentId).map(Identification::getPrimaryIdentifier);
   }
 }

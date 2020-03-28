@@ -16,7 +16,7 @@ public class StreamDatabase {
   public void forEach(Consumer<StreamRecord> consumer) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
       tx.select(r -> {
-        r.setIdentifiers(tx.select(StreamIdentifierRecord.class, "stream_id = ?", r.getStreamId()).stream().map(StreamIdentifierRecord::getIdentifier).collect(Collectors.toList()));
+        r.setIdentifiers(tx.select(StreamIdentifierRecord.class, "content_id = ?", r.getContentId()).stream().map(StreamIdentifierRecord::getIdentifier).collect(Collectors.toList()));
         consumer.accept(r);
       }, StreamRecord.class);
     }
@@ -24,9 +24,9 @@ public class StreamDatabase {
 
   public void store(StreamRecord record) {
     try(Transaction tx = database.beginTransaction()) {
-      tx.delete("stream_identifier", "stream_id = ?", record.getStreamId());
+      tx.delete("stream_identifier", "content_id = ?", record.getContentId());
 
-      if(tx.selectUnique(StreamRecord.class, "stream_id = ?", record.getStreamId()) == null) {
+      if(tx.selectUnique(StreamRecord.class, "content_id = ?", record.getContentId()) == null) {
         tx.insert(record);
       }
       else {
@@ -39,9 +39,9 @@ public class StreamDatabase {
     }
   }
 
-  public void delete(int streamId) {
+  public void delete(int contentId) {
     try(Transaction tx = database.beginTransaction()) {
-      tx.delete(StreamRecord.class, streamId);
+      tx.delete(StreamRecord.class, contentId);
       tx.commit();
     }
   }
@@ -52,7 +52,7 @@ public class StreamDatabase {
         StreamIdentifierRecord m2mRecord = new StreamIdentifierRecord();
 
         m2mRecord.setIdentifier(identifier);
-        m2mRecord.setStreamId(record.getStreamId());
+        m2mRecord.setContentId(record.getContentId());
 
         tx.insert(m2mRecord);
       }

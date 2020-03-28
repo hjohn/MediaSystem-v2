@@ -1,7 +1,7 @@
 package hs.mediasystem.db.extract;
 
 import hs.mediasystem.db.extract.grabber.FFmpegFrameGrabber;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.util.ImageURI;
@@ -28,7 +28,7 @@ public class StreamMetaDataFactory {
 
   @Inject private DefaultStreamMetaDataStore store;
 
-  public StreamMetaData generatePreviewImage(StreamID streamId, File file) throws IOException, Exception {
+  public StreamMetaData generatePreviewImage(ContentID contentId, File file) throws IOException, Exception {
     @SuppressWarnings("resource")
     FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(file);
 
@@ -43,7 +43,7 @@ public class StreamMetaDataFactory {
       int index = 0;
 
       for(long offset = frameCount / 5; offset < frameCount * 9 / 10; offset += frameCount * 3 / 20) {
-        if(!store.existsSnapshot(streamId, index)) {
+        if(!store.existsSnapshot(contentId, index)) {
           LOGGER.finest("Grabbing frame #" + index + " at frame " + offset + "/" + frameCount);
 
           grabber.setFrameNumber((int)offset);
@@ -51,14 +51,14 @@ public class StreamMetaDataFactory {
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
           ImageIO.write(toBufferedImage(grabber.grabKeyFrame()), "jpg", baos);
 
-          store.storeImage(streamId, index, baos.toByteArray());
+          store.storeImage(contentId, index, baos.toByteArray());
         }
 
         index++;
-        snapshots.add(new Snapshot(new ImageURI("localdb://" + streamId.asInt() + "/" + index), (int)offset));
+        snapshots.add(new Snapshot(new ImageURI("localdb://" + contentId.asInt() + "/" + index), (int)offset));
       }
 
-      return new StreamMetaData(streamId, duration, grabber.getVideoStreams(), grabber.getAudioStreams(), grabber.getSubtitleStreams(), snapshots);
+      return new StreamMetaData(contentId, duration, grabber.getVideoStreams(), grabber.getAudioStreams(), grabber.getSubtitleStreams(), snapshots);
     }
     finally {
       grabber.stop();

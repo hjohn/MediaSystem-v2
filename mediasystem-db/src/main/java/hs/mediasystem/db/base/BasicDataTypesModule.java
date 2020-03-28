@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.StringURI;
 
@@ -46,17 +46,17 @@ public class BasicDataTypesModule extends SimpleModule {
       }
     });
 
-    addSerializer(StreamID.class, new JsonSerializer<StreamID>() {
+    addSerializer(ContentID.class, new JsonSerializer<ContentID>() {
       @Override
-      public void serialize(StreamID value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      public void serialize(ContentID value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
         gen.writeNumber(value.asInt());
       }
     });
 
-    addDeserializer(StreamID.class, new JsonDeserializer<StreamID>() {
+    addDeserializer(ContentID.class, new JsonDeserializer<ContentID>() {
       @Override
-      public StreamID deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        return new StreamID(p.getIntValue());
+      public ContentID deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        return new ContentID(p.getIntValue());
       }
     });
   }

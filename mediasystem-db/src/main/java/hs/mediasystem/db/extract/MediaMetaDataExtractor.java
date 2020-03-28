@@ -3,7 +3,7 @@ package hs.mediasystem.db.extract;
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
 import hs.mediasystem.db.uris.UriDatabase;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
@@ -50,16 +50,16 @@ public class MediaMetaDataExtractor {
       try {
         Thread.sleep(HOUR);
 
-        try(Stream<Integer> stream = metaDataStore.streamUnindexedStreamIds()) {
-          List<Integer> streamIds = stream.collect(Collectors.toList());
+        try(Stream<Integer> stream = metaDataStore.streamUnindexedContentIds()) {
+          List<Integer> contentIds = stream.collect(Collectors.toList());
 
           stream.close();  // ends transaction
 
-          WORKLOAD.start(streamIds.size());
+          WORKLOAD.start(contentIds.size());
 
-          for(int streamId : streamIds) {
+          for(int contentId : contentIds) {
             try {
-              createMetaData(streamId);
+              createMetaData(contentId);
             }
             finally {
               WORKLOAD.complete();
@@ -75,33 +75,33 @@ public class MediaMetaDataExtractor {
     }
   }
 
-  private void createMetaData(int streamId) {
+  private void createMetaData(int contentId) {
     try {
-      uriDatabase.findUris(streamId).stream()
+      uriDatabase.findUris(contentId).stream()
         .map(URI::create)
         .map(Paths::get)
         .map(Path::toFile)
         .filter(File::exists)
         .findFirst()
-        .ifPresent(file -> createMetaData(new StreamID(streamId), file));
+        .ifPresent(file -> createMetaData(new ContentID(contentId), file));
     }
     catch(Exception e) {
-      LOGGER.warning("Error while storing stream metadata in database for stream id " + streamId + ": " + Throwables.formatAsOneLine(e));
+      LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
     }
   }
 
-  private void createMetaData(StreamID streamId, File file) {
+  private void createMetaData(ContentID contentId, File file) {
     try {
       LOGGER.fine("Extracting metadata from: " + file);
 
       if(file.isDirectory()) {
-        StreamMetaData metaData = new StreamMetaData(streamId, Duration.ZERO, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+        StreamMetaData metaData = new StreamMetaData(contentId, Duration.ZERO, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
         metaDataStore.store(metaData);
       }
       else {
         try(Transaction tx = database.beginTransaction()) {
-          StreamMetaData metaData = factory.generatePreviewImage(streamId, file);
+          StreamMetaData metaData = factory.generatePreviewImage(contentId, file);
 
           metaDataStore.store(metaData);
 
@@ -110,7 +110,7 @@ public class MediaMetaDataExtractor {
       }
     }
     catch(Exception e) {
-      LOGGER.warning("Error while decoding stream '" + file + "', streamId " + streamId.asInt() + ": " + Throwables.formatAsOneLine(e));
+      LOGGER.warning("Error while decoding stream '" + file + "', contentId " + contentId.asInt() + ": " + Throwables.formatAsOneLine(e));
     }
   }
 }

@@ -1,7 +1,7 @@
 package hs.mediasystem.local.client.service;
 
 import hs.mediasystem.db.base.StreamStateService;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.ui.api.domain.State;
 
 import java.time.Duration;
@@ -15,15 +15,15 @@ import org.reactfx.value.Var;
 public class StateFactory {
   @Inject private StreamStateService streamStateService;
 
-  public State create(StreamID streamId) {
-    if(streamId == null) {
+  public State create(ContentID contentId) {
+    if(contentId == null) {
       return new State(Var.newSimpleVar(null), Var.newSimpleVar(false), Var.newSimpleVar(Duration.ZERO));
     }
 
     return new State(
-      Var.suspendable(streamStateService.lastWatchedTimeProperty(streamId)),
-      Var.suspendable(streamStateService.watchedProperty(streamId)),
-      Var.suspendable(streamStateService.resumePositionProperty(streamId)).mapBidirectional(i -> Duration.ofSeconds(i), d -> (int)d.toSeconds())
+      Var.suspendable(streamStateService.lastWatchedTimeProperty(contentId)),
+      Var.suspendable(streamStateService.watchedProperty(contentId)),
+      Var.suspendable(streamStateService.resumePositionProperty(contentId)).mapBidirectional(i -> Duration.ofSeconds(i), d -> (int)d.toSeconds())
     );
   }
 }

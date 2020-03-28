@@ -1,6 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 
 import java.time.Duration;
@@ -14,10 +14,10 @@ public class Recommendation {
   private final MediaDescriptor mediaDescriptor;
   private final Optional<Duration> length;
   private final Duration position;
-  private final StreamID streamId;
+  private final ContentID contentId;
   private final boolean watched;
 
-  public Recommendation(Instant instant, Work work, MediaDescriptor parent, MediaDescriptor mediaDescriptor, StreamID streamId, Duration length, Duration position, boolean watched) {
+  public Recommendation(Instant instant, Work work, MediaDescriptor parent, MediaDescriptor mediaDescriptor, ContentID contentId, Duration length, Duration position, boolean watched) {
     if(instant == null) {
       throw new IllegalArgumentException("instant cannot be null");
     }
@@ -27,8 +27,8 @@ public class Recommendation {
     if(mediaDescriptor == null) {
       throw new IllegalArgumentException("mediaDescriptor cannot be null");
     }
-    if(streamId == null) {
-      throw new IllegalArgumentException("streamId cannot be null");
+    if(contentId == null) {
+      throw new IllegalArgumentException("contentId cannot be null");
     }
     if(position == null || position.isNegative()) {
       throw new IllegalArgumentException("position cannot be null or negative: " + position);
@@ -38,7 +38,7 @@ public class Recommendation {
     this.work = work;
     this.parent = Optional.ofNullable(parent);
     this.mediaDescriptor = mediaDescriptor;
-    this.streamId = streamId;
+    this.contentId = contentId;
     this.length = Optional.ofNullable(length);
     this.position = position;
     this.watched = watched;
@@ -68,8 +68,8 @@ public class Recommendation {
     return position;
   }
 
-  public StreamID getStreamId() {
-    return streamId;
+  public ContentID getContentId() {
+    return contentId;
   }
 
   public boolean isWatched() {

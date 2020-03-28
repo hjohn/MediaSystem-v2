@@ -1,8 +1,8 @@
 package hs.mediasystem.local.client.service;
 
 import hs.mediasystem.db.services.WorksService;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
@@ -76,12 +76,12 @@ public class LocalWorksClient implements WorksClient {
    * - image is taken from descriptor or otherwise from stream
    * - backdrop is taken from descriptor or otherwise from its parent
    */
-  private static Details createDetails(MediaDescriptor descriptor, MediaDescriptor parent, Optional<StreamID> streamId) {
+  private static Details createDetails(MediaDescriptor descriptor, MediaDescriptor parent, Optional<ContentID> contentId) {
     return new Details(
       descriptor.getDetails().getName(),
       descriptor.getDetails().getDescription().orElse(null),
       descriptor.getDetails().getDate().orElse(null),
-      descriptor.getDetails().getImage().or(() -> streamId.map(StreamID::asInt).map(id -> new ImageURI("localdb://" + id + "/2"))).orElse(null),
+      descriptor.getDetails().getImage().or(() -> contentId.map(ContentID::asInt).map(id -> new ImageURI("localdb://" + id + "/2"))).orElse(null),
       descriptor.getDetails().getBackdrop().orElse(parent == null ? null : parent.getDetails().getBackdrop().orElse(null)),
       descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
       descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,
@@ -92,8 +92,8 @@ public class LocalWorksClient implements WorksClient {
     );
   }
 
-  private State toState(StreamID streamId) {
-    return stateFactory.create(streamId);
+  private State toState(ContentID contentId) {
+    return stateFactory.create(contentId);
   }
 
   private static Classification createClassification(Production production) {

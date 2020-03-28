@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
@@ -109,6 +109,6 @@ public class TmdbIdentificationServiceTest {
   }
 
   private static Streamable streamable(Attributes attributes) {
-    return new Streamable(MediaType.of("MOVIE"), new StringURI(""), new StreamID(1), null, attributes);
+    return new Streamable(MediaType.of("MOVIE"), new StringURI(""), new ContentID(1), null, attributes);
   }
 }

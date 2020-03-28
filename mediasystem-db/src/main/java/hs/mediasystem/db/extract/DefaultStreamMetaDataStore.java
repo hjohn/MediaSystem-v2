@@ -2,7 +2,7 @@ package hs.mediasystem.db.extract;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.Throwables;
@@ -28,7 +28,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Inject private StreamMetaDataDatabase database;
   @Inject private StreamMetaDataCodec codec;
 
-  private final Map<StreamID, StreamMetaData> cache = new HashMap<>();
+  private final Map<ContentID, StreamMetaData> cache = new HashMap<>();
 
   @PostConstruct
   private void postConstruct() {
@@ -38,12 +38,12 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
       try {
         StreamMetaData smd = codec.decode(r.getJson());
 
-        cache.put(smd.getStreamId(), smd);
+        cache.put(smd.getContentId(), smd);
       }
       catch(IOException e) {
         LOGGER.warning("Exception decoding StreamMetaDataRecord: " + r + ": " + Throwables.formatAsOneLine(e));
 
-        badIds.add(r.getStreamId());
+        badIds.add(r.getContentId());
       }
     });
 
@@ -54,22 +54,22 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
 
   public void store(StreamMetaData streamMetaData) {
     database.store(toRecord(streamMetaData));
-    cache.put(streamMetaData.getStreamId(), streamMetaData);
+    cache.put(streamMetaData.getContentId(), streamMetaData);
   }
 
-  public Stream<Integer> streamUnindexedStreamIds() {
-    return database.streamUnindexedStreamIds();
+  public Stream<Integer> streamUnindexedContentIds() {
+    return database.streamUnindexedContentIds();
   }
 
-  public void storeImage(StreamID streamId, int index, byte[] image) {
-    database.storeImage(streamId.asInt(), index, image);
+  public void storeImage(ContentID contentId, int index, byte[] image) {
+    database.storeImage(contentId.asInt(), index, image);
   }
 
   private StreamMetaDataRecord toRecord(StreamMetaData streamMetaData) {
     try {
       StreamMetaDataRecord record = new StreamMetaDataRecord();
 
-      record.setStreamId(streamMetaData.getStreamId().asInt());
+      record.setContentId(streamMetaData.getContentId().asInt());
       record.setVersion(1);
       record.setLastModificationTime(Instant.now().toEpochMilli());
       record.setJson(codec.encode(streamMetaData));
@@ -82,16 +82,16 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   }
 
   @Override
-  public Optional<StreamMetaData> find(StreamID streamId) {
-    return Optional.ofNullable(cache.get(streamId));
+  public Optional<StreamMetaData> find(ContentID contentId) {
+    return Optional.ofNullable(cache.get(contentId));
   }
 
   @Override
-  public byte[] readSnapshot(StreamID streamId, int snapshotIndex) {
-    return database.readSnapshot(streamId.asInt(), snapshotIndex);
+  public byte[] readSnapshot(ContentID contentId, int snapshotIndex) {
+    return database.readSnapshot(contentId.asInt(), snapshotIndex);
   }
 
-  public boolean existsSnapshot(StreamID streamId, int snapshotIndex) {
-    return database.existsSnapshot(streamId.asInt(), snapshotIndex);
+  public boolean existsSnapshot(ContentID contentId, int snapshotIndex) {
+    return database.existsSnapshot(contentId.asInt(), snapshotIndex);
   }
 }

@@ -2,10 +2,10 @@ package hs.mediasystem.domain.stream;
 
 import java.util.Objects;
 
-public class StreamID {
+public class ContentID {
   private final int id;
 
-  public StreamID(int id) {
+  public ContentID(int id) {
     this.id = id;
   }
 
@@ -15,7 +15,7 @@ public class StreamID {
 
   @Override
   public String toString() {
-    return "StreamID(" + id + ")";
+    return "ContentID(" + id + ")";
   }
 
   @Override
@@ -32,7 +32,7 @@ public class StreamID {
       return false;
     }
 
-    StreamID other = (StreamID)obj;
+    ContentID other = (ContentID)obj;
 
     return id == other.id;
   }

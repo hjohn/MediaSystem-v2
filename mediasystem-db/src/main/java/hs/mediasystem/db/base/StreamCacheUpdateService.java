@@ -1,8 +1,8 @@
 package hs.mediasystem.db.base;
 
 import hs.mediasystem.db.DatabaseResponseCache;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
@@ -41,7 +41,7 @@ import javax.inject.Singleton;
 @Singleton
 public class StreamCacheUpdateService {
   private static final Logger LOGGER = Logger.getLogger(StreamCacheUpdateService.class.getName());
-  private static final Map<StreamID, CompletableFuture<MediaIdentification>> RECENT_IDENTIFICATIONS = new ConcurrentHashMap<>();
+  private static final Map<ContentID, CompletableFuture<MediaIdentification>> RECENT_IDENTIFICATIONS = new ConcurrentHashMap<>();
   private static final Executor FORCE_CACHE_USE_EXECUTOR = createExecutor("StreamCacheUS-cached", true);  // forces cache use for any requests done
   private static final Executor NORMAL_CACHING_EXECUTOR = createExecutor("StreamCacheUS-refresh", false);  // normal cache use for any requests done
   private static final Executor DELAYED_EXECUTOR = CompletableFuture.delayedExecutor(2, TimeUnit.MINUTES, FORCE_CACHE_USE_EXECUTOR);
@@ -121,7 +121,7 @@ public class StreamCacheUpdateService {
    * @return the (future) result, never null
    */
   private CompletableFuture<MediaIdentification> asyncEnrich(Streamable streamable, Executor executor) {
-    StreamID id = streamable.getId();
+    ContentID id = streamable.getId();
     CompletableFuture<MediaIdentification> activeIdentification = RECENT_IDENTIFICATIONS.get(id);
 
     if(activeIdentification != null) {
@@ -129,7 +129,7 @@ public class StreamCacheUpdateService {
     }
 
     // this code may modify RECENT_IDENTIFICATIONS map, so compute it first before modifying it ourselves:
-    activeIdentification = streamable.getParentStreamId()
+    activeIdentification = streamable.getParentContentId()
       .map(pid -> createChildTask(getParentFuture(pid, executor), id, executor))
       .orElseGet(() -> createTask(id, executor));
 
@@ -142,27 +142,27 @@ public class StreamCacheUpdateService {
     return asyncEnrich(streamable, FORCE_CACHE_USE_EXECUTOR);
   }
 
-  private CompletableFuture<MediaIdentification> getParentFuture(StreamID pid, Executor executor) {
+  private CompletableFuture<MediaIdentification> getParentFuture(ContentID pid, Executor executor) {
     return RECENT_IDENTIFICATIONS.computeIfAbsent(pid, k -> createTask(k, executor));
   }
 
-  private CompletableFuture<MediaIdentification> createTask(StreamID streamId, Executor executor) {
+  private CompletableFuture<MediaIdentification> createTask(ContentID contentId, Executor executor) {
     WORKLOAD.start();
 
-    return addFinalStages(CompletableFuture.supplyAsync(() -> enrichTask(streamId, null), executor), streamId);
+    return addFinalStages(CompletableFuture.supplyAsync(() -> enrichTask(contentId, null), executor), contentId);
   }
 
-  private CompletableFuture<MediaIdentification> createChildTask(CompletableFuture<MediaIdentification> parentStage, StreamID streamId, Executor executor) {
+  private CompletableFuture<MediaIdentification> createChildTask(CompletableFuture<MediaIdentification> parentStage, ContentID contentId, Executor executor) {
     WORKLOAD.start();
 
-    return addFinalStages(parentStage.thenApplyAsync(mi -> enrichTask(streamId, mi.getDescriptor()), executor), streamId);
+    return addFinalStages(parentStage.thenApplyAsync(mi -> enrichTask(contentId, mi.getDescriptor()), executor), contentId);
   }
 
   // Add final stages to newly created futures only; don't call this on futures found in queue as they would get these final stages added again!
-  private CompletableFuture<MediaIdentification> addFinalStages(CompletableFuture<MediaIdentification> cf, StreamID streamId) {
+  private CompletableFuture<MediaIdentification> addFinalStages(CompletableFuture<MediaIdentification> cf, ContentID contentId) {
     cf.whenComplete(this::log)
       .whenComplete((v, ex) -> WORKLOAD.complete())
-      .thenRunAsync(() -> RECENT_IDENTIFICATIONS.remove(streamId), DELAYED_EXECUTOR);
+      .thenRunAsync(() -> RECENT_IDENTIFICATIONS.remove(contentId), DELAYED_EXECUTOR);
 
     return cf;  // Purposely returning original cf here
   }
@@ -184,10 +184,10 @@ public class StreamCacheUpdateService {
     }
   }
 
-  private MediaIdentification enrichTask(StreamID streamId, MediaDescriptor parent) {
+  private MediaIdentification enrichTask(ContentID contentId, MediaDescriptor parent) {
     try(Key key = storeConsistencyLock.lock()) {
-      Streamable streamable = streamStore.findStream(streamId).orElseThrow(() -> new IllegalStateException("Stream with id " + streamId + " no longer available"));   // As tasks can take a while before they start, fetch latest state from StreamStore first
-      List<String> dataSourceNames = parent == null ? streamStore.findStreamSource(streamId).getDataSourceNames() : List.of(parent.getIdentifier().getDataSource().getName());
+      Streamable streamable = streamStore.findStream(contentId).orElseThrow(() -> new IllegalStateException("Stream with id " + contentId + " no longer available"));   // As tasks can take a while before they start, fetch latest state from StreamStore first
+      List<String> dataSourceNames = parent == null ? streamStore.findStreamSource(contentId).getDataSourceNames() : List.of(parent.getIdentifier().getDataSource().getName());
 
       key.earlyUnlock();
 
@@ -245,7 +245,7 @@ public class StreamCacheUpdateService {
 
       if(rootResult.isPresent()) {
         int scannerAndRootId = (int)importSourceId + rootResultIdx * 65536;
-        Map<StreamID, Streamable> existingStreams = streamStore.findByImportSourceId(scannerAndRootId);  // Returns all active streams (not deleted)
+        Map<ContentID, Streamable> existingStreams = streamStore.findByImportSourceId(scannerAndRootId);  // Returns all active streams (not deleted)
 
         for(Streamable found : rootResult.get()) {
           try {
@@ -320,9 +320,9 @@ public class StreamCacheUpdateService {
     }
   }
 
-  public Optional<CompletableFuture<MediaIdentification>> reidentifyStream(StreamID streamId) {
+  public Optional<CompletableFuture<MediaIdentification>> reidentifyStream(ContentID contentId) {
     try(Key key = storeConsistencyLock.lock()) {
-      return streamStore.findStream(streamId).map(s -> asyncEnrich(s, NORMAL_CACHING_EXECUTOR));
+      return streamStore.findStream(contentId).map(s -> asyncEnrich(s, NORMAL_CACHING_EXECUTOR));
     }
   }
 
@@ -378,10 +378,10 @@ public class StreamCacheUpdateService {
 
   private void updateCacheWithIdentification(MediaIdentification mediaIdentification) {
     try(Key key = storeConsistencyLock.lock()) {
-      StreamID streamId = mediaIdentification.getStreamable().getId();
+      ContentID contentId = mediaIdentification.getStreamable().getId();
 
       // Store identifiers with stream:
-      streamStore.putIdentification(streamId, mediaIdentification.getIdentification());
+      streamStore.putIdentification(contentId, mediaIdentification.getIdentification());
 
       // Store descriptors in descriptor store:
       if(mediaIdentification.getDescriptor() != null) {

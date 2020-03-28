@@ -10,7 +10,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
@@ -62,8 +62,8 @@ public class CachedStreamCodec {
     try {
       StreamRecord record = new StreamRecord();
 
-      record.setStreamId(stream.getStreamable().getId().asInt());
-      record.setParentStreamId(stream.getStreamable().getParentStreamId().map(StreamID::asInt).orElse(null));
+      record.setContentId(stream.getStreamable().getId().asInt());
+      record.setParentContentId(stream.getStreamable().getParentContentId().map(ContentID::asInt).orElse(null));
       record.setImportSourceId(stream.getImportSourceId());
       record.setCreationMillis(stream.getCreationTime().toEpochMilli());
       record.setLastEnrichTime(stream.getLastEnrichTime() == null ? null : stream.getLastEnrichTime().getEpochSecond());
