@@ -1,10 +1,10 @@
 package hs.mediasystem.db.base;
 
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
-import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -45,25 +45,22 @@ public class ScannerController {
 
     for(ImportSource source : sources) {
       String scannerName = source.getScanner().getClass().getSimpleName();
+      List<Path> roots = source.getRoots();
 
-      try {
-        List<Exceptional<List<Streamable>>> results = source.getScanner().scan(source.getRoots());
+      for(int i = 0; i < roots.size(); i++) {
+        Path root = roots.get(i);
 
-        for(int i = 0; i < results.size(); i++) {
-          Exceptional<List<Streamable>> result = results.get(i);
+        try {
+          int importSourceId = source.getId() + i * 65536;
+          List<Streamable> results = source.getScanner().scan(root, importSourceId);
 
-          if(result.isException()) {
-            LOGGER.warning(scannerName + " failed while scanning '" + source.getRoots().get(i) + "' with: " + result.getException());
-          }
-          else {
-            LOGGER.fine(scannerName + " returned " + result.get().size() + " items while scanning '" + source.getRoots().get(i) + "'");
-          }
+          LOGGER.fine(scannerName + " returned " + results.size() + " items while scanning '" + root + "'");
+
+          updateService.update(importSourceId, results);
         }
-
-        updateService.update(source.getId(), results);
-      }
-      catch(Throwable t) {
-        LOGGER.severe("Exception while running Scanner: " + scannerName + ": " + Throwables.formatAsOneLine(t));
+        catch(Throwable t) {
+          LOGGER.warning(scannerName + " failed while scanning '" + root + "' with: " + Throwables.formatAsOneLine(t));
+        }
       }
     }
   }

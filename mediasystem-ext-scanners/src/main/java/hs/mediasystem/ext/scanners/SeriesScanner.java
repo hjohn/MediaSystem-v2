@@ -4,15 +4,13 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Exceptional;
-import hs.mediasystem.util.RuntimeIOException;
 import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
@@ -43,61 +41,54 @@ public class SeriesScanner implements Scanner {
   private static final NameDecoder SIMPLE_NAME_DECODER = new NameDecoder(Mode.SIMPLE);
   private static final Set<FileVisitOption> FILE_VISIT_OPTIONS = new HashSet<>(Arrays.asList(FileVisitOption.FOLLOW_LINKS));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Scanning series");
-	private static final MediaType SERIE = MediaType.of("SERIE");
-	private static final MediaType EPISODE = MediaType.of("EPISODE");
-	
+  private static final MediaType SERIE = MediaType.of("SERIE");
+  private static final MediaType EPISODE = MediaType.of("EPISODE");
+
   @Inject private ContentPrintProvider contentPrintProvider;
 
   @Override
-  public List<Exceptional<List<Streamable>>> scan(List<Path> roots) {
-    List<Exceptional<List<Streamable>>> rootResults = new ArrayList<>();
+  public List<Streamable> scan(Path root, int importSourceId) throws IOException {
+    LOGGER.info("Scanning " + root);
 
-    LOGGER.info("Scanning " + roots);
+    List<Path> scanResults = scan(root);
 
-    for(Path root : roots) {
+    WORKLOAD.start(scanResults.size());
+
+    List<Streamable> results = new ArrayList<>();
+
+    for(Path path : scanResults) {
       try {
-        List<Path> scanResults = scan(root);
+        DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
 
-        WORKLOAD.start(scanResults.size());
+        String title = result.getTitle();
+        String subtitle = result.getSubtitle();
+        Integer year = result.getReleaseYear();
 
-        List<Streamable> results = new ArrayList<>();
+        String imdb = result.getCode();
+        String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
+        StringURI uri = new StringURI(path.toUri());
 
-        for(Path path : scanResults) {
-          DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
+        ContentPrint contentPrint = contentPrintProvider.get(uri, null, Files.getLastModifiedTime(path).toMillis());
 
-          String title = result.getTitle();
-          String subtitle = result.getSubtitle();
-          Integer year = result.getReleaseYear();
+        Attributes attributes = Attributes.of(
+          Attribute.TITLE, title,
+          Attribute.SUBTITLE, subtitle,
+          Attribute.YEAR, year == null ? null : year.toString(),
+          Attribute.ID_PREFIX + "IMDB", imdbNumber
+        );
 
-          String imdb = result.getCode();
-          String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
-          StringURI uri = new StringURI(path.toUri());
-
-          ContentPrint contentPrint = contentPrintProvider.get(uri, null, Files.getLastModifiedTime(path).toMillis());
-
-          Attributes attributes = Attributes.of(
-            Attribute.TITLE, title,
-            Attribute.SUBTITLE, subtitle,
-            Attribute.YEAR, year == null ? null : year.toString(),
-            Attribute.ID_PREFIX + "IMDB", imdbNumber
-          );
-
-          results.add(new Streamable(SERIE, uri, contentPrint.getId(), null, attributes));
-          results.addAll(scanSerie(path, contentPrint.getId()));
-
-          WORKLOAD.complete();
-        }
-
-        rootResults.add(Exceptional.of(results));
+        results.add(new Streamable(SERIE, uri, contentPrint.getId(), null, attributes));
+        results.addAll(scanSerie(path, contentPrint.getId()));
       }
       catch(RuntimeException | IOException e) {
-        WORKLOAD.reset();
-
-        rootResults.add(Exceptional.ofException(e));
+        LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
+      }
+      finally {
+        WORKLOAD.complete();
       }
     }
 
-    return rootResults;
+    return results;
   }
 
   private List<Streamable> scanSerie(Path root, ContentID parentId) {
@@ -163,29 +154,24 @@ public class SeriesScanner implements Scanner {
     return false;
   }
 
-  private static List<Path> scan(Path scanPath) {
-    try {
-      List<Path> results = new ArrayList<>();
+  private static List<Path> scan(Path scanPath) throws IOException {
+    List<Path> results = new ArrayList<>();
 
-      Files.walkFileTree(scanPath, FILE_VISIT_OPTIONS, 2, new SimpleFileVisitor<Path>() {
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-          if(dir.equals(scanPath)) {
-            return FileVisitResult.CONTINUE;
-          }
-
-          if(!dir.getFileName().toString().startsWith(".")) {
-            results.add(dir);
-          }
-
-          return FileVisitResult.SKIP_SUBTREE;
+    Files.walkFileTree(scanPath, FILE_VISIT_OPTIONS, 2, new SimpleFileVisitor<Path>() {
+      @Override
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+        if(dir.equals(scanPath)) {
+          return FileVisitResult.CONTINUE;
         }
-      });
 
-      return results;
-    }
-    catch(IOException e) {
-      throw new RuntimeIOException("Exception while scanning \"" + scanPath + "\"", e);
-    }
+        if(!dir.getFileName().toString().startsWith(".")) {
+          results.add(dir);
+        }
+
+        return FileVisitResult.SKIP_SUBTREE;
+      }
+    });
+
+    return results;
   }
 }

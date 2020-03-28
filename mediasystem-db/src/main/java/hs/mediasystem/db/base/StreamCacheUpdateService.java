@@ -13,7 +13,6 @@ import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
 import hs.mediasystem.mediamanager.MediaIdentification;
 import hs.mediasystem.util.AutoReentrantLock;
 import hs.mediasystem.util.AutoReentrantLock.Key;
-import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
@@ -239,84 +238,77 @@ public class StreamCacheUpdateService {
     }
   }
 
-  public synchronized void update(long importSourceId, List<Exceptional<List<Streamable>>> rootResults) {
-    for(int rootResultIdx = 0; rootResultIdx < rootResults.size(); rootResultIdx++) {
-      Exceptional<List<Streamable>> rootResult = rootResults.get(rootResultIdx);
+  public synchronized void update(int importSourceId, List<Streamable> results) {
+    Map<ContentID, Streamable> existingStreams = streamStore.findByImportSourceId(importSourceId);  // Returns all active streams (not deleted)
 
-      if(rootResult.isPresent()) {
-        int scannerAndRootId = (int)importSourceId + rootResultIdx * 65536;
-        Map<ContentID, Streamable> existingStreams = streamStore.findByImportSourceId(scannerAndRootId);  // Returns all active streams (not deleted)
+    for(Streamable found : results) {
+      try {
+        Streamable existing = existingStreams.remove(found.getId());
 
-        for(Streamable found : rootResult.get()) {
-          try {
-            Streamable existing = existingStreams.remove(found.getId());
+        if(existing == null || !found.equals(existing)) {
+          try(Key key = storeConsistencyLock.lock()) {
+            streamStore.put(importSourceId, found);  // Adds as new or modify it
+          }
 
-            if(existing == null || !found.equals(existing)) {
-              try(Key key = storeConsistencyLock.lock()) {
-                streamStore.put(scannerAndRootId, found);  // Adds as new or modify it
+          LOGGER.finer((existing == null ? "New stream found: " : "Existing stream modified: ") + found);
+
+          asyncEnrich(found);
+        }
+        else {
+          // Check if descriptor store contains the relevant descriptors:
+          streamStore.findIdentification(existing.getId()).stream().map(Identification::getIdentifiers).flatMap(Collection::stream).forEach(identifier -> {
+            if(identificationService.isQueryServiceAvailable(identifier.getDataSource())) {
+              MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
+
+              if(mediaDescriptor == null) {
+                // One or more descriptors are missing, enrich:
+                LOGGER.warning("Existing stream is missing descriptors in cache (" + identifier + ") -> refetching: " + found);
+
+                asyncEnrich(found);
               }
+              else if(mediaDescriptor instanceof Production) {
+                Production production = (Production)mediaDescriptor;
+                Identifier collectionIdentifier = production.getCollectionIdentifier().orElse(null);
 
-              LOGGER.finer((existing == null ? "New stream found: " : "Existing stream modified: ") + found);
+                if(collectionIdentifier != null) {
+                  IdentifierCollection identifierCollection = (IdentifierCollection)descriptorStore.find(collectionIdentifier).orElse(null);
 
-              asyncEnrich(found);
-            }
-            else {
-              // Check if descriptor store contains the relevant descriptors:
-              streamStore.findIdentification(existing.getId()).stream().map(Identification::getIdentifiers).flatMap(Collection::stream).forEach(identifier -> {
-                if(identificationService.isQueryServiceAvailable(identifier.getDataSource())) {
-                  MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
-
-                  if(mediaDescriptor == null) {
-                    // One or more descriptors are missing, enrich:
-                    LOGGER.warning("Existing stream is missing descriptors in cache (" + identifier + ") -> refetching: " + found);
+                  if(identifierCollection == null) {
+                    LOGGER.warning("Existing stream is missing collection data in cache (" + collectionIdentifier + ") -> refetching: " + found);
 
                     asyncEnrich(found);
                   }
-                  else if(mediaDescriptor instanceof Production) {
-                    Production production = (Production)mediaDescriptor;
-                    Identifier collectionIdentifier = production.getCollectionIdentifier().orElse(null);
-
-                    if(collectionIdentifier != null) {
-                      IdentifierCollection identifierCollection = (IdentifierCollection)descriptorStore.find(collectionIdentifier).orElse(null);
-
-                      if(identifierCollection == null) {
-                        LOGGER.warning("Existing stream is missing collection data in cache (" + collectionIdentifier + ") -> refetching: " + found);
+                  else {
+                    for(Identifier collectionItemIdentifier : identifierCollection.getItems()) {
+                      if(descriptorStore.find(collectionItemIdentifier).orElse(null) == null) {
+                        LOGGER.warning("Existing stream is missing collection items in cache (" + collectionItemIdentifier + " is missing, out of " + identifierCollection.getItems() + " from " + collectionIdentifier + ") -> refetching: " + found);
 
                         asyncEnrich(found);
-                      }
-                      else {
-                        for(Identifier collectionItemIdentifier : identifierCollection.getItems()) {
-                          if(descriptorStore.find(collectionItemIdentifier).orElse(null) == null) {
-                            LOGGER.warning("Existing stream is missing collection items in cache (" + collectionItemIdentifier + " is missing, out of " + identifierCollection.getItems() + " from " + collectionIdentifier + ") -> refetching: " + found);
-
-                            asyncEnrich(found);
-                            break;
-                          }
-                        }
+                        break;
                       }
                     }
                   }
                 }
-              });
+              }
             }
-          }
-          catch(Throwable t) {
-            LOGGER.severe("Exception while updating: " + found + ": " + Throwables.formatAsOneLine(t));
-          }
-        }
-
-        /*
-         * After updating, existingStreams will only contain the streams that were
-         * not found during the last scan.  These will be removed.
-         */
-
-        try(Key key = storeConsistencyLock.lock()) {
-          existingStreams.entrySet().stream()
-            .peek(e -> LOGGER.finer("Existing Stream deleted: " + e.getValue()))
-            .map(Map.Entry::getKey)
-            .forEach(streamStore::remove);
+          });
         }
       }
+      catch(Throwable t) {
+        LOGGER.severe("Exception while updating: " + found + ": " + Throwables.formatAsOneLine(t));
+      }
+    }
+
+    /*
+     * After updating, existingStreams will only contain the streams that were
+     * not found during the last scan.  These will be removed.
+     */
+
+    try(Key key = storeConsistencyLock.lock()) {
+      existingStreams.entrySet().stream()
+        .peek(e -> LOGGER.finer("Existing Stream deleted: " + e.getValue()))
+        .map(Map.Entry::getKey)
+        .forEach(streamStore::remove);
     }
   }
 

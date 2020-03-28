@@ -2,14 +2,13 @@ package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
@@ -35,61 +34,48 @@ public class MoviesScanner implements Scanner {
   @Inject private ContentPrintProvider contentPrintProvider;
 
   @Override
-  public List<Exceptional<List<Streamable>>> scan(List<Path> roots) {
-    List<Exceptional<List<Streamable>>> rootResults = new ArrayList<>();
+  public List<Streamable> scan(Path root, int importSourceId) throws IOException {
+    LOGGER.info("Scanning " + root);
 
-    LOGGER.info("Scanning " + roots);
+    List<Path> scanResults = new PathFinder(1).find(root);
+    List<Streamable> results = new ArrayList<>();
 
-    for(Path root : roots) {
+    WORKLOAD.start(scanResults.size());
+
+    for(Path path : scanResults) {
       try {
-        List<Path> scanResults = new PathFinder(1).find(root);
-        List<Streamable> results = new ArrayList<>();
+        DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
 
-        WORKLOAD.start(scanResults.size());
+        String title = result.getTitle();
+        String sequence = result.getSequence();
+        String subtitle = result.getSubtitle();
+        Integer year = result.getReleaseYear();
 
-        for(Path path : scanResults) {
-          try {
-            DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
+        String imdb = result.getCode();
+        String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
+        URI uri = path.toUri();
 
-            String title = result.getTitle();
-            String sequence = result.getSequence();
-            String subtitle = result.getSubtitle();
-            Integer year = result.getReleaseYear();
+        ContentPrint contentPrint = contentPrintProvider.get(new StringURI(uri), Files.size(path), Files.getLastModifiedTime(path).toMillis());
 
-            String imdb = result.getCode();
-            String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
-            URI uri = path.toUri();
+        Attributes attributes = Attributes.of(
+          Attribute.TITLE, title,
+          Attribute.ALTERNATIVE_TITLE, result.getAlternativeTitle(),
+          Attribute.SUBTITLE, subtitle,
+          Attribute.SEQUENCE, sequence,
+          Attribute.YEAR, year == null ? null : year.toString(),
+          Attribute.ID_PREFIX + "IMDB", imdbNumber
+        );
 
-            ContentPrint contentPrint = contentPrintProvider.get(new StringURI(uri), Files.size(path), Files.getLastModifiedTime(path).toMillis());
-
-            Attributes attributes = Attributes.of(
-              Attribute.TITLE, title,
-              Attribute.ALTERNATIVE_TITLE, result.getAlternativeTitle(),
-              Attribute.SUBTITLE, subtitle,
-              Attribute.SEQUENCE, sequence,
-              Attribute.YEAR, year == null ? null : year.toString(),
-              Attribute.ID_PREFIX + "IMDB", imdbNumber
-            );
-
-            results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), contentPrint.getId(), null, attributes));
-          }
-          catch(RuntimeException | IOException e) {
-            LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
-          }
-          finally {
-            WORKLOAD.complete();
-          }
-        }
-
-        rootResults.add(Exceptional.of(results));
+        results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), contentPrint.getId(), null, attributes));
       }
       catch(RuntimeException | IOException e) {
-        WORKLOAD.reset();
-
-        rootResults.add(Exceptional.ofException(e));
+        LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
+      }
+      finally {
+        WORKLOAD.complete();
       }
     }
 
-    return rootResults;
+    return results;
   }
 }

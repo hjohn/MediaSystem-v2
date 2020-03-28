@@ -1,7 +1,7 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
@@ -16,7 +16,6 @@ import hs.mediasystem.mediamanager.Movies;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
 
 import java.time.Instant;
@@ -68,9 +67,9 @@ public class StreamCacheUpdateServiceTest {
       MOVIE
     ));
 
-    updater.update(1, List.of(Exceptional.of(List.of(
+    updater.update(1, List.of(
       stream1
-    ))));
+    ));
 
     Thread.sleep(100);  // Part of calls is async
 
@@ -95,9 +94,9 @@ public class StreamCacheUpdateServiceTest {
 
     when(streamStore.findStream(new ContentID(21))).thenReturn(Optional.of(stream1));
 
-    updater.update(1, List.of(Exceptional.of(List.of(
+    updater.update(1, List.of(
       stream1
-    ))));
+    ));
 
     Thread.sleep(100);  // Part of calls is async
 
@@ -125,9 +124,9 @@ public class StreamCacheUpdateServiceTest {
 
     when(streamStore.findStream(new ContentID(20))).thenReturn(Optional.of(stream1));  // Return renamed stream with same stream id (as content was same)
 
-    updater.update(1, List.of(Exceptional.of(List.of(
+    updater.update(1, List.of(
       stream1
-    ))));
+    ));
 
     Thread.sleep(100);  // Part of calls is async
 
@@ -152,9 +151,9 @@ public class StreamCacheUpdateServiceTest {
     ));
     when(streamStore.findStream(new ContentID(123))).thenReturn(Optional.of(stream1));
 
-    updater.update(1, List.of(Exceptional.of(List.of(
+    updater.update(1, List.of(
       stream1
-    ))));
+    ));
 
     Thread.sleep(100);  // Part of calls is async
 

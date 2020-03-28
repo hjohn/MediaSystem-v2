@@ -8,8 +8,8 @@ import hs.mediasystem.db.base.ImportSourceProvider;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
 import hs.mediasystem.db.services.WorkService;
 import hs.mediasystem.db.services.WorksService;
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
@@ -32,7 +32,6 @@ import hs.mediasystem.mediamanager.Series;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Exceptional;
 import hs.mediasystem.util.StringURI;
 
 import java.io.IOException;
@@ -331,11 +330,11 @@ public class DatabaseIT {
   static class AddSomeMovies {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
-      updateService.update(1, List.of(Exceptional.of(List.of(
+      updateService.update(1, List.of(
         streamable(MOVIE, "testdata/movies/Terminator.txt", contentPrint1.getId(), "Terminator"),
         streamable(MOVIE, "testdata/movies/Avatar.txt", contentPrint2.getId(), "Avatar"),
         streamable(MOVIE, "testdata/movies/Matrix.txt", contentPrint3.getId(), "The Matrix")
-      ))));
+      ));
 
       Thread.sleep(500);
       System.out.println("... hoping all have been enriched now ...");
@@ -343,17 +342,17 @@ public class DatabaseIT {
 
     @AfterAll
     static void afterAll() {
-      updateService.update(1, List.of(Exceptional.of(List.of())));  // Should remove everything
+      updateService.update(1, List.of());  // Should remove everything
     }
   }
 
   static class RemoveAvatarAndModifyOne {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
-      updateService.update(1, List.of(Exceptional.of(List.of(
+      updateService.update(1, List.of(
         streamable(MOVIE, "testdata/movies/Terminator.txt", contentPrint1.getId(), "The Terminator"),
         streamable(MOVIE, "testdata/movies/Matrix.txt", contentPrint3.getId(), "The Matrix")
-      ))));
+      ));
 
       Thread.sleep(500);
       System.out.println("... hoping all have been enriched now ...");
@@ -363,11 +362,11 @@ public class DatabaseIT {
   static class AddFriends {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
-      updateService.update(2, List.of(Exceptional.of(List.of(
+      updateService.update(2, List.of(
         streamable(SERIE, "testdata/series/Friends", contentPrint4.getId(), "Friends"),
         streamable(EPISODE, "testdata/series/Friends/friends_1x01.txt", contentPrint5.getId(), contentPrint4.getId(), "1x01"),
         streamable(EPISODE, "testdata/series/Friends/friends_1x02.txt", contentPrint6.getId(), contentPrint4.getId(), "1x02")
-      ))));
+      ));
 
       Thread.sleep(500);
       System.out.println("... hoping all have been enriched now ...");
@@ -375,7 +374,7 @@ public class DatabaseIT {
 
     @AfterAll
     static void afterAll() {
-      updateService.update(2, List.of(Exceptional.of(List.of())));  // Should remove everything
+      updateService.update(2, List.of());  // Should remove everything
     }
   }
 
