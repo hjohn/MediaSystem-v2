@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
-import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.StringURI;
 
@@ -11,8 +11,8 @@ import java.util.Optional;
 public class Streamable {
   private final MediaType type;
   private final StringURI uri;
-  private final ContentID contentId;
-  private final Optional<ContentID> parentContentId;
+  private final StreamID id;
+  private final Optional<StreamID> parentId;
   private final Attributes attributes;
 
   /**
@@ -20,19 +20,19 @@ public class Streamable {
    *
    * @param type a {@link MediaType}, cannot be null
    * @param uri a {@link StringURI}, cannot be null
-   * @param contentId a {@link ContentID}, cannot be null
-   * @param parentContentId a parent {@link ContentID}, can be null
+   * @param id a {@link StreamID}, cannot be null
+   * @param parentId a parent {@link StreamID}, can be null
    * @param attributes an {@link Attributes}, cannot be null
    */
-  public Streamable(MediaType type, StringURI uri, ContentID contentId, ContentID parentContentId, Attributes attributes) {
+  public Streamable(MediaType type, StringURI uri, StreamID id, StreamID parentId, Attributes attributes) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
     if(uri == null) {
       throw new IllegalArgumentException("uri cannot be null");
     }
-    if(contentId == null) {
-      throw new IllegalArgumentException("contentId cannot be null");
+    if(id == null) {
+      throw new IllegalArgumentException("id cannot be null");
     }
     if(attributes == null) {
       throw new IllegalArgumentException("attributes cannot be null");
@@ -43,9 +43,15 @@ public class Streamable {
 
     this.type = type;
     this.uri = uri;
-    this.contentId = contentId;
-    this.parentContentId = Optional.ofNullable(parentContentId);
+    this.id = id;
+    this.parentId = Optional.ofNullable(parentId);
     this.attributes = attributes;
+  }
+
+  public String getName() {
+    String name = uri.asReadableString();
+
+    return name.substring(name.lastIndexOf('/') + 1);
   }
 
   public StringURI getUri() {
@@ -56,12 +62,12 @@ public class Streamable {
     return type;
   }
 
-  public ContentID getId() {
-    return contentId;
+  public StreamID getId() {
+    return id;
   }
 
-  public Optional<ContentID> getParentContentId() {
-    return parentContentId;
+  public Optional<StreamID> getParentId() {
+    return parentId;
   }
 
   public Attributes getAttributes() {
@@ -70,7 +76,7 @@ public class Streamable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(attributes, parentContentId, contentId, type, uri);
+    return Objects.hash(attributes, parentId, id, type, uri);
   }
 
   @Override
@@ -85,8 +91,8 @@ public class Streamable {
     Streamable other = (Streamable)obj;
 
     return Objects.equals(attributes, other.attributes)
-        && Objects.equals(parentContentId, other.parentContentId)
-        && Objects.equals(contentId, other.contentId)
+        && Objects.equals(parentId, other.parentId)
+        && Objects.equals(id, other.id)
         && Objects.equals(type, other.type)
         && Objects.equals(uri, other.uri);
   }

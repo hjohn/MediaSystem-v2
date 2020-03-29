@@ -9,12 +9,11 @@ import java.util.Optional;
 public class CachedStream {
   private final Streamable streamable;
   private final Optional<Identification> identification;
-  private final int importSourceId;
   private final Instant creationTime;
   private final Instant lastEnrichTime;
   private final Instant nextEnrichTime;
 
-  public CachedStream(Streamable streamable, Identification identification, int importSourceId, Instant creationTime, Instant lastEnrichTime, Instant nextEnrichTime) {
+  public CachedStream(Streamable streamable, Identification identification, Instant creationTime, Instant lastEnrichTime, Instant nextEnrichTime) {
     if(streamable == null) {
       throw new IllegalArgumentException("streamable cannot be null");
     }
@@ -24,7 +23,6 @@ public class CachedStream {
 
     this.streamable = streamable;
     this.identification = Optional.ofNullable(identification);
-    this.importSourceId = importSourceId;
     this.creationTime = creationTime;
     this.lastEnrichTime = lastEnrichTime;
     this.nextEnrichTime = nextEnrichTime;
@@ -38,10 +36,6 @@ public class CachedStream {
     return identification;
   }
 
-  public int getImportSourceId() {
-    return importSourceId;
-  }
-
   public Instant getCreationTime() {
     return creationTime;
   }
@@ -52,5 +46,9 @@ public class CachedStream {
 
   public Instant getNextEnrichTime() {
     return nextEnrichTime;
+  }
+
+  public int getImportSourceId() {
+    return streamable.getId().getImportSourceId();
   }
 }

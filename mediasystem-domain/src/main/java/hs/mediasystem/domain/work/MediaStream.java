@@ -1,20 +1,20 @@
 package hs.mediasystem.domain.work;
 
-import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.StreamID;
 
 import java.util.Optional;
 
 public class MediaStream {
-  private final ContentID contentId;
-  private final Optional<ContentID> parentId;
+  private final StreamID id;
+  private final Optional<StreamID> parentId;
   private final StreamAttributes attributes;
   private final State state;
   private final Optional<StreamMetaData> metaData;
   private final Optional<Match> match;
 
-  public MediaStream(ContentID contentId, ContentID parentId, StreamAttributes attributes, State state, StreamMetaData metaData, Match match) {
-    if(contentId == null) {
-      throw new IllegalArgumentException("contentId cannot be null");
+  public MediaStream(StreamID id, StreamID parentId, StreamAttributes attributes, State state, StreamMetaData metaData, Match match) {
+    if(id == null) {
+      throw new IllegalArgumentException("id cannot be null");
     }
     if(state == null) {
       throw new IllegalArgumentException("state cannot be null");
@@ -23,7 +23,7 @@ public class MediaStream {
       throw new IllegalArgumentException("attributes cannot be null");
     }
 
-    this.contentId = contentId;
+    this.id = id;
     this.parentId = Optional.ofNullable(parentId);
     this.attributes = attributes;
     this.state = state;
@@ -31,11 +31,11 @@ public class MediaStream {
     this.match = Optional.ofNullable(match);
   }
 
-  public ContentID getId() {
-    return contentId;
+  public StreamID getId() {
+    return id;
   }
 
-  public Optional<ContentID> getParentId() {
+  public Optional<StreamID> getParentId() {
     return parentId;
   }
 

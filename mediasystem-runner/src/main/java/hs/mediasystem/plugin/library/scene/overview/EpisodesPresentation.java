@@ -1,7 +1,5 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.domain.Sequence;
@@ -104,9 +102,8 @@ public class EpisodesPresentation extends AbstractPresentation {
     Map<Integer, Integer> totalCounts = new HashMap<>();
 
     for(Work episodeItem : internalEpisodeItems) {
-      ContentID contentId = episodeItem.getPrimaryStream().map(MediaStream::getId).orElse(null);
-      boolean missing = contentId == null;
-      boolean watched = contentId == null ? false : episodeItem.getState().isConsumed().getValue();
+      boolean missing = episodeItem.getPrimaryStream().isEmpty();
+      boolean watched = missing ? false : episodeItem.getState().isConsumed().getValue();
 
       int seasonNumber = toSeasonBarIndex(episodeItem);
 

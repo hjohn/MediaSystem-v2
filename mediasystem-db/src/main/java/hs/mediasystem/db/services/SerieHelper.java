@@ -1,7 +1,7 @@
 package hs.mediasystem.db.services;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Resolution;
 import hs.mediasystem.domain.work.Snapshot;
@@ -34,7 +34,7 @@ public class SerieHelper {
   @Inject private StreamableStore streamStore;
   @Inject private StreamMetaDataStore metaDataProvider;
 
-  public List<Episode> createExtras(Serie serie, ContentID contentId) {
+  public List<Episode> createExtras(Serie serie, StreamID streamId) {
 
     /*
      * For a serie, additional information is added for video files found in the same folder, but
@@ -42,7 +42,7 @@ public class SerieHelper {
      */
 
     List<Episode> extras = new ArrayList<>();
-    List<Streamable> children = streamStore.findChildren(contentId).stream()
+    List<Streamable> children = streamStore.findChildren(streamId).stream()
         .sorted((a, b) -> a.getAttributes().<String>get(Attribute.TITLE).compareTo(b.getAttributes().get(Attribute.TITLE)))
         .collect(Collectors.toList());
 
@@ -67,7 +67,7 @@ public class SerieHelper {
   }
 
   public Details createMinimalDetails(Streamable streamable) {
-    Optional<StreamMetaData> metaData = metaDataProvider.find(streamable.getId());
+    Optional<StreamMetaData> metaData = metaDataProvider.find(streamable.getId().getContentId());
     String subtitle = streamable.getAttributes().get(Attribute.SUBTITLE);
 
     ImageURI image;
@@ -107,7 +107,7 @@ public class SerieHelper {
   }
 
   private static LocalEpisodeIdentifier createLocalId(Serie serie, Streamable stream) {
-    return new LocalEpisodeIdentifier(DEFAULT_RELEASE, serie.getIdentifier().getId() + "/" + stream.getId().asInt(), serie.getIdentifier());
+    return new LocalEpisodeIdentifier(DEFAULT_RELEASE, serie.getIdentifier().getId() + "/" + stream.getId().asString(), serie.getIdentifier());
   }
 
   private static class LocalEpisodeIdentifier extends EpisodeIdentifier {

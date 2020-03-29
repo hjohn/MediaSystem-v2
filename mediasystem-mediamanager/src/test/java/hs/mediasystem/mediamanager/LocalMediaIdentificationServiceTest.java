@@ -1,8 +1,9 @@
 package hs.mediasystem.mediamanager;
 
 import hs.ddif.core.Injector;
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
@@ -31,7 +32,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 public class LocalMediaIdentificationServiceTest {
-  private static final ContentID CONTENT_ID = new ContentID(999);
+  private static final StreamID STREAM_ID = new StreamID(1, new ContentID(999), "Stuff");
 
   private static final MediaType MOVIE = MediaType.of("MOVIE");
   private static final MediaType SERIE = MediaType.of("SERIE");
@@ -153,6 +154,6 @@ public class LocalMediaIdentificationServiceTest {
   }
 
   private static Streamable createMovie(String uri, Attributes attributes) {
-    return new Streamable(MediaType.of("MOVIE"), new StringURI(uri), CONTENT_ID, null, attributes);
+    return new Streamable(MediaType.of("MOVIE"), new StringURI(uri), STREAM_ID, null, attributes);
   }
 }

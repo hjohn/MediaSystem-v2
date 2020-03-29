@@ -3,6 +3,7 @@ package hs.mediasystem.local.client.service;
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
@@ -61,8 +62,8 @@ public class LocalWorksClient implements WorksClient {
       work.getId(),
       work.getType(),
       work.getParent().orElse(null),
-      createDetails(work.getDescriptor(), parent, work.getPrimaryStream().map(MediaStream::getId)),
-      toState(work.getPrimaryStream().map(MediaStream::getId).orElse(null)),
+      createDetails(work.getDescriptor(), parent, work.getPrimaryStream().map(MediaStream::getId).map(StreamID::getContentId)),
+      toState(work.getPrimaryStream().map(MediaStream::getId).map(StreamID::getContentId).orElse(null)),
       work.getStreams()
     );
   }

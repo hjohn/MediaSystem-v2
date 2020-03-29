@@ -33,7 +33,7 @@ public class Identifier {  // TODO refactor
   }
 
   public static Identifier fromString(String key) {
-    int colon = key.lastIndexOf(":");
+    int colon = key.indexOf(':', key.indexOf(':') + 1);
 
     return new Identifier(DataSource.fromString(key.substring(0, colon)), key.substring(colon + 1));
   }

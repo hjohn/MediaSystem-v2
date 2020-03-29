@@ -9,15 +9,15 @@ public class StreamIdentifierRecord {
   @Column
   private String identifier;
 
-  @Column(name = "content_id")
-  private int contentId;
+  @Column(name = "stream_id")
+  private int streamId;
 
-  public int getContentId() {
-    return contentId;
+  public int getStreamId() {
+    return streamId;
   }
 
-  public void setContentId(int contentId) {
-    this.contentId = contentId;
+  public void setStreamId(int streamId) {
+    this.streamId = streamId;
   }
 
   public String getIdentifier() {

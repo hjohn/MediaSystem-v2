@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
@@ -77,8 +77,10 @@ public class SeriesScanner implements Scanner {
           Attribute.ID_PREFIX + "IMDB", imdbNumber
         );
 
-        results.add(new Streamable(SERIE, uri, contentPrint.getId(), null, attributes));
-        results.addAll(scanSerie(path, contentPrint.getId()));
+        StreamID id = new StreamID(importSourceId, contentPrint.getId(), path.getFileName().toString());
+
+        results.add(new Streamable(SERIE, uri, id, null, attributes));
+        results.addAll(scanSerie(path, id));
       }
       catch(RuntimeException | IOException e) {
         LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
@@ -91,7 +93,7 @@ public class SeriesScanner implements Scanner {
     return results;
   }
 
-  private List<Streamable> scanSerie(Path root, ContentID parentId) {
+  private List<Streamable> scanSerie(Path root, StreamID parentId) {
     List<Streamable> results = new ArrayList<>();
 
     try {
@@ -99,12 +101,13 @@ public class SeriesScanner implements Scanner {
 
       for(Path path : scanResults) {
         Path relative = root.relativize(path);
+        String name = path.getFileName().toString();
         ChildType type = hasPathPart(relative, "specials?") ? ChildType.SPECIAL :
                          hasPathPart(relative, "extras?")   ? ChildType.EXTRA : null;
 
-        DecodeResult result = type == ChildType.SPECIAL ? SPECIAL_NAME_DECODER.decode(path.getFileName().toString()) :
-                              type == ChildType.EXTRA   ? SIMPLE_NAME_DECODER.decode(path.getFileName().toString()) :
-                                                          EPISODE_NAME_DECODER.decode(path.getFileName().toString());
+        DecodeResult result = type == ChildType.SPECIAL ? SPECIAL_NAME_DECODER.decode(name) :
+                              type == ChildType.EXTRA   ? SIMPLE_NAME_DECODER.decode(name) :
+                                                          EPISODE_NAME_DECODER.decode(name);
 
         String title = result.getTitle();
         String subtitle = result.getSubtitle();
@@ -129,7 +132,7 @@ public class SeriesScanner implements Scanner {
           Attribute.CHILD_TYPE, type == null ? null : type.toString()
         );
 
-        results.add(new Streamable(EPISODE, new StringURI(path.toUri()), contentPrint.getId(), parentId, attributes));
+        results.add(new Streamable(EPISODE, new StringURI(path.toUri()), new StreamID(parentId.getImportSourceId(), contentPrint.getId(), name), parentId, attributes));
       }
     }
     catch(RuntimeException | IOException e) {

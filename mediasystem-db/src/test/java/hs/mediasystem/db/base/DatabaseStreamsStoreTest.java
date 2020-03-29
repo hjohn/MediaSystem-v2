@@ -2,6 +2,7 @@ package hs.mediasystem.db.base;
 
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.Attributes;
@@ -36,26 +37,26 @@ class DatabaseStreamsStoreTest {
   }
 
   @Test
-  void removeShouldIgnoreUnknownContentID() {
-    store.remove(new ContentID(1));
+  void removeShouldIgnoreUnknownStreamID() {
+    store.remove(new StreamID(1, new ContentID(1), "Unknown"));
   }
 
   @Nested
   class AfterAddingElements {
-    ContentID contentId1 = new ContentID(1);
-    ContentID contentId2 = new ContentID(2);
-    ContentID contentId3 = new ContentID(3);
-    Streamable sa1 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir1"), contentId1, null, Attributes.of(Attribute.TITLE, "SerieTitle1"));
-    Streamable sa2 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir2"), contentId2, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
-    Streamable sa3 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir2"), contentId3, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
+    StreamID streamId1 = new StreamID(1, new ContentID(1), "SerieTitle1");
+    StreamID streamId2 = new StreamID(2, new ContentID(2), "SerieTitle2");
+    StreamID streamId3 = new StreamID(1, new ContentID(3), "SerieTitle3");
+    Streamable sa1 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir1"), streamId1, null, Attributes.of(Attribute.TITLE, "SerieTitle1"));
+    Streamable sa2 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir2"), streamId2, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
+    Streamable sa3 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir2"), streamId3, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
 
     @BeforeEach
     void beforeEach() {
       when(codec.toRecord(any(CachedStream.class))).thenReturn(new StreamRecord());
 
-      store.put(1, sa1);
-      store.put(2, sa2);
-      store.put(1, sa3);
+      store.put(sa1);
+      store.put(sa2);
+      store.put(sa3);
 
       verify(database, times(3)).store(any(StreamRecord.class));
     }
@@ -64,9 +65,9 @@ class DatabaseStreamsStoreTest {
     void findByImportSourceIdShouldFindStreams() {
       assertEquals(2, store.findByImportSourceId(1).size());
       assertEquals(1, store.findByImportSourceId(2).size());
-      assertEquals(sa1, store.findByImportSourceId(1).get(contentId1));
-      assertEquals(sa2, store.findByImportSourceId(2).get(contentId2));
-      assertEquals(sa3, store.findByImportSourceId(1).get(contentId3));
+      assertEquals(sa1, store.findByImportSourceId(1).get(streamId1));
+      assertEquals(sa2, store.findByImportSourceId(2).get(streamId2));
+      assertEquals(sa3, store.findByImportSourceId(1).get(streamId3));
     }
 
     @Nested
@@ -80,24 +81,24 @@ class DatabaseStreamsStoreTest {
       void findByImportSourceIdShouldFindLessStreams() {
         assertEquals(1, store.findByImportSourceId(1).size());
         assertEquals(1, store.findByImportSourceId(2).size());
-        assertEquals(sa1, store.findByImportSourceId(1).get(contentId1));
-        assertEquals(sa2, store.findByImportSourceId(2).get(contentId2));
+        assertEquals(sa1, store.findByImportSourceId(1).get(streamId1));
+        assertEquals(sa2, store.findByImportSourceId(2).get(streamId2));
       }
 
       @Nested
       class AfterReaddingRemovedElement {
         @BeforeEach
         void beforeEach() {
-          store.put(1, sa3);
+          store.put(sa3);
         }
 
         @Test
         void findByImportSourceIdShouldFindAllStreams() {
           assertEquals(2, store.findByImportSourceId(1).size());
           assertEquals(1, store.findByImportSourceId(2).size());
-          assertEquals(sa1, store.findByImportSourceId(1).get(contentId1));
-          assertEquals(sa2, store.findByImportSourceId(2).get(contentId2));
-          assertEquals(sa3, store.findByImportSourceId(1).get(contentId3));
+          assertEquals(sa1, store.findByImportSourceId(1).get(streamId1));
+          assertEquals(sa2, store.findByImportSourceId(2).get(streamId2));
+          assertEquals(sa3, store.findByImportSourceId(1).get(streamId3));
         }
       }
     }

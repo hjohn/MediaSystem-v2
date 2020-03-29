@@ -1,6 +1,7 @@
 package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
@@ -66,7 +67,7 @@ public class MoviesScanner implements Scanner {
           Attribute.ID_PREFIX + "IMDB", imdbNumber
         );
 
-        results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), contentPrint.getId(), null, attributes));
+        results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), new StreamID(importSourceId, contentPrint.getId(), path.getFileName().toString()), null, attributes));
       }
       catch(RuntimeException | IOException e) {
         LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?

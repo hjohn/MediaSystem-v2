@@ -8,8 +8,8 @@ import hs.mediasystem.db.base.ImportSourceProvider;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
 import hs.mediasystem.db.services.WorkService;
 import hs.mediasystem.db.services.WorksService;
-import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
@@ -141,7 +141,7 @@ public class DatabaseIT {
 
     @Override
     public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(MOVIE_DS, "T" + streamable.getId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+      return Optional.of(new Identification(List.of(new ProductionIdentifier(MOVIE_DS, "T" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
@@ -152,7 +152,7 @@ public class DatabaseIT {
 
     @Override
     public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE_DS, "S" + streamable.getId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+      return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE_DS, "S" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
@@ -163,7 +163,7 @@ public class DatabaseIT {
 
     @Override
     public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(EPISODE_DS, "S4/E" + streamable.getId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+      return Optional.of(new Identification(List.of(new ProductionIdentifier(EPISODE_DS, "S4/E" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
@@ -331,9 +331,9 @@ public class DatabaseIT {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
-        streamable(MOVIE, "testdata/movies/Terminator.txt", contentPrint1.getId(), "Terminator"),
-        streamable(MOVIE, "testdata/movies/Avatar.txt", contentPrint2.getId(), "Avatar"),
-        streamable(MOVIE, "testdata/movies/Matrix.txt", contentPrint3.getId(), "The Matrix")
+        streamable(MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "Terminator"), "Terminator"),
+        streamable(MOVIE, "testdata/movies/Avatar.txt", new StreamID(1, contentPrint2.getId(), "Avatar"), "Avatar"),
+        streamable(MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
       ));
 
       Thread.sleep(500);
@@ -350,8 +350,8 @@ public class DatabaseIT {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
-        streamable(MOVIE, "testdata/movies/Terminator.txt", contentPrint1.getId(), "The Terminator"),
-        streamable(MOVIE, "testdata/movies/Matrix.txt", contentPrint3.getId(), "The Matrix")
+        streamable(MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "The Terminator"), "The Terminator"),
+        streamable(MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
       ));
 
       Thread.sleep(500);
@@ -362,10 +362,12 @@ public class DatabaseIT {
   static class AddFriends {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
+      StreamID sid = new StreamID(2, contentPrint4.getId(), "Friends");
+
       updateService.update(2, List.of(
-        streamable(SERIE, "testdata/series/Friends", contentPrint4.getId(), "Friends"),
-        streamable(EPISODE, "testdata/series/Friends/friends_1x01.txt", contentPrint5.getId(), contentPrint4.getId(), "1x01"),
-        streamable(EPISODE, "testdata/series/Friends/friends_1x02.txt", contentPrint6.getId(), contentPrint4.getId(), "1x02")
+        streamable(SERIE, "testdata/series/Friends", sid, "Friends"),
+        streamable(EPISODE, "testdata/series/Friends/friends_1x01.txt", new StreamID(2, contentPrint5.getId(), "1x01"), sid, "1x01"),
+        streamable(EPISODE, "testdata/series/Friends/friends_1x02.txt", new StreamID(2, contentPrint6.getId(), "1x02"), sid, "1x02")
       ));
 
       Thread.sleep(500);
@@ -378,11 +380,11 @@ public class DatabaseIT {
     }
   }
 
-  private static Streamable streamable(MediaType type, String uri, ContentID cid, String title) {
-    return new Streamable(type, new StringURI(uri), cid, null, Attributes.of(Attribute.TITLE, title));
+  private static Streamable streamable(MediaType type, String uri, StreamID sid, String title) {
+    return new Streamable(type, new StringURI(uri), sid, null, Attributes.of(Attribute.TITLE, title));
   }
 
-  private static Streamable streamable(MediaType type, String uri, ContentID cid, ContentID pid, String title) {
-    return new Streamable(type, new StringURI(uri), cid, pid, Attributes.of(Attribute.TITLE, title));
+  private static Streamable streamable(MediaType type, String uri, StreamID sid, StreamID pid, String title) {
+    return new Streamable(type, new StringURI(uri), sid, pid, Attributes.of(Attribute.TITLE, title));
   }
 }

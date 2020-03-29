@@ -4,8 +4,9 @@ import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
 import hs.mediasystem.db.base.StreamStateService;
 import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStream;
@@ -28,9 +29,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
@@ -76,8 +77,21 @@ public class WorkService {
 
   private static final State UNWATCHED_STATE = new State(null, false, Duration.ZERO);
 
-  synchronized Optional<Work> find(ContentID contentId) {
-    return streamStore.findStream(contentId).map(this::toWork);
+  synchronized Optional<Work> find(StreamID streamId) {
+    return streamStore.findStream(streamId).map(this::toWork);
+  }
+
+  /**
+   * Finds the first match for a given {@link ContentID}.  Although rare, it is
+   * possible that two streams have the same content.  As sometimes only the
+   * content id is known (for example watched state is tracked by content id only)
+   * this method does a best effort match.
+   *
+   * @param contentId a {@link ContentID}, cannot be null
+   * @return an optional {@link Work}, never null
+   */
+  synchronized Optional<Work> findFirst(ContentID contentId) {
+    return streamStore.findStreams(contentId).stream().findFirst().map(this::toWork);
   }
 
   @SuppressWarnings("unchecked")
@@ -93,7 +107,7 @@ public class WorkService {
 
   public synchronized Optional<Work> find(WorkId workId) {
     if(workId.getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
-      return find(new ContentID(Integer.parseInt(workId.getKey())));
+      return find(StreamID.of(workId.getKey()));
     }
     if(workId.getType().equals(COLLECTION)) {
       return queryProductionCollection(toIdentifier(workId))
@@ -144,13 +158,13 @@ public class WorkService {
        */
 
       if(workId.getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
-        return findChildren(new ContentID(Integer.parseInt(workId.getKey())));
+        return findChildren(StreamID.of(workId.getKey()));
       }
 
-      Set<Streamable> streamables = streamStore.findStreams(toIdentifier(workId));
+      List<Streamable> streamables = streamStore.findStreams(toIdentifier(workId));
 
       if(!streamables.isEmpty()) {
-        return findChildren(streamables.stream().findFirst().get().getId());  // TODO if multiple Series have the same identifier, this picks one at random
+        return findChildren(streamables.get(0).getId());  // TODO if multiple Series have the same identifier, this picks one at random
       }
 
       return findChildren((ProductionIdentifier)toIdentifier(workId));
@@ -166,8 +180,8 @@ public class WorkService {
 
   // find children needs to always add all known children from the Serie, plus any that couldn't be matched
   // as extras!
-  private synchronized List<Work> findChildren(ContentID contentId) {
-    return streamStore.findStream(contentId)
+  private synchronized List<Work> findChildren(StreamID id) {
+    return streamStore.findStream(id)
       .map(this::findBestDescriptor)
       .filter(Serie.class::isInstance)
       .map(Serie.class::cast)
@@ -175,7 +189,7 @@ public class WorkService {
       .flatMap(serie ->
         Stream.concat(
           serie.getSeasons().stream().map(Season::getEpisodes).flatMap(Collection::stream),
-          serieHelper.createExtras(serie, contentId).stream()
+          serieHelper.createExtras(serie, id).stream()
         )
         .map(ep -> toWork(ep, serie))
       )
@@ -269,12 +283,12 @@ public class WorkService {
       if(descriptor.getIdentifier().getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
         String id = descriptor.getIdentifier().getId();
         int slash = id.indexOf("/");
-        ContentID cid = new ContentID(Integer.parseInt(id.substring(slash + 1)));
+        StreamID sid = StreamID.of(id.substring(slash + 1));
 
-        mediaStreams = streamStore.findStream(cid).map(this::toMediaStream).stream().collect(Collectors.toList());
+        mediaStreams = streamStore.findStream(sid).map(this::toMediaStream).stream().collect(Collectors.toList());
       }
       else {
-        Set<Streamable> childStreams = streamStore.findStreams(descriptor.getIdentifier());
+        List<Streamable> childStreams = streamStore.findStreams(descriptor.getIdentifier());
 
         /*
          * When multiple streams are returned for an Episode, there are two cases:
@@ -330,7 +344,7 @@ public class WorkService {
   }
 
   private State toState(Streamable streamable) {
-    ContentID contentId = streamable.getId();
+    ContentID contentId = streamable.getId().getContentId();
 
     // TODO for Series, need to compute last watched time and watched status based on its children
 
@@ -343,22 +357,22 @@ public class WorkService {
 
   private MediaStream toMediaStream(Streamable streamable) {
     Match match = streamStore.findIdentification(streamable.getId()).map(Identification::getMatch).orElse(null);
-    ContentID contentId = streamable.getId();
-    ContentID parentId = streamStore.findParentId(contentId).orElse(null);
+    StreamID id = streamable.getId();
+    StreamID parentId = streamStore.findParentId(id).orElse(null);
     State state = toState(streamable);
-    StreamMetaData md = metaDataStore.find(contentId).orElse(null);
-    int totalDuration = stateService.getTotalDuration(contentId);
+    StreamMetaData md = metaDataStore.find(id.getContentId()).orElse(null);
+    int totalDuration = stateService.getTotalDuration(id.getContentId());
 
     if(md == null && totalDuration != -1) {
-      md = new StreamMetaData(contentId, Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+      md = new StreamMetaData(id.getContentId(), Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
-    ContentPrint contentPrint = contentPrintProvider.get(contentId);
+    ContentPrint contentPrint = contentPrintProvider.get(id.getContentId());
 
     return new MediaStream(
-      contentId,
+      id,
       parentId,
-      new StreamAttributes(streamable.getUri(), streamStore.findCreationTime(contentId).orElseThrow(), Instant.ofEpochMilli(contentPrint.getLastModificationTime()), contentPrint.getSize(), streamable.getAttributes()),
+      new StreamAttributes(streamable.getUri(), streamStore.findCreationTime(id).orElseThrow(), Instant.ofEpochMilli(contentPrint.getLastModificationTime()), contentPrint.getSize(), streamable.getAttributes()),
       state,
       md,
       match
@@ -387,7 +401,7 @@ public class WorkService {
 
   private MediaDescriptor createMinimalDescriptor(Streamable streamable) {
     return new Production(
-      new ProductionIdentifier(DataSource.instance(streamable.getType(), DEFAULT_DATA_SOURCE_NAME), "" + streamable.getId().asInt()),
+      new ProductionIdentifier(DataSource.instance(streamable.getType(), DEFAULT_DATA_SOURCE_NAME), "" + streamable.getId().asString()),
       serieHelper.createMinimalDetails(streamable),
       null,
       List.of(),

@@ -26,6 +26,6 @@ public class LocalIdentificationService extends AbstractIdentificationService {
 
   @Override
   public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-    return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE, "" + streamable.getId().asInt())), new Match(Type.MANUAL, 1.0f, Instant.now())));
+    return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE, "" + streamable.getId().asString())), new Match(Type.MANUAL, 1.0f, Instant.now())));
   }
 }

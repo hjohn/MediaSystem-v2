@@ -27,7 +27,7 @@ public class WorksService {
   public synchronized List<Work> findLastWatched(int maximum, Instant after) {
     return streamStateProvider.map(stream -> stream
       .map(StreamState::getContentID)
-      .map(workService::find)
+      .map(workService::findFirst)
       .flatMap(Optional::stream)
       .filter(r -> r.getState().getLastConsumptionTime().isPresent())
       .filter(r -> after == null || r.getState().getLastConsumptionTime().map(lwt -> lwt.isAfter(after)).orElse(false))

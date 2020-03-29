@@ -1,7 +1,8 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.Binder;
@@ -55,7 +56,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   @Override
   public Function<Work, ImageHandle> imageHandleExtractor() {
     return r -> r.getDetails().getImage()
-      .or(() -> Optional.of(r).flatMap(Work::getPrimaryStream).map(MediaStream::getId).map(ContentID::asInt).map(id -> new ImageURI("localdb://" + id + "/1")))
+      .or(() -> Optional.of(r).flatMap(Work::getPrimaryStream).map(MediaStream::getId).map(StreamID::getContentId).map(ContentID::asInt).map(id -> new ImageURI("localdb://" + id + "/1")))
       .map(imageHandleFactory::fromURI)
       .orElse(null);
   }

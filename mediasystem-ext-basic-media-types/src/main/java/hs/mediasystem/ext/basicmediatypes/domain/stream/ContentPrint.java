@@ -37,6 +37,11 @@ public class ContentPrint {
     return size;
   }
 
+  /**
+   * The last modification time in milliseconds since the epoch.
+   *
+   * @return last modification time in milliseconds since the epoch
+   */
   public long getLastModificationTime() {
     return lastModificationTime;
   }

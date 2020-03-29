@@ -9,12 +9,21 @@ import java.util.List;
 @Table(name = "streams")
 public class StreamRecord {
 
-  @Id(generated = false)
+  @Id
+  @Column(name = "id")
+  private Integer id;
+
+  @Column(name = "parent_id")
+  private Integer parentId;
+
   @Column(name = "content_id")
   private int contentId;
 
   @Column(name = "scanner_id")
   private int importSourceId;
+
+  @Column(name = "name")
+  private String name;
 
   @Column(name = "creation_ms")
   private long creationMillis;
@@ -39,8 +48,13 @@ public class StreamRecord {
   @Column(name = "match_accuracy")
   private Float matchAccuracy;
 
-  @Column(name = "parent_content_id")
-  private Integer parentContentId;
+  public Integer getId() {
+    return id;
+  }
+
+  public void setId(Integer id) {
+    this.id = id;
+  }
 
   public int getContentId() {
     return contentId;
@@ -56,6 +70,14 @@ public class StreamRecord {
 
   public void setImportSourceId(int importSourceId) {
     this.importSourceId = importSourceId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
   }
 
   public long getCreationMillis() {
@@ -90,12 +112,12 @@ public class StreamRecord {
     this.json = json;
   }
 
-  public Integer getParentContentId() {
-    return parentContentId;
+  public Integer getParentId() {
+    return parentId;
   }
 
-  public void setParentContentId(Integer parentContentId) {
-    this.parentContentId = parentContentId;
+  public void setParentId(Integer parentId) {
+    this.parentId = parentId;
   }
 
   public List<String> getIdentifiers() {

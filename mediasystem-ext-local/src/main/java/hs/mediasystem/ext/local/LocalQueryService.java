@@ -10,7 +10,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
@@ -66,11 +66,11 @@ public class LocalQueryService extends AbstractQueryService {
 
   @Override
   public Serie query(Identifier identifier) {
-    ContentID contentId = new ContentID(Integer.parseInt(identifier.getId()));
-    Streamable streamable = streamStore.findStream(contentId).orElseThrow();
+    StreamID streamId = StreamID.of(identifier.getId());
+    Streamable streamable = streamStore.findStream(streamId).orElseThrow();
     Map<Integer, List<Episode>> episodes = new HashMap<>();
 
-    for(Streamable childStream : streamStore.findChildren(contentId)) {
+    for(Streamable childStream : streamStore.findChildren(streamId)) {
       Matcher matcher = PATTERN.matcher(childStream.getAttributes().get(Attribute.SEQUENCE, ""));
 
       if(matcher.matches()) {
@@ -83,7 +83,7 @@ public class LocalQueryService extends AbstractQueryService {
             childStream.getAttributes().get(Attribute.TITLE),
             null,
             null,
-            new ImageURI("localdb://" + childStream.getId().asInt() + "/1"),
+            new ImageURI("localdb://" + childStream.getId().getContentId().asInt() + "/1"),
             null
           ),
           null,

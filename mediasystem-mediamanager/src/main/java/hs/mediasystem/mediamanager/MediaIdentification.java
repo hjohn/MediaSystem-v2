@@ -16,7 +16,7 @@ public class MediaIdentification {
     if(identification == null) {
       throw new IllegalArgumentException("identification cannot be null");
     }
-    if(descriptor == null && streamable.getParentContentId() == null) {
+    if(descriptor == null && streamable.getParentId() == null) {
       throw new IllegalArgumentException("descriptor cannot be null for streamables without a parent");
     }
 

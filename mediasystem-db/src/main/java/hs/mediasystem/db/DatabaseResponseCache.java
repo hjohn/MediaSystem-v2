@@ -60,7 +60,7 @@ public class DatabaseResponseCache extends ResponseCache {
    *
    * @param forceCacheUse <code>true</code> if this thread should always try use the cache, no matter how old
    */
-  public static void forceCacheUse(boolean forceCacheUse) {
+  public void currentThreadForceCacheUse(boolean forceCacheUse) {
     FORCE_CACHE_USE.set(forceCacheUse);
   }
 
