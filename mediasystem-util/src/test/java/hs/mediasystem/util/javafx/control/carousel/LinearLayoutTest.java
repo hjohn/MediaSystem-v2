@@ -1,8 +1,5 @@
 package hs.mediasystem.util.javafx.control.carousel;
 
-import hs.mediasystem.util.javafx.control.carousel.CellIterator;
-import hs.mediasystem.util.javafx.control.carousel.LinearLayout;
-
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Orientation;
 import javafx.scene.effect.PerspectiveTransform;

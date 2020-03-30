@@ -1,7 +1,5 @@
 package hs.mediasystem.util.javafx.control;
 
-import hs.mediasystem.util.javafx.control.GridPane;
-
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.RowConstraints;
 
