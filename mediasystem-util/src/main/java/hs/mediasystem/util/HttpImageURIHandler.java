@@ -1,6 +1,6 @@
 package hs.mediasystem.util;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Objects;
 import java.util.logging.Logger;
@@ -28,15 +28,8 @@ public class HttpImageURIHandler implements ImageURIHandler {
     }
 
     @Override
-    public byte[] getImageData() {
-      try {
-        return URLs.readAllBytes(uri.toURL());
-      }
-      catch(RuntimeIOException | MalformedURLException e) {
-        LOGGER.warning("RuntimeIOException while downloading image: " + uri + ": " + Throwables.formatAsOneLine(e));
-
-        return null;
-      }
+    public byte[] getImageData() throws IOException {
+      return URLs.readAllBytes(uri.toURL());
     }
 
     @Override

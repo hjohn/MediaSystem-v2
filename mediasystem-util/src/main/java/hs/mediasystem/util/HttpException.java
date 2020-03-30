@@ -1,8 +1,9 @@
 package hs.mediasystem.util;
 
+import java.io.IOException;
 import java.net.URL;
 
-public class HttpException extends RuntimeIOException {
+public class HttpException extends IOException {
   private final int responseCode;
 
   public HttpException(URL url, int responseCode, String message) {

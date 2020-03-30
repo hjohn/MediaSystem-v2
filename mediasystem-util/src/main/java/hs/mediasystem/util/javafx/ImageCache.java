@@ -2,6 +2,7 @@ package hs.mediasystem.util.javafx;
 
 import hs.mediasystem.util.Cache;
 import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.Throwables;
 
 import java.awt.Dimension;
 import java.io.ByteArrayInputStream;
@@ -14,9 +15,10 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import javafx.scene.image.Image;
 
@@ -25,33 +27,22 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
 public class ImageCache {
-  private static final ReferenceQueue<Object> REFERENCE_QUEUE = new ReferenceQueue<>();
-  private static final NavigableMap<String, WeakReference<?>> CACHE = new TreeMap<>();
+  private static final Logger LOGGER = Logger.getLogger(ImageCache.class.getName());
+  private static final ReferenceQueue<? super CompletableFuture<Image>> REFERENCE_QUEUE = new ReferenceQueue<>();
+  private static final NavigableMap<String, ImageFutureWeakReference> CACHE = new TreeMap<>();
   private static final Cache REF_CACHE = new Cache(500 * 1024 * 1024, 300 * 1000);
 
   public static Image loadImage(ImageHandle handle) {
     cleanReferenceQueue();
 
-    return loadImage(handle.getKey(), () -> new Image(new ByteArrayInputStream(handle.getImageData())));
+    return loadImage(handle.getKey(), handle, () -> new Image(new ByteArrayInputStream(handle.getImageData())));
   }
 
   public static Image getImageUptoMaxSize(ImageHandle handle, int w, int h) {
     String key = createKey(handle.getKey(), w, h, true);
 
     synchronized(CACHE) {
-      WeakReference<?> ref = CACHE.get(key);
-
-      if(ref == null) {
-        return null;
-      }
-
-      Object content = ref.get();
-
-      if(content instanceof Image) {
-        return (Image)content;
-      }
-
-      return null;
+      return getFromRef(CACHE.get(key));
     }
   }
 
@@ -59,25 +50,28 @@ public class ImageCache {
     String key = createKey(handle.getKey(), w, h, true);
 
     synchronized(CACHE) {
-      NavigableMap<String, WeakReference<?>> subMap = CACHE.subMap(handle.getKey(), true, handle.getKey() + "$", false);
-      Entry<String, WeakReference<?>> entry = Optional.ofNullable(subMap.ceilingEntry(key)).orElseGet(() -> subMap.floorEntry(key));
+      NavigableMap<String, ImageFutureWeakReference> subMap = CACHE.subMap(handle.getKey(), true, handle.getKey() + "$", false);
+      Entry<String, ImageFutureWeakReference> entry = Optional.ofNullable(subMap.ceilingEntry(key)).orElseGet(() -> subMap.floorEntry(key));
 
       if(entry == null) {
         return null;
       }
 
-      WeakReference<?> ref = entry.getValue();
+      return getFromRef(entry.getValue());
+    }
+  }
 
-      if(ref == null) {
-        return null;
-      }
+  private static Image getFromRef(WeakReference<CompletableFuture<Image>> ref) {
+    if(ref == null) {
+      return null;
+    }
 
-      Object content = ref.get();
+    CompletableFuture<Image> future = ref.get();
 
-      if(content instanceof Image) {
-        return (Image)content;
-      }
-
+    try {
+      return future.getNow(null);
+    }
+    catch(Exception e) {
       return null;
     }
   }
@@ -87,7 +81,7 @@ public class ImageCache {
 
     String key = createKey(handle.getKey(), w, h, true);
 
-    return loadImage(key, () -> {
+    return loadImage(key, handle, () -> {
       Image image = null;
       byte[] data = handle.getImageData();
 
@@ -128,7 +122,7 @@ public class ImageCache {
    * @param imageSupplier an Image supplier, which will be called if needed
    * @return the image matching the given key
    */
-  private static Image loadImage(String key, Supplier<Image> imageSupplier) {
+  private static Image loadImage(String key, ImageHandle imageHandle, Callable<Image> imageSupplier) {
     CompletableFuture<Image> futureImage;
     boolean needsCompletion = false;
 
@@ -170,12 +164,14 @@ public class ImageCache {
       Image image = null;
 
       try {
-        image = imageSupplier.get();
+        image = imageSupplier.call();
 
         futureImage.complete(image);
       }
       catch(Exception e) {
-        futureImage.completeExceptionally(e);
+        LOGGER.warning("Unable to load image: " + imageHandle + ": " + Throwables.formatAsOneLine(e));
+
+        futureImage.complete(null);
       }
 
       if(image == null) {
@@ -193,8 +189,11 @@ public class ImageCache {
       Image image = futureImage.get();
 
       synchronized(CACHE) {
-        CACHE.put(key, new ImageWeakReference(key, image, REFERENCE_QUEUE));  // Put Image directly in cache
-        REF_CACHE.add(key, image, (long)image.getWidth() * (long)image.getHeight() * 4);
+        CACHE.put(key, new ImageFutureWeakReference(key, futureImage, REFERENCE_QUEUE));
+
+        if(image != null) {
+          REF_CACHE.add(key, image, (long)image.getWidth() * (long)image.getHeight() * 4);
+        }
       }
 
       return image;
@@ -244,7 +243,7 @@ public class ImageCache {
       size = CACHE.size();
 
       for(;;) {
-        KeyedReference ref = (KeyedReference)REFERENCE_QUEUE.poll();
+        ImageFutureWeakReference ref = (ImageFutureWeakReference)REFERENCE_QUEUE.poll();
 
         if(ref == null) {
           break;
@@ -275,8 +274,8 @@ public class ImageCache {
       String keyToRemove = handle.getKey();
 
       synchronized(CACHE) {
-        for(Iterator<Map.Entry<String, WeakReference<?>>> iterator = CACHE.tailMap(keyToRemove).entrySet().iterator(); iterator.hasNext();) {
-          Map.Entry<String, WeakReference<?>> entry = iterator.next();
+        for(Iterator<Map.Entry<String, ImageFutureWeakReference>> iterator = CACHE.tailMap(keyToRemove).entrySet().iterator(); iterator.hasNext();) {
+          Map.Entry<String, ImageFutureWeakReference> entry = iterator.next();
 
           if(!entry.getKey().startsWith(keyToRemove)) {
             break;
@@ -288,35 +287,15 @@ public class ImageCache {
     }
   }
 
-  private interface KeyedReference {
-    String getKey();
-  }
-
-  private static class ImageFutureWeakReference extends WeakReference<CompletableFuture<Image>> implements KeyedReference {
+  private static class ImageFutureWeakReference extends WeakReference<CompletableFuture<Image>> {
     private final String key;
 
-    public ImageFutureWeakReference(String key, CompletableFuture<Image> referent, ReferenceQueue<Object> q) {
+    public ImageFutureWeakReference(String key, CompletableFuture<Image> referent, ReferenceQueue<? super CompletableFuture<Image>> q) {
       super(referent, q);
 
       this.key = key;
     }
 
-    @Override
-    public String getKey() {
-      return key;
-    }
-  }
-
-  private static class ImageWeakReference extends WeakReference<Image> implements KeyedReference {
-    private final String key;
-
-    public ImageWeakReference(String key, Image referent, ReferenceQueue<Object> q) {
-      super(referent, q);
-
-      this.key = key;
-    }
-
-    @Override
     public String getKey() {
       return key;
     }
