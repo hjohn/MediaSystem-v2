@@ -27,7 +27,7 @@ import javafx.scene.image.Image;
  * asynchronous load of a higher quality version starts.
  */
 public class AsyncImageProperty3 extends SimpleObjectProperty<Image> {
-  private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty", Thread.MIN_PRIORITY, true));
+  private static final ThreadPoolExecutor EXECUTOR = new ThreadPoolExecutor(3, 3, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty", Thread.MIN_PRIORITY, true));
 
   private final ObjectProperty<ImageHandle> imageHandle = new SimpleObjectProperty<>();
   public ObjectProperty<ImageHandle> imageHandleProperty() { return imageHandle; }

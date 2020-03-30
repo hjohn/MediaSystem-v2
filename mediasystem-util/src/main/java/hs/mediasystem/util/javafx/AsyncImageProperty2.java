@@ -33,8 +33,8 @@ import javafx.scene.image.Image;
 // Contains changes to remove the settling delay
 
 public class AsyncImageProperty2 extends SimpleObjectProperty<Image> {
-  private static final ThreadPoolExecutor SLOW_EXECUTOR = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty2[S]", Thread.MIN_PRIORITY, true));
-  private static final ThreadPoolExecutor FAST_EXECUTOR = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty2[F]", Thread.MIN_PRIORITY, true));
+  private static final ThreadPoolExecutor SLOW_EXECUTOR = new ThreadPoolExecutor(3, 3, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty2[S]", Thread.MIN_PRIORITY, true));
+  private static final ThreadPoolExecutor FAST_EXECUTOR = new ThreadPoolExecutor(3, 3, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(), new NamedThreadFactory("AsyncImageProperty2[F]", Thread.MIN_PRIORITY, true));
 
   private static Executor JAVAFX_UPDATE_EXECUTOR = new Executor() {
     @Override
