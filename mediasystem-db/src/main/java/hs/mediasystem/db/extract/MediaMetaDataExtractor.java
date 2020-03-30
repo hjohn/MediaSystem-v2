@@ -5,6 +5,7 @@ import hs.database.core.Database.Transaction;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
+import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
@@ -16,6 +17,9 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,7 +32,7 @@ import javax.inject.Singleton;
 public class MediaMetaDataExtractor {
   private static final Logger LOGGER = Logger.getLogger(MediaMetaDataExtractor.class.getName());
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Extracting Metadata");
-  private static final long HOUR = 60 * 60 * 1000;
+  private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(1, new NamedThreadFactory("MediaMetaDataExtractor", Thread.NORM_PRIORITY - 3, true));
 
   @Inject private UriDatabase uriDatabase;
   @Inject private DefaultStreamMetaDataStore metaDataStore;
@@ -37,40 +41,26 @@ public class MediaMetaDataExtractor {
 
   @PostConstruct
   private void postConstruct() {
-    Thread thread = new Thread(this::extractThread);
-
-    thread.setDaemon(true);
-    thread.setPriority(Thread.NORM_PRIORITY - 3);
-    thread.setName("MediaMetaDataExtractor");
-    thread.start();
+    EXECUTOR.scheduleWithFixedDelay(this::extract, 300, 30, TimeUnit.SECONDS);
   }
 
-  private void extractThread() {
-    for(;;) {
-      try {
-        Thread.sleep(HOUR);
+  private void extract() {
+    try(Stream<Integer> stream = metaDataStore.streamUnindexedContentIds()) {
+      List<Integer> contentIds = stream.collect(Collectors.toList());
 
-        try(Stream<Integer> stream = metaDataStore.streamUnindexedContentIds()) {
-          List<Integer> contentIds = stream.collect(Collectors.toList());
+      stream.close();  // ends transaction
 
-          stream.close();  // ends transaction
+      if(contentIds.size() > 0) {
+        WORKLOAD.start(contentIds.size());
 
-          WORKLOAD.start(contentIds.size());
-
-          for(int contentId : contentIds) {
-            try {
-              createMetaData(contentId);
-            }
-            finally {
-              WORKLOAD.complete();
-            }
+        for(int contentId : contentIds) {
+          try {
+            createMetaData(contentId);
+          }
+          finally {
+            WORKLOAD.complete();
           }
         }
-
-        Thread.sleep(6 * HOUR);
-      }
-      catch(Exception e) {
-        LOGGER.warning("Exception while extracting local metadata: " + Throwables.formatAsOneLine(e));
       }
     }
   }
