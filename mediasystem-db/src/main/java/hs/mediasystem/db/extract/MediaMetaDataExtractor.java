@@ -11,12 +11,15 @@ import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,14 +42,17 @@ public class MediaMetaDataExtractor {
   @Inject private StreamMetaDataFactory factory;
   @Inject private Database database;
 
+  private final Set<Integer> recentFailures = new ConcurrentSkipListSet<>();
+
   @PostConstruct
   private void postConstruct() {
     EXECUTOR.scheduleWithFixedDelay(this::extract, 300, 30, TimeUnit.SECONDS);
+    EXECUTOR.scheduleWithFixedDelay(() -> recentFailures.clear(), 24, 48, TimeUnit.HOURS);
   }
 
   private void extract() {
     try(Stream<Integer> stream = metaDataStore.streamUnindexedContentIds()) {
-      List<Integer> contentIds = stream.collect(Collectors.toList());
+      List<Integer> contentIds = stream.filter(cid -> !recentFailures.contains(cid)).collect(Collectors.toList());
 
       stream.close();  // ends transaction
 
@@ -57,6 +63,11 @@ public class MediaMetaDataExtractor {
           try {
             createMetaData(contentId);
           }
+          catch(Exception e) {
+            LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
+
+            recentFailures.add(contentId);
+          }
           finally {
             WORKLOAD.complete();
           }
@@ -65,42 +76,34 @@ public class MediaMetaDataExtractor {
     }
   }
 
-  private void createMetaData(int contentId) {
-    try {
-      uriDatabase.findUris(contentId).stream()
-        .map(URI::create)
-        .map(Paths::get)
-        .map(Path::toFile)
-        .filter(File::exists)
-        .findFirst()
-        .ifPresent(file -> createMetaData(new ContentID(contentId), file));
-    }
-    catch(Exception e) {
-      LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
-    }
+  private void createMetaData(int contentId) throws Exception {
+    File file = uriDatabase.findUris(contentId).stream()
+      .map(URI::create)
+      .map(Paths::get)
+      .map(Path::toFile)
+      .filter(File::exists)
+      .findFirst()
+      .orElseThrow(() -> new FileNotFoundException("URI not available or pointed to a missing resource for given content id: " + contentId));
+
+    createMetaData(new ContentID(contentId), file);
   }
 
-  private void createMetaData(ContentID contentId, File file) {
-    try {
-      LOGGER.fine("Extracting metadata from: " + file);
+  private void createMetaData(ContentID contentId, File file) throws Exception {
+    LOGGER.fine("Extracting metadata from: " + file);
 
-      if(file.isDirectory()) {
-        StreamMetaData metaData = new StreamMetaData(contentId, Duration.ZERO, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+    if(file.isDirectory()) {
+      StreamMetaData metaData = new StreamMetaData(contentId, Duration.ZERO, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+
+      metaDataStore.store(metaData);
+    }
+    else {
+      try(Transaction tx = database.beginTransaction()) {
+        StreamMetaData metaData = factory.generatePreviewImage(contentId, file);
 
         metaDataStore.store(metaData);
-      }
-      else {
-        try(Transaction tx = database.beginTransaction()) {
-          StreamMetaData metaData = factory.generatePreviewImage(contentId, file);
 
-          metaDataStore.store(metaData);
-
-          tx.commit();
-        }
+        tx.commit();
       }
-    }
-    catch(Exception e) {
-      LOGGER.warning("Error while decoding stream '" + file + "', contentId " + contentId.asInt() + ": " + Throwables.formatAsOneLine(e));
     }
   }
 }

@@ -9,7 +9,6 @@ import hs.mediasystem.util.ImageURI;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +27,7 @@ public class StreamMetaDataFactory {
 
   @Inject private DefaultStreamMetaDataStore store;
 
-  public StreamMetaData generatePreviewImage(ContentID contentId, File file) throws IOException, Exception {
+  public StreamMetaData generatePreviewImage(ContentID contentId, File file) throws Exception {
     @SuppressWarnings("resource")
     FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(file);
 

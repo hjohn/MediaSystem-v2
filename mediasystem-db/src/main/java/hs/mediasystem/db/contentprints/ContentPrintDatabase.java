@@ -5,6 +5,7 @@ import hs.database.core.Database.Transaction;
 import hs.mediasystem.domain.stream.ContentID;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,16 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ContentPrintDatabase {
+  private static final Map<String, Object> RESET_LAST_SEEN_TIME;
+
+  static {
+    Map<String, Object> map = new HashMap<>();
+
+    map.put("lastseentime", null);
+
+    RESET_LAST_SEEN_TIME = Collections.unmodifiableMap(map);
+  }
+
   @Inject private Database database;
 
   public <T, U> Map<T, U> findAll(Function<ContentPrintRecord, T> keyMapper, Function<ContentPrintRecord, U> valueMapper) {
@@ -94,7 +105,7 @@ public class ContentPrintDatabase {
   public void unmarkSeen(Set<ContentID> idsToUnmark) {
     try(Transaction tx = database.beginTransaction()) {
       for(ContentID contentID : idsToUnmark) {
-        tx.update("content_prints", contentID.asInt(), Map.of("lastseentime", null));
+        tx.update("content_prints", contentID.asInt(), RESET_LAST_SEEN_TIME);
       }
 
       tx.commit();
