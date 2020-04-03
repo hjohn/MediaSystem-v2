@@ -10,16 +10,17 @@ import java.util.function.BiConsumer;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 public class AreaPane2<T> extends StackPane {
-  private final Map<T, AreaDescriptor<? extends Pane>> areaDescriptors = new HashMap<>();
+  private final Map<T, AreaDescriptor<? extends Parent>> areaDescriptors = new HashMap<>();
   private final Map<T, List<Node>> addedNodes = new HashMap<>();
 
   public boolean add(T area, Node node) {
     @SuppressWarnings("unchecked")
-    AreaDescriptor<Pane> areaDescriptor = (AreaDescriptor<Pane>)areaDescriptors.get(area);
+    AreaDescriptor<Parent> areaDescriptor = (AreaDescriptor<Parent>)areaDescriptors.get(area);
 
     if(areaDescriptor == null) {
       return false;
@@ -60,7 +61,7 @@ public class AreaPane2<T> extends StackPane {
     }
   }
 
-  protected <P extends Pane> void setupArea(T area, P pane, BiConsumer<P, Node> adder) {
+  protected <P extends Parent> void setupArea(T area, P pane, BiConsumer<P, Node> adder) {
     areaDescriptors.put(area, new AreaDescriptor<>(pane, adder));
   }
 
@@ -68,11 +69,11 @@ public class AreaPane2<T> extends StackPane {
     areaDescriptors.put(area, new AreaDescriptor<>(pane, (p, n) -> p.getChildren().add(n)));
   }
 
-  private static class AreaDescriptor<P extends Pane> {
-    final Pane pane;
+  private static class AreaDescriptor<P extends Parent> {
+    final P pane;
     final BiConsumer<P, Node> adder;
 
-    public AreaDescriptor(Pane pane, BiConsumer<P, Node> adder) {
+    public AreaDescriptor(P pane, BiConsumer<P, Node> adder) {
       this.pane = pane;
       this.adder = adder;
     }

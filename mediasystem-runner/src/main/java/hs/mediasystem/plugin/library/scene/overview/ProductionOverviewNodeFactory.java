@@ -27,7 +27,9 @@ import hs.mediasystem.util.javafx.control.StarRating;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
 import hs.mediasystem.util.javafx.control.status.StatusIndicator;
-import hs.mediasystem.util.javafx.control.transitionpane.TransitionPane;
+import hs.mediasystem.util.javafx.control.transition.TransitionPane;
+import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
+import hs.mediasystem.util.javafx.control.transition.multi.Scroll;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -107,7 +109,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         Labels.create("genres", work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")))
       );
 
-      TransitionPane dynamicBoxContainer = new TransitionPane(new TransitionPane.FadeIn(), createDynamicBox());
+      TransitionPane dynamicBoxContainer = new TransitionPane(StandardTransitions.fade(), createDynamicBox());
 
       HBox.setHgrow(leftTitleBox, Priority.ALWAYS);
       VBox.setVgrow(dynamicBoxContainer, Priority.ALWAYS);
@@ -282,12 +284,12 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       presentation.episodeItem.unbind();
 
       List<Work> episodes = presentation.episodeItems;
-      TransitionPane transitionPane = new TransitionPane(new TransitionPane.Scroll(), buildEpisodeUI());
+      TransitionPane transitionPane = new TransitionPane(new Scroll(), buildEpisodeUI());
       BorderPane borderPane = new BorderPane();
 
       EventStreams.changesOf(presentation.episodeItem)
         .conditionOnShowing(borderPane)
-        .subscribe(c -> transitionPane.add(episodes.indexOf(c.getOldValue()) > episodes.indexOf(c.getNewValue()) ? 0 : -1, buildEpisodeUI()));
+        .subscribe(c -> transitionPane.add(episodes.indexOf(c.getOldValue()) > episodes.indexOf(c.getNewValue()), buildEpisodeUI()));
 
       borderPane.setCenter(transitionPane);
       borderPane.setBottom(navigationButtonsFactory.create(presentation));

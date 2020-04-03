@@ -1,19 +1,19 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.util.javafx.control.transitionpane.TransitionPane;
+import hs.mediasystem.util.javafx.control.transition.TransitionPane;
+import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
 
 import java.util.function.Consumer;
 
 import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
-import javafx.scene.layout.Pane;
 
 public class ViewPort extends TransitionPane {
   private final ParentPresentation parentPresentation;
   private final Consumer<Node> nodeAdjuster;
 
   public ViewPort(Theme theme, ParentPresentation parentPresentation, Consumer<Node> nodeAdjuster) {
-    super(new TransitionPane.FadeIn(), null);
+    super(StandardTransitions.fade());
 
     this.parentPresentation = parentPresentation;
     this.nodeAdjuster = nodeAdjuster;
@@ -34,7 +34,7 @@ public class ViewPort extends TransitionPane {
 
     node.getProperties().put("presentation2", current);
 
-    add((Pane)node);
+    add(node);  // after transition ends, node will be the single visible node
 
     if(nodeAdjuster != null) {
       nodeAdjuster.accept(node);

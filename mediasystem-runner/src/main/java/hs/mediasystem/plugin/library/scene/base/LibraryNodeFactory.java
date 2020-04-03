@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.library.scene.base;
 
 import hs.mediasystem.presentation.NodeFactory;
+import hs.mediasystem.presentation.ViewPort;
 import hs.mediasystem.presentation.ViewPortFactory;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.util.javafx.Nodes;
@@ -59,7 +60,7 @@ public class LibraryNodeFactory implements NodeFactory<LibraryPresentation> {
     private final GridPane content = GridPaneUtil.create(new double[] {20, 30, 30, 20}, new double[] {20, 30, 41, 9});
     private final int fadeOutDelay;
 
-    private StackPane center;
+    private ViewPort center;
     private StackPane statusArea = new StackPane();
 
     public EntityView(ViewPortFactory viewPortFactory, LibraryPresentation entityPresentation, int fadeOutDelay) {
@@ -104,10 +105,6 @@ public class LibraryNodeFactory implements NodeFactory<LibraryPresentation> {
           timeline.stop();
         }
       });
-    }
-
-    public void setCenter(Node node) {
-      center.getChildren().setAll(node);
     }
 
     public void setStatusArea(Node node) {

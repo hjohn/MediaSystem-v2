@@ -23,13 +23,19 @@ import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.carousel.CarouselListCell;
 import hs.mediasystem.util.javafx.control.carousel.CarouselSkin;
 import hs.mediasystem.util.javafx.control.carousel.LinearLayout;
-import hs.mediasystem.util.javafx.control.transitionpane.TransitionPane;
+import hs.mediasystem.util.javafx.control.transition.EffectList;
+import hs.mediasystem.util.javafx.control.transition.TransitionPane;
+import hs.mediasystem.util.javafx.control.transition.effects.Fade;
+import hs.mediasystem.util.javafx.control.transition.effects.Slide;
+import hs.mediasystem.util.javafx.control.transition.effects.Slide.Direction;
+import hs.mediasystem.util.javafx.control.transition.multi.Custom;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -81,13 +87,19 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     grid.at(1, 0).spanning(10, 9).add(backdropContainer);
 
-    TransitionPane optionContainer = new TransitionPane(new TransitionPane.FadeIn(), null);
+    TransitionPane optionContainer = new TransitionPane(new Custom(
+      Duration.millis(500),
+      new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_BOTH, Direction.DOWN), new Fade())),
+      new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_BOTH, Direction.UP), new Fade()))
+    ));
 
     optionContainer.getStyleClass().add("option-container");
 
     grid.at(0, 5).spanning(11, 5).add(optionContainer);
 
     ListView<String> menuListView = createMenu();
+
+    menuListView.setFocusTraversable(false);  // focus should never be here, horizontal carousel should always get it instead
 
     optionContainer.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
       if(e.getCode().isNavigationKey()) {
@@ -109,6 +121,8 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     menuListView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
       ActionListView<MenuOption> listView;
 
+      boolean invert = menuListView.getItems().indexOf(old) > menuListView.getItems().indexOf(current);
+
       if(current.equals("Home")) {
         listView = createWatchRecommendationView();
       }
@@ -127,7 +141,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
         listView.onItemSelected.set(e -> PresentationLoader.navigate(e, listView.getSelectionModel().getSelectedItem().getPresentationSupplier()));
 
-        optionContainer.getChildren().add(Containers.vbox("menu-view", listView));
+        optionContainer.add(invert, Containers.vbox("menu-view", listView));
 
         bgPane.backdropProperty().bind(Val.wrap(listView.getSelectionModel().selectedItemProperty())
           .map(o -> o.getBackdrop().orElse(null))

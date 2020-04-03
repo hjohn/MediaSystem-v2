@@ -16,18 +16,18 @@ import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
-import hs.mediasystem.util.javafx.control.transitionpane.SlideInTransition;
-import hs.mediasystem.util.javafx.control.transitionpane.SlideOutTransition;
+import hs.mediasystem.util.javafx.control.transition.EffectList;
+import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
+import hs.mediasystem.util.javafx.control.transition.TransitionPane;
+import hs.mediasystem.util.javafx.control.transition.effects.Fade;
+import hs.mediasystem.util.javafx.control.transition.effects.Slide;
+import hs.mediasystem.util.javafx.control.transition.effects.Slide.Direction;
+import hs.mediasystem.util.javafx.control.transition.multi.Custom;
 
+import java.util.List;
 import java.util.Objects;
 
 import javafx.animation.Interpolator;
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
-import javafx.animation.Transition;
-import javafx.application.Platform;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
@@ -37,8 +37,6 @@ import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
@@ -159,8 +157,12 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
   @Override
   public Node create(P presentation) {
     AreaPane2<Area> areaPane = new AreaPane2<>() {
-      StackPane leftOverlayPanel = new StackPane();
-      StackPane rightOverlayPanel = new StackPane();
+      TransitionPane leftOverlayPanel = new TransitionPane(StandardTransitions.fade());
+      TransitionPane rightOverlayPanel = new TransitionPane(new Custom(
+        Duration.millis(2000),
+        new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_OUT, Direction.RIGHT), new Fade())),
+        new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_IN, Direction.RIGHT), new Fade()))
+      ));
       GridPane gp = GridPaneUtil.create(new double[] {2, 21, 2, 50, 2, 21, 2}, new double[] {15, 66, 0.5, 5, 0.5, 6, 6.5, 0.5});
       HBox navigationArea = new HBox();
 
@@ -175,88 +177,17 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
         // left overlay:
         gp.at(1, 1).spanning(1, 5).align(VPos.TOP).styleClass("overlay-panel").add(leftOverlayPanel);
 
-        leftOverlayPanel.getChildren().addListener((Observable o) -> fadeIn(leftOverlayPanel));
-
         // right overlay:
         gp.at(5, 1).spanning(2, 5).align(VPos.TOP).styleClass("overlay-panel", "slide-in-right-panel").add(rightOverlayPanel);
-
-        rightOverlayPanel.getChildren().addListener((Observable o) -> slideRight(rightOverlayPanel));
 
         setupArea(Area.CENTER_TOP, gp, (p, n) -> p.at(3, 1).add(n));
         setupArea(Area.NAVIGATION, navigationArea);
         setupArea(Area.NAME, gp, (p, n) -> p.at(3, 5).align(HPos.CENTER).align(VPos.TOP).add(n));
         setupArea(Area.DETAILS, gp, (p, n) -> p.at(5, 1).add(n));
         setupArea(Area.CENTER, gp, (p, n) -> p.at(3, 1).spanning(1, 5).align(VPos.BOTTOM).add(n));
-        setupArea(Area.CONTEXT_PANEL, leftOverlayPanel);
-        setupArea(Area.PREVIEW_PANEL, rightOverlayPanel);
+        setupArea(Area.CONTEXT_PANEL, leftOverlayPanel, (TransitionPane p, Node node) -> p.add(node));
+        setupArea(Area.PREVIEW_PANEL, rightOverlayPanel, (TransitionPane p, Node node) -> p.add(node));
         setupArea(Area.INFORMATION_PANEL, gp, (p, n) -> p.at(1, 6).spanning(5, 1).align(VPos.BOTTOM).align(HPos.LEFT).styleClass("information-panel").add(n));
-      }
-
-      private void slideRight(Pane pane) {
-        int size = pane.getChildren().size();
-
-        for(int i = size - 1; i >= 0; i--) {
-          Node node = pane.getChildren().get(i);
-          Transition transition = (Transition)node.getProperties().get("entity-layout.slide-right-transition");
-
-          if(transition == null) {
-            node.setVisible(false);
-            node.setManaged(false);
-//            node.setTranslateX(10000); // transition doesn't play immediately, so make sure the node isn't visible immediately by moving it far away
-
-            transition = new SlideInTransition(pane, node, Duration.millis(2000), Duration.millis(500));
-            transition.play();
-          }
-
-          if(i < size - 1 && transition instanceof SlideInTransition) {
-            transition.stop();
-
-            if(!node.isManaged()) {  // If panel not even visible yet, remove it immediately
-              Platform.runLater(() -> pane.getChildren().remove(node));
-            }
-            else {
-              transition = new SlideOutTransition(pane, node);
-              transition.setOnFinished(e -> pane.getChildren().remove(node));
-              transition.play();
-            }
-          }
-
-          node.getProperties().put("entity-layout.slide-right-transition", transition);
-        }
-      }
-
-      private void fadeIn(Pane pane) {
-        int size = pane.getChildren().size();
-
-        for(int i = size - 1; i >= 0; i--) {
-          Node node = pane.getChildren().get(i);
-          Timeline timeline = (Timeline)node.getProperties().get("entity-layout.fade-in-timeline");
-
-          if(timeline == null) {
-            timeline = new Timeline(
-              new KeyFrame(Duration.ZERO, new KeyValue(node.opacityProperty(), 0)),
-              new KeyFrame(Duration.seconds(0.01), new KeyValue(node.opacityProperty(), 0)),
-              new KeyFrame(Duration.seconds(0.5), new KeyValue(node.opacityProperty(), 1.0, Interpolator.EASE_OUT))
-            );
-
-            timeline.play();
-          }
-
-          if(i < size - 1 && timeline.getKeyFrames().size() != 2) {
-            timeline.stop();
-
-            timeline = new Timeline(
-              new KeyFrame(Duration.ZERO, new KeyValue(node.opacityProperty(), node.getOpacity())),
-              new KeyFrame(Duration.seconds(0.5), e -> {
-                pane.getChildren().remove(node);
-              }, new KeyValue(node.opacityProperty(), 0, Interpolator.EASE_IN))
-            );
-
-            timeline.play();
-          }
-
-          node.getProperties().put("entity-layout.fade-in-timeline", timeline);
-        }
       }
     };
 
