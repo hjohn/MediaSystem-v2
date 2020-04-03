@@ -75,7 +75,10 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     listView.getStyleClass().add("glass-pane");
     listView.onItemSelected.set(e -> {
       if(!(e.getItem() instanceof Parent) || ((Parent<?>)e.getItem()).getChildren().isEmpty()) {
-        onItemSelected((ItemSelectedEvent<T>)e, presentation);
+        @SuppressWarnings("unchecked")
+        ItemSelectedEvent<T> itemSelectedEvent = (ItemSelectedEvent<T>)e;
+
+        onItemSelected(itemSelectedEvent, presentation);
       }
       else {
         presentation.contextItem.setValue(e.getItem());
