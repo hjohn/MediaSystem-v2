@@ -14,9 +14,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -28,13 +25,9 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.util.Callback;
-import javafx.util.Duration;
 
 import org.reactfx.value.Var;
 
@@ -101,7 +94,6 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
       private final BooleanProperty hasStreamProperty = new SimpleBooleanProperty();
 
       private final ChangeListener<Boolean> updateIndicatorListener = (obs, old, watched) -> updateMediaStateStyles();
-      private final DropShadow dropShadow = new DropShadow(BlurType.GAUSSIAN, new Color(1, 1, 1, 0.8), 0, 0.0, 0, 0);
 
       {
         imageView = new BiasedImageView(placeHolderLabel, aspectRatio);
@@ -137,13 +129,6 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
 
         setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
         setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);  // Indicate to cell that it can become as big as possible
-
-        focusedProperty().addListener((obs, old, current) -> {
-          new Timeline(
-            new KeyFrame(Duration.ZERO, new KeyValue(dropShadow.radiusProperty(), dropShadow.getRadius())),
-            new KeyFrame(Duration.seconds(0.2), new KeyValue(dropShadow.radiusProperty(), current ? 25.0 : 0))
-          ).play();
-        });
 
         name.textProperty().addListener((obs, old, current) -> {
           if(current.length() >= 30) {
