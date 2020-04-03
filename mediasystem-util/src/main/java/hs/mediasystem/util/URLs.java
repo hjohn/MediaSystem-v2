@@ -28,16 +28,32 @@ public class URLs {
       }
     }
 
-    try(InputStream is = connection.getInputStream();
-        ByteArrayOutputStream bais = new ByteArrayOutputStream()) {
-      byte[] byteChunk = new byte[4096];
-      int n;
+    int length = connection.getContentLength();
 
-      while((n = is.read(byteChunk)) > 0) {
-        bais.write(byteChunk, 0, n);
+    if(length == -1) {
+      try(InputStream is = connection.getInputStream();
+          ByteArrayOutputStream bais = new ByteArrayOutputStream()) {
+        byte[] byteChunk = new byte[4096];
+        int n;
+
+        while((n = is.read(byteChunk)) > 0) {
+          bais.write(byteChunk, 0, n);
+        }
+
+        return bais.toByteArray();
+      }
+    }
+
+    byte[] data = new byte[length];
+
+    try(InputStream is = connection.getInputStream()) {
+      int readLength = is.readNBytes(data, 0, length);
+
+      if(readLength != length) {
+        throw new IOException("wrong length read, expected " + length + ", but got: " + readLength);
       }
 
-      return bais.toByteArray();
+      return data;
     }
   }
 }
