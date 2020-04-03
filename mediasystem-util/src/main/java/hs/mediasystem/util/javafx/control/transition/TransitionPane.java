@@ -90,6 +90,10 @@ public class TransitionPane extends Region {
     add(start ? 0 : getChildren().size(), child);
   }
 
+  public void clear() {
+    transition.restart(getManagedChildren(), false);
+  }
+
   @Override
   protected void layoutChildren() {
     List<Node> managed = getManagedChildren();

@@ -65,7 +65,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     PREVIEW_PANEL   // Panel that slides in from the right depending on the presence of content
   }
 
-  public void configurePanes(AreaPane2<Area> areaPane, P presentation) {
+  private void configurePanes(AreaPane2<Area> areaPane, TransitionPane previewPanel, P presentation) {
     MediaGridView<Object> listView = new MediaGridView<>();
 
     listView.setOrientation(Orientation.VERTICAL);
@@ -84,15 +84,23 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
         presentation.contextItem.setValue(e.getItem());
       }
     });
-    listView.getSelectionModel().selectedItemProperty().addListener((ov, old, current) -> {
-      if(current != null) {
-        Node context = contextLayout.create(current);
 
-        if(context != null) {
-          areaPane.add(Area.PREVIEW_PANEL, context);
+    // Clear preview panel immediately:
+    Val.wrap(listView.getSelectionModel().selectedItemProperty()).values()
+      .observe(current -> previewPanel.clear());
+
+    // Create it if selection was stable for a time:
+    Val.wrap(listView.getSelectionModel().selectedItemProperty()).values()
+      .successionEnds(java.time.Duration.ofMillis(500))
+      .observe(current -> {
+        if(current != null) {
+          Node context = contextLayout.create(current);
+
+          if(context != null) {
+            previewPanel.add(context);
+          }
         }
-      }
-    });
+      });
 
     areaPane.add(Area.CENTER, listView);
 
@@ -159,13 +167,14 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
 
   @Override
   public Node create(P presentation) {
+    TransitionPane rightOverlayPanel = new TransitionPane(new Custom(
+      Duration.millis(2000),
+      new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_OUT, Direction.RIGHT), new Fade())),
+      new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_IN, Direction.RIGHT), new Fade()))
+    ));
+
     AreaPane2<Area> areaPane = new AreaPane2<>() {
       TransitionPane leftOverlayPanel = new TransitionPane(StandardTransitions.fade());
-      TransitionPane rightOverlayPanel = new TransitionPane(new Custom(
-        Duration.millis(2000),
-        new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_OUT, Direction.RIGHT), new Fade())),
-        new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_IN, Direction.RIGHT), new Fade()))
-      ));
       GridPane gp = GridPaneUtil.create(new double[] {2, 21, 2, 50, 2, 21, 2}, new double[] {15, 66, 0.5, 5, 0.5, 6, 6.5, 0.5});
       HBox navigationArea = new HBox();
 
@@ -197,7 +206,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     areaPane.setMinSize(1, 1);
     areaPane.getStylesheets().add(LessLoader.compile(AbstractSetup.class.getResource("styles.less")).toExternalForm());
 
-    configurePanes(areaPane, presentation);
+    configurePanes(areaPane, rightOverlayPanel, presentation);
 
     return areaPane;
   }
