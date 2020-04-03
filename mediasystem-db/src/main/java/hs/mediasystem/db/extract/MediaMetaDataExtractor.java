@@ -31,6 +31,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.bytedeco.javacpp.avutil;
+
 @Singleton
 public class MediaMetaDataExtractor {
   private static final Logger LOGGER = Logger.getLogger(MediaMetaDataExtractor.class.getName());
@@ -48,6 +50,8 @@ public class MediaMetaDataExtractor {
   private void postConstruct() {
     EXECUTOR.scheduleWithFixedDelay(this::extract, 300, 30, TimeUnit.SECONDS);
     EXECUTOR.scheduleWithFixedDelay(() -> recentFailures.clear(), 24, 48, TimeUnit.HOURS);
+
+    avutil.av_log_set_level(avutil.AV_LOG_FATAL);
   }
 
   private void extract() {
