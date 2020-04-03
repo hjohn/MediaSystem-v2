@@ -96,24 +96,32 @@ public class ActionTargetProviderTest {
   }
 
   @Test
-  public void shouldDoActions() {
+  public void shouldDoTriggerActions() {
+    List<ActionTarget> actionTargets = provider.getActionTargets(TestRoot.class);
+
+    ActionTarget stopActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("stop")).findFirst().orElse(null);
+    ActionTarget stop2ActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("stop2")).findFirst().orElse(null);
+
+    TestRoot root = new TestRoot();
+
+    stopActionTarget.doAction("trigger", root, new Event(Event.ANY)).run(new Event(Event.ANY), null);
+
+    assertTrue(root.stopCalled.get());
+
+    stop2ActionTarget.doAction("trigger", root, new Event(Event.ANY)).run(new Event(Event.ANY), null);
+
+    assertTrue(root.stop2Called.get());
+  }
+
+  @Test
+  public void shouldDoPropertyActions() {
     List<ActionTarget> actionTargets = provider.getActionTargets(TestRoot.class);
 
     ActionTarget volumeActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("volume")).findFirst().orElse(null);
     ActionTarget brightnessActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("brightness")).findFirst().orElse(null);
-    ActionTarget stopActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("stop")).findFirst().orElse(null);
-    ActionTarget stop2ActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("stop2")).findFirst().orElse(null);
     ActionTarget positionActionTarget = actionTargets.stream().filter(at -> at.getTargetName().equals("position")).findFirst().orElse(null);
 
     TestRoot root = new TestRoot();
-
-    stopActionTarget.doAction("trigger", root, new Event(Event.ANY));
-
-    assertTrue(root.stopCalled.get());
-
-    stop2ActionTarget.doAction("trigger", root, new Event(Event.ANY));
-
-    assertTrue(root.stop2Called.get());
 
     volumeActionTarget.doAction("subtract(5)", root, new Event(Event.ANY));
 

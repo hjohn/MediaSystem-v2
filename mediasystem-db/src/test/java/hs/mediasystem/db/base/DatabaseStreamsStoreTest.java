@@ -4,6 +4,8 @@ import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.PostConstructCaller;
@@ -26,6 +28,7 @@ class DatabaseStreamsStoreTest {
 
   @Mock private CachedStreamCodec codec;
   @Mock private StreamDatabase database;
+  @Mock private ContentPrintProvider contentPrintProvider;
 
   @InjectMocks private DatabaseStreamStore store;
 
@@ -53,6 +56,9 @@ class DatabaseStreamsStoreTest {
     @BeforeEach
     void beforeEach() {
       when(codec.toRecord(any(CachedStream.class))).thenReturn(new StreamRecord());
+      when(contentPrintProvider.get(new ContentID(1))).thenReturn(new ContentPrint(new ContentID(1), 100L, 12345L, new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
+      when(contentPrintProvider.get(new ContentID(2))).thenReturn(new ContentPrint(new ContentID(2), 200L, 22345L, new byte[] {1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
+      when(contentPrintProvider.get(new ContentID(3))).thenReturn(new ContentPrint(new ContentID(3), 300L, 32345L, new byte[] {2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
 
       store.put(sa1);
       store.put(sa2);
