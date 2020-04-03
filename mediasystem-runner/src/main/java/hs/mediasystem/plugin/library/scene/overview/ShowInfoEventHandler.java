@@ -13,7 +13,7 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
-import hs.mediasystem.util.javafx.AsyncImageProperty3;
+import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -198,7 +198,7 @@ public class ShowInfoEventHandler {
       stream.getMetaData().ifPresent(metaData -> {
         metaData.getSnapshots().stream().map(Snapshot::getImageUri).map(imageHandleFactory::fromURI).forEach(handle -> {
           BiasedImageView imageView = new BiasedImageView();
-          AsyncImageProperty3 property = new AsyncImageProperty3(600, 400);
+          AsyncImageProperty property = new AsyncImageProperty(600, 400);
 
           imageView.setOrientation(Orientation.HORIZONTAL);
           imageView.imageProperty().bind(property);

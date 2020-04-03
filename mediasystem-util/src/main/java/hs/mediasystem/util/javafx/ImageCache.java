@@ -85,8 +85,16 @@ public class ImageCache {
       Image image = null;
       byte[] data = handle.getImageData();
 
+      if(Thread.interrupted()) {
+        throw new InterruptedException("Image loading interrupted after loading data: " + handle);
+      }
+
       if(data != null) {
         Dimension size = determineSize(data);
+
+        if(Thread.interrupted()) {
+          throw new InterruptedException("Image loading interrupted after determining size: " + handle);
+        }
 
         if(size != null) {
           if(size.width <= w && size.height <= h) {

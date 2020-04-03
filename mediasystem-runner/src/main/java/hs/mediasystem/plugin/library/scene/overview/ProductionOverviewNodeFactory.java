@@ -17,7 +17,7 @@ import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.javafx.AsyncImageProperty3;
+import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
@@ -88,7 +88,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       presentation.update();
 
       Work work = presentation.rootItem;
-      AsyncImageProperty3 imageProperty = new AsyncImageProperty3(840, 840);
+      AsyncImageProperty imageProperty = new AsyncImageProperty(840, 840);
 
       imageProperty.imageHandleProperty().set(work.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
 
@@ -303,7 +303,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
     private HBox buildEpisodeUI() {
       Work work = presentation.episodeItem.getValue();
-      AsyncImageProperty3 imageProperty = new AsyncImageProperty3(840, 840);
+      AsyncImageProperty imageProperty = new AsyncImageProperty(840, 840);
 
       imageProperty.imageHandleProperty().set(work.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
 

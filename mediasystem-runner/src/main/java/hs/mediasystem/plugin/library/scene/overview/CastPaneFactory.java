@@ -6,7 +6,7 @@ import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role.Type;
 import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.javafx.AsyncImageProperty3;
+import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -78,7 +78,7 @@ public class CastPaneFactory {
 
     for(int i = 0; i < topContributors.size(); i++) {
       Contribution contributor = topContributors.get(i);
-      AsyncImageProperty3 imageProperty = new AsyncImageProperty3(600, 600);
+      AsyncImageProperty imageProperty = new AsyncImageProperty(400, 600);
 
       imageProperty.imageHandleProperty().set(contributor.getPerson().getImage().map(imageHandleFactory::fromURI).orElse(null));
 

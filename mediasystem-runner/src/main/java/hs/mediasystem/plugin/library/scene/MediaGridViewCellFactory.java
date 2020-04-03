@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.javafx.AsyncImageProperty2;
+import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
@@ -94,7 +94,7 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
       private final BiasedImageView imageView;
       private final StylableVBox container;
 
-      private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2(400, 400);
+      private final AsyncImageProperty asyncImageProperty = new AsyncImageProperty(400, 400);
       private final StringProperty sideBarTopLeftText = new SimpleStringProperty();
       private final StringProperty sideBarCenterText = new SimpleStringProperty();
       private final BooleanProperty watchedProperty = new SimpleBooleanProperty();

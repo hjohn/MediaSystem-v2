@@ -17,6 +17,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Pos;
 import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
@@ -32,7 +33,7 @@ public class BackgroundPane extends StackPane {
   private final ObjectProperty<ImageHandle> backdropProperty = new SimpleObjectProperty<>();
   public ObjectProperty<ImageHandle> backdropProperty() { return backdropProperty; }
 
-  private final AsyncImageProperty wantedBackground = new AsyncImageProperty();
+  private final AsyncImageProperty wantedBackground = new AsyncImageProperty(new Dimension2D(1920, 1200), java.time.Duration.ofMillis(500));
 
   private final ObjectProperty<Image> background = new SimpleObjectProperty<>(EMPTY_IMAGE);
   private final ObjectProperty<Image> newBackground = new SimpleObjectProperty<>(EMPTY_IMAGE);

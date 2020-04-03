@@ -21,6 +21,7 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.ScaledImageView;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
@@ -162,7 +163,7 @@ public class ContextLayout {
     public final ObjectProperty<ImageURI> imageURI = new SimpleObjectProperty<>();
 
     {
-      AsyncImageProperty poster = new AsyncImageProperty();
+      AsyncImageProperty poster = new AsyncImageProperty(400, 600);
 
       getStyleClass().add("side-panel");
 

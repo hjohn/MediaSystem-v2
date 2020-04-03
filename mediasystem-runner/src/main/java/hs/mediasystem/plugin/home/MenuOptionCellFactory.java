@@ -3,7 +3,7 @@ package hs.mediasystem.plugin.home;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
-import hs.mediasystem.util.javafx.AsyncImageProperty2;
+import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.carousel.CarouselListCell;
@@ -38,7 +38,7 @@ public class MenuOptionCellFactory implements Callback<ListView<MenuOption>, Lis
   public CarouselListCell<MenuOption> call(ListView<MenuOption> view) {
     return new CarouselListCell<>() {
       private final BiasedImageView imageView = new BiasedImageView();
-      private final AsyncImageProperty2 asyncImageProperty = new AsyncImageProperty2(600, 400);
+      private final AsyncImageProperty asyncImageProperty = new AsyncImageProperty(600, 400);
 
       private final StatusIndicator indicator = new StatusIndicator();
       private final Label parentTitle = Labels.create("parent-title", Labels.HIDE_IF_EMPTY);
