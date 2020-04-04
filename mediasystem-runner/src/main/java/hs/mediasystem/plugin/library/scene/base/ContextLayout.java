@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.base;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
@@ -21,7 +22,6 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.ScaledImageView;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,6 +47,8 @@ import org.reactfx.value.Val;
 
 @Singleton
 public class ContextLayout {
+  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
+
   @Inject private ImageHandleFactory imageHandleFactory;
 
   public BasePanel create(Object item) {
@@ -91,27 +93,29 @@ public class ContextLayout {
     BasePanel panel = create(wg.getDetails());
     LocalDate now = LocalDate.now();
 
-    wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).min(Comparator.naturalOrder()).ifPresent(earliest -> {
-      wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).max(Comparator.naturalOrder()).ifPresent(latest -> {
-        int minYear = earliest.getYear();
-        int maxYear = latest.getYear();
+    if(wg.getId().getType().equals(COLLECTION)) {
+      wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).min(Comparator.naturalOrder()).ifPresent(earliest -> {
+        wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).max(Comparator.naturalOrder()).ifPresent(latest -> {
+          int minYear = earliest.getYear();
+          int maxYear = latest.getYear();
 
-        panel.releaseDate.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
+          panel.releaseDate.setValue(minYear == maxYear ? "" + minYear : minYear + " - " + maxYear);
+        });
       });
-    });
 
-    Map<String, Long> genreCounts = wg.getChildren().stream()
-      .map(Work::getDetails)
-      .map(Details::getClassification)
-      .map(Classification::getGenres)
-      .flatMap(Collection::stream)
-      .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+      Map<String, Long> genreCounts = wg.getChildren().stream()
+        .map(Work::getDetails)
+        .map(Details::getClassification)
+        .map(Classification::getGenres)
+        .flatMap(Collection::stream)
+        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-    panel.subtitle.set(genreCounts.entrySet().stream()
-      .sorted(Comparator.comparing(Map.Entry::getValue, Collections.reverseOrder()))
-      .map(Map.Entry::getKey)
-      .collect(Collectors.joining(" / "))
-    );
+      panel.subtitle.set(genreCounts.entrySet().stream()
+        .sorted(Comparator.comparing(Map.Entry::getValue, Collections.reverseOrder()))
+        .map(Map.Entry::getKey)
+        .collect(Collectors.joining(" / "))
+      );
+    }
 
     return panel;
   }
