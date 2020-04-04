@@ -215,7 +215,12 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     Val<Integer> totalItemCount = presentation.totalItemCount;
     Val<Integer> visibleUniqueItemCount = presentation.visibleUniqueItemCount;
 
-    StringBinding binding = Bindings.createStringBinding(() -> String.format(visibleUniqueItemCount.getValue() == totalItemCount.getValue() ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), visibleUniqueItemCount.getValue(), totalItemCount.getValue()), visibleUniqueItemCount, totalItemCount);
+    StringBinding binding = Bindings.createStringBinding(
+      () -> String.format(visibleUniqueItemCount.getValue().equals(totalItemCount.getValue()) ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), visibleUniqueItemCount.getValue(), totalItemCount.getValue()),
+      visibleUniqueItemCount,
+      totalItemCount
+    );
+
     GridPane gridPane = new GridPane();
     VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
 
