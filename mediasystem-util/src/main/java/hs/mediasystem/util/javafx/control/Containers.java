@@ -2,6 +2,7 @@ package hs.mediasystem.util.javafx.control;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import javafx.beans.binding.Bindings;
@@ -37,8 +38,9 @@ public class Containers {
   }
 
   public static HBox hbox(String styleClass, Node... nodes) {
-    HBox hbox = new HBox(nodes);
+    HBox hbox = new HBox();
 
+    addChildren(hbox, Arrays.asList(nodes));
     addStyleClass(hbox, styleClass);
 
     return hbox;
@@ -49,8 +51,9 @@ public class Containers {
   }
 
   public static VBox vbox(String styleClass, BooleanBinding visibility, Node... nodes) {
-    VBox vbox = new VBox(nodes);
+    VBox vbox = new VBox();
 
+    addChildren(vbox, Arrays.asList(nodes));
     addStyleClass(vbox, styleClass);
 
     if(visibility != null) {
@@ -88,7 +91,7 @@ public class Containers {
   public static StackPane stack(String styleClass, List<Node> nodes, Option... options) {
     StackPane stackPane = new StackPane();
 
-    stackPane.getChildren().addAll(nodes);
+    addChildren(stackPane, nodes);
 
     for(Option option : options) {
       option.accept(stackPane);
@@ -115,5 +118,9 @@ public class Containers {
     }
 
     return node;
+  }
+
+  private static void addChildren(Pane pane, List<Node> nodes) {
+    nodes.stream().filter(Objects::nonNull).forEach(n -> pane.getChildren().add(n));
   }
 }

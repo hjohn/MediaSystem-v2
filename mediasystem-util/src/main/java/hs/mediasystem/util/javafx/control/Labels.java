@@ -28,16 +28,16 @@ public class Labels {
   public interface Option extends Consumer<Label> {
   }
 
-  public static Label create(String styleClass, String text, Option... options) {
-    Label label = createLabel(styleClass, options);
+  public static Label create(String styleClasses, String text, Option... options) {
+    Label label = createLabel(styleClasses, options);
 
     label.setText(text);
 
     return label;
   }
 
-  public static Label create(String styleClass, Option... options) {
-    return create(styleClass, "", options);
+  public static Label create(String styleClasses, Option... options) {
+    return create(styleClasses, "", options);
   }
 
   public static Label create(String styleClass, ObservableValue<? extends String> observable, Option... options) {
@@ -48,10 +48,10 @@ public class Labels {
     return label;
   }
 
-  private static Label createLabel(String styleClass, Option... options) {
+  private static Label createLabel(String styleClasses, Option... options) {
     Label label = new Label();
 
-    label.getStyleClass().addAll(styleClass.split(",(?: *)"));
+    label.getStyleClass().addAll(styleClasses.split(",(?: *)"));
 
     for(Option option : options) {
       option.accept(label);
