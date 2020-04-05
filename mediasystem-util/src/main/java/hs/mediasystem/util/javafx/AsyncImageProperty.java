@@ -52,14 +52,13 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
           // Check if image exists in cache (of any size)...
           Image image = ImageCache.getClosestImage(value, (int)maxSize.getWidth(), (int)maxSize.getHeight());
 
-          if(image != null) {
-            set(image);
-          }
+          set(image); // image can be null, but it needs to be cleared anyway then
+        }
+        else {
+          set(null);  // always clear if there is a settling delay
         }
 
         // If there was no image still or it is too small, then async load (a better) one:
-        set(null);
-
         if(get() == null || get().getWidth() < maxSize.getWidth() - 1 || get().getHeight() < maxSize.getHeight() - 1) {
           loader = EXECUTOR.schedule(
             new Loader(AsyncImageProperty.this, value, maxSize),
