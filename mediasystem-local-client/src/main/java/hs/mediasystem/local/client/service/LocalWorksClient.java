@@ -119,10 +119,12 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static hs.mediasystem.ui.api.domain.Serie createSerie(Serie serie) {
+    List<Season> seasons = serie.getSeasons();
+
     return new hs.mediasystem.ui.api.domain.Serie(
       serie.getLastAirDate(),
-      (int)serie.getSeasons().stream().filter(s -> s.getNumber() > 0).count(),
-      (int)serie.getSeasons().stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count()
+      seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).count(),
+      seasons == null ? 0 : (int)seasons.stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count()
     );
   }
 
