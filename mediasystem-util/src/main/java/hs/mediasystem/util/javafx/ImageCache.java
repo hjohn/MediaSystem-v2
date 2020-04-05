@@ -68,6 +68,10 @@ public class ImageCache {
 
     CompletableFuture<Image> future = ref.get();
 
+    if(future == null) {
+      return null;
+    }
+
     try {
       return future.getNow(null);
     }
@@ -264,7 +268,7 @@ public class ImageCache {
     }
 
     if(counter > 0) {
-      System.out.println("[FINE] ImageCache.cleanReferenceQueue() - Removed " + counter + "/" + size + " images.");
+      LOGGER.fine("Removed " + counter + "/" + size + " images");
     }
   }
 
