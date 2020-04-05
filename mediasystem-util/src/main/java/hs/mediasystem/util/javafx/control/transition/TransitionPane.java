@@ -6,6 +6,8 @@ import hs.mediasystem.util.javafx.control.transition.multi.Custom;
 
 import java.util.List;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -59,9 +61,14 @@ public class TransitionPane extends Region {
     boolean hadFocus = Nodes.findFocusedNodeInTree(this).isPresent();
 
     child.setManaged(true);
-    child.managedProperty().addListener((obs, old, managed) -> {
-      if(!managed) {
-        getChildren().remove(child);
+    child.managedProperty().addListener(new ChangeListener<Boolean>() {
+      @Override
+      public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean managed) {
+        if(!managed) {
+          child.managedProperty().removeListener(this);
+
+          getChildren().remove(child);
+        }
       }
     });
 

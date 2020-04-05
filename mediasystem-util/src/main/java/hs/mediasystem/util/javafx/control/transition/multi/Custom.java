@@ -27,6 +27,7 @@ public class Custom implements MultiNodeTransition {
 
   private static final String ACTION = Custom.class.getName() + ":action";
   private static final String TIMELINE = Custom.class.getName() + ":timeline";
+  private static final String INTRO = Custom.class.getName() + ":intro";
 
   private final Duration initialDelay;
   private final EffectList intro;
@@ -73,6 +74,7 @@ public class Custom implements MultiNodeTransition {
         Timeline timeline = new Timeline(new KeyFrame(initialDelay, e -> transition.play()), new KeyFrame(initialDelay.add(Duration.millis(1))));
 
         node.getProperties().put(TIMELINE, timeline);
+        node.getProperties().put(INTRO, transition);
 
         timeline.play();
       }
@@ -81,7 +83,7 @@ public class Custom implements MultiNodeTransition {
 
         if(timeline.getStatus() == Status.RUNNING) {  // early removal, if initial delay has not yet elapsed
           timeline.stop();
-          node.setManaged(false);
+          removeNode(node);
           continue;
         }
 
@@ -89,10 +91,20 @@ public class Custom implements MultiNodeTransition {
 
         Transition transition = create(outro, node, false, invert);
 
-        transition.setOnFinished(e -> node.setManaged(false));
+        transition.setOnFinished(e -> removeNode(node));
         transition.play();
       }
     }
+  }
+
+  private static void removeNode(Node node) {
+    PublicTransition transition = (PublicTransition)node.getProperties().remove(INTRO);
+
+    transition.interpolate(1.0);  // resets all interpolated values to their defaults
+
+    node.getProperties().remove(ACTION);
+    node.getProperties().remove(TIMELINE);
+    node.setManaged(false);
   }
 
   private class Wrapper implements Interpolatable {
@@ -110,30 +122,35 @@ public class Custom implements MultiNodeTransition {
     }
   }
 
-  public Transition create(EffectList list, Node node, boolean intro, boolean invert) {
+  public PublicTransition create(EffectList list, Node node, boolean intro, boolean invert) {
     List<Wrapper> interpolatables = list.getEffects().stream()
       .map(e -> new Wrapper(e.create(node, invert), e.getInterpolator()))
       .collect(Collectors.toList());
 
-    if(intro) {
-      // Run once at fraction 0 so nodes are correctly positioned/setup, despite initial delay
-      for(Wrapper w : interpolatables) {
-        w.apply(w.interpolator.interpolate(0.0, 1.0, 0.0));
-      }
-    }
-
-    return new Transition() {
+    PublicTransition publicTransition = new PublicTransition() {
       {
         setCycleDuration(list.getDuration());
         setInterpolator(Interpolator.LINEAR);
       }
 
       @Override
-      protected void interpolate(double frac) {
+      public void interpolate(double frac) {
         for(Wrapper w : interpolatables) {
           w.apply(w.interpolator.interpolate(intro ? 0.0 : 1.0, intro ? 1.0 : 0.0, frac));
         }
       }
     };
+
+    if(intro) {
+      // Run once at fraction 0 so nodes are correctly positioned/setup, despite initial delay
+      publicTransition.interpolate(0);
+    }
+
+    return publicTransition;
+  }
+
+  static abstract class PublicTransition extends Transition {
+    @Override
+    public abstract void interpolate(double frac);
   }
 }
