@@ -201,10 +201,11 @@ public class ImageCache {
       Image image = futureImage.get();
 
       synchronized(CACHE) {
-        CACHE.put(key, new ImageFutureWeakReference(key, futureImage, REFERENCE_QUEUE));
-
         if(image != null) {
-          REF_CACHE.add(key, image, (long)image.getWidth() * (long)image.getHeight() * 4);
+          CACHE.put(key, new ImageFutureWeakReference(key, futureImage, REFERENCE_QUEUE));
+
+          // Store futureImage, not image, as otherwise the future might get GC'd even though the image wasn't
+          REF_CACHE.add(key, futureImage, (long)image.getWidth() * (long)image.getHeight() * 4);
         }
       }
 
