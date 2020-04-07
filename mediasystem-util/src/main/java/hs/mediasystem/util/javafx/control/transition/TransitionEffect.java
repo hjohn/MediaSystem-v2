@@ -20,6 +20,14 @@ public interface TransitionEffect {
      * @param frac a fractional value between 0 and 1, with 0 representing the start of the effect and 1 the end
      */
     void apply(double frac);
+
+    /**
+     * Derives a new {@link Interpolatable} based on this one, which starts its interpolation
+     * from the current value(s) of the original {@link Node}.
+     *
+     * @return a new {@link Interpolatable}, never null
+     */
+    Interpolatable derive();
   }
 
   /**

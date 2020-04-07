@@ -22,7 +22,11 @@ public class Scroll implements MultiNodeTransition {
   private static final String TRANSITION_KEY = PREFIX + "transition";
 
   @Override
-  public void restart(List<? extends Node> children, boolean invert) {
+  public void restart(List<? extends Node> children, Node targetNode, boolean invert) {
+    if(targetNode != null) {
+      targetNode.getProperties().remove(INDEX_KEY);  // Remove key from most recently added node, in case it was re-added while animated.
+    }
+
     Duration duration = Duration.millis(500);
     Node latest = children.stream().filter(c -> c.getProperties().containsKey(LATEST_KEY)).findFirst().orElse(null);
     int latestIndex = latest == null ? 0 : (int)latest.getProperties().get(INDEX_KEY);

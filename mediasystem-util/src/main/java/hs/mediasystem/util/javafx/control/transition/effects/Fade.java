@@ -26,13 +26,28 @@ public class Fade implements TransitionEffect {
 
   @Override
   public Interpolatable create(Node node, boolean invert) {
-    double startOpacity = node.getOpacity();
+    return new InternalInterpolatable(node, node.getOpacity(), 0);
+  }
 
-    return new Interpolatable() {
-      @Override
-      public void apply(double frac) {
-        node.setOpacity(startOpacity * frac);
-      }
-    };
+  private final class InternalInterpolatable implements Interpolatable {
+    final Node node;
+    final double original;
+    final double base;
+
+    InternalInterpolatable(Node node, double original, double base) {
+      this.node = node;
+      this.original = original;
+      this.base = base;
+    }
+
+    @Override
+    public void apply(double frac) {
+      node.setOpacity(base + (original - base) * frac);
+    }
+
+    @Override
+    public Interpolatable derive() {
+      return new InternalInterpolatable(node, original, node.getOpacity());
+    }
   }
 }

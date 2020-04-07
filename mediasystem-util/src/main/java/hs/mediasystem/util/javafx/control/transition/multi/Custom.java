@@ -22,12 +22,10 @@ import javafx.util.Duration;
  */
 public class Custom implements MultiNodeTransition {
   enum Action {
-    SHOW, REMOVE
+    SHOW, REMOVE, FINISHED
   }
 
-  private static final String ACTION = Custom.class.getName() + ":action";
-  private static final String TIMELINE = Custom.class.getName() + ":timeline";
-  private static final String INTRO = Custom.class.getName() + ":intro";
+  private static final String STATE = Custom.class.getName() + ":state";
 
   private final Duration initialDelay;
   private final EffectList intro;
@@ -52,7 +50,7 @@ public class Custom implements MultiNodeTransition {
   }
 
   @Override
-  public void restart(List<? extends Node> children, boolean invert) {
+  public void restart(List<? extends Node> children, Node targetNode, boolean invert) {
 
     /*
      * Lifecycle here:
@@ -65,49 +63,62 @@ public class Custom implements MultiNodeTransition {
 
     for(int i = children.size() - 1; i >= 0; i--) {
       Node node = children.get(i);
-      Action previousAction = (Action)node.getProperties().get(ACTION);
 
-      if(previousAction == null) {
-        node.getProperties().put(ACTION, Action.SHOW);
+      State state = (State)node.getProperties().computeIfAbsent(STATE, k -> new State(create(intro, node, true, invert)));
 
-        Transition transition = create(intro, node, true, invert);
-        Timeline timeline = new Timeline(new KeyFrame(initialDelay, e -> transition.play()), new KeyFrame(initialDelay.add(Duration.millis(1))));
-
-        node.getProperties().put(TIMELINE, timeline);
-        node.getProperties().put(INTRO, transition);
-
-        timeline.play();
+      if(state.action == Action.SHOW) {
+        state.action = Action.REMOVE;
+        state.timeline = new Timeline(new KeyFrame(initialDelay, e -> state.originalIntro.play()), new KeyFrame(initialDelay.add(Duration.millis(1))));
+        state.timeline.play();
       }
-      else if(previousAction == Action.SHOW) {
-        Timeline timeline = (Timeline)node.getProperties().get(TIMELINE);
-
-        if(timeline.getStatus() == Status.RUNNING) {  // early removal, if initial delay has not yet elapsed
-          timeline.stop();
+      else if(state.action == Action.REMOVE) {
+        if(state.timeline.getStatus() == Status.RUNNING) {  // early removal, if initial delay has not yet elapsed
           removeNode(node);
           continue;
         }
 
-        node.getProperties().put(ACTION, Action.REMOVE);
+        state.action = Action.FINISHED;
+        state.intro.stop();
+        state.outro = create(outro, node, false, invert);  // created on demand so it starts from correct start values
+        state.outro.play();
+      }
+      else if(state.action == Action.FINISHED && node.equals(targetNode)) {  // node is to be shown again (due to re-add)
 
-        Transition transition = create(outro, node, false, invert);
+        /*
+         * This occurs when a node that was in the process of being removed
+         * gets re-added before the removal completed.  The transition is
+         * not recreated as it contains information about the initial state
+         * of the animated properties.
+         *
+         * If initialDelay has not elapsed, no further action is taken apart
+         * from cancelling the timeline.  If it has elapsed, the intro
+         * transition is started.
+         */
 
-        transition.setOnFinished(e -> removeNode(node));
-        transition.play();
+        state.action = Action.REMOVE;
+
+        if(state.timeline.getStatus() == Status.RUNNING) {
+          state.timeline.stop();
+          continue;
+        }
+
+        state.outro.stop();
+        state.intro = state.originalIntro.derive();
+        state.intro.play();
       }
     }
   }
 
   private static void removeNode(Node node) {
-    PublicTransition transition = (PublicTransition)node.getProperties().remove(INTRO);
+    State state = (State)node.getProperties().remove(STATE);
 
-    transition.interpolate(1.0);  // resets all interpolated values to their defaults
+    state.timeline.stop();
+    state.originalIntro.interpolate(1.0);  // resets all interpolated values to their defaults
 
-    node.getProperties().remove(ACTION);
-    node.getProperties().remove(TIMELINE);
     node.setManaged(false);
   }
 
-  private class Wrapper implements Interpolatable {
+  private static class Wrapper implements Interpolatable {
     final Interpolatable delegate;
     final Interpolator interpolator;
 
@@ -120,6 +131,11 @@ public class Custom implements MultiNodeTransition {
     public void apply(double frac) {
       delegate.apply(frac);
     }
+
+    @Override
+    public Wrapper derive() {
+      return new Wrapper(delegate.derive(), interpolator);
+    }
   }
 
   public PublicTransition create(EffectList list, Node node, boolean intro, boolean invert) {
@@ -127,30 +143,59 @@ public class Custom implements MultiNodeTransition {
       .map(e -> new Wrapper(e.create(node, invert), e.getInterpolator()))
       .collect(Collectors.toList());
 
-    PublicTransition publicTransition = new PublicTransition() {
-      {
-        setCycleDuration(list.getDuration());
-        setInterpolator(Interpolator.LINEAR);
-      }
-
-      @Override
-      public void interpolate(double frac) {
-        for(Wrapper w : interpolatables) {
-          w.apply(w.interpolator.interpolate(intro ? 0.0 : 1.0, intro ? 1.0 : 0.0, frac));
-        }
-      }
-    };
+    PublicTransition publicTransition = new PublicTransition(interpolatables, list.getDuration(), intro);
 
     if(intro) {
       // Run once at fraction 0 so nodes are correctly positioned/setup, despite initial delay
       publicTransition.interpolate(0);
     }
+    else {
+      publicTransition.setOnFinished(e -> removeNode(node));
+    }
 
     return publicTransition;
   }
 
-  static abstract class PublicTransition extends Transition {
+  private static class State {
+    final PublicTransition originalIntro;
+
+    PublicTransition intro;
+    PublicTransition outro;
+    Action action = Action.SHOW;
+    Timeline timeline;
+
+    State(PublicTransition intro) {
+      this.originalIntro = intro;
+      this.intro = intro;
+    }
+  }
+
+  private static class PublicTransition extends Transition {
+    final List<Wrapper> interpolatables;
+    final boolean intro;
+
+    PublicTransition(List<Wrapper> interpolatables, Duration duration, boolean intro) {
+      this.intro = intro;
+
+      setCycleDuration(duration);
+      setInterpolator(Interpolator.LINEAR);
+
+      this.interpolatables = interpolatables;
+    }
+
     @Override
-    public abstract void interpolate(double frac);
+    public void interpolate(double frac) {
+      for(Wrapper w : interpolatables) {
+        w.apply(w.interpolator.interpolate(intro ? 0.0 : 1.0, intro ? 1.0 : 0.0, frac));
+      }
+    }
+
+    public PublicTransition derive() {
+      return new PublicTransition(
+        interpolatables.stream().map(Wrapper::derive).collect(Collectors.toList()),
+        getCycleDuration(),
+        intro
+      );
+    }
   }
 }

@@ -52,20 +52,41 @@ public class Slide implements TransitionEffect {
 
   @Override
   public Interpolatable create(Node node, boolean invert) {
-    Bounds layoutBounds = node.getParent().getLayoutBounds();
-    double start = direction.isVertical() ? node.getTranslateY() : node.getTranslateX();
-    double d = (direction == Direction.RIGHT || direction == Direction.DOWN) != invert ? 1 : -1;
+    Bounds b = node.getLayoutBounds();
+    double original = direction.isVertical() ? node.getTranslateY() : node.getTranslateX();
+    double sign = (direction == Direction.RIGHT || direction == Direction.DOWN) != invert ? 1 : -1;
 
-    return new Interpolatable() {
-      @Override
-      public void apply(double frac) {
-        if(direction.isVertical()) {
-          node.setTranslateY(d * layoutBounds.getHeight() * (1 - frac) + start);
-        }
-        else {
-          node.setTranslateX(d * layoutBounds.getWidth() * (1 - frac) + start);
-        }
+    return new InternalInterpolatable(direction, node, original, sign * (direction.isVertical() ? b.getHeight() : b.getWidth()));
+  }
+
+  private static final class InternalInterpolatable implements Interpolatable {
+    final Direction direction;
+    final Node node;
+    final double original;
+    final double base;
+
+    InternalInterpolatable(Direction direction, Node node, double original, double base) {
+      this.direction = direction;
+      this.node = node;
+      this.original = original;
+      this.base = base;
+    }
+
+    @Override
+    public void apply(double frac) {
+      double value = base + (original - base) * frac;
+
+      if(direction.isVertical()) {
+        node.setTranslateY(value);
       }
-    };
+      else {
+        node.setTranslateX(value);
+      }
+    }
+
+    @Override
+    public Interpolatable derive() {
+      return new InternalInterpolatable(direction, node, original, direction.isVertical() ? node.getTranslateY() : node.getTranslateX());
+    }
   }
 }

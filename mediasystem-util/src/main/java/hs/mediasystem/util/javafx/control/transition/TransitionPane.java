@@ -60,21 +60,22 @@ public class TransitionPane extends Region {
   private void add(int index, Node child) {
     boolean hadFocus = Nodes.findFocusedNodeInTree(this).isPresent();
 
-    child.setManaged(true);
-    child.managedProperty().addListener(new ChangeListener<Boolean>() {
-      @Override
-      public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean managed) {
-        if(!managed) {
-          child.managedProperty().removeListener(this);
-
-          getChildren().remove(child);
+    if(!getChildren().contains(child)) {
+      child.setManaged(true);
+      child.managedProperty().addListener(new ChangeListener<Boolean>() {
+        @Override
+        public void changed(ObservableValue<? extends Boolean> obs, Boolean old, Boolean managed) {
+          if(!managed) {
+            child.managedProperty().removeListener(this);
+            getChildren().remove(child);
+          }
         }
-      }
-    });
+      });
 
-    getChildren().add(index, child);
+      getChildren().add(index, child);
+    }
 
-    transition.restart(getManagedChildren(), index == 0 && getChildren().size() > 1);
+    transition.restart(getManagedChildren(), child, index == 0 && getChildren().size() > 1);
 
     if(hadFocus) {
       Nodes.focus(child);
@@ -98,7 +99,7 @@ public class TransitionPane extends Region {
   }
 
   public void clear() {
-    transition.restart(getManagedChildren(), false);
+    transition.restart(getManagedChildren(), null, false);
   }
 
   @Override
