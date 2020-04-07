@@ -12,6 +12,10 @@ import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
+import hs.mediasystem.util.javafx.control.MultiButton;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -37,7 +41,7 @@ public class NavigationButtonsFactory {
   public HBox create(ProductionPresentation presentation) {
     HBox hbox = Containers.hbox("navigation-area");
 
-    EventStreams.merge(EventStreams.invalidationsOf(presentation.buttonState), EventStreams.invalidationsOf(presentation.episodeItem))
+    EventStreams.merge(EventStreams.invalidationsOf(presentation.episodeItem))
       .conditionOnShowing(hbox)
       .withDefaultEvent(null)
       .subscribe(e -> updateButtons(presentation, hbox));
@@ -49,41 +53,46 @@ public class NavigationButtonsFactory {
     if(presentation.state.get() != State.LIST) {
       hbox.getChildren().clear();
 
-      switch(presentation.buttonState.get()) {
-      case MAIN:
-        hbox.getChildren().addAll(
-          presentation.rootItem.getType().equals(SERIE) && presentation.state.get() == State.OVERVIEW ?
-            Buttons.create("Episodes", e -> presentation.toListState()) :
-              presentation.resume.enabledProperty().getValue() ?
-                Buttons.create("Play", e -> presentation.toPlayResumeButtonState()) :
-                Buttons.create(presentation.play),
-          presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
-            Buttons.create("Related", e -> presentation.toRelatedButtonState()) :
-            Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.getValue()))
-        );
-        if(presentation.state.get() == State.OVERVIEW) {
-          hbox.getChildren().add(Buttons.create(presentation.playTrailer));
-        }
-        break;
-      case PLAY_RESUME:
-        hbox.getChildren().addAll(
-          create("Resume", "From " + SizeFormatter.SECONDS_AS_POSITION.format(presentation.resume.resumePosition.getValue().toSeconds()), e -> presentation.resume.trigger(e)),
-          create("Play", "From start", e -> presentation.play.trigger(e))
-        );
-        break;
-      case RELATED:  // Only for Movies and Series
-        hbox.getChildren().addAll(
-          Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.rootItem)),
-          Buttons.create("Recommendations", e -> navigateToRecommendations(e, presentation.rootItem))
-        );
-
-        presentation.rootItem.getParent().filter(p -> p.getType().equals(COLLECTION))
-          .ifPresent(p -> {
-            hbox.getChildren().add(Buttons.create("Collection", e -> navigateToCollection(e, p.getId())));
-          });
-        break;
-      }
+      hbox.getChildren().addAll(
+        presentation.rootItem.getType().equals(SERIE) && presentation.state.get() == State.OVERVIEW ?
+          Buttons.create("Episodes", e -> presentation.toListState()) : createPlayButton(presentation),
+        presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
+          createRelatedButton(presentation) :
+          Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.getValue()))
+      );
     }
+  }
+
+  private static MultiButton createPlayButton(ProductionPresentation presentation) {
+    List<Button> nodes = new ArrayList<>();
+
+    if(presentation.resume.enabledProperty().getValue()) {
+      nodes.add(create("Resume", "From " + SizeFormatter.SECONDS_AS_POSITION.format(presentation.resume.resumePosition.getValue().toSeconds()), e -> presentation.resume.trigger(e)));
+      nodes.add(create("Play", "From start", e -> presentation.play.trigger(e)));
+    }
+    else {
+      nodes.add(Buttons.create(presentation.play));
+    }
+
+    if(presentation.state.get() == State.OVERVIEW) {
+      nodes.add(Buttons.create(presentation.playTrailer));
+    }
+
+    return new MultiButton(nodes);
+  }
+
+  private MultiButton createRelatedButton(ProductionPresentation presentation) {
+    List<Button> nodes = new ArrayList<>();
+
+    nodes.add(Buttons.create("cast", "Cast & Crew", e -> navigateToCastAndCrew(e, presentation.rootItem)));
+    nodes.add(Buttons.create("recommended", "Recommended", e -> navigateToRecommendations(e, presentation.rootItem)));
+
+    presentation.rootItem.getParent().filter(p -> p.getType().equals(COLLECTION))
+      .ifPresent(p -> {
+        nodes.add(Buttons.create("collection", "Collection", e -> navigateToCollection(e, p.getId())));
+      });
+
+    return new MultiButton(nodes);
   }
 
   private void navigateToCastAndCrew(ActionEvent event, Work work) {

@@ -276,21 +276,41 @@
       .bold;
     }
 
+    .button
+    {
+      -fx-max-width: 1000;
+    }
 
     .button.focused .text,
-    .button:focused .text 
+    .button:focused .text
     {
       -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.6), 4, 0.0, 4, 4);
     }
 
-    .button.focused, 
-    .button:focused 
+    .button.focused,
+    .button:focused
     {
       -fx-background-color:
         radial-gradient(center 50% -40%, radius 200%, rgba(170, 170, 170, 0.375) 45%, rgba(68, 68, 68, 0.375) 50%),
         radial-gradient(center 50% 10%, radius 80%, rgba(170, 170, 170, 0.375) 15%, rgba(68, 68, 68, 0.375) 50%);
 
       -fx-effect: dropshadow(gaussian, rgba(255, 165, 0, 0.8), 10, 0.4, 0, 0);
+    }
+
+    .overlay-up-arrow, .overlay-down-arrow {
+      -fx-font-size: 24;
+      -fx-max-width: 10000;
+      -fx-max-height: 10000;
+      -fx-text-fill: rgba(255, 255, 255, 0.3);
+      -fx-padding: 0 7 0 0;
+    }
+
+    .overlay-up-arrow {
+      -fx-alignment: top-right;
+    }
+
+    .overlay-down-arrow {
+      -fx-alignment: bottom-right;
     }
   }
 

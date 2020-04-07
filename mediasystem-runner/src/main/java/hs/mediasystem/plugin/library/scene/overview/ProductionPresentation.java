@@ -88,7 +88,6 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   private final ObjectProperty<ButtonState> internalButtonState = new SimpleObjectProperty<>(ButtonState.MAIN);
 
   public final ReadOnlyObjectProperty<State> state = new SimpleReadOnlyObjectProperty<>(internalState);
-  public final ReadOnlyObjectProperty<ButtonState> buttonState = new SimpleReadOnlyObjectProperty<>(internalButtonState);
 
   public final List<Work> episodeItems;
   public final Var<Work> episodeItem = Var.newSimpleVar(null);
@@ -179,22 +178,15 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   @Override
   public void navigateBack(Event e) {
-    switch(buttonState.get()) {
-    case PLAY_RESUME:
-    case RELATED:
-      internalButtonState.set(ButtonState.MAIN);
+    switch(state.get()) {
+    case OVERVIEW:
+      return;
+    case LIST:
+      internalState.set(State.OVERVIEW);
       break;
-    case MAIN:
-      switch(state.get()) {
-      case OVERVIEW:
-        return;
-      case LIST:
-        internalState.set(State.OVERVIEW);
-        break;
-      case EPISODE:
-        internalState.set(State.LIST);
-        break;
-      }
+    case EPISODE:
+      internalState.set(State.LIST);
+      break;
     }
 
     e.consume();
