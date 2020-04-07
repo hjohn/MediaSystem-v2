@@ -7,7 +7,7 @@
 
   .title-panel {
     -fx-background-color: lighten(@glass-color, 20%, relative);
-    -fx-padding: 16;
+    -fx-padding: 8 16 12 16;
     -fx-border-width: 0 0 2 0;
     -fx-border-color: lighten(@glass-color, 25%, relative);
 
@@ -33,29 +33,15 @@
   }
 
   .dynamic-panel {
-    -fx-background-color: -c-dark-glass;
+    .overview-panel, .episode-panel {
+      -fx-padding: 12 16 12 16;
+    }
 
-    .media-grid-view {
-      .cell-box {
-        -fx-alignment: CENTER;
-      }
-
-      .place-holder {
-        -fx-alignment: center;
-        -fx-text-fill: -c-text-watermark;
-        -fx-font-size: 70;
-        // Removed border, as the place-holder here could be for 4:3 or 16:9 images, which makes the fade-in/out look 
-        // ugly as the border shines through the middle of image during that process
-        //-fx-border-color: @glass-color;
-        //-fx-border-width: 2;
-        //-fx-border-insets: -2;
-        -fx-padding: 40;
-      }
+    .overview-panel, .episode-panel, .episode-list-dynamic-panel {
+      -fx-background-color: @glass-color;
     }
 
     .overview-dynamic-panel {
-      -fx-padding: 16;
-
       .label.tag-line {
         .style-p2;
         -fx-wrap-text: true;
@@ -111,8 +97,6 @@
     }
 
     .episode-dynamic-panel {
-      -fx-padding: 16;
-
       .episode-panel {
         -fx-spacing: 15;
 
@@ -152,50 +136,70 @@
       }
     }
 
-    .season-bar {
-      .items {
-        -fx-spacing: 15;
-      }
+    .episode-list-dynamic-panel {
+      .media-grid-view {
+        .cell-box {
+          -fx-alignment: CENTER;
+        }
 
-      -fx-padding: 8 16 8 16;
-      -fx-background-color: fade(black, 20%);
-      -fx-border-color: -c-dark-glass;
-      -fx-border-width: 0 0 2 0;
-
-      .label {
-        .style-heading2;
-        -fx-text-fill: darken(@text-accent, 20%, relative);
-        -fx-padding: 5;
-
-        &.focused {
-          -fx-text-fill: lighten(@text-accent, 20%, relative);
+        .place-holder {
+          -fx-alignment: center;
+          -fx-text-fill: -c-text-watermark;
+          -fx-font-size: 70;
+          // Removed border, as the place-holder here could be for 4:3 or 16:9 images, which makes the fade-in/out look 
+          // ugly as the border shines through the middle of image during that process
+          //-fx-border-color: @glass-color;
+          //-fx-border-width: 2;
+          //-fx-border-insets: -2;
+          -fx-padding: 40;
         }
       }
 
-      .graphic, .graphic-bg {
-        -fx-min-width: 15px;
-        -fx-max-width: 15px;
-        -fx-min-height: 15px;
-        -fx-max-height: 15px;
-        -fx-translate-x: 7px;
-        -fx-translate-y: 15px;
-      }
+      .season-bar {
+        .items {
+          -fx-spacing: 15;
+        }
 
-      .watched .graphic {
-        -fx-shape: @shape-checkmark;
-        -fx-background-color: rgba(125, 255, 125, 0.5);
-      }
+        -fx-padding: 8 16 8 16;
+        -fx-background-color: fade(black, 20%);
+        -fx-border-color: -c-dark-glass;
+        -fx-border-width: 0 0 2 0;
 
-      .unavailable .graphic {
-        -fx-shape: @shape-cross;
-        -fx-background-color: rgba(255, 0, 0, 0.5);
-      }
+        .label {
+          .style-heading2;
+          -fx-text-fill: darken(@text-accent, 20%, relative);
+          -fx-padding: 5;
 
-      .watched .graphic-bg, .unavailable .graphic-bg {
-        -fx-shape: @shape-disc;
-        -fx-background-color: rgba(0, 0, 0, 0.6);
-        -fx-scale-x: 1.1;
-        -fx-scale-y: 1.1;
+          &.focused {
+            -fx-text-fill: lighten(@text-accent, 20%, relative);
+          }
+        }
+
+        .graphic, .graphic-bg {
+          -fx-min-width: 15px;
+          -fx-max-width: 15px;
+          -fx-min-height: 15px;
+          -fx-max-height: 15px;
+          -fx-translate-x: 7px;
+          -fx-translate-y: 15px;
+        }
+
+        .watched .graphic {
+          -fx-shape: @shape-checkmark;
+          -fx-background-color: rgba(125, 255, 125, 0.5);
+        }
+
+        .unavailable .graphic {
+          -fx-shape: @shape-cross;
+          -fx-background-color: rgba(255, 0, 0, 0.5);
+        }
+
+        .watched .graphic-bg, .unavailable .graphic-bg {
+          -fx-shape: @shape-disc;
+          -fx-background-color: rgba(0, 0, 0, 0.6);
+          -fx-scale-x: 1.1;
+          -fx-scale-y: 1.1;
+        }
       }
     }
   }
@@ -216,7 +220,10 @@
 
   .navigation-area
   {
-    -fx-padding: 15 0 0 0;
+    -fx-padding: 8 16 8 16;
+    -fx-border-width: 1.5 0 0 0;
+    -fx-border-color: lighten(@glass-color, 10%, relative);
+    -fx-background-color: fadein(@glass-color, 5%, relative);
   }
 
   .navigation-area {
@@ -254,7 +261,7 @@
         -fx-alignment: center;
       }
 
-      .text 
+      .text
       {
         -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 3, 0.0, 3, 3);
       }
@@ -284,6 +291,29 @@
         radial-gradient(center 50% 10%, radius 80%, rgba(170, 170, 170, 0.375) 15%, rgba(68, 68, 68, 0.375) 50%);
 
       -fx-effect: dropshadow(gaussian, rgba(255, 165, 0, 0.8), 10, 0.4, 0, 0);
+    }
+  }
+
+  .stream-info-panel {
+    -fx-padding: 8 16 8 16;
+    -fx-alignment: center;
+    -fx-spacing: -5;
+
+    .duration-box, .last-watched-box {
+      -fx-alignment: center-left;
+      -fx-spacing: 10;
+    }
+
+    .duration-text, .last-watched-text {
+      -fx-alignment: center;
+      -fx-font-size: 14;
+      .medium;
+    }
+
+    .duration-icon, .last-watched-icon {
+      -fx-alignment: center;
+      -fx-font-size: 20;
+      .medium;
     }
   }
 }

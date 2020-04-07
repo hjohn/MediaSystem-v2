@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
@@ -17,6 +18,7 @@ import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
+import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
@@ -27,11 +29,13 @@ import hs.mediasystem.util.javafx.control.StarRating;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
 import hs.mediasystem.util.javafx.control.status.StatusIndicator;
-import hs.mediasystem.util.javafx.control.transition.TransitionPane;
 import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
+import hs.mediasystem.util.javafx.control.transition.TransitionPane;
 import hs.mediasystem.util.javafx.control.transition.multi.Scroll;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -189,12 +193,32 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       borderPane.setMinHeight(1);
       borderPane.setPrefHeight(1);
       borderPane.setCenter(outer);
-      borderPane.setBottom(navigationButtonsFactory.create(presentation));
+      borderPane.setBottom(work.getPrimaryStream()
+        .filter(ms -> ms.getAttributes().getSize().isPresent())
+        .map(ms -> Containers.stack(navigationButtonsFactory.create(presentation), buildStreamInfoPanel(ms)))
+        .orElseGet(() -> Containers.stack(navigationButtonsFactory.create(presentation)))
+      );
       borderPane.getStyleClass().add("overview-dynamic-panel");
 
       VBox.setVgrow(borderPane, Priority.ALWAYS);
 
       return Containers.vbox("dynamic-panel", borderPane);
+    }
+
+    private Pane buildStreamInfoPanel(MediaStream stream) {
+      return Containers.vbox(
+        "stream-info-panel",
+        stream.getMetaData().map(md -> Containers.hbox(
+          "duration-box",
+          Labels.create("duration-icon", "🕑"),
+          Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(md.getLength().toSeconds()))
+        )).orElse(null),
+        stream.getState().getLastConsumptionTime().map(time -> Containers.hbox(
+          "last-watched-box",
+          Labels.create("last-watched-icon", "📷"),
+          Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
+        )).orElse(null)
+      );
     }
 
     private Pane buildEpisodeListUI() {
@@ -277,7 +301,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         }
       });
 
-      return Containers.vbox("dynamic-panel", seasonsBar, gridView);
+      return Containers.vbox("dynamic-panel", Containers.vbox("episode-list-dynamic-panel", seasonsBar, gridView));
     }
 
     private Pane buildEpisodeDynamicUI() {
@@ -285,20 +309,33 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       List<Work> episodes = presentation.episodeItems;
       TransitionPane transitionPane = new TransitionPane(new Scroll(), buildEpisodeUI());
+      TransitionPane streamInfoPane = new TransitionPane(StandardTransitions.fade(250, 500));
       BorderPane borderPane = new BorderPane();
 
       EventStreams.changesOf(presentation.episodeItem)
         .conditionOnShowing(borderPane)
-        .subscribe(c -> transitionPane.add(episodes.indexOf(c.getOldValue()) > episodes.indexOf(c.getNewValue()), buildEpisodeUI()));
+        .subscribe(c -> {
+          transitionPane.add(episodes.indexOf(c.getOldValue()) > episodes.indexOf(c.getNewValue()), buildEpisodeUI());
+
+          updateStreamInfoPane(streamInfoPane);
+        });
+
+      updateStreamInfoPane(streamInfoPane);
 
       borderPane.setCenter(transitionPane);
-      borderPane.setBottom(navigationButtonsFactory.create(presentation));
+      borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(presentation), streamInfoPane));
       borderPane.getProperties().put("presentation2", new EpisodePresentation(presentation));
       borderPane.getStyleClass().add("episode-dynamic-panel");
 
       VBox.setVgrow(borderPane, Priority.ALWAYS);
 
       return Containers.vbox("dynamic-panel", borderPane);
+    }
+
+    private void updateStreamInfoPane(TransitionPane streamInfoPane) {
+      presentation.episodeItem.getValue().getPrimaryStream().filter(ms -> ms.getAttributes().getSize().isPresent()).ifPresent(ms -> {
+        streamInfoPane.add(buildStreamInfoPanel(ms));
+      });
     }
 
     private HBox buildEpisodeUI() {
