@@ -37,12 +37,7 @@ public class TransitionPane extends Region {
   public TransitionPane(MultiNodeTransition transition, Node initial) {
     this.transition = transition;
 
-    Rectangle clip = new Rectangle();
-
-    clip.widthProperty().bind(widthProperty());
-    clip.heightProperty().bind(heightProperty());
-
-    setClip(clip);
+    setClipContent(true);
 
     if(initial != null) {
       add(initial);
@@ -55,6 +50,20 @@ public class TransitionPane extends Region {
 
   public TransitionPane() {
     this(new Custom(new EffectList(Duration.millis(500), List.of(new Fade()))));
+  }
+
+  public void setClipContent(boolean clipContent) {
+    if(clipContent) {
+      Rectangle clip = new Rectangle();
+
+      clip.widthProperty().bind(widthProperty());
+      clip.heightProperty().bind(heightProperty());
+
+      setClip(clip);
+    }
+    else {
+      setClip(null);
+    }
   }
 
   private void add(int index, Node child) {
