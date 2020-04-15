@@ -1,15 +1,18 @@
 package hs.mediasystem.util.javafx.control.csslayout;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.parser.CssStyle;
-import hs.mediasystem.util.parser.Cursor;
-import hs.mediasystem.util.parser.Parser;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -22,7 +25,7 @@ import javafx.scene.layout.VBox;
 /**
  * Creates new nodes for CSS based layout.<p>
  *
- * Accepted format: <code>([container-type]:)[style-name] ({ [key=value] (...) )(, ...) }</code><p>
+ * Accepted format: <code>[(container-type!)style-name: ({key: value (, ...) })(, ...)]</code><p>
  *
  * Where:<ul>
  *   <li>{@code container-type} is optionally one of {@code HBox, VBox, Stack}</li>
@@ -37,17 +40,55 @@ import javafx.scene.layout.VBox;
  *   </ul>
  *
  * Examples:<ul>
- * <li><code>title, VBox:subtitle-block { hgrow=ALWAYS}, VBox:side-box</code></li>
+ * <li><code>[title, VBox!subtitle-block: {hgrow: ALWAYS}, VBox!side-box]</code></li>
  * </ul>
  */
 public class CssLayoutFactory {
-  private static final Parser PARSER = new Parser(CssStyle.class);
   private static final String POTENTIALS = "css-layout-factory.potential-children";
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
+
+  private static ChildDefinition toChildDefinition(Object obj) {
+    if(obj instanceof String) {
+      return new ChildDefinition((String)obj, Map.of());
+    }
+
+    if(obj instanceof Map) {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> map = (Map<String, Object>)obj;
+
+      if(map.size() != 1) {
+        throw new IllegalStateException("Expected map of exactly 1 element: " + map);
+      }
+
+      Map.Entry<String, Object> entry = map.entrySet().iterator().next();
+
+      @SuppressWarnings("unchecked")
+      Map<String, Object> value = (Map<String, Object>)entry.getValue();
+
+      return new ChildDefinition(entry.getKey(), value);
+    }
+
+    throw new IllegalStateException("Did not expect type: " + obj);
+  }
+
+  private static List<ChildDefinition> fromYaml(String v) {
+    try {
+      List<Object> list = OBJECT_MAPPER.readValue(v, new TypeReference<List<Object>>() {});
+
+      return list.stream()
+        .map(CssLayoutFactory::toChildDefinition)
+        .collect(Collectors.toList());
+    }
+    catch(IOException e) {
+      throw new IllegalStateException("Problem parsing \"" + v + "\"", e);
+    }
+  }
 
   public static List<Node> createNewChildren(String v, Pane parent) {
     List<Node> newChildren = new ArrayList<>();
     List<Node> children = new ArrayList<>(parent.getChildren());
-    List<ChildDefinition> childDefinitions = createChildDefinitions(new Cursor(PARSER.parse(v)));
+    List<ChildDefinition> childDefinitions = fromYaml(v);
 
     @SuppressWarnings("unchecked")
     List<Node> potentialChildren = (List<Node>)parent.getProperties().getOrDefault(POTENTIALS, List.of());
@@ -85,19 +126,19 @@ public class CssLayoutFactory {
         node.getProperties().put(POTENTIALS, children);
       }
 
-      String hgrow = childDef.getOptions().get("hgrow");
+      String hgrow = childDef.getString("hgrow");
 
       if(hgrow != null) {
         HBox.setHgrow(node, Priority.valueOf(hgrow.toUpperCase()));
       }
 
-      String vgrow = childDef.getOptions().get("vgrow");
+      String vgrow = childDef.getString("vgrow");
 
       if(vgrow != null) {
         VBox.setVgrow(node, Priority.valueOf(vgrow.toUpperCase()));
       }
 
-      String align = childDef.getOptions().get("align");
+      String align = childDef.getString("align");
 
       if(align != null) {
         StackPane.setAlignment(node, Pos.valueOf(align.toUpperCase()));
@@ -109,80 +150,31 @@ public class CssLayoutFactory {
     return newChildren;
   }
 
-  private static List<ChildDefinition> createChildDefinitions(Cursor cursor) {
-    List<ChildDefinition> definitions = new ArrayList<>();
-
-    while(!cursor.current().isEnd()) {
-      String type = null;
-      String name = null;
-
-      if(cursor.current().getType() == CssStyle.IDENTIFIER) {
-        if(cursor.next().matches(CssStyle.OPERATOR, ":")) {
-          type = cursor.getAs(CssStyle.IDENTIFIER);
-          name = cursor.advance(2).getAs(CssStyle.IDENTIFIER);
-        }
-        else if(cursor.next().getType() == CssStyle.OPERATOR || cursor.next().isEnd()) {
-          name = cursor.getAs(CssStyle.IDENTIFIER);
-        }
-
-        Map<String, String> parameters;
-
-        cursor.advance().expectTypeOrEnd(CssStyle.OPERATOR, ",", "{");
-
-        if(cursor.current().getType() == CssStyle.OPERATOR && cursor.current().getText().equals("{")) {
-          cursor.advance();
-          parameters = toParameters(cursor);
-          cursor.expect(CssStyle.OPERATOR, "}");
-          cursor.advance();
-        }
-        else {
-          parameters = Map.of();
-        }
-
-        definitions.add(new ChildDefinition(type, name, parameters));
-
-        if(cursor.current().getType() == CssStyle.OPERATOR && cursor.current().getText().equals(",")) {
-          cursor.advance();
-        }
-      }
-      else {
-        throw new IllegalArgumentException("Unexpected " + cursor.current().getText());
-      }
-    }
-
-    return definitions;
-  }
-
-  private static Map<String, String> toParameters(Cursor cursor) {
-    Map<String, String> parameters = new HashMap<>();
-
-    while(!cursor.current().isEnd() && !cursor.current().matches(CssStyle.OPERATOR, "}")) {
-      String name = cursor.getAs(CssStyle.IDENTIFIER);
-      String value = null;
-
-      cursor.advance();
-
-      if(cursor.current().matches(CssStyle.OPERATOR, "=")) {
-        value = cursor.advance().getAs(CssStyle.IDENTIFIER);
-      }
-
-      parameters.put(name, value);
-
-      cursor.advance();
-    }
-
-    return parameters;
-  }
-
   private static class ChildDefinition {
     private final String type;
     private final String name;
-    private final Map<String, String> options;
+    private final Map<String, Object> options;
 
-    public ChildDefinition(String type, String name, Map<String, String> options) {
+    public ChildDefinition(String type, String name, Map<String, Object> options) {
       this.type = type;
       this.name = name;
       this.options = options;
+    }
+
+    public ChildDefinition(String name, Map<String, Object> options) {
+      this(extractType(name), extractName(name), options);
+    }
+
+    private static String extractName(String name) {
+      int mark = name.indexOf("!");
+
+      return mark >= 0 ? name.substring(mark + 1) : name;
+    }
+
+    private static String extractType(String name) {
+      int mark = name.indexOf("!");
+
+      return mark >= 0 ? name.substring(0, mark) : null;
     }
 
     public String getType() {
@@ -193,8 +185,29 @@ public class CssLayoutFactory {
       return name;
     }
 
-    public Map<String, String> getOptions() {
-      return options;
+    public String getString(String optionName) {
+      return (String)options.get(optionName);
+    }
+
+    public <T> Optional<List<T>> getList(String optionName, Class<T> cls, int count) {
+      Object obj = options.get(optionName);
+
+      if(obj == null) {
+        return Optional.empty();
+      }
+
+      if(obj instanceof List) {
+        @SuppressWarnings("unchecked")
+        List<T> list = (List<T>)obj;
+
+        if(list.size() == count) {
+          if(list.stream().allMatch(e -> cls.isInstance(e))) {
+            return Optional.of(list);
+          }
+        }
+      }
+
+      throw new IllegalArgumentException("Expected list of type " + cls + " with " + count + " elements: " + obj);
     }
   }
 }

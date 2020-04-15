@@ -55,18 +55,18 @@
 
       &.horizontal {
         // Extra container so selection box exactly wraps content, not the entire cell
-        -fx-layout: "VBox:content";
+        -fx-layout: "[VBox!content]";
 
         .content {
-          -fx-layout: "VBox:image-box, name, detail";
+          -fx-layout: "[VBox!image-box, name, detail]";
         }
 
         .image-box {
-          -fx-layout: "scaled-image-view, HBox:side-detail";
+          -fx-layout: "[scaled-image-view, HBox!side-detail]";
         }
 
         .side-detail {
-          -fx-layout: "extra-horizontal-1 { hgrow = SOMETIMES }, extra-horizontal-2 { hgrow = ALWAYS }, indicator-pane";
+          -fx-layout: "[extra-horizontal-1: {hgrow: SOMETIMES}, extra-horizontal-2: {hgrow: ALWAYS}, indicator-pane]";
 
           -fx-background-color: linear-gradient(to bottom, -c-dark-glass, black);
           -fx-padding: -2 5 2 5;
@@ -79,10 +79,10 @@
 
       &.vertical {
         // Extra container so selection box exactly wraps content, not the entire cell, for vertical also vgrow is set
-        -fx-layout: "VBox:content { vgrow = ALWAYS }";
+        -fx-layout: "[VBox!content: {vgrow: ALWAYS}]";
 
         .content {
-          -fx-layout: "HBox:image-box { vgrow = ALWAYS }, name, detail";
+          -fx-layout: "[HBox!image-box: {vgrow: ALWAYS}, name, detail]";
         }
 
         .image-box {
@@ -90,7 +90,7 @@
         }
 
         .side-detail {
-          -fx-layout: "extra-vertical-1 { vgrow = SOMETIMES }, extra-vertical-2 { vgrow = ALWAYS }, indicator-pane";
+          -fx-layout: "[extra-vertical-1: {vgrow: SOMETIMES}, extra-vertical-2: {vgrow: ALWAYS}, indicator-pane]";
 
           -fx-background-color: linear-gradient(to right, -c-dark-glass, black);
           -fx-padding: 5 0 5 0;

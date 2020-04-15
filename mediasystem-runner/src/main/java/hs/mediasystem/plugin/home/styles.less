@@ -30,7 +30,7 @@
   }
   
   .overlay {
-    -fx-layout: "status-indicator, Stack:stack-box { hgrow=ALWAYS }";
+    -fx-layout: "[status-indicator, Stack!stack-box: {hgrow: ALWAYS}]";
     
     -fx-background-color: @glass-color;
     -fx-fill-height: true;
@@ -63,7 +63,7 @@
     }
     
     .stack-box {
-      -fx-layout: "VBox:title-box, sequence { align=CENTER_RIGHT }, age { align=BOTTOM_RIGHT }";
+      -fx-layout: "[VBox!title-box, sequence: {align: CENTER_RIGHT}, age: {align: BOTTOM_RIGHT}]";
     
       .sequence {
         -fx-font-size: 32;
@@ -79,7 +79,7 @@
     }
     
     .title-box {
-      -fx-layout: "parent-title, title, subtitle";
+      -fx-layout: "[parent-title, title, subtitle]";
       
       -fx-alignment: CENTER_LEFT;
       -fx-spacing: -0.25em;
