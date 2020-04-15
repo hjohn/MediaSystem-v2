@@ -69,7 +69,7 @@
     <dependency>
       <groupId>de.inetsoftware</groupId>
       <artifactId>jlessc</artifactId>
-      <version>1.5</version>
+      <version>1.9</version>
     </dependency>
 
     <!-- Test Dependencies -->
