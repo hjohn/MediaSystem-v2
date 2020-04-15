@@ -127,6 +127,10 @@ public class BiasedImageView extends Region {
     this(placeHolder, 16.0 / 9);
   }
 
+  public BiasedImageView(double expectedAspectRatio) {
+    this(null, expectedAspectRatio);
+  }
+
   public BiasedImageView() {
     this(null);
   }
