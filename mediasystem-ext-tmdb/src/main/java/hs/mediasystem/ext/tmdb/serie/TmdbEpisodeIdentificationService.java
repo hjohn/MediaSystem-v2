@@ -98,7 +98,7 @@ public class TmdbEpisodeIdentificationService extends AbstractIdentificationServ
 
       for(String joinedString : combinations(title, subtitle, sequence)) {
         for(Episode episode : season.getEpisodes()) {
-          String name = episode.getDetails().getName();
+          String name = episode.getDetails().getTitle();
           float match = (float)WeightedNgramDistance.calculate(name, joinedString);
 
           if(match > 0.5 && match > bestMatch) {

@@ -260,12 +260,13 @@ public class WorkService {
 
   Work toWork(MediaDescriptor descriptor, MediaDescriptor parentDescriptor) {
     if(parentDescriptor != null) {
-      Parent parent = new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), parentDescriptor.getDetails().getName());
+      Parent parent = new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), parentDescriptor.getDetails().getTitle());
       Episode ep = (Episode)descriptor;
       Episode episode = new Episode(  // New Episode created here to add backdrop to Episode if one is missing
         (EpisodeIdentifier)ep.getIdentifier(),
         new Details(
-          ep.getName(),
+          ep.getTitle(),
+          ep.getDetails().getSubtitle().orElse(null),
           ep.getDescription().orElse(null),
           ep.getDate().orElse(null),
           ep.getImage().orElse(null),
@@ -330,13 +331,13 @@ public class WorkService {
 
       return movie.getCollectionIdentifier()
         .flatMap(ci -> find(toWorkId(ci)))
-        .map(r -> new Parent(r.getId(), r.getDetails().getName()))
+        .map(r -> new Parent(r.getId(), r.getDetails().getTitle()))
         .orElse(null);
     }
 
     if(descriptor instanceof Episode) {
       return descriptorStore.find(descriptor.getIdentifier().getRootIdentifier())
-        .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getName()))
+        .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getTitle()))
         .orElse(null);
     }
 

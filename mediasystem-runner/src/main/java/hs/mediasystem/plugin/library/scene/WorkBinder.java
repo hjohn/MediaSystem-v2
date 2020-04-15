@@ -34,7 +34,7 @@ import org.reactfx.value.Var;
 
 @Singleton
 public class WorkBinder implements Binder<Work>, IDBinder<Work> {
-  public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL));
+  public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Comparator.comparing(Details::getTitle, NaturalLanguage.ALPHABETICAL));
   public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
   public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().getValue(), Comparator.nullsLast(Comparator.naturalOrder())));
 
@@ -50,7 +50,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
 
   @Override
   public Function<Work, ObservableValue<? extends String>> titleBindProvider() {
-    return r -> new SimpleStringProperty(r.getDetails().getName());
+    return r -> new SimpleStringProperty(r.getDetails().getTitle());
   }
 
   @Override

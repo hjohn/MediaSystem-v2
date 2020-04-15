@@ -30,7 +30,7 @@ public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup
 
   @Override
   public Function<WorksGroup, ObservableValue<? extends String>> titleBindProvider() {
-    return wg -> new SimpleStringProperty(wg.getDetails().getName());
+    return wg -> new SimpleStringProperty(wg.getDetails().getTitle());
   }
 
   @Override

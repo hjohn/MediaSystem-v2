@@ -43,7 +43,7 @@ public class RecommendationMenuOptionAdapter implements MenuOption {
 
   @Override
   public String getTitle() {
-    return getDetails().getName();
+    return getDetails().getTitle();
   }
 
   @Override

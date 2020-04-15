@@ -95,6 +95,7 @@ public class ObjectFactory {
 
     return new Details(
       node.get("title") == null ? node.get("name").textValue() : node.get("title").textValue(),
+      null,
       node.path("overview").textValue(),
       parseDate(releaseDate),
       posterURI,

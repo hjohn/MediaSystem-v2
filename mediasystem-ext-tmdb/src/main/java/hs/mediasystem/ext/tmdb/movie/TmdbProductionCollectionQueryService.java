@@ -33,6 +33,7 @@ public class TmdbProductionCollectionQueryService implements ProductionCollectio
         new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText()),
         new Details(
           node.path("name").asText(),
+          null,
           node.path("overview").asText(),
           null,
           tmdb.createImageURI(node.path("poster_path").textValue(), "original"),

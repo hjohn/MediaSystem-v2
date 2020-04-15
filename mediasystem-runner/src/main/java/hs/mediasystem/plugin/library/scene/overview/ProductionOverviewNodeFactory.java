@@ -101,7 +101,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       poster.setOrientation(Orientation.VERTICAL);
       poster.imageProperty().bind(imageProperty);
 
-      Label titleLabel = Labels.create("title", work.getDetails().getName());
+      Label titleLabel = Labels.create("title", work.getDetails().getTitle());
 
       if(titleLabel.getText().length() > 40) {
         titleLabel.getStyleClass().add("smaller");
@@ -363,7 +363,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       String formattedDate = MediaItemFormatter.formattedLocalDate(work.getDetails().getReleaseDate().orElse(null));
       String subtitle = createSeasonEpisodeText(work) + (formattedDate == null ? "" : " • " + formattedDate);
 
-      Label titleLabel = Labels.create("title", presentation.episodeItem.getValue().getDetails().getName());
+      Label titleLabel = Labels.create("title", presentation.episodeItem.getValue().getDetails().getTitle());
 
       titleLabel.setMinHeight(Region.USE_PREF_SIZE);  // With reflowed labels, sometimes not enough vertical space is assigned and the reflow fails to use the next line and adds an ellipsis instead...
 

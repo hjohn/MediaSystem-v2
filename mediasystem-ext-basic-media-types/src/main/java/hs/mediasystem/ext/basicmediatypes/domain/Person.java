@@ -19,7 +19,7 @@ public class Person implements MediaDescriptor {
 
     this.identifier = identifier;
     this.name = name;
-    this.details = new Details(name, null, null, image, null);
+    this.details = new Details(name, null, null, null, image, null);
     this.image = image;
   }
 

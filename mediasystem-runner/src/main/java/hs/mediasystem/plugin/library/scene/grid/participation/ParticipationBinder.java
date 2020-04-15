@@ -31,7 +31,7 @@ public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Part
 
   @Override
   public Function<Participation, ObservableValue<? extends String>> titleBindProvider() {
-    return c -> new SimpleStringProperty(c.getWork().getDetails().getName());
+    return c -> new SimpleStringProperty(c.getWork().getDetails().getTitle());
   }
 
   @Override

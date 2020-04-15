@@ -25,7 +25,7 @@ public class ParticipationsPresentation extends GridViewPresentation<Participati
 
   private static final List<SortOrder<Participation>> SORT_ORDERS = List.of(
     new SortOrder<>("popularity", Comparator.comparing((Participation p) -> p.getPopularity()).reversed()),
-    new SortOrder<>("alpha", Comparator.comparing(p -> p.getWork().getDetails(), Comparator.comparing(Details::getName, NaturalLanguage.ALPHABETICAL))),
+    new SortOrder<>("alpha", Comparator.comparing(p -> p.getWork().getDetails(), Comparator.comparing(Details::getTitle, NaturalLanguage.ALPHABETICAL))),
     new SortOrder<>("release-date", Comparator.comparing(p -> p.getWork().getDetails(), Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()))))
   );
 

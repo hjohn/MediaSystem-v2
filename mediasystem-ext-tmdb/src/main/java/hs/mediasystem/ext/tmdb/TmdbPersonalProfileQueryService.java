@@ -86,6 +86,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
       new ProductionIdentifier(DataSource.instance(isMovie ? MOVIE : SERIE, "TMDB"), node.get("id").asText()),
       new Details(
         isMovie ? node.path("title").textValue() : node.path("name").textValue(),
+        null,
         node.path("overview").textValue(),
         TheMovieDatabase.parseDateOrNull(releaseDate),
         posterURI,

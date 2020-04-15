@@ -23,6 +23,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
 import hs.mediasystem.mediamanager.StreamableStore;
+import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.Throwables;
 
@@ -35,6 +36,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -81,7 +83,8 @@ public class LocalQueryService extends AbstractQueryService {
           new EpisodeIdentifier(EPISODE, identifier.getId() + "/" + seasonNumber + "/" + episodeNumber),
           new Details(
             childStream.getAttributes().get(Attribute.TITLE),
-            null,
+            childStream.getAttributes().get(Attribute.SUBTITLE),
+            childStream.getAttributes().get(Attribute.DESCRIPTION),
             null,
             new ImageURI("localdb://" + childStream.getId().getContentId().asInt() + "/1"),
             null
@@ -102,26 +105,29 @@ public class LocalQueryService extends AbstractQueryService {
         null,
         null,
         null,
+        null,
         null
       ),
       e.getKey(),
       e.getValue()
     )).collect(Collectors.toList());
 
-    Description description = loadDescription(streamable);
+    Optional<Description> description = loadDescription(streamable);
+    Attributes attributes = streamable.getAttributes();
 
     return new Serie(
       (ProductionIdentifier)identifier,
       new Details(
-        description == null || description.getTitle() == null ? streamable.getAttributes().get(Attribute.TITLE) : description.getTitle(),
-        description == null ? null : description.getDescription(),
-        description == null ? null : description.getDate(),
+        description.map(Description::getTitle).orElse(attributes.get(Attribute.TITLE)),
+        description.map(Description::getSubtitle).orElse(attributes.get(Attribute.SUBTITLE)),
+        description.map(Description::getDescription).orElse(attributes.get(Attribute.ALTERNATIVE_TITLE)),
+        description.map(Description::getDate).orElse(null),
         new ImageURI(streamable.getUri().toString() + "/cover.jpg"),
         new ImageURI(streamable.getUri().toString() + "/backdrop.jpg")
       ),
       null,
       Collections.emptyList(),
-      description == null ? Collections.emptyList() : description.getGenres(),
+      description.map(Description::getGenres).orElse(List.of()),
       Collections.emptyList(),
       null,
       null,
@@ -131,19 +137,19 @@ public class LocalQueryService extends AbstractQueryService {
     );
   }
 
-  private static Description loadDescription(Streamable streamable) {
+  public static Optional<Description> loadDescription(Streamable streamable) {
     String urlText = streamable.getUri().toString() + "/description.yaml";
 
     try {
-      return OBJECT_MAPPER.readValue(new URL(urlText), Description.class);
+      return Optional.of(OBJECT_MAPPER.readValue(new URL(urlText), Description.class));
     }
     catch(ConnectException e) {
       // ignore, file just doesn't exist
-      return null;
+      return Optional.empty();
     }
     catch(IOException e) {
       LOGGER.warning("Exception while parsing " + urlText + ": " + Throwables.formatAsOneLine(e));
-      return null;
+      return Optional.empty();
     }
   }
 }

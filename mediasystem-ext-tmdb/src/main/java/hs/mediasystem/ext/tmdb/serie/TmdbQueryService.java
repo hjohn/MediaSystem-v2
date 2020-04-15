@@ -64,6 +64,7 @@ public class TmdbQueryService extends AbstractQueryService {
       new ProductionIdentifier(DataSources.TMDB_SEASON, parentId + "/" + seasonNumber),
       new Details(
         node.get("name").asText(),
+        null,
         node.get("overview").asText(),
         releaseDate == null || releaseDate.isEmpty() ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
         tmdb.createImageURI(node.path("poster_path").textValue(), "original"),
@@ -85,6 +86,7 @@ public class TmdbQueryService extends AbstractQueryService {
       new EpisodeIdentifier(DataSources.TMDB_EPISODE, parentId + "/" + seasonNumber + "/" + episodeNumber),
       new Details(
         node.get("name").asText(),
+        null,
         node.get("overview").asText(),
         releaseDate == null ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
         tmdb.createImageURI(node.path("still_path").textValue(), "original"),

@@ -7,7 +7,8 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 public class Details {
-  private final String name;
+  private final String title;
+  private final Optional<String> subtitle;
   private final Optional<String> description;
   private final Optional<LocalDate> releaseDate;
   private final Optional<ImageURI> image;
@@ -19,15 +20,16 @@ public class Details {
   private final Optional<Double> popularity;
   private final Classification classification;
 
-  public Details(String name, String description, LocalDate releaseDate, ImageURI image, ImageURI backdrop, String tagline, Serie serie, Sequence sequence, Reception reception, Double popularity, Classification classification) {
-    if(name == null || name.isBlank()) {
-      throw new IllegalArgumentException("name cannot be null or blank: " + name);
+  public Details(String title, String subtitle, String description, LocalDate releaseDate, ImageURI image, ImageURI backdrop, String tagline, Serie serie, Sequence sequence, Reception reception, Double popularity, Classification classification) {
+    if(title == null || title.isBlank()) {
+      throw new IllegalArgumentException("title cannot be null or blank: " + title);
     }
     if(classification == null) {
       throw new IllegalArgumentException("classification cannot be null");
     }
 
-    this.name = name;
+    this.title = title;
+    this.subtitle = Optional.ofNullable(subtitle);
     this.description = Optional.ofNullable(description);
     this.releaseDate = Optional.ofNullable(releaseDate);
     this.image = Optional.ofNullable(image);
@@ -40,8 +42,12 @@ public class Details {
     this.classification = classification;
   }
 
-  public String getName() {
-    return name;
+  public String getTitle() {
+    return title;
+  }
+
+  public Optional<String> getSubtitle() {
+    return subtitle;
   }
 
   public Optional<String> getDescription() {

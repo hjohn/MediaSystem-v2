@@ -35,8 +35,8 @@ public class Release implements MediaDescriptor {
     return details;
   }
 
-  public String getName() {
-    return details.getName();
+  public String getTitle() {
+    return details.getTitle();
   }
 
   public Optional<String> getDescription() {

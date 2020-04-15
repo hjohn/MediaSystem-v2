@@ -68,8 +68,6 @@ public class SerieHelper {
 
   public Details createMinimalDetails(Streamable streamable) {
     Optional<StreamMetaData> metaData = metaDataProvider.find(streamable.getId().getContentId());
-    String subtitle = streamable.getAttributes().get(Attribute.SUBTITLE);
-
     ImageURI image;
     ImageURI backdrop = null;
 
@@ -82,8 +80,9 @@ public class SerieHelper {
     }
 
     return new Details(
-      streamable.getAttributes().get(Attribute.TITLE) + (subtitle == null ? "" : ": " + subtitle),
-      null,
+      streamable.getAttributes().get(Attribute.TITLE),
+      streamable.getAttributes().get(Attribute.SUBTITLE),
+      streamable.getAttributes().get(Attribute.DESCRIPTION),
       null,
       image,
       backdrop

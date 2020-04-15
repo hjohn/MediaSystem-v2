@@ -123,7 +123,7 @@ public class ContextLayout {
   private BasePanel create(Details details) {
     BasePanel panel = new BasePanel();
 
-    panel.title.set(details.getName());
+    panel.title.set(details.getTitle());
     panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getReleaseDate().orElse(null)));
     panel.overview.set(details.getDescription().orElse(null));
     panel.imageURI.set(details.getImage().orElse(null));

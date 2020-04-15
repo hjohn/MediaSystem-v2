@@ -209,7 +209,7 @@ public class DatabaseIT {
     void findShouldFindFriends() {
       Work work = workService.find(new WorkId(SERIE_DS, "S4")).get();
 
-      assertEquals("Friends", work.getDescriptor().getDetails().getName());
+      assertEquals("Friends", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
@@ -217,7 +217,7 @@ public class DatabaseIT {
     void findShouldFindFriendsEp1() {
       Work work = workService.find(new WorkId(EPISODE_DS, "S4/E5")).get();
 
-      assertEquals("Forever", work.getDescriptor().getDetails().getName());
+      assertEquals("Forever", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
@@ -225,7 +225,7 @@ public class DatabaseIT {
     void findShouldFindFriendsEp2() {
       Work work = workService.find(new WorkId(EPISODE_DS, "S4/E6")).get();
 
-      assertEquals("Never", work.getDescriptor().getDetails().getName());
+      assertEquals("Never", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
@@ -233,7 +233,7 @@ public class DatabaseIT {
     void findShouldFindFriendsEp3WithoutStreamEquivalent() {
       Work work = workService.find(new WorkId(EPISODE_DS, "S4/E7")).get();
 
-      assertEquals("Not Included", work.getDescriptor().getDetails().getName());
+      assertEquals("Not Included", work.getDescriptor().getDetails().getTitle());
       assertEquals(0, work.getStreams().size());
     }
 
@@ -249,7 +249,7 @@ public class DatabaseIT {
     void findShouldFindTerminator() {
       Work work = workService.find(new WorkId(MOVIE_DS, "T1")).get();
 
-      assertEquals("The Terminator", work.getDescriptor().getDetails().getName());
+      assertEquals("The Terminator", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
@@ -257,7 +257,7 @@ public class DatabaseIT {
     void findShouldFindAvatar() {
       Work work = workService.find(new WorkId(MOVIE_DS, "T2")).get();
 
-      assertEquals("Avatar", work.getDescriptor().getDetails().getName());
+      assertEquals("Avatar", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
@@ -265,7 +265,7 @@ public class DatabaseIT {
     void findShouldFindMatrix() {
       Work work = workService.find(new WorkId(MOVIE_DS, "T3")).get();
 
-      assertEquals("The Matrix", work.getDescriptor().getDetails().getName());
+      assertEquals("The Matrix", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
@@ -290,7 +290,7 @@ public class DatabaseIT {
       void findShouldFindTerminatorStillAlthoughItsTitleChanged() {
         Work work = workService.find(new WorkId(MOVIE_DS, "T1")).get();
 
-        assertEquals("The Terminator", work.getDescriptor().getDetails().getName());
+        assertEquals("The Terminator", work.getDescriptor().getDetails().getTitle());
         assertEquals(1, work.getStreams().size());
       }
 
@@ -298,7 +298,7 @@ public class DatabaseIT {
       void findShouldFindAvatarStillButWithoutAStream() {
         Work work = workService.find(new WorkId(MOVIE_DS, "T2")).get();
 
-        assertEquals("Avatar", work.getDescriptor().getDetails().getName());
+        assertEquals("Avatar", work.getDescriptor().getDetails().getTitle());
         assertEquals(0, work.getStreams().size());
       }
 
@@ -306,7 +306,7 @@ public class DatabaseIT {
       void findShouldFindMatrixStill() {
         Work work = workService.find(new WorkId(MOVIE_DS, "T3")).get();
 
-        assertEquals("The Matrix", work.getDescriptor().getDetails().getName());
+        assertEquals("The Matrix", work.getDescriptor().getDetails().getTitle());
         assertEquals(1, work.getStreams().size());
       }
 

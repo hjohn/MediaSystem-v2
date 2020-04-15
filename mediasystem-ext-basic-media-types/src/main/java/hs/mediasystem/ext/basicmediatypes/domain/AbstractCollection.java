@@ -46,6 +46,6 @@ public abstract class AbstractCollection<T> implements MediaDescriptor {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "['" + collectionDetails.getDetails().getName() + "' " + items + "]";
+    return getClass().getSimpleName() + "['" + collectionDetails.getDetails().getTitle() + "' " + items + "]";
   }
 }

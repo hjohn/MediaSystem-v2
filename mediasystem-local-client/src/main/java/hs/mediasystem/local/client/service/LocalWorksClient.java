@@ -79,7 +79,8 @@ public class LocalWorksClient implements WorksClient {
    */
   private static Details createDetails(MediaDescriptor descriptor, MediaDescriptor parent, Optional<ContentID> contentId) {
     return new Details(
-      descriptor.getDetails().getName(),
+      descriptor.getDetails().getTitle(),
+      descriptor.getDetails().getSubtitle().orElse(null),
       descriptor.getDetails().getDescription().orElse(null),
       descriptor.getDetails().getDate().orElse(null),
       descriptor.getDetails().getImage().or(() -> contentId.map(ContentID::asInt).map(id -> new ImageURI("localdb://" + id + "/2"))).orElse(null),

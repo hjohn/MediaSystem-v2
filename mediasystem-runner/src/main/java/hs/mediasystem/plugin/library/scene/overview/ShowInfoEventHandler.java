@@ -43,7 +43,7 @@ public class ShowInfoEventHandler {
   @Inject private ImageHandleFactory imageHandleFactory;
 
   public void handle(Event event, Work work) {
-    Label titleLabel = Labels.create("title", work.getDetails().getName());
+    Label titleLabel = Labels.create("title", work.getDetails().getTitle());
 
     if(titleLabel.getText().length() > 40) {
       titleLabel.getStyleClass().add("smaller");
