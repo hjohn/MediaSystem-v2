@@ -3,7 +3,6 @@ package hs.mediasystem.util.javafx.control.transition.effects;
 import hs.mediasystem.util.javafx.control.transition.TransitionEffect;
 
 import javafx.animation.Interpolator;
-import javafx.geometry.Bounds;
 import javafx.scene.Node;
 
 /**
@@ -52,28 +51,28 @@ public class Slide implements TransitionEffect {
 
   @Override
   public Interpolatable create(Node node, boolean invert) {
-    Bounds b = node.getLayoutBounds();
     double original = direction.isVertical() ? node.getTranslateY() : node.getTranslateX();
     double sign = (direction == Direction.RIGHT || direction == Direction.DOWN) != invert ? 1 : -1;
 
-    return new InternalInterpolatable(direction, node, original, sign * (direction.isVertical() ? b.getHeight() : b.getWidth()));
+    return new InternalInterpolatable(direction, node, original, sign);
   }
 
   private static final class InternalInterpolatable implements Interpolatable {
     final Direction direction;
     final Node node;
     final double original;
-    final double base;
+    final double sign;
 
-    InternalInterpolatable(Direction direction, Node node, double original, double base) {
+    InternalInterpolatable(Direction direction, Node node, double original, double sign) {
       this.direction = direction;
       this.node = node;
       this.original = original;
-      this.base = base;
+      this.sign = sign;
     }
 
     @Override
     public void apply(double frac) {
+      double base = sign * (direction.isVertical() ? node.getLayoutBounds().getHeight() : node.getLayoutBounds().getWidth());
       double value = base + (original - base) * frac;
 
       if(direction.isVertical()) {
