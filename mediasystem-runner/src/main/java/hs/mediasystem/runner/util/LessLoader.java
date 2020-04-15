@@ -1,6 +1,7 @@
 package hs.mediasystem.runner.util;
 
 import com.inet.lib.less.Less;
+import com.inet.lib.less.LessException;
 import com.inet.lib.less.ReaderFactory;
 
 import hs.mediasystem.util.URLs;
@@ -36,6 +37,9 @@ public class LessLoader {
       tempFile.toFile().deleteOnExit();
 
       return tempFile.toUri().toURL();
+    }
+    catch(LessException e) {
+      throw new IllegalStateException("Exception while parsing: " + url, e);
     }
     catch(IOException e) {
       throw new IllegalStateException(e);
