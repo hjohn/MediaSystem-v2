@@ -72,8 +72,13 @@ public class LocalMediaIdentificationService {
 
   private MediaIdentification performIdentificationCall(Streamable streamable, MediaDescriptor parent, IdentificationService service) {
     Identification identification = service.identify(streamable, parent).orElseThrow(() -> new UnknownStreamableException(streamable, service));
+    Identifier identifier = identification.getPrimaryIdentifier();
 
-    return new MediaIdentification(streamable, identification, parent == null ? query(identification.getPrimaryIdentifier()) : null);
+    return new MediaIdentification(
+      streamable,
+      identification,
+      parent == null || isQueryServiceAvailable(identifier.getDataSource()) ? query(identifier) : null
+    );
   }
 
   public MediaDescriptor query(Identifier identifier) {
