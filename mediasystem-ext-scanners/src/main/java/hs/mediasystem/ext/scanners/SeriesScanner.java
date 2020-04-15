@@ -32,9 +32,11 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
+@Singleton
 public class SeriesScanner implements Scanner {
-  private static final Logger LOGGER = Logger.getLogger(MoviesScanner.class.getName());
+  private static final Logger LOGGER = Logger.getLogger(SeriesScanner.class.getName());
   private static final NameDecoder NAME_DECODER = new NameDecoder(Mode.SERIE);
   private static final NameDecoder EPISODE_NAME_DECODER = new NameDecoder(Mode.EPISODE);
   private static final NameDecoder SPECIAL_NAME_DECODER = new NameDecoder(Mode.SPECIAL);

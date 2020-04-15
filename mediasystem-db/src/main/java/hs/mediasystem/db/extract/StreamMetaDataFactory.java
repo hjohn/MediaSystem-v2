@@ -43,7 +43,7 @@ public class StreamMetaDataFactory {
 
       for(long offset = frameCount / 5; offset < frameCount * 9 / 10; offset += frameCount * 3 / 20) {
         if(!store.existsSnapshot(contentId, index)) {
-          LOGGER.finest("Grabbing frame #" + index + " at frame " + offset + "/" + frameCount);
+          LOGGER.finest("Grabbing frame #" + index + " at frame " + offset + "/" + frameCount + " with aspect " + grabber.getAspectRatio());
 
           grabber.setFrameNumber((int)offset);
 

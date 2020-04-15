@@ -70,6 +70,7 @@ public class ResourceManager {
       .orElse("<" + cls + "::" + key + ">");
   }
 
+  @SuppressWarnings("resource")
   public static Image getImage(Class<?> cls, String key) {
     return new Image(cls.getResourceAsStream(cls.getSimpleName() + "_" + key + ".png"));
   }

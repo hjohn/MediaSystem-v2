@@ -106,7 +106,7 @@ public class RecommendationService {
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
     return getIdentifier(parentId).flatMap(
-      identifier -> descriptorStore.find(identifier).map(Serie.class::cast).map(serie -> {
+      identifier -> descriptorStore.find(identifier).filter(Serie.class::isInstance).map(Serie.class::cast).map(serie -> {
         Episode episode = (Episode)descriptorStore.find(work.getDescriptor().getIdentifier()).orElse(null);
 
         if(episode != null) {
