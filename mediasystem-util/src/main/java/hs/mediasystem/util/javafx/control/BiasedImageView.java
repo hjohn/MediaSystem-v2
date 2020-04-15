@@ -33,7 +33,8 @@ import javafx.util.Duration;
  *  "scaled-image-view" - The actual image
  *  "image-view-overlay" - A region that is placed on top of the image
  *
- * The effect and overlay regions always exactly match the size of the image.
+ * The effect and overlay regions always exactly match the size of the image (excluding
+ * borders).
  *
  * The place holder should be around the same size as the expected image to prevent "jumps",
  * if possible.
@@ -101,7 +102,7 @@ public class BiasedImageView extends Region {
 
     getStyleClass().add("scaled-image-view");
 
-    effectRegion.getStyleClass().add("image-view");
+    effectRegion.getStyleClass().add("image-view-effect");
     overlayRegion.getStyleClass().add("image-view-overlay");
 
     imagePresent.addListener(obs -> {
@@ -136,11 +137,9 @@ public class BiasedImageView extends Region {
     Timeline timeline;
 
     if(placeHolder == null) {
-      effectRegion.setOpacity(0);
-
       timeline = new Timeline(
-        new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0), new KeyValue(effectRegion.opacityProperty(), 0)),
-        new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1), new KeyValue(effectRegion.opacityProperty(), 1))
+        new KeyFrame(Duration.ZERO, new KeyValue(imageView.opacityProperty(), 0)),
+        new KeyFrame(Duration.seconds(1), new KeyValue(imageView.opacityProperty(), 1))
       );
     }
     else {
@@ -171,9 +170,6 @@ public class BiasedImageView extends Region {
 
         if(placeHolder != null) {
           placeHolder.setOpacity(1);
-        }
-        else {
-          effectRegion.setOpacity(0);
         }
 
         imageView.setOpacity(0);
