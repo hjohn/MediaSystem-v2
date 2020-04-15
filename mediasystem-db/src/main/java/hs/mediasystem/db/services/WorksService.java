@@ -51,6 +51,12 @@ public class WorksService {
       .collect(Collectors.toList());
   }
 
+  public synchronized List<Work> findRootsByTag(String tag) {
+    return streamStore.findRootStreams(tag).stream()
+      .map(workService::toWork)
+      .collect(Collectors.toList());
+  }
+
   public synchronized List<Work> findTop100() {
     return top100QueryServices.get(0).query().stream()
       .map(p -> workService.toWork(p, null))

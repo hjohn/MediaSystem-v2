@@ -103,7 +103,15 @@ public class DatabaseStreamStore implements StreamableStore {
     return cache.values().stream()
       .filter(cs -> tag == null ? true : importSourceProvider.getStreamSource(cs.getImportSourceId() & 0xffff).getStreamSource().getTags().contains(tag))  // TODO performance here might suck somewhat
       .map(CachedStream::getStreamable)
-      .filter(s -> s.getType().equals(type));
+      .filter(s -> type == null ? true : s.getType().equals(type));
+  }
+
+  public synchronized List<Streamable> findRootStreams(String tag) {
+    List<Streamable> collect = stream(null, tag)
+      .filter(s -> s.getParentId().isEmpty())
+      .collect(Collectors.toList());
+
+    return collect;
   }
 
   @Override

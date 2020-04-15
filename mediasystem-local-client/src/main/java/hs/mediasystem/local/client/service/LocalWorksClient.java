@@ -53,6 +53,11 @@ public class LocalWorksClient implements WorksClient {
   }
 
   @Override
+  public List<Work> findRootsByTag(String tag) {
+    return worksService.findRootsByTag(tag).stream().map(this::toWork).collect(Collectors.toList());
+  }
+
+  @Override
   public List<Work> findTop100() {
     return worksService.findTop100().stream().map(this::toWork).collect(Collectors.toList());
   }
