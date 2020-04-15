@@ -14,6 +14,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Pos;
 
 /**
  * Cell based view, similar to ListView, which supports multiple columns of items
@@ -29,6 +30,7 @@ public class MediaGridView<T> extends ActionListView<T> {
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
   public final ObjectProperty<List<Group>> groups = new SimpleObjectProperty<>();
   public final BooleanProperty scrollBarVisible = new SimpleBooleanProperty(true);
+  public final ObjectProperty<Pos> cellAlignment = new SimpleObjectProperty<>(Pos.CENTER);
 
   /**
    * Show the headers in between groups.
@@ -57,6 +59,7 @@ public class MediaGridView<T> extends ActionListView<T> {
 
     skin.visibleColumns.bindBidirectional(visibleColumns);
     skin.visibleRows.bindBidirectional(visibleRows);
+    skin.cellAlignment.bindBidirectional(cellAlignment);
     skin.groups.bindBidirectional(groups);
     skin.scrollBarVisible.bindBidirectional(scrollBarVisible);
     skin.pageByGroup.bindBidirectional(pageByGroup);

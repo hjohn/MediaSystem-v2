@@ -20,6 +20,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
@@ -39,6 +40,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   public final IntegerProperty visibleColumns = new SimpleIntegerProperty(4);
   public final IntegerProperty visibleRows = new SimpleIntegerProperty(3);
   public final BooleanProperty scrollBarVisible = new SimpleBooleanProperty(true);
+  public final ObjectProperty<Pos> cellAlignment = new SimpleObjectProperty<>(Pos.CENTER);
 
   /**
    * Defines where groups start and their title, leave <code>null</code> for no
@@ -236,7 +238,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
           this.clip = new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight());
 
           setClip(clip);  // Needed to clip off cells while scrolling
-          layoutInArea(groupHeaderPane, 0, 0, getSkinnable().getWidth(), getSkinnable().getHeight(), 0, Insets.EMPTY, true, true, HPos.CENTER, VPos.CENTER);
+          layoutInArea(groupHeaderPane, 0, 0, getSkinnable().getWidth(), getSkinnable().getHeight(), 0, Insets.EMPTY, true, true, cellAlignment.get().getHpos(), cellAlignment.get().getVpos());
         }
 
         groupHeaderPane.requestLayout();
@@ -255,7 +257,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
               if(y < getSkinnable().getHeight()) {
                 cell.setVisible(true);
-                layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
+                layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, cellAlignment.get().getHpos(), cellAlignment.get().getVpos());
               }
             }
             else {
@@ -351,6 +353,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     visibleRows.addListener(obs -> content.requestLayout());
     visibleColumns.addListener(obs -> content.requestLayout());
     scrollPosition.addListener(obs -> content.requestLayout());    // Calls layout when scroll position is updated for animation
+    cellAlignment.addListener(obs -> content.requestLayout());
 
     InvalidationListener updateScrollBarListener = this::updateScrollBar;
 
