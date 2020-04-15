@@ -110,6 +110,11 @@ public class NameDecoder {
     SPECIAL,
 
     /**
+     * Extracts first part as title, second part as subtitle, bracketed part as alternative title (description) and year
+     */
+    FILE,
+
+    /**
      * Extracts title only
      */
     SIMPLE
@@ -152,6 +157,12 @@ public class NameDecoder {
       extractAlternativeTitle = false;
       extractSubtitle = true;
       extractYear = false;
+      extractExtension = true;
+      break;
+    case FILE:
+      extractYear = true;
+      extractAlternativeTitle = true;
+      extractSubtitle = true;
       extractExtension = true;
       break;
     default:
