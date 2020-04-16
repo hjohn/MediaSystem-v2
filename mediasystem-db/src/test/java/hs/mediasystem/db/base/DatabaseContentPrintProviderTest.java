@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -74,6 +75,7 @@ class DatabaseContentPrintProviderTest {
     Files.createDirectory(tempDir.resolve("dir"));
     Files.write(newFile, List.of("Hello World!"));
     Files.write(existingFile, List.of("Hello Planet!"));
+    Files.setLastModifiedTime(newFile, FileTime.fromMillis(0));  // Ensure that any modification results in a later modification time
   }
 
   @AfterEach
