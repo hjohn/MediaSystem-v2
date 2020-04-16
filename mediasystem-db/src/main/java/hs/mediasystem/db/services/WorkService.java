@@ -158,16 +158,16 @@ public class WorkService {
        */
 
       if(workId.getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
-        return findChildren(StreamID.of(workId.getKey()));
+        return findSerieChildren(StreamID.of(workId.getKey()));
       }
 
       List<Streamable> streamables = streamStore.findStreams(toIdentifier(workId));
 
       if(!streamables.isEmpty()) {
-        return findChildren(streamables.get(0).getId());  // TODO if multiple Series have the same identifier, this picks one at random
+        return findSerieChildren(streamables.get(0).getId());  // TODO if multiple Series have the same identifier, this picks one at random
       }
 
-      return findChildren((ProductionIdentifier)toIdentifier(workId));
+      return findSerieChildren((ProductionIdentifier)toIdentifier(workId));
     }
     else if(type.equals(COLLECTION)) {
       return queryProductionCollection(toIdentifier(workId)).map(ProductionCollection::getItems).orElse(List.of()).stream()
@@ -180,7 +180,7 @@ public class WorkService {
 
   // find children needs to always add all known children from the Serie, plus any that couldn't be matched
   // as extras!
-  private synchronized List<Work> findChildren(StreamID id) {
+  private synchronized List<Work> findSerieChildren(StreamID id) {
     return streamStore.findStream(id)
       .map(this::findBestDescriptor)
       .filter(Serie.class::isInstance)
@@ -196,7 +196,7 @@ public class WorkService {
       .collect(Collectors.toList());
   }
 
-  private synchronized List<Work> findChildren(ProductionIdentifier identifier) {  // Only used for cases where there is no local serie
+  private synchronized List<Work> findSerieChildren(ProductionIdentifier identifier) {  // Only used for cases where there is no local serie
     Serie serie = (Serie)queryProduction(identifier);
 
     return serie.getSeasons().stream()
