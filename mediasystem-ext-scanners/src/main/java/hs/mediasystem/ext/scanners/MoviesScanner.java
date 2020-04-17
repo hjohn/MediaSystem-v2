@@ -38,7 +38,7 @@ public class MoviesScanner implements Scanner {
   public List<Streamable> scan(Path root, int importSourceId) throws IOException {
     LOGGER.info("Scanning " + root);
 
-    List<Path> scanResults = new PathFinder(1).find(root);
+    List<Path> scanResults = new PathFinder(1).find(root, Constants.VIDEOS);
     List<Streamable> results = new ArrayList<>();
 
     WORKLOAD.start(scanResults.size());

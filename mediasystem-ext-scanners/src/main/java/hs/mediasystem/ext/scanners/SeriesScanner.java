@@ -99,7 +99,7 @@ public class SeriesScanner implements Scanner {
     List<Streamable> results = new ArrayList<>();
 
     try {
-      List<Path> scanResults = new PathFinder(5).find(root);
+      List<Path> scanResults = new PathFinder(5).find(root, Constants.VIDEOS);
 
       for(Path path : scanResults) {
         Path relative = root.relativize(path);
