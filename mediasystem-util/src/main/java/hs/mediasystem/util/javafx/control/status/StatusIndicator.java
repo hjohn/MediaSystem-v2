@@ -77,6 +77,12 @@ public class StatusIndicator extends StackPane {
         arcGraphic.setVisible(false);
         label.setVisible(false);
       }
+      else if(Double.isNaN(percentage)) {
+        icon.setVisible(true);
+        icon.getStyleClass().setAll("size", "icon", "unknown");
+        arcGraphic.setVisible(false);
+        label.setVisible(false);
+      }
       else {
         circle.setLength(360 * (1 - percentage));
         arc.setLength(-360 * percentage);
