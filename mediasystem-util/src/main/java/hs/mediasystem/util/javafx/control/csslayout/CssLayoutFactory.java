@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
@@ -143,6 +144,11 @@ public class CssLayoutFactory {
       if(align != null) {
         StackPane.setAlignment(node, Pos.valueOf(align.toUpperCase()));
       }
+
+      childDef.getList("margins", Double.class, 4).ifPresent(list -> {
+        Insets insets = new Insets(list.get(0), list.get(1), list.get(2), list.get(3));
+        StylableStackPane.setPercentageMargin(node, insets);
+      });
 
       newChildren.add(node);
     }
