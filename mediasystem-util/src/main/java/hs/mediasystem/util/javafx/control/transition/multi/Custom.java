@@ -68,8 +68,14 @@ public class Custom implements MultiNodeTransition {
 
       if(state.action == Action.SHOW) {
         state.action = Action.REMOVE;
-        state.timeline = new Timeline(new KeyFrame(initialDelay, e -> state.originalIntro.play()), new KeyFrame(initialDelay.add(Duration.millis(1))));
-        state.timeline.play();
+        state.timeline = new Timeline(new KeyFrame(initialDelay, e -> state.originalIntro.play()));
+
+        if(initialDelay.equals(Duration.ZERO)) {
+          state.originalIntro.play();  // Timelines of Duration.ZERO length donot trigger their event action, so trigger it immediately here instead
+        }
+        else {
+          state.timeline.play();
+        }
       }
       else if(state.action == Action.REMOVE) {
         if(state.timeline.getStatus() == Status.RUNNING) {  // early removal, if initial delay has not yet elapsed
