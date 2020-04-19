@@ -319,29 +319,27 @@ public class WorkService {
 
     return new Work(
       descriptor,
-      createParentForMovieOrEpisode(descriptor),
+      createParentForMovieOrEpisode(descriptor).orElse(null),
       mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
       mediaStreams
     );
   }
 
-  private Parent createParentForMovieOrEpisode(MediaDescriptor descriptor) {
+  private Optional<Parent> createParentForMovieOrEpisode(MediaDescriptor descriptor) {
     if(descriptor instanceof Movie) {
       Movie movie = (Movie)descriptor;
 
       return movie.getCollectionIdentifier()
         .flatMap(ci -> find(toWorkId(ci)))
-        .map(r -> new Parent(r.getId(), r.getDetails().getTitle()))
-        .orElse(null);
+        .map(r -> new Parent(r.getId(), r.getDetails().getTitle()));
     }
 
     if(descriptor instanceof Episode) {
       return descriptorStore.find(descriptor.getIdentifier().getRootIdentifier())
-        .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getTitle()))
-        .orElse(null);
+        .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getTitle()));
     }
 
-    return null;
+    return Optional.empty();
   }
 
   private State toState(Streamable streamable) {
@@ -394,7 +392,7 @@ public class WorkService {
 
     return new Work(
       descriptor,
-      createParentForMovieOrEpisode(descriptor),
+      createParentForMovieOrEpisode(descriptor).orElse(null),
       state,
       mediaStreams
     );

@@ -1,7 +1,6 @@
 package hs.mediasystem.domain.work;
 
 import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.util.ImageURI;
 
 import java.util.Optional;
 
@@ -54,9 +53,5 @@ public class MediaStream {
 
   public Optional<Match> getMatch() {
     return match;
-  }
-
-  public Optional<ImageURI> getImage() {
-    return metaData.map(md -> md.getSnapshots().size() > 1 ? md.getSnapshots().get(1).getImageUri() : null);
   }
 }
