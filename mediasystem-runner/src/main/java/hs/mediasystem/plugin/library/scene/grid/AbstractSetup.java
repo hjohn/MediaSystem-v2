@@ -23,9 +23,11 @@ import hs.mediasystem.util.javafx.control.transition.multi.Custom;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import javafx.animation.Interpolator;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
@@ -36,6 +38,7 @@ import javafx.util.Duration;
 import javax.inject.Inject;
 
 import org.reactfx.EventStreams;
+import org.reactfx.Subscription;
 import org.reactfx.value.Val;
 
 public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implements NodeFactory<P> {
@@ -93,11 +96,24 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
 
     Nodes.visible(listView).values().map(visible -> visible ? presentation.items : FXCollections.emptyObservableList()).feedTo(listView.itemsProperty());
 
-    EventStreams.valuesOf(presentation.selectedItem)
-      .withDefaultEvent(presentation.selectedItem.getValue())
-      .repeatOn(EventStreams.changesOf(listView.itemsProperty()))
+    EventStreams.valuesOf(listView.itemsProperty())
       .conditionOnShowing(listView)
-      .observe(item -> updateSelectedItem(listView, presentation, item));
+      .observe(new Consumer<ObservableList<Object>>() {
+        private Subscription subscription;
+
+        @Override
+        public void accept(ObservableList<Object> list) {
+          if(subscription != null) {
+            subscription.unsubscribe();
+          }
+
+          subscription = EventStreams.valuesOf(presentation.selectedItem)
+            .withDefaultEvent(presentation.selectedItem.getValue())
+            .repeatOn(EventStreams.changesOf(list))
+            .conditionOnShowing(listView)
+            .observe(item -> updateSelectedItem(listView, presentation, item));
+        }
+      });
 
     return listView;
   }
