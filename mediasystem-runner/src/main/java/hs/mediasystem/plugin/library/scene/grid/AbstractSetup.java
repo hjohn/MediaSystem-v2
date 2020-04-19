@@ -7,14 +7,11 @@ import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Parent;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.util.LessLoader;
-import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.AreaPane2;
-import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
-import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 import hs.mediasystem.util.javafx.control.transition.EffectList;
 import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
@@ -28,16 +25,12 @@ import java.util.List;
 import java.util.Objects;
 
 import javafx.animation.Interpolator;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.StringBinding;
 import javafx.collections.FXCollections;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 import javax.inject.Inject;
@@ -48,11 +41,10 @@ import org.reactfx.value.Val;
 public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implements NodeFactory<P> {
   protected static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
 
-  private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
-
   @Inject private ContextLayout contextLayout;
   @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
   @Inject private BinderProvider binderProvider;
+  @Inject private ViewStatusBarFactory viewStatusBarFactory;
 
   public enum Area {
     CENTER_TOP,
@@ -65,7 +57,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     PREVIEW_PANEL   // Panel that slides in from the right depending on the presence of content
   }
 
-  private void configurePanes(AreaPane2<Area> areaPane, TransitionPane previewPanel, P presentation) {
+  private MediaGridView<Object> createMediaGridView(P presentation) {
     MediaGridView<Object> listView = new MediaGridView<>();
 
     listView.setOrientation(Orientation.VERTICAL);
@@ -85,6 +77,34 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       }
     });
 
+    listView.getProperties().put("presentation2", workCellPresentationFactory.create(listView));
+
+    MediaGridViewCellFactory<Object> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
+
+    cellFactory.setMaxRatio(0.9);
+    cellFactory.setContentBias(Orientation.VERTICAL);
+
+    listView.setCellFactory(cellFactory);
+    listView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
+      if(current != null) {
+        presentation.selectItem(current);
+      }
+    });
+
+    Nodes.visible(listView).values().map(visible -> visible ? presentation.items : FXCollections.emptyObservableList()).feedTo(listView.itemsProperty());
+
+    EventStreams.valuesOf(presentation.selectedItem)
+      .withDefaultEvent(presentation.selectedItem.getValue())
+      .repeatOn(EventStreams.changesOf(listView.itemsProperty()))
+      .conditionOnShowing(listView)
+      .observe(item -> updateSelectedItem(listView, presentation, item));
+
+    return listView;
+  }
+
+  private void configurePanes(AreaPane2<Area> areaPane, TransitionPane previewPanel, P presentation) {
+    MediaGridView<Object> listView = createMediaGridView(presentation);
+
     // Clear preview panel immediately:
     Val.wrap(listView.getSelectionModel().selectedItemProperty()).values()
       .observe(current -> previewPanel.clear());
@@ -103,13 +123,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       });
 
     areaPane.add(Area.CENTER, listView);
-
-    listView.getProperties().put("presentation2", workCellPresentationFactory.create(listView));
-
-    MediaGridViewCellFactory<Object> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
-
-    cellFactory.setMaxRatio(0.9);
-    cellFactory.setContentBias(Orientation.VERTICAL);
 
     EventStreams.invalidationsOf(presentation.contextItem)
       .withDefaultEvent(null)
@@ -131,24 +144,9 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       .map(list -> list.isEmpty() ? null : list)
       .feedTo(listView.groups);
 
-    Nodes.visible(listView).values().map(visible -> visible ? presentation.items : FXCollections.emptyObservableList()).feedTo(listView.itemsProperty());
-
-    listView.setCellFactory(cellFactory);
     listView.requestFocus();
 
-    setupStatusBar(areaPane, presentation);
-
-    listView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
-      if(current != null) {
-        presentation.selectItem(current);
-      }
-    });
-
-    EventStreams.valuesOf(presentation.selectedItem)
-      .withDefaultEvent(presentation.selectedItem.getValue())
-      .repeatOn(EventStreams.changesOf(listView.itemsProperty()))
-      .conditionOnShowing(listView)
-      .observe(item -> updateSelectedItem(listView, presentation, item));
+    areaPane.add(Area.INFORMATION_PANEL, viewStatusBarFactory.create(presentation));
   }
 
   private void updateSelectedItem(MediaGridView<Object> listView, P presentation, Object selectedItem) {
@@ -209,39 +207,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     configurePanes(areaPane, rightOverlayPanel, presentation);
 
     return areaPane;
-  }
-
-  private void setupStatusBar(AreaPane2<Area> areaPane, P presentation) {
-    Val<Integer> totalItemCount = presentation.totalItemCount;
-    Val<Integer> visibleUniqueItemCount = presentation.visibleUniqueItemCount;
-
-    StringBinding binding = Bindings.createStringBinding(
-      () -> String.format(visibleUniqueItemCount.getValue().equals(totalItemCount.getValue()) ? RESOURCES.getText("status-message.unfiltered") : RESOURCES.getText("status-message.filtered"), visibleUniqueItemCount.getValue(), totalItemCount.getValue()),
-      visibleUniqueItemCount,
-      totalItemCount
-    );
-
-    GridPane gridPane = new GridPane();
-    VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
-
-    vbox.getStylesheets().add(LessLoader.compile(AbstractSetup.class.getResource("status-bar.less")).toExternalForm());
-
-    areaPane.add(Area.INFORMATION_PANEL, vbox);
-
-    gridPane.at(0, 0).add(Containers.hbox("header-with-shortcut", Labels.create("header", RESOURCES.getText("header.order")), Labels.create("remote-shortcut, red")));
-    gridPane.at(0, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.sortOrder).map(so -> RESOURCES.getText("sort-order", so.resourceKey)).orElseConst("Unknown")));
-    gridPane.at(1, 0).add(Containers.hbox("header-with-shortcut", Labels.create("header", RESOURCES.getText("header.filter")), Labels.create("remote-shortcut, green")));
-    gridPane.at(1, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.filter).map(f -> RESOURCES.getText("filter", f.resourceKey)).orElseConst("Unknown")));
-
-    if(presentation.availableStateFilters.size() > 1) {
-      gridPane.at(2, 0).add(Containers.hbox("header-with-shortcut", Labels.create("header", RESOURCES.getText("header.stateFilter")), Labels.create("remote-shortcut, yellow")));
-      gridPane.at(2, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.stateFilter).map(sf -> RESOURCES.getText("stateFilter", sf.resourceKey)).orElseConst("Unknown")));
-    }
-
-    BooleanBinding hidden = Bindings.size(presentation.availableGroupings).lessThan(2);
-
-    gridPane.at(3, 0).add(Containers.hbox("header-with-shortcut", Labels.create("header", RESOURCES.getText("header.grouping"), Labels.hide(hidden)), Labels.create("remote-shortcut, blue", "", Labels.hide(hidden))));
-    gridPane.at(3, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.grouping).map(g -> RESOURCES.getText("grouping", g.getClass().getSimpleName())).orElseConst("Unknown"), Labels.hide(hidden)));
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<T> event, P presentation);
