@@ -28,7 +28,7 @@ public class MoviesCollectionType implements CollectionType {
 
   private static SortOrder<Work> BY_RELEASE_DATE = new SortOrder<>(
     "release-date",
-    WorkBinder.BY_RELEASE_DATE
+    WorkBinder.BY_REVERSE_RELEASE_DATE
 //    new DelegatingComparator<>(mi -> mi.getData() instanceof GroupDescriptor, MediaItem.BY_PRODUCTION_NAME, Comparator.nullsLast(MediaItem.BY_PRODUCTION_RELEASE_DATE.reversed())),
 //    mi -> List.of(mi.date.getValue().map(LocalDate::getYear).map(Object::toString).orElse("Unknown")),
 //    true

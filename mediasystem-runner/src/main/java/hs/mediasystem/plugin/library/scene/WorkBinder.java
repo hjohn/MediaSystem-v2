@@ -36,6 +36,7 @@ import org.reactfx.value.Var;
 public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Comparator.comparing(Details::getTitle, NaturalLanguage.ALPHABETICAL));
   public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
+  public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder()))).reversed();
   public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().getValue(), Comparator.nullsLast(Comparator.naturalOrder())));
 
   private static final MediaType SERIE = MediaType.of("SERIE");
