@@ -53,13 +53,18 @@ public class NavigationButtonsFactory {
     if(presentation.state.get() != State.LIST) {
       hbox.getChildren().clear();
 
-      hbox.getChildren().addAll(
+      hbox.getChildren().add(
         presentation.rootItem.getType().equals(SERIE) && presentation.state.get() == State.OVERVIEW ?
-          Buttons.create("Episodes", e -> presentation.toListState()) : createPlayButton(presentation),
-        presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
-          createRelatedButton(presentation) :
-          Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.getValue()))
+          Buttons.create("Episodes", e -> presentation.toListState()) : createPlayButton(presentation)
       );
+
+      if(presentation.rootItem.getId().getDataSource().getName().equals("TMDB")) {
+        hbox.getChildren().add(
+          presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
+            createRelatedButton(presentation) :
+            Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.getValue()))
+        );
+      }
     }
   }
 
