@@ -25,6 +25,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.image.Image;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 
 import javax.imageio.ImageIO;
 import javax.inject.Inject;
@@ -133,6 +134,9 @@ public class MultiImageURIHandler implements ImageURIHandler {
       Scene scene = new Scene(new StackPane(c));
       List<Rectangle2D> locations = positioner.positionsFor(handles.size());
 
+      c.getGraphicsContext2D().setFill(Color.BLACK);
+      c.getGraphicsContext2D().fillRect(0, 0, width, height);
+
       for(int i = 0; i < handles.size(); i++) {
         if(i >= locations.size()) {
           break;
@@ -141,8 +145,25 @@ public class MultiImageURIHandler implements ImageURIHandler {
         ImageHandle handle = handles.get(i);
         Rectangle2D location = locations.get(i);
         Image image = ImageCache.loadImageUptoMaxSize(handle, (int)location.getWidth(), (int)location.getHeight());
+        double areaWidth = location.getWidth();
+        double areaHeight = location.getHeight();
+        double imageWidth = image.getWidth();
+        double imageHeight = image.getHeight();
+        double fitWidth = areaWidth;
+        double fitHeight = areaHeight;
+        double w = Math.round(imageWidth * areaHeight / imageHeight);
 
-        c.getGraphicsContext2D().drawImage(image, location.getMinX(), location.getMinY(), location.getWidth(), location.getHeight());
+        if(w <= areaWidth) {
+          fitWidth = w;
+        }
+        else {
+          fitHeight = Math.round(imageHeight * areaWidth / imageWidth);
+        }
+
+        double x = location.getMinX() + (areaWidth - fitWidth) / 2;
+        double y = location.getMinY() + (areaHeight - fitHeight) / 2;
+
+        c.getGraphicsContext2D().drawImage(image, x, y, fitWidth, fitHeight);
       }
 
       CompletableFuture<WritableImage> writableImageFuture = new CompletableFuture<>();
