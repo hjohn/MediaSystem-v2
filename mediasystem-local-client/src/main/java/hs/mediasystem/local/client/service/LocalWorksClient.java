@@ -67,7 +67,7 @@ public class LocalWorksClient implements WorksClient {
       work.getId(),
       work.getType(),
       work.getParent().orElse(null),
-      createDetails(work.getDescriptor(), parent, work.getPrimaryStream().map(MediaStream::getId).map(StreamID::getContentId)),
+      createDetails(work.getDescriptor(), parent, work.getPrimaryStream()),
       toState(work.getPrimaryStream().map(MediaStream::getId).map(StreamID::getContentId).orElse(null)),
       work.getStreams()
     );
@@ -82,14 +82,17 @@ public class LocalWorksClient implements WorksClient {
    * - image is taken from descriptor or otherwise from stream
    * - backdrop is taken from descriptor or otherwise from its parent
    */
-  private static Details createDetails(MediaDescriptor descriptor, MediaDescriptor parent, Optional<ContentID> contentId) {
+  private static Details createDetails(MediaDescriptor descriptor, MediaDescriptor parent, Optional<MediaStream> mediaStream) {
     return new Details(
       descriptor.getDetails().getTitle(),
       descriptor.getDetails().getSubtitle().orElse(null),
       descriptor.getDetails().getDescription().orElse(null),
       descriptor.getDetails().getDate().orElse(null),
-      descriptor.getDetails().getImage().or(() -> contentId.map(ContentID::asInt).map(id -> new ImageURI("localdb://" + id + "/2"))).orElse(null),
-      descriptor.getDetails().getBackdrop().orElse(parent == null ? null : parent.getDetails().getBackdrop().orElse(null)),
+      descriptor.getDetails().getImage().or(() -> mediaStream.map(LocalWorksClient::snapshotsToCover)).orElse(null),
+      descriptor.getDetails().getBackdrop()
+        .or(() -> parent == null ? Optional.empty() : parent.getDetails().getBackdrop())
+        .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
+        .orElse(null),
       descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
       descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,
       descriptor instanceof Episode ? createSequence((Episode)descriptor) : null,
@@ -97,6 +100,26 @@ public class LocalWorksClient implements WorksClient {
       descriptor instanceof Production ? ((Production)descriptor).getPopularity() : null,
       descriptor instanceof Production ? createClassification((Production)descriptor) : Classification.DEFAULT
     );
+  }
+
+  private static ImageURI snapshotsToCover(MediaStream mediaStream) {
+    int id = mediaStream.getId().getContentId().asInt();
+
+    return mediaStream.getMetaData()
+      .filter(smd -> !smd.getVideoStreams().isEmpty())
+      .map(smd -> new ImageURI("multi:600,900;38,3,524,294;38,303,524,294;38,603,524,294:localdb://" + id + "/1,localdb://" + id + "/2,localdb://" + id + "/3"))
+      .orElse(null);
+
+    //return new ImageURI("multi:600,900;3,3,594,334;3,563,594,334:localdb://" + id + "/1,localdb://" + id + "/2");
+  }
+
+  private static ImageURI snapshotsToBackdrop(MediaStream mediaStream) {
+    int id = mediaStream.getId().getContentId().asInt();
+
+    return mediaStream.getMetaData()
+      .filter(smd -> !smd.getVideoStreams().isEmpty())
+      .map(smd -> new ImageURI("localdb://" + id + "/2"))
+      .orElse(null);
   }
 
   private State toState(ContentID contentId) {
