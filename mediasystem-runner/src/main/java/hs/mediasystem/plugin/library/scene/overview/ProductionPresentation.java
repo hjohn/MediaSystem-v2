@@ -8,12 +8,14 @@ import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.javafx.action.Action;
 import hs.mediasystem.util.javafx.action.SimpleAction;
+import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.property.SimpleReadOnlyObjectProperty;
 
 import java.time.Duration;
@@ -96,7 +98,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   public final PlayAction play;
   public final ResumeAction resume;
-  public final Action playTrailer = new SimpleAction("Trailer", trailerVideoLink.isNotNull(), this::playTrailer);
+  public final Action playTrailer = new SimpleAction("Trailer", this::playTrailer);
   public final EventSource<Event> showInfo = new EventSource<>();
 
   private final Var<Float> seasonWatchedFraction = Var.newSimpleVar(0.0f);  // If not empty, represents fraction of season watched
@@ -374,7 +376,13 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   private void playTrailer(Event event) {
     VideoLink videoLink = trailerVideoLink.get();
-    Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(rootItem, new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
+
+    if(videoLink == null) {
+      Dialogs.show(event, Labels.create("description", "No trailer available"));
+    }
+    else {
+      Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(rootItem, new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
+    }
   }
 
   public void update() {

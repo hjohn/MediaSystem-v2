@@ -24,6 +24,12 @@ public class SimpleAction implements Action {
     this.enabledProperty.bind(this.enabled);
   }
 
+  public SimpleAction(String title, Consumer<Event> consumer) {
+    this.titleProperty.set(title);
+    this.enabled = null;
+    this.consumer = consumer;
+  }
+
   public SimpleAction(Consumer<Event> consumer) {
     this.enabled = null;
     this.consumer = consumer;
