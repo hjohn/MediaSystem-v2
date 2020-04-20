@@ -96,7 +96,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       imageProperty.imageHandleProperty().set(work.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
 
-      BiasedImageView poster = new BiasedImageView();
+      BiasedImageView poster = new BiasedImageView(2.0 / 3);
 
       poster.setOrientation(Orientation.VERTICAL);
       poster.imageProperty().bind(imageProperty);
