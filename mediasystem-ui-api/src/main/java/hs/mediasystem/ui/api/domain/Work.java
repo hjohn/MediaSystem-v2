@@ -68,4 +68,9 @@ public class Work {
   public Optional<MediaStream> getPrimaryStream() {
     return streams.stream().findFirst();
   }
+
+  @Override
+  public String toString() {
+    return "Work[" + id + ": '" + details.getTitle() + "']";
+  }
 }
