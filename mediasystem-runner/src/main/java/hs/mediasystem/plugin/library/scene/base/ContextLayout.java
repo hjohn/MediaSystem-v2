@@ -82,7 +82,7 @@ public class ContextLayout {
     seq.flatMap(Sequence::getSeasonNumber).map(Object::toString).ifPresent(panel.season::set);
 
     // Add total seasons and episodes:
-    work.getDetails().getSerie().map(Serie::getTotalEpisodes).ifPresent(episodeCount -> {
+    work.getDetails().getSerie().flatMap(Serie::getTotalEpisodes).ifPresent(episodeCount -> {
       panel.totalEpisodes.set("" + episodeCount + work.getDetails().getSerie().flatMap(Serie::getTotalSeasons).map(seasonCount -> " (" + seasonCount + " seasons)").orElse(""));
     });
 

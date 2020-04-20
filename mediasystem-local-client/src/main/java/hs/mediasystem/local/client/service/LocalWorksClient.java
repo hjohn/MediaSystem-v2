@@ -139,7 +139,7 @@ public class LocalWorksClient implements WorksClient {
       : state == Serie.State.CONTINUING || state == Serie.State.PILOT ? Stage.RELEASED
       : state == Serie.State.IN_PRODUCTION ? Stage.IN_PRODUCTION
       : state == Serie.State.PLANNED ? Stage.PLANNED
-      : Stage.RELEASED;
+      : null;
   }
 
   private static Stage toStage(Movie.State state) {
@@ -153,7 +153,7 @@ public class LocalWorksClient implements WorksClient {
     return new hs.mediasystem.ui.api.domain.Serie(
       serie.getLastAirDate(),
       seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).count(),
-      seasons == null ? 0 : (int)seasons.stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count()
+      seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count()
     );
   }
 

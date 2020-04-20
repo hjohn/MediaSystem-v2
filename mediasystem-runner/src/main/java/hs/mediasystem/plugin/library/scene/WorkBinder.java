@@ -115,7 +115,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
       return "";
     }
 
-    Stage stage = details.getClassification().getStage();
+    Stage stage = details.getClassification().getStage().orElse(null);
     LocalDate lastAirDate = details.getSerie().flatMap(Serie::getLastAirDate).orElse(null);
 
     if(stage == Stage.ENDED && lastAirDate != null && lastAirDate.getYear() != date.getYear()) {

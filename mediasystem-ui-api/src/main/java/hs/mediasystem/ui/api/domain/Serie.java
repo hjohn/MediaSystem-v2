@@ -6,12 +6,12 @@ import java.util.Optional;
 public class Serie {
   private Optional<LocalDate> lastAirDate;
   private Optional<Integer> totalSeasons;
-  private int totalEpisodes;
+  private Optional<Integer> totalEpisodes;
 
-  public Serie(LocalDate lastAirDate, Integer totalSeasons, int totalEpisodes) {
+  public Serie(LocalDate lastAirDate, Integer totalSeasons, Integer totalEpisodes) {
     this.lastAirDate = Optional.ofNullable(lastAirDate);
     this.totalSeasons = Optional.ofNullable(totalSeasons);
-    this.totalEpisodes = totalEpisodes;
+    this.totalEpisodes = Optional.ofNullable(totalEpisodes);
   }
 
   public Optional<LocalDate> getLastAirDate() {
@@ -22,7 +22,7 @@ public class Serie {
     return totalSeasons;
   }
 
-  public int getTotalEpisodes() {
+  public Optional<Integer> getTotalEpisodes() {
     return totalEpisodes;
   }
 }
