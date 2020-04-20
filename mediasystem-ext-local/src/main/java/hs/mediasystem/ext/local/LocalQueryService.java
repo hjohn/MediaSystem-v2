@@ -1,14 +1,5 @@
 package hs.mediasystem.ext.local;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
-import com.fasterxml.jackson.annotation.JsonCreator.Mode;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
@@ -25,11 +16,7 @@ import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
 import hs.mediasystem.mediamanager.StreamableStore;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.Throwables;
 
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -48,19 +34,13 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LocalQueryService extends AbstractQueryService {
-  private static final Logger LOGGER = Logger.getLogger(LocalQueryService.class.getName());
   private static final DataSource SERIE = DataSource.instance(MediaType.of("SERIE"), "LOCAL");
   private static final DataSource SEASON = DataSource.instance(MediaType.of("SEASON"), "LOCAL");
   private static final DataSource EPISODE = DataSource.instance(MediaType.of("EPISODE"), "LOCAL");
   private static final Pattern PATTERN = Pattern.compile("([0-9]+),([0-9]+)");
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory())
-    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-    .setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
-    .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
-    .registerModule(new JavaTimeModule())
-    .registerModule(new ParameterNamesModule(Mode.PROPERTIES));
 
   @Inject private StreamableStore streamStore;
+  @Inject private DescriptionService descriptionService;
 
   public LocalQueryService() {
     super(SERIE);
@@ -112,7 +92,7 @@ public class LocalQueryService extends AbstractQueryService {
       e.getValue()
     )).collect(Collectors.toList());
 
-    Optional<Description> description = loadDescription(streamable);
+    Optional<Description> description = descriptionService.loadDescription(streamable);
     Attributes attributes = streamable.getAttributes();
 
     return new Serie(
@@ -122,8 +102,8 @@ public class LocalQueryService extends AbstractQueryService {
         description.map(Description::getSubtitle).orElse(attributes.get(Attribute.SUBTITLE)),
         description.map(Description::getDescription).orElse(attributes.get(Attribute.ALTERNATIVE_TITLE)),
         description.map(Description::getDate).orElse(null),
-        new ImageURI(streamable.getUri().toString() + "/cover.jpg"),
-        new ImageURI(streamable.getUri().toString() + "/backdrop.jpg")
+        description.map(Description::getCover).orElse(null),
+        description.map(Description::getBackdrop).orElse(null)
       ),
       null,
       Collections.emptyList(),
@@ -135,21 +115,5 @@ public class LocalQueryService extends AbstractQueryService {
       seasons,
       Set.of()
     );
-  }
-
-  public static Optional<Description> loadDescription(Streamable streamable) {
-    String urlText = streamable.getUri().toString() + "/description.yaml";
-
-    try {
-      return Optional.of(OBJECT_MAPPER.readValue(new URL(urlText), Description.class));
-    }
-    catch(ConnectException e) {
-      // ignore, file just doesn't exist
-      return Optional.empty();
-    }
-    catch(IOException e) {
-      LOGGER.warning("Exception while parsing " + urlText + ": " + Throwables.formatAsOneLine(e));
-      return Optional.empty();
-    }
   }
 }
