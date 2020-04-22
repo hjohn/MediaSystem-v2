@@ -47,7 +47,7 @@ public class DescriptionService {
       Path backdrop = base.resolve("backdrop.jpg");
 
       ImageURI coverImage = Files.isRegularFile(cover) ? new ImageURI(cover.toUri().toString()) : null;
-      ImageURI backdropImage = Files.isRegularFile(backdrop) ? new ImageURI(cover.toUri().toString()) : null;
+      ImageURI backdropImage = Files.isRegularFile(backdrop) ? new ImageURI(backdrop.toUri().toString()) : null;
 
       return Optional.of(new Description(d.title, d.subtitle, d.description, d.genres, d.date, coverImage, backdropImage));
     }
