@@ -1,10 +1,12 @@
 package hs.mediasystem.local.client.service;
 
 import hs.mediasystem.db.services.RecommendationService;
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ui.api.RecommendationClient;
 import hs.mediasystem.ui.api.domain.Recommendation;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -21,8 +23,8 @@ public class LocalRecommendationClient implements RecommendationClient {
   }
 
   @Override
-  public List<Recommendation> findNew() {
-    return service.findNew().stream().map(this::toRecommendation).collect(Collectors.toList());
+  public List<Recommendation> findNew(Predicate<MediaType> filter) {
+    return service.findNew(filter).stream().map(this::toRecommendation).collect(Collectors.toList());
   }
 
   private Recommendation toRecommendation(hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation r) {

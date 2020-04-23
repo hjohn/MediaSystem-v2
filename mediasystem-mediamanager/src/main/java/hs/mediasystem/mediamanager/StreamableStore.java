@@ -10,6 +10,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public interface StreamableStore {
 
@@ -71,5 +72,5 @@ public interface StreamableStore {
   List<Streamable> findChildren(StreamID streamId);
 
   StreamSource findStreamSource(StreamID streamId);
-  List<Streamable> findNewest(int maximum);
+  List<Streamable> findNewest(int maximum, Predicate<MediaType> filter);
 }

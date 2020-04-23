@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -43,8 +44,8 @@ public class LocalWorksClient implements WorksClient {
   }
 
   @Override
-  public List<Work> findNewest(int maximum) {
-    return worksService.findNewest(maximum).stream().map(this::toWork).collect(Collectors.toList());
+  public List<Work> findNewest(int maximum, Predicate<MediaType> filter) {
+    return worksService.findNewest(maximum, filter).stream().map(this::toWork).collect(Collectors.toList());
   }
 
   @Override

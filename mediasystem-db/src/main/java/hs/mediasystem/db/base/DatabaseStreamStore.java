@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -149,8 +150,9 @@ public class DatabaseStreamStore implements StreamableStore {
   }
 
   @Override
-  public synchronized List<Streamable> findNewest(int maximum) {
+  public synchronized List<Streamable> findNewest(int maximum, Predicate<MediaType> filter) {
     return cache.values().stream()
+      .filter(cs -> filter.test(cs.getStreamable().getType()))
       .sorted(Comparator.comparing(CachedStream::getCreationTime).reversed())
       .limit(maximum)
       .map(CachedStream::getStreamable)

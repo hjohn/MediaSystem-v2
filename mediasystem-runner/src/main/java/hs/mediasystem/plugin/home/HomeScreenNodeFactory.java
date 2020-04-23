@@ -207,7 +207,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
   private ActionListView<MenuOption> createNewView() {
     ActionListView<MenuOption> mediaGridView = createCarousel(
-      recommendationClient.findNew().stream().map(r -> new RecommendationMenuOptionAdapter(r, createProductionPresentationSupplier(r))).collect(Collectors.toList()),
+      recommendationClient.findNew(mediaType -> !mediaType.isComponent()).stream().map(r -> new RecommendationMenuOptionAdapter(r, createProductionPresentationSupplier(r))).collect(Collectors.toList()),
       menuOptionCellFactory
     );
 

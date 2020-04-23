@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -31,6 +32,12 @@ public class RecommendationService {
   @Inject private StreamableStore streamStore;
   @Inject private DescriptorStore descriptorStore;
 
+  /**
+   * Finds recommendations on what to continue watching or what to watch next.
+   *
+   * @param maximum the maximum amount of items to return
+   * @return a {@link List} of {@link Recommendation}s, never null but can be empty
+   */
   public List<Recommendation> findRecommendations(int maximum) {
     return worksService.findLastWatched(maximum * 2, null).stream()    // Find twice as much matched last watched Works, as Works that are consecutive will get filtered and only last one is added
       .filter(r -> r.getType().isPlayable())
@@ -40,8 +47,14 @@ public class RecommendationService {
       .collect(Collectors.toList());
   }
 
-  public List<Recommendation> findNew() {
-    return worksService.findNewest(100).stream()
+  /**
+   * Finds new items added to the system.
+   *
+   * @param filter a filter, cannot be null
+   * @return a {@link List} of {@link Recommendation}s, never null but can be empty
+   */
+  public List<Recommendation> findNew(Predicate<MediaType> filter) {
+    return worksService.findNewest(100, filter).stream()
       .map(this::toNewRecommendation)
       .flatMap(Optional::stream)
       .collect(Collectors.toList());

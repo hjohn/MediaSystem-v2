@@ -278,7 +278,7 @@ public class DatabaseIT {
 
     @Test
     void findNewestShouldFindThem() {
-      assertEquals(3, worksService.findNewest(10).size());
+      assertEquals(3, worksService.findNewest(10, m -> true).size());
     }
 
     @Nested
@@ -319,7 +319,7 @@ public class DatabaseIT {
 
       @Test
       void findNewestShouldFindOneLess() {
-        assertEquals(2, worksService.findNewest(10).size());
+        assertEquals(2, worksService.findNewest(10, x -> true).size());
       }
     }
   }

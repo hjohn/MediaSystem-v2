@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -37,8 +38,8 @@ public class WorksService {
     );
   }
 
-  public synchronized List<Work> findNewest(int maximum) {
-    return streamStore.findNewest(maximum).stream()
+  public synchronized List<Work> findNewest(int maximum, Predicate<MediaType> filter) {
+    return streamStore.findNewest(maximum, filter).stream()
       .map(Streamable::getId)
       .map(workService::find)
       .flatMap(Optional::stream)
