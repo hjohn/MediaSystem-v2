@@ -7,10 +7,10 @@
   -fx-border-color: @glass-color;
 
   .title-panel {
-    -fx-background-color: lighten(@glass-color, 20%, relative);
+    -fx-background-color: fadeout(@glass-color, 10%, relative);
     -fx-padding: 8 16 12 16;
     -fx-border-width: 0 0 2 0;
-    -fx-border-color: lighten(@glass-color, 25%, relative);
+    -fx-border-color: @glass-color;
 
     .label.title {
       .style-heading1;
@@ -224,7 +224,7 @@
     -fx-padding: 8 16 8 16;
     -fx-border-width: 1.5 0 0 0;
     -fx-border-color: lighten(@glass-color, 10%, relative);
-    -fx-background-color: fadein(@glass-color, 5%, relative);
+    -fx-background-color: fadein(@glass-color, 10%, relative);
   }
 
   .navigation-area {
