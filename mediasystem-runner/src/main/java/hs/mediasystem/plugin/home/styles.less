@@ -1,4 +1,5 @@
 @import "../../runner/properties.less";
+@import "../cell/annotated-image-cell-factory.less";
 
 .menu-view {
   -fx-alignment: bottom-center;
@@ -13,93 +14,13 @@
 }
 
 .option-container {
-  .list-cell {
-    -fx-padding: 0 0 0 0;
-    -fx-content-display: graphic-only;
-  }
-
   -fx-background-color: linear-gradient(to bottom, transparent 0%, transparent 75%, rgba(40, 40, 40) 75%, black);
-  
-  .image-view-effect, .image-view-overlay {
-    -fx-border-color: black;
-    -fx-border-width: 3px;
-  }
- 
-  .scaled-image-view {
-    -fx-background-color: black;
-  }
-  
-  .overlay {
-    -fx-layout: "[status-indicator, Stack!stack-box: {hgrow: ALWAYS}]";
-    
-    -fx-background-color: @glass-color;
-    -fx-fill-height: true;
-    -fx-spacing: 10px;
-    
-    .status-indicator {
-      -fx-padding: 5;
 
-      .circle-shape {
-        -fx-stroke-width: 3;
-        -fx-stroke: rgba(125, 255, 125, 0.2);
-      }
-      
-      .arc-shape {
-        -fx-stroke-width: 5;
-      }
+  .list-cell {
+    #cell-layout.image-overlay();
 
-      .empty {
-        -fx-background-color: rgba(125, 255, 125, 0.5);
-        -fx-shape: @shape-play;
-      }
-      
-      .partial {
-        -fx-shape: @shape-resume; 
-      }
-      
-      .full {
-        -fx-shape: @shape-checkmark;
-      }
-    }
-    
-    .stack-box {
-      -fx-layout: "[VBox!title-box, sequence: {align: CENTER_RIGHT}, age: {align: BOTTOM_RIGHT}]";
-    
-      .sequence {
-        -fx-font-size: 32;
-        .black;
-        -fx-padding: 0 10 0 0;
-        -fx-text-fill: rgba(255, 255, 255, 0.3);
-      }
-      
-      .age {
-        -fx-font-size: 12;
-        -fx-text-fill: rgba(255, 255, 255, 0.3);
-      }
-    }
-    
-    .title-box {
-      -fx-layout: "[parent-title, title, subtitle]";
-      
-      -fx-alignment: CENTER_LEFT;
-      -fx-spacing: -0.25em;
-      
-      .label {
-        -fx-wrap-text: true;
-        .heading-drop-shadow;
-      }
-      
-      .title {
-        -fx-font-size: 22;
-        -fx-text-fill: @text-primary-highlight;
-      }
-                  
-      .parent-title,
-      .subtitle {
-        -fx-font-size: 16;
-        -fx-text-fill: @text-accent;
-      }
-    }
+    @style-p2-base: 22;
+    @style-p3-base: 16;
   }
 }
 
@@ -109,8 +30,8 @@
     -fx-text-fill: fade(@text-accent, 0.4);
     .black;
   }
-  
-  .list-cell {     
+
+  .list-cell {
     -fx-text-fill: @text-primary-highlight;
     -fx-font-size: 30;
     .black;

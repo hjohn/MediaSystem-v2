@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid.participation;
 
-import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
+import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.ui.api.domain.Participation;

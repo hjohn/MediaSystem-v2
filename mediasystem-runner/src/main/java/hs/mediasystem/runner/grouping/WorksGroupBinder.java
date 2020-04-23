@@ -1,7 +1,7 @@
 package hs.mediasystem.runner.grouping;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory.Binder;
+import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Binder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;

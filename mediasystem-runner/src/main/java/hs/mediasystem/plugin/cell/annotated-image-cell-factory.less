@@ -1,0 +1,108 @@
+#cell-focus() {
+  .rounded-box() {
+    -fx-background-color: linear-gradient(rgba(235, 235, 235, 0.4), rgba(235, 235, 235, 0.2) 25%, rgba(255, 255, 255, 0.3) 75%, rgba(235, 235, 235, 0.4));
+    -fx-border-color:
+       linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.9) 20%, rgba(0, 0, 0, 0.9) 70%, rgba(0, 0, 0, 0.6)),
+       linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.5) 10%, rgba(255, 255, 255, 0.5) 80%, rgba(255, 255, 255, 0.7));
+    -fx-background-insets: -8;
+    -fx-background-radius: 3;
+    -fx-border-width: 3px, 2px;
+    -fx-border-insets: 0, -10;
+    -fx-border-radius: 0, 10;
+
+    .label
+    {
+      .text-fill-highlight;
+    }
+
+    .label.detail
+    {
+      .text-fill-accent-highlight;
+    }
+  }
+}
+
+#cell-layout() {
+  .image-overlay() {
+    -fx-padding: 0 0 0 0;
+    -fx-content-display: graphic-only;
+
+    .image-view-effect, .image-view-overlay {
+      -fx-border-width: 3px;
+      -fx-border-color: @glass-color;
+    }
+
+    .overlay {
+      -fx-layout: "[status-indicator, Stack!stack-box: {hgrow: ALWAYS}]";
+
+      -fx-background-color: @glass-color;
+      -fx-fill-height: true;
+      -fx-spacing: 10px;
+
+      .status-indicator {
+        -fx-padding: 5;
+
+        .circle-shape {
+          -fx-stroke-width: 3;
+          -fx-stroke: rgba(125, 255, 125, 0.2);
+        }
+
+        .arc-shape {
+          -fx-stroke-width: 5;
+        }
+
+        .empty {
+          -fx-background-color: rgba(125, 255, 125, 0.5);
+          -fx-shape: @shape-play;
+        }
+
+        .partial {
+          -fx-shape: @shape-resume;
+        }
+
+        .full {
+          -fx-shape: @shape-checkmark;
+        }
+      }
+
+      .stack-box {
+        -fx-layout: "[VBox!title-box, sequence: {align: CENTER_RIGHT}, age: {align: BOTTOM_RIGHT}]";
+
+        .sequence {
+          -fx-font-size: 32;
+          .black;
+          -fx-padding: 0 10 0 0;
+          -fx-text-fill: rgba(255, 255, 255, 0.3);
+        }
+
+        .age {
+          -fx-font-size: 12;
+          -fx-text-fill: rgba(255, 255, 255, 0.3);
+        }
+      }
+
+      .title-box {
+        -fx-layout: "[parent-title, title, subtitle]";
+
+        -fx-alignment: CENTER_LEFT;
+        -fx-spacing: -0.25em;
+
+        .label {
+          -fx-wrap-text: true;
+          .heading-drop-shadow;
+        }
+
+        .title {
+          .style-p2;
+          -fx-text-fill: @text-primary-highlight;
+        }
+
+        .parent-title,
+        .subtitle {
+          .style-p3;
+          -fx-text-fill: @text-accent;
+        }
+      }
+    }
+  }
+}

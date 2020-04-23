@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
-import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Parent;
 import hs.mediasystem.presentation.NodeFactory;

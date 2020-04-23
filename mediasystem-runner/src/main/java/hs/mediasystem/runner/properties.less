@@ -98,20 +98,44 @@
 
 // Difference between headings and paragraphs: bold vs regular, not wrapped vs wrapped
 
+@style-p1-base: 22;
+@style-p2-base: 18;
+@style-p3-base: 15;
+
 .style-p1 {
-  -fx-font-size: 22;
+  -fx-font-size: @style-p1-base;
+
+  &.smaller {
+    -fx-font-size: @style-p1-base - 4;
+  }
+
+  &.smaller2 {
+    -fx-font-size: @style-p1-base - 6;
+  }
 }
 
 .style-p2 {
-  -fx-font-size: 18;
+  -fx-font-size: @style-p2-base;
 
   &.smaller {
-    -fx-font-size: 15;
+    -fx-font-size: @style-p2-base - 2;
+  }
+
+  &.smaller2 {
+    -fx-font-size: @style-p2-base - 4;
   }
 }
 
 .style-p3 {
-  -fx-font-size: 15;
+  -fx-font-size: @style-p3-base;
+
+  &.smaller {
+    -fx-font-size: @style-p3-base - 2;
+  }
+
+  &.smaller2 {
+    -fx-font-size: @style-p3-base - 4;
+  }
 }
 
 .style-p3-thin {

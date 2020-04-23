@@ -3,6 +3,10 @@ package hs.mediasystem.util.javafx.control.status;
 import hs.mediasystem.util.javafx.control.Labels;
 
 import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.ContentDisplay;
@@ -13,12 +17,10 @@ import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Rectangle;
 
-import org.reactfx.value.Var;
-
 public class StatusIndicator extends StackPane {
-  public final Var<Double> value = Var.newSimpleVar(0.0);
-  public final Var<Double> missingFraction = Var.newSimpleVar(0.0);
-  public final Var<Boolean> showPercentage = Var.newSimpleVar(Boolean.TRUE);
+  public final DoubleProperty value = new SimpleDoubleProperty();
+  public final DoubleProperty missingFraction = new SimpleDoubleProperty();
+  public final BooleanProperty showPercentage = new SimpleBooleanProperty(true);
 
   private final Label label = Labels.create("size,percentage");
   private final Label backgroundLabel = Labels.create("size,background");

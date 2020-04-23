@@ -2,10 +2,10 @@ package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
-import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.WorkBinder;

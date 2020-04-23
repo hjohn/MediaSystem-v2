@@ -1,5 +1,7 @@
-package hs.mediasystem.plugin.library.scene;
+package hs.mediasystem.plugin.cell;
 
+import hs.mediasystem.plugin.library.scene.BinderBase;
+import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;

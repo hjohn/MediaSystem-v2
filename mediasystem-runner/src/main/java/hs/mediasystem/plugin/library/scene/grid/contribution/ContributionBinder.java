@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
-import hs.mediasystem.plugin.library.scene.MediaGridViewCellFactory;
+import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role;
