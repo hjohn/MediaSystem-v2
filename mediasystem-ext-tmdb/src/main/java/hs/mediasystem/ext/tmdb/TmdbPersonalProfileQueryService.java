@@ -30,9 +30,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class TmdbPersonalProfileQueryService implements PersonalProfileQueryService {
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-  private static final MediaType SERIE = MediaType.of("SERIE");
-
   @Inject private TheMovieDatabase tmdb;
 
   @Override
@@ -83,7 +80,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
     }
 
     Production production = new Production(
-      new ProductionIdentifier(DataSource.instance(isMovie ? MOVIE : SERIE, "TMDB"), node.get("id").asText()),
+      new ProductionIdentifier(DataSource.instance(isMovie ? MediaType.MOVIE : MediaType.SERIE, "TMDB"), node.get("id").asText()),
       new Details(
         isMovie ? node.path("title").textValue() : node.path("name").textValue(),
         null,

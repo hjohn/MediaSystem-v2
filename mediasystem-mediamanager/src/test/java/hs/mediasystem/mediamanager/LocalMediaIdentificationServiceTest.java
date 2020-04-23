@@ -34,15 +34,12 @@ import static org.mockito.Mockito.when;
 public class LocalMediaIdentificationServiceTest {
   private static final StreamID STREAM_ID = new StreamID(1, new ContentID(999), "Stuff");
 
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
-  private static final DataSource DATA_SOURCE_1 = DataSource.instance(MOVIE, "D1");
-  private static final DataSource DATA_SOURCE_2 = DataSource.instance(MOVIE, "D2");
-  private static final DataSource DATA_SOURCE_3 = DataSource.instance(EPISODE, "D3");
-  private static final DataSource DATA_SOURCE_4 = DataSource.instance(EPISODE, "D4");
-  private static final DataSource DATA_SOURCE_5 = DataSource.instance(MOVIE, "D5");
-  private static final DataSource DATA_SOURCE_6 = DataSource.instance(MOVIE, "D6");
+  private static final DataSource DATA_SOURCE_1 = DataSource.instance(MediaType.MOVIE, "D1");
+  private static final DataSource DATA_SOURCE_2 = DataSource.instance(MediaType.MOVIE, "D2");
+  private static final DataSource DATA_SOURCE_3 = DataSource.instance(MediaType.EPISODE, "D3");
+  private static final DataSource DATA_SOURCE_4 = DataSource.instance(MediaType.EPISODE, "D4");
+  private static final DataSource DATA_SOURCE_5 = DataSource.instance(MediaType.MOVIE, "D5");
+  private static final DataSource DATA_SOURCE_6 = DataSource.instance(MediaType.MOVIE, "D6");
 
   @Mock private IdentificationService idServiceForDS1;
   @Mock private IdentificationService idServiceForDS2;
@@ -66,8 +63,8 @@ public class LocalMediaIdentificationServiceTest {
     when(idServiceForDS3.getDataSource()).thenReturn(DATA_SOURCE_3);
     when(idServiceForDS4.getDataSource()).thenReturn(DATA_SOURCE_4);
     when(idServiceForDS6.getDataSource()).thenReturn(DATA_SOURCE_6);
-    when(serieIdService.getDataSource()).thenReturn(DataSource.instance(SERIE, "TMDB"));
-    when(episodeIdService.getDataSource()).thenReturn(DataSource.instance(EPISODE, "TMDB"));
+    when(serieIdService.getDataSource()).thenReturn(DataSource.instance(MediaType.SERIE, "TMDB"));
+    when(episodeIdService.getDataSource()).thenReturn(DataSource.instance(MediaType.EPISODE, "TMDB"));
 
     when(queryServiceForDS1.getDataSource()).thenReturn(DATA_SOURCE_1);
     when(queryServiceForDS3.getDataSource()).thenReturn(DATA_SOURCE_3);
@@ -154,6 +151,6 @@ public class LocalMediaIdentificationServiceTest {
   }
 
   private static Streamable createMovie(String uri, Attributes attributes) {
-    return new Streamable(MediaType.of("MOVIE"), new StringURI(uri), STREAM_ID, null, attributes);
+    return new Streamable(MediaType.MOVIE, new StringURI(uri), STREAM_ID, null, attributes);
   }
 }

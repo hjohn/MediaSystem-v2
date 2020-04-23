@@ -39,9 +39,6 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder()))).reversed();
   public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().getValue(), Comparator.nullsLast(Comparator.naturalOrder())));
 
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
-
   @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
@@ -81,7 +78,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   @Override
   public Function<Work, ObservableValue<? extends String>> sideBarCenterBindProvider() {
     return r -> new SimpleStringProperty(r.getParent()
-      .filter(p -> p.getType().equals(COLLECTION))
+      .filter(p -> p.getType().equals(MediaType.COLLECTION))
       .map(Parent::getName)
       .orElse("")
     );
@@ -121,7 +118,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
     if(stage == Stage.ENDED && lastAirDate != null && lastAirDate.getYear() != date.getYear()) {
       return date.getYear() + " - " + lastAirDate.getYear();
     }
-    else if(item.getType().equals(SERIE) && stage == Stage.RELEASED) {
+    else if(item.getType().isSerie() && stage == Stage.RELEASED) {
       return date.getYear() + " -";
     }
 

@@ -26,7 +26,7 @@ public class Series {
   }
 
   public static Serie create(List<Episode> episodes) {
-    return create(new ProductionIdentifier(DataSource.instance(MediaType.of("SERIE"), "TMDB"), "12345"), "Charmed", episodes);
+    return create(new ProductionIdentifier(DataSource.instance(MediaType.SERIE, "TMDB"), "12345"), "Charmed", episodes);
   }
 
   public static Serie create(ProductionIdentifier identifier, String title, List<Episode> episodes) {
@@ -36,13 +36,13 @@ public class Series {
       new Reception(8, 12345),
       Arrays.asList("en"),
       Arrays.asList("Action", "Science-Fiction"),
-      Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.of("KEYWORD"), "TMDB"), "12345"), "magic")),
+      Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.KEYWORD, "TMDB"), "12345"), "magic")),
       State.ENDED,
       LocalDate.of(2009, 6, 6),
       99.0,
       Arrays.asList(
         new Season(
-          new ProductionIdentifier(DataSource.instance(MediaType.of("SEASON"), "TMDB"), "1"),
+          new ProductionIdentifier(DataSource.instance(MediaType.SEASON, "TMDB"), "1"),
           new Details("Season 1", "subtitle", "", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
           1,
           episodes

@@ -16,9 +16,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 public class TmdbRecommendationQueryService implements RecommendationQueryService {
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-  private static final MediaType SERIE = MediaType.of("SERIE");
-
   @Inject private TheMovieDatabase tmdb;
   @Inject private ObjectFactory objectFactory;
 
@@ -28,10 +25,10 @@ public class TmdbRecommendationQueryService implements RecommendationQueryServic
     List<Production> productions = new ArrayList<>();
 
     for(JsonNode result : info.path("results")) {
-      if(identifier.getDataSource().getType() == MOVIE) {
+      if(identifier.getDataSource().getType() == MediaType.MOVIE) {
         productions.add(objectFactory.toMovie(result));
       }
-      else if(identifier.getDataSource().getType() == SERIE) {
+      else if(identifier.getDataSource().getType() == MediaType.SERIE) {
         productions.add(objectFactory.toSerie(result, null));
       }
     }
@@ -40,10 +37,10 @@ public class TmdbRecommendationQueryService implements RecommendationQueryServic
   }
 
   private static String identifierToLocation(Identifier identifier) {
-    if(identifier.getDataSource().getType() == MOVIE) {
+    if(identifier.getDataSource().getType() == MediaType.MOVIE) {
       return "3/movie/" + identifier.getId() + "/recommendations";
     }
-    if(identifier.getDataSource().getType() == SERIE) {
+    if(identifier.getDataSource().getType() == MediaType.SERIE) {
       return "3/tv/" + identifier.getId() + "/recommendations";
     }
 

@@ -14,10 +14,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 public class TmdbVideoLinksQueryService implements VideoLinksQueryService {
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
-
   @Inject private TheMovieDatabase tmdb;
   @Inject private VideoLinks videoLinks;
 
@@ -29,13 +25,13 @@ public class TmdbVideoLinksQueryService implements VideoLinksQueryService {
   }
 
   private static String identifierToLocation(Identifier identifier) {
-    if(identifier.getDataSource().getType() == MOVIE) {
+    if(identifier.getDataSource().getType() == MediaType.MOVIE) {
       return "3/movie/" + identifier.getId() + "/videos";
     }
-    if(identifier.getDataSource().getType() == SERIE) {
+    if(identifier.getDataSource().getType() == MediaType.SERIE) {
       return "3/tv/" + identifier.getId() + "/videos";
     }
-    if(identifier.getDataSource().getType() == EPISODE) {
+    if(identifier.getDataSource().getType() == MediaType.EPISODE) {
       String[] parts = identifier.getId().split("/");
 
       return "3/tv/" + parts[0] + "/season/" + parts[1] + "/episode/" + parts[2] + "/videos";

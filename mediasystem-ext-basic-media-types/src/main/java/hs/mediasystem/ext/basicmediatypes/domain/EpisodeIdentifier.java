@@ -15,6 +15,6 @@ public class EpisodeIdentifier extends ProductionIdentifier {
 
   @Override
   public Identifier getRootIdentifier() {
-    return new Identifier(DataSource.instance(MediaType.of("SERIE"), getDataSource().getName()), getId().substring(0, getId().indexOf("/")));
+    return new Identifier(DataSource.instance(MediaType.SERIE, getDataSource().getName()), getId().substring(0, getId().indexOf("/")));
   }
 }

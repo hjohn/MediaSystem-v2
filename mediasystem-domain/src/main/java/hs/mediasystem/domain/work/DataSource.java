@@ -18,7 +18,7 @@ public class DataSource {
   public static DataSource fromString(String key) {
     String[] parts = key.split(":");
 
-    return DataSource.instance(MediaType.of(parts[1]), parts[0]);
+    return DataSource.instance(MediaType.valueOf(parts[1]), parts[0]);
   }
 
   private DataSource(MediaType type, String name) {

@@ -14,7 +14,7 @@ public class Streamables {
   }
 
   public static Streamable create(String uri, StreamID streamId) {
-    return create(MediaType.of("MOVIE"), uri, streamId, null);
+    return create(MediaType.MOVIE, uri, streamId, null);
   }
 
   public static Streamable create(MediaType type, String uri, StreamID streamId, String sequence) {

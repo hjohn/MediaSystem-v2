@@ -11,8 +11,6 @@ import java.util.Set;
  * Represents either a Movie, a TV Movie or an entire TV Series.
  */
 public class Production extends Release {
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
-
   private final List<String> languages;
   private final List<String> genres;
   private final double popularity;
@@ -51,7 +49,7 @@ public class Production extends Release {
   }
 
   public Optional<Identifier> getCollectionIdentifier() {
-    return relatedIdentifiers.stream().filter(i -> i.getDataSource().getType().equals(COLLECTION)).findAny();
+    return relatedIdentifiers.stream().filter(i -> i.getDataSource().getType().equals(MediaType.COLLECTION)).findAny();
   }
 
   @Override

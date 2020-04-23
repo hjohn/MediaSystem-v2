@@ -26,8 +26,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class RecommendationService {
-  private static final MediaType SERIE = MediaType.of("SERIE");
-
   @Inject private WorksService worksService;
   @Inject private WorkService workService;
   @Inject private StreamableStore streamStore;
@@ -35,7 +33,7 @@ public class RecommendationService {
 
   public List<Recommendation> findRecommendations(int maximum) {
     return worksService.findLastWatched(maximum * 2, null).stream()    // Find twice as much matched last watched Works, as Works that are consecutive will get filtered and only last one is added
-      .filter(r -> !r.getType().equals(SERIE))  // Donot turn Series into recommendations
+      .filter(r -> r.getType().isPlayable())
       .map(this::toPartiallyWatchedOrNextUnwatchedRecommendation)
       .flatMap(Optional::stream)
       .limit(maximum)

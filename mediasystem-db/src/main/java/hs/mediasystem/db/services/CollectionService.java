@@ -33,7 +33,7 @@ public class CollectionService {
     List<Collection> collections = new ArrayList<>();
 
     for(CollectionDefinition collectionDefinition : manager.getCollectionDefinitions()) {
-      MediaType mediaType = MediaType.of(collectionDefinition.getType().toUpperCase());
+      MediaType mediaType = MediaType.valueOf(collectionDefinition.getType().toUpperCase());
       List<Work> works = worksService.findAllByType(mediaType, collectionDefinition.getTag());
       Collections.sort(works, RATING_COMPARATOR);
 

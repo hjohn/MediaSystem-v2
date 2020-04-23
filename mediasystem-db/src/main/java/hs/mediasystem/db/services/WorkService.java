@@ -57,10 +57,6 @@ import javax.inject.Singleton;
 @Singleton
 public class WorkService {
   private static final String DEFAULT_DATA_SOURCE_NAME = "DEFAULT";
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
 
   @Inject private DatabaseStreamStore streamStore;
   @Inject private StreamStateService stateService;
@@ -109,7 +105,7 @@ public class WorkService {
     if(workId.getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
       return find(StreamID.of(workId.getKey()));
     }
-    if(workId.getType().equals(COLLECTION)) {
+    if(workId.getType().equals(MediaType.COLLECTION)) {
       return queryProductionCollection(toIdentifier(workId))
         .map(pc -> toWork(pc, null));
     }
@@ -149,7 +145,7 @@ public class WorkService {
   public synchronized List<Work> findChildren(WorkId workId) {
     MediaType type = workId.getType();
 
-    if(type.equals(SERIE)) {
+    if(type.isSerie()) {
 
       /*
        * Case 1: Identifier is a special identifier identifying a stream directly
@@ -169,7 +165,7 @@ public class WorkService {
 
       return findSerieChildren((ProductionIdentifier)toIdentifier(workId));
     }
-    else if(type.equals(COLLECTION)) {
+    else if(type.equals(MediaType.COLLECTION)) {
       return queryProductionCollection(toIdentifier(workId)).map(ProductionCollection::getItems).orElse(List.of()).stream()
         .map(p -> toWork(p, null))
         .collect(Collectors.toList());
@@ -428,10 +424,10 @@ public class WorkService {
   }
 
   private static Identifier toIdentifier(WorkId workId) {
-    if(workId.getType().equals(EPISODE)) {
+    if(workId.getType().equals(MediaType.EPISODE)) {
       return new EpisodeIdentifier(workId.getDataSource(), workId.getKey());
     }
-    else if(workId.getType().equals(SERIE) || workId.getType().equals(MOVIE)) {
+    else if(workId.getType().equals(MediaType.SERIE) || workId.getType().equals(MediaType.MOVIE)) {
       return new ProductionIdentifier(workId.getDataSource(), workId.getKey());
     }
 

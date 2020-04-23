@@ -13,9 +13,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class RecommendationMenuOptionAdapter implements MenuOption {
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-
   private final Recommendation recommendation;
   private final Supplier<? extends Presentation> presentationSupplier;
 
@@ -36,7 +33,7 @@ public class RecommendationMenuOptionAdapter implements MenuOption {
   @Override
   public String getParentTitle() {
     return recommendation.getWork().getParent()
-      .filter(p -> p.getType().equals(SERIE))
+      .filter(p -> p.getType().equals(MediaType.SERIE))
       .map(Parent::getName)
       .orElse(null);
   }
@@ -49,7 +46,7 @@ public class RecommendationMenuOptionAdapter implements MenuOption {
   @Override
   public String getSubtitle() {
     return recommendation.getWork().getParent()
-      .filter(p -> p.getType().equals(SERIE))
+      .filter(p -> p.getType().equals(MediaType.SERIE))
       .map(p -> "")
       .orElseGet(() -> recommendation.getWork().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null));
   }
@@ -70,14 +67,14 @@ public class RecommendationMenuOptionAdapter implements MenuOption {
   public Optional<ImageURI> getImage() {
     MediaType type = recommendation.getWork().getType();
 
-    if(type.equals(SERIE)) {
+    if(type.equals(MediaType.SERIE)) {
       return Optional.of(new ImageURI(
         "multi:800,450;0,0,800,450;517,50,233,350:" + getDetails().getBackdrop().get().getUri()
           + "," + getDetails().getImage().get().getUri()
       ));
     }
 
-    if(type.equals(MOVIE)) {
+    if(type.equals(MediaType.MOVIE)) {
       return getDetails().getBackdrop();
     }
 

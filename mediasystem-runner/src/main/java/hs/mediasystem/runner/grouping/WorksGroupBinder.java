@@ -19,8 +19,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup> {
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
-
   @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
@@ -48,7 +46,7 @@ public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup
   }
 
   private static String toYearRange(WorksGroup wg) {
-    if(wg.getId().getType().equals(COLLECTION)) {
+    if(wg.getId().getType().equals(MediaType.COLLECTION)) {
       LocalDate earliestDate = null;
       LocalDate latestDate = null;
       LocalDate now = LocalDate.now();

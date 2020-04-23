@@ -21,7 +21,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LocalEpisodeIdentificationService extends AbstractIdentificationService {
-  private static final DataSource EPISODE = DataSource.instance(MediaType.of("EPISODE"), "LOCAL");
+  private static final DataSource EPISODE = DataSource.instance(MediaType.EPISODE, "LOCAL");
   private static final Pattern PATTERN = Pattern.compile("([0-9]+),([0-9]+)");
 
   public LocalEpisodeIdentificationService() {

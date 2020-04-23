@@ -28,8 +28,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class SerieHelper {
-  private static final DataSource DEFAULT_RELEASE = DataSource.instance(MediaType.of("RELEASE"), "DEFAULT");
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
+  private static final DataSource DEFAULT_RELEASE = DataSource.instance(MediaType.RELEASE, "DEFAULT");
 
   @Inject private StreamableStore streamStore;
   @Inject private StreamMetaDataStore metaDataProvider;
@@ -71,7 +70,7 @@ public class SerieHelper {
     ImageURI image;
     ImageURI backdrop = null;
 
-    if(streamable.getType().equals(EPISODE)) {
+    if(streamable.getType().isComponent()) {
       image = metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 1).map(list -> list.get(1)).map(Snapshot::getImageUri).orElse(null);
     }
     else {

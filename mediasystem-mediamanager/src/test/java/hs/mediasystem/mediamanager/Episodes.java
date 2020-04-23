@@ -27,7 +27,7 @@ public class Episodes {
 
   public static Episode create(String id, int season, int episodeNumber) {
     return create(
-      new EpisodeIdentifier(DataSource.instance(MediaType.of("EPISODE"), "TMDB"), id),
+      new EpisodeIdentifier(DataSource.instance(MediaType.EPISODE, "TMDB"), id),
       season,
       episodeNumber
     );

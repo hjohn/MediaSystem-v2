@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class Movies {
   public static Movie create() {
-    return create(new ProductionIdentifier(DataSource.instance(MediaType.of("MOVIE"), "TMDB"), "12345"));
+    return create(new ProductionIdentifier(DataSource.instance(MediaType.MOVIE, "TMDB"), "12345"));
   }
 
   public static Movie create(ProductionIdentifier identifier) {
@@ -33,7 +33,7 @@ public class Movies {
       Duration.ofHours(2),
       Arrays.asList("en"),
       Arrays.asList("Action", "Science-Fiction"),
-      Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.of("KEYWORD"), "TMDB"), "12345"), "timetravel")),
+      Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.KEYWORD, "TMDB"), "12345"), "timetravel")),
       99.0,
       "Skynet comes",
       State.RELEASED,

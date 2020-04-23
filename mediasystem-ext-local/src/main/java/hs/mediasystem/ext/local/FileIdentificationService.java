@@ -18,7 +18,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class FileIdentificationService extends AbstractIdentificationService {
-  private static final DataSource FILE = DataSource.instance(MediaType.of("FILE"), "LOCAL");
+  private static final DataSource FILE = DataSource.instance(MediaType.FILE, "LOCAL");
 
   public FileIdentificationService() {
     super(FILE);

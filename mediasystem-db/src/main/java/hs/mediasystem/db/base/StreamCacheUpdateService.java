@@ -42,7 +42,6 @@ public class StreamCacheUpdateService {
   private static final Logger LOGGER = Logger.getLogger(StreamCacheUpdateService.class.getName());
   private static final Map<StreamID, CompletableFuture<MediaIdentification>> RECENT_IDENTIFICATIONS = new ConcurrentHashMap<>();
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Downloading Metadata");
-  private static final MediaType COLLECTION_MEDIA_TYPE = MediaType.of("COLLECTION");
 
   @Inject private LocalMediaIdentificationService identificationService;
   @Inject private DatabaseStreamStore streamStore;
@@ -210,7 +209,7 @@ public class StreamCacheUpdateService {
       Production production = (Production)descriptor;
 
       production.getRelatedIdentifiers().stream()
-        .filter(identifier -> identifier.getDataSource().getType().equals(COLLECTION_MEDIA_TYPE))  // After this filtering, stream consists of Collection type identifiers
+        .filter(identifier -> identifier.getDataSource().getType().equals(MediaType.COLLECTION))  // After this filtering, stream consists of Collection type identifiers
         .filter(identifier -> identifier.getDataSource().getName().equals(production.getIdentifier().getDataSource().getName()))  // Only Collection type identifiers of same data source as production that contained it
         .forEach(this::fetchAndStoreCollectionItems);
     }

@@ -127,12 +127,9 @@ public class DatabaseIT {
     contentPrint6 = contentPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends/friends_1x02.txt").toUri().toString()), 302L, 402L);
   }
 
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
-  private static final DataSource MOVIE_DS = DataSource.instance(MOVIE, "TMDB");
-  private static final DataSource SERIE_DS = DataSource.instance(SERIE, "TMDB");
-  private static final DataSource EPISODE_DS = DataSource.instance(EPISODE, "TMDB");
+  private static final DataSource MOVIE_DS = DataSource.instance(MediaType.MOVIE, "TMDB");
+  private static final DataSource SERIE_DS = DataSource.instance(MediaType.SERIE, "TMDB");
+  private static final DataSource EPISODE_DS = DataSource.instance(MediaType.EPISODE, "TMDB");
 
   public static class MovieIdentificationService extends AbstractIdentificationService {
     public MovieIdentificationService() {
@@ -239,7 +236,7 @@ public class DatabaseIT {
 
     @Test
     void findAllByTypeSerieShouldFindAll() {
-      assertEquals(1, worksService.findAllByType(SERIE, "series").size());
+      assertEquals(1, worksService.findAllByType(MediaType.SERIE, "series").size());
     }
   }
 
@@ -271,12 +268,12 @@ public class DatabaseIT {
 
     @Test
     void findAllByTypeMovieShouldFindAll() {
-      assertEquals(3, worksService.findAllByType(MOVIE, "movies").size());
+      assertEquals(3, worksService.findAllByType(MediaType.MOVIE, "movies").size());
     }
 
     @Test
     void findAllByTypeNotMovieShouldNotFindAnything() {
-      assertEquals(0, worksService.findAllByType(MOVIE, "non-existing").size());
+      assertEquals(0, worksService.findAllByType(MediaType.MOVIE, "non-existing").size());
     }
 
     @Test
@@ -312,12 +309,12 @@ public class DatabaseIT {
 
       @Test
       void findAllByTypeMovieShouldFindOneLess() {
-        assertEquals(2, worksService.findAllByType(MOVIE, "movies").size());
+        assertEquals(2, worksService.findAllByType(MediaType.MOVIE, "movies").size());
       }
 
       @Test
       void findAllByTypeNotMovieShouldNotFindAnythingStill() {
-        assertEquals(0, worksService.findAllByType(MOVIE, "non-existing").size());
+        assertEquals(0, worksService.findAllByType(MediaType.MOVIE, "non-existing").size());
       }
 
       @Test
@@ -331,9 +328,9 @@ public class DatabaseIT {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
-        streamable(MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "Terminator"), "Terminator"),
-        streamable(MOVIE, "testdata/movies/Avatar.txt", new StreamID(1, contentPrint2.getId(), "Avatar"), "Avatar"),
-        streamable(MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
+        streamable(MediaType.MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "Terminator"), "Terminator"),
+        streamable(MediaType.MOVIE, "testdata/movies/Avatar.txt", new StreamID(1, contentPrint2.getId(), "Avatar"), "Avatar"),
+        streamable(MediaType.MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
       ));
 
       Thread.sleep(500);
@@ -350,8 +347,8 @@ public class DatabaseIT {
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
-        streamable(MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "The Terminator"), "The Terminator"),
-        streamable(MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
+        streamable(MediaType.MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "The Terminator"), "The Terminator"),
+        streamable(MediaType.MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
       ));
 
       Thread.sleep(500);
@@ -365,9 +362,9 @@ public class DatabaseIT {
       StreamID sid = new StreamID(2, contentPrint4.getId(), "Friends");
 
       updateService.update(2, List.of(
-        streamable(SERIE, "testdata/series/Friends", sid, "Friends"),
-        streamable(EPISODE, "testdata/series/Friends/friends_1x01.txt", new StreamID(2, contentPrint5.getId(), "1x01"), sid, "1x01"),
-        streamable(EPISODE, "testdata/series/Friends/friends_1x02.txt", new StreamID(2, contentPrint6.getId(), "1x02"), sid, "1x02")
+        streamable(MediaType.SERIE, "testdata/series/Friends", sid, "Friends"),
+        streamable(MediaType.EPISODE, "testdata/series/Friends/friends_1x01.txt", new StreamID(2, contentPrint5.getId(), "1x01"), sid, "1x01"),
+        streamable(MediaType.EPISODE, "testdata/series/Friends/friends_1x02.txt", new StreamID(2, contentPrint6.getId(), "1x02"), sid, "1x02")
       ));
 
       Thread.sleep(500);

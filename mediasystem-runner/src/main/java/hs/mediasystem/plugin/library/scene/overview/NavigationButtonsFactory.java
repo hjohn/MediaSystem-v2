@@ -31,9 +31,6 @@ import org.reactfx.EventStreams;
 
 @Singleton
 public class NavigationButtonsFactory {
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
-
   @Inject private ProductionCollectionFactory productionCollectionFactory;
   @Inject private RecommendationsPresentation.Factory recommendationsPresentationFactory;
   @Inject private ContributionsPresentation.Factory contributionsPresentationFactory;
@@ -54,7 +51,7 @@ public class NavigationButtonsFactory {
       hbox.getChildren().clear();
 
       hbox.getChildren().add(
-        presentation.rootItem.getType().equals(SERIE) && presentation.state.get() == State.OVERVIEW ?
+        presentation.rootItem.getType().isSerie() && presentation.state.get() == State.OVERVIEW ?
           Buttons.create("Episodes", e -> presentation.toListState()) : createPlayButton(presentation)
       );
 
@@ -92,7 +89,7 @@ public class NavigationButtonsFactory {
     nodes.add(Buttons.create("cast", "Cast & Crew", e -> navigateToCastAndCrew(e, presentation.rootItem)));
     nodes.add(Buttons.create("recommended", "Recommended", e -> navigateToRecommendations(e, presentation.rootItem)));
 
-    presentation.rootItem.getParent().filter(p -> p.getType().equals(COLLECTION))
+    presentation.rootItem.getParent().filter(p -> p.getType().equals(MediaType.COLLECTION))
       .ifPresent(p -> {
         nodes.add(Buttons.create("collection", "Collection", e -> navigateToCollection(e, p.getId())));
       });

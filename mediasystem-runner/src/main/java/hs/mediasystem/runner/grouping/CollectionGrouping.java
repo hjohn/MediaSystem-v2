@@ -15,8 +15,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class CollectionGrouping implements Grouping<Work> {
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
-
   @Inject private WorkClient workClient;
 
   @Override
@@ -25,7 +23,7 @@ public class CollectionGrouping implements Grouping<Work> {
     List<Object> topLevelItems = new ArrayList<>();
 
     for(Work work : items) {
-      work.getParent().filter(p -> p.getType().equals(COLLECTION)).ifPresent(p -> {
+      work.getParent().filter(p -> p.getType().equals(MediaType.COLLECTION)).ifPresent(p -> {
         if(!childWorks.containsKey(p.getId())) {
           workClient.find(p.getId()).ifPresent(r -> {
             childWorks.put(p.getId(), workClient.findChildren(p.getId()));

@@ -110,6 +110,6 @@ public class TmdbIdentificationServiceTest {
   }
 
   private static Streamable streamable(Attributes attributes) {
-    return new Streamable(MediaType.of("MOVIE"), new StringURI(""), new StreamID(1, new ContentID(1), "Unknown"), null, attributes);
+    return new Streamable(MediaType.MOVIE, new StringURI(""), new StreamID(1, new ContentID(1), "Unknown"), null, attributes);
   }
 }

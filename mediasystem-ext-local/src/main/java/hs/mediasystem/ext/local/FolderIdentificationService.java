@@ -18,7 +18,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class FolderIdentificationService extends AbstractIdentificationService {
-  private static final DataSource FOLDER = DataSource.instance(MediaType.of("FOLDER"), "LOCAL");
+  private static final DataSource FOLDER = DataSource.instance(MediaType.FOLDER, "LOCAL");
 
   public FolderIdentificationService() {
     super(FOLDER);

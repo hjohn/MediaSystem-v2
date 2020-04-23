@@ -28,8 +28,6 @@ import javax.inject.Singleton;
 @Singleton
 public class FoldersScanner implements Scanner {
   private static final NameDecoder FILE_NAME_DECODER = new NameDecoder(Mode.FILE);
-  private static final MediaType FOLDER = MediaType.of("FOLDER");
-  private static final MediaType FILE = MediaType.of("FILE");
 
   @Inject private ContentPrintProvider contentPrintProvider;
 
@@ -66,7 +64,7 @@ public class FoldersScanner implements Scanner {
       List<Streamable> list = scan(path, importSourceId, id);
 
       if(!list.isEmpty()) {
-        results.add(new Streamable(FOLDER, uri, id, parentId, attributes));
+        results.add(new Streamable(MediaType.FOLDER, uri, id, parentId, attributes));
         results.addAll(list);
       }
     }
@@ -74,7 +72,7 @@ public class FoldersScanner implements Scanner {
       ContentPrint contentPrint = contentPrintProvider.get(uri, Files.size(path), Files.getLastModifiedTime(path).toMillis());
       StreamID id = new StreamID(importSourceId, contentPrint.getId(), fileName);
 
-      return List.of(new Streamable(FILE, uri, id, parentId, attributes));
+      return List.of(new Streamable(MediaType.FILE, uri, id, parentId, attributes));
     }
 
     return results;

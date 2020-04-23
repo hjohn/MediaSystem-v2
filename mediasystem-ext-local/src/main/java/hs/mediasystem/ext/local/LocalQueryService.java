@@ -34,9 +34,9 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LocalQueryService extends AbstractQueryService {
-  private static final DataSource SERIE = DataSource.instance(MediaType.of("SERIE"), "LOCAL");
-  private static final DataSource SEASON = DataSource.instance(MediaType.of("SEASON"), "LOCAL");
-  private static final DataSource EPISODE = DataSource.instance(MediaType.of("EPISODE"), "LOCAL");
+  private static final DataSource SERIE = DataSource.instance(MediaType.SERIE, "LOCAL");
+  private static final DataSource SEASON = DataSource.instance(MediaType.SEASON, "LOCAL");
+  private static final DataSource EPISODE = DataSource.instance(MediaType.EPISODE, "LOCAL");
   private static final Pattern PATTERN = Pattern.compile("([0-9]+),([0-9]+)");
 
   @Inject private StreamableStore streamStore;

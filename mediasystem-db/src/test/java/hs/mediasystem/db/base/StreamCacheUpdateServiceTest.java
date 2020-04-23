@@ -47,7 +47,7 @@ public class StreamCacheUpdateServiceTest {
 
   private final String allowedDataSource = "TMDB";
 
-  private static final DataSource MOVIE_DATASOURCE = DataSource.instance(MediaType.of("MOVIE") ,"TMDB");
+  private static final DataSource MOVIE_DATASOURCE = DataSource.instance(MediaType.MOVIE, "TMDB");
   private static final Match MATCH = new Match(Type.NAME, 1.0f, Instant.now());
   private static final Movie MOVIE = Movies.create();
 
@@ -132,6 +132,6 @@ public class StreamCacheUpdateServiceTest {
   private static Streamable streamable(int identifier, String uri, String title) {
     Attributes attributes = Attributes.of(Attribute.TITLE, title);
 
-    return new Streamable(MediaType.of("MOVIE"), new StringURI(uri), new StreamID(7, new ContentID(identifier), title), null, attributes);
+    return new Streamable(MediaType.MOVIE, new StringURI(uri), new StreamID(7, new ContentID(identifier), title), null, attributes);
   }
 }

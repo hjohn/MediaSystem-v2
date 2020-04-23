@@ -41,7 +41,7 @@ public class MediaSystemDomainModule extends SimpleModule {
     addDeserializer(MediaType.class, new JsonDeserializer<MediaType>() {
       @Override
       public MediaType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        return MediaType.of(p.getText());
+        return MediaType.valueOf(p.getText());
       }
     });
 

@@ -18,7 +18,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LocalIdentificationService extends AbstractIdentificationService {
-  private static final DataSource SERIE = DataSource.instance(MediaType.of("SERIE"), "LOCAL");
+  private static final DataSource SERIE = DataSource.instance(MediaType.SERIE, "LOCAL");
 
   public LocalIdentificationService() {
     super(SERIE);

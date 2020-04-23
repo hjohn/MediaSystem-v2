@@ -47,8 +47,6 @@ import org.reactfx.value.Val;
 
 @Singleton
 public class ContextLayout {
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
-
   @Inject private ImageHandleFactory imageHandleFactory;
 
   public BasePanel create(Object item) {
@@ -93,7 +91,7 @@ public class ContextLayout {
     BasePanel panel = create(wg.getDetails());
     LocalDate now = LocalDate.now();
 
-    if(wg.getId().getType().equals(COLLECTION)) {
+    if(wg.getId().getType().equals(MediaType.COLLECTION)) {
       wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).min(Comparator.naturalOrder()).ifPresent(earliest -> {
         wg.getChildren().stream().map(Work::getDetails).map(Details::getReleaseDate).flatMap(Optional::stream).filter(d -> d.isBefore(now)).max(Comparator.naturalOrder()).ifPresent(latest -> {
           int minYear = earliest.getYear();

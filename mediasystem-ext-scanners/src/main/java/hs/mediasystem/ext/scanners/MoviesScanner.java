@@ -67,7 +67,7 @@ public class MoviesScanner implements Scanner {
           Attribute.ID_PREFIX + "IMDB", imdbNumber
         );
 
-        results.add(new Streamable(MediaType.of("MOVIE"), new StringURI(uri), new StreamID(importSourceId, contentPrint.getId(), path.getFileName().toString()), null, attributes));
+        results.add(new Streamable(MediaType.MOVIE, new StringURI(uri), new StreamID(importSourceId, contentPrint.getId(), path.getFileName().toString()), null, attributes));
       }
       catch(RuntimeException | IOException e) {
         LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?

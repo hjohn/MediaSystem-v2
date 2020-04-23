@@ -20,7 +20,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class FileQueryService extends AbstractQueryService {
-  private static final DataSource FILE = DataSource.instance(MediaType.of("FILE"), "LOCAL");
+  private static final DataSource FILE = DataSource.instance(MediaType.FILE, "LOCAL");
 
   @Inject private StreamableStore streamStore;
 

@@ -21,7 +21,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class SeriesCollectionType implements CollectionType {
-  private static final MediaType SERIE = MediaType.of("SERIE");
 
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
     new SortOrder<>("alpha", WorkBinder.BY_NAME),
@@ -46,13 +45,13 @@ public class SeriesCollectionType implements CollectionType {
 
   @Override
   public String getId() {
-    return SERIE.toString();
+    return MediaType.SERIE.toString();
   }
 
   @Override
   public Presentation createPresentation(String tag) {
     return factory.create(
-      worksClient.findAllByType(SERIE, tag),
+      worksClient.findAllByType(MediaType.SERIE, tag),
       "Series" + (tag == null ? "" : ":" + tag),
       new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS),
       null

@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
@@ -41,7 +40,6 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 public class ProductionPresentation extends AbstractPresentation implements Navigable {
-  private static final MediaType SERIE = MediaType.of("SERIE");
 
   @Singleton
   public static class Factory {
@@ -129,7 +127,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     this.workClient = workClient;
     this.rootItem = rootItem;
 
-    this.episodesPresentation = rootItem.getType().equals(SERIE) ? episodesPresentationProvider.get().set(rootItem, children) : null;
+    this.episodesPresentation = rootItem.getType().isSerie() ? episodesPresentationProvider.get().set(rootItem, children) : null;
     this.episodeItems = episodesPresentation == null ? null : episodesPresentation.episodeItems;
 
     Val<Work> episodeOrMovieItem = episodeItems == null ? Val.constant(rootItem) : Val.wrap(episodeItem);
@@ -245,10 +243,10 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     if(rootMissing.getValue()) {
       return -1.0;
     }
-    if(!rootItem.getType().equals(SERIE) && resume.resumePosition.isPresent() && totalDuration.isPresent()) {
+    if(rootItem.getType().isPlayable() && resume.resumePosition.isPresent() && totalDuration.isPresent()) {
       return resume.resumePosition.getValue().toSeconds() / (double)totalDuration.getValue();
     }
-    if(rootItem.getType().equals(SERIE)) {
+    if(rootItem.getType().isSerie()) {
       long totalWatched = episodeItems.stream()
         .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
         .filter(i -> isWatched(i).getValue())
@@ -265,7 +263,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   private double getMissingFraction() {
-    if(rootItem.getType().equals(SERIE) && !rootWatched.getValue() && !rootMissing.getValue()) {
+    if(rootItem.getType().isSerie() && !rootWatched.getValue() && !rootMissing.getValue()) {
       long totalMissingUnwatched = episodeItems.stream()
         .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
         .filter(i -> i.getStreams().isEmpty() && !isWatched(i).getValue())
@@ -282,7 +280,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   }
 
   public Var<Boolean> watchedProperty() {
-    if(!(rootItem.getType().equals(SERIE)) && !rootItem.getStreams().isEmpty()) {
+    if(rootItem.getType().isPlayable() && !rootItem.getStreams().isEmpty()) {
       return rootWatched;
     }
 

@@ -16,7 +16,7 @@ public class Productions {
 
   public static Production create() {
     return new Production(
-      new ProductionIdentifier(DataSource.instance(MediaType.of("MOVIE"), "TMDB"), "12345"),
+      new ProductionIdentifier(DataSource.instance(MediaType.MOVIE, "TMDB"), "12345"),
       new Details("The Terminator", "Subtitle", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost"), new ImageURI("http://localhost")),
       new Reception(8, 12345),
       Arrays.asList("en"),

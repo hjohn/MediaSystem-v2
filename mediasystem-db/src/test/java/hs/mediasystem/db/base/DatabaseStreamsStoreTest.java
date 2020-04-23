@@ -49,9 +49,9 @@ class DatabaseStreamsStoreTest {
     StreamID streamId1 = new StreamID(1, new ContentID(1), "SerieTitle1");
     StreamID streamId2 = new StreamID(2, new ContentID(2), "SerieTitle2");
     StreamID streamId3 = new StreamID(1, new ContentID(3), "SerieTitle3");
-    Streamable sa1 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir1"), streamId1, null, Attributes.of(Attribute.TITLE, "SerieTitle1"));
-    Streamable sa2 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir2"), streamId2, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
-    Streamable sa3 = new Streamable(MediaType.of("SERIE"), new StringURI("file://dir2"), streamId3, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
+    Streamable sa1 = new Streamable(MediaType.SERIE, new StringURI("file://dir1"), streamId1, null, Attributes.of(Attribute.TITLE, "SerieTitle1"));
+    Streamable sa2 = new Streamable(MediaType.SERIE, new StringURI("file://dir2"), streamId2, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
+    Streamable sa3 = new Streamable(MediaType.SERIE, new StringURI("file://dir2"), streamId3, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
 
     @BeforeEach
     void beforeEach() {

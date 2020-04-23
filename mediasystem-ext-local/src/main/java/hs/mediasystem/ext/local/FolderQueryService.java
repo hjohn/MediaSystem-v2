@@ -21,7 +21,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class FolderQueryService extends AbstractQueryService {
-  private static final DataSource FOLDER = DataSource.instance(MediaType.of("FOLDER"), "LOCAL");
+  private static final DataSource FOLDER = DataSource.instance(MediaType.FOLDER, "LOCAL");
 
   @Inject private StreamableStore streamStore;
   @Inject private DescriptionService descriptionService;

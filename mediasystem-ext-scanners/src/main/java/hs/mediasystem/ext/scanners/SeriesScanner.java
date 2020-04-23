@@ -43,8 +43,6 @@ public class SeriesScanner implements Scanner {
   private static final NameDecoder SIMPLE_NAME_DECODER = new NameDecoder(Mode.SIMPLE);
   private static final Set<FileVisitOption> FILE_VISIT_OPTIONS = new HashSet<>(Arrays.asList(FileVisitOption.FOLLOW_LINKS));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Scanning series");
-  private static final MediaType SERIE = MediaType.of("SERIE");
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
 
   @Inject private ContentPrintProvider contentPrintProvider;
 
@@ -81,7 +79,7 @@ public class SeriesScanner implements Scanner {
 
         StreamID id = new StreamID(importSourceId, contentPrint.getId(), path.getFileName().toString());
 
-        results.add(new Streamable(SERIE, uri, id, null, attributes));
+        results.add(new Streamable(MediaType.SERIE, uri, id, null, attributes));
         results.addAll(scanSerie(path, id));
       }
       catch(RuntimeException | IOException e) {
@@ -134,7 +132,7 @@ public class SeriesScanner implements Scanner {
           Attribute.CHILD_TYPE, type == null ? null : type.toString()
         );
 
-        results.add(new Streamable(EPISODE, new StringURI(path.toUri()), new StreamID(parentId.getImportSourceId(), contentPrint.getId(), name), parentId, attributes));
+        results.add(new Streamable(MediaType.EPISODE, new StringURI(path.toUri()), new StreamID(parentId.getImportSourceId(), contentPrint.getId(), name), parentId, attributes));
       }
     }
     catch(RuntimeException | IOException e) {

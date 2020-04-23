@@ -65,8 +65,6 @@ import org.reactfx.value.Var;
 
 @Singleton
 public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
-  private static final MediaType EPISODE = MediaType.of("EPISODE");
-
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private CollectionPresentationProvider collectionPresentationProvider;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
@@ -179,7 +177,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   }
 
   private Supplier<ProductionPresentation> createProductionPresentationSupplier(Recommendation recommendation) {
-    boolean isEpisode = recommendation.getWork().getType().equals(EPISODE);
+    boolean isEpisode = recommendation.getWork().getType().equals(MediaType.EPISODE);
     WorkId id = isEpisode ?
         recommendation.getWork().getParent().map(Parent::getId).orElseThrow() :
         recommendation.getWork().getId();

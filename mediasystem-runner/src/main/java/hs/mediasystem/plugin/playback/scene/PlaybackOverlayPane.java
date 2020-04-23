@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Details;
@@ -44,8 +43,6 @@ import javafx.util.Duration;
 import org.reactfx.value.Val;
 
 public class PlaybackOverlayPane extends StackPane {
-  private static final MediaType COLLECTION = MediaType.of("COLLECTION");
-
   public final ObjectProperty<PlayerPresentation> player = new SimpleObjectProperty<>();
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
 
@@ -124,7 +121,7 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).filter(p -> !p.getType().equals(COLLECTION)).map(Parent::getName);
+          Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).filter(p -> !p.getType().isSerie()).map(Parent::getName);
           Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getDetails).map(Details::getTitle);
 
           HBox.setHgrow(this, Priority.ALWAYS);

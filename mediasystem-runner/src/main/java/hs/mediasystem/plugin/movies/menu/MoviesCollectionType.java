@@ -22,8 +22,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class MoviesCollectionType implements CollectionType {
-  private static final MediaType MOVIE = MediaType.of("MOVIE");
-
   private static SortOrder<Work> ALPHABETICALLY = new SortOrder<>("alpha", WorkBinder.BY_NAME);
 
   private static SortOrder<Work> BY_RELEASE_DATE = new SortOrder<>(
@@ -59,13 +57,13 @@ public class MoviesCollectionType implements CollectionType {
 
   @Override
   public String getId() {
-    return MOVIE.toString();
+    return MediaType.MOVIE.toString();
   }
 
   @Override
   public Presentation createPresentation(String tag) {
     return factory.create(
-      worksClient.findAllByType(MOVIE, tag),
+      worksClient.findAllByType(MediaType.MOVIE, tag),
       "Movies" + (tag == null ? "" : ":" + tag),
       new ViewOptions<>(
         SORT_ORDERS,

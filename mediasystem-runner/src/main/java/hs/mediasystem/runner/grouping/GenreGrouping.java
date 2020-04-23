@@ -25,7 +25,7 @@ import javax.inject.Singleton;
 @Singleton
 public class GenreGrouping implements Grouping<Work> {
   private static final ResourceManager RM = new ResourceManager(GenreGrouping.class);
-  private static final DataSource DATA_SOURCE = DataSource.instance(MediaType.of("GROUPING"), "GENRE");
+  private static final DataSource DATA_SOURCE = DataSource.instance(MediaType.GROUPING, "GENRE");
   private static final Comparator<Work> RATING_COMPARATOR = Comparator.comparing((Work w) -> w.getDetails().getReception().map(Reception::getRating).orElse(0.0)).reversed();
 
   @Override
