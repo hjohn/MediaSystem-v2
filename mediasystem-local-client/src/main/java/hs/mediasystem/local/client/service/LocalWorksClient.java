@@ -91,8 +91,8 @@ public class LocalWorksClient implements WorksClient {
       descriptor.getDetails().getDate().orElse(null),
       descriptor.getDetails().getImage().or(() -> mediaStream.map(LocalWorksClient::snapshotsToCover)).orElse(null),
       descriptor.getDetails().getBackdrop()
-        .or(() -> parent == null ? Optional.empty() : parent.getDetails().getBackdrop())
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
+        .or(() -> parent == null ? Optional.empty() : parent.getDetails().getBackdrop())
         .orElse(null),
       descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
       descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,
