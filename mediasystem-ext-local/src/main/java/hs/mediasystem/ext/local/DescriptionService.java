@@ -42,14 +42,7 @@ public class DescriptionService {
     try {
       DescriptionInternal d = OBJECT_MAPPER.readValue(new URL(urlText), DescriptionInternal.class);
 
-      Path base = Paths.get(streamable.getUri().toURI());
-      Path cover = base.resolve("cover.jpg");
-      Path backdrop = base.resolve("backdrop.jpg");
-
-      ImageURI coverImage = Files.isRegularFile(cover) ? new ImageURI(cover.toUri().toString()) : null;
-      ImageURI backdropImage = Files.isRegularFile(backdrop) ? new ImageURI(backdrop.toUri().toString()) : null;
-
-      return Optional.of(new Description(d.title, d.subtitle, d.description, d.genres, d.date, coverImage, backdropImage));
+      return Optional.of(new Description(d.title, d.subtitle, d.description, d.genres, d.date));
     }
     catch(ConnectException e) {
       // ignore, file just doesn't exist
@@ -59,6 +52,20 @@ public class DescriptionService {
       LOGGER.warning("Exception while parsing " + urlText + ": " + Throwables.formatAsOneLine(e));
       return Optional.empty();
     }
+  }
+
+  public Optional<ImageURI> getCover(Streamable streamable) {
+    Path base = Paths.get(streamable.getUri().toURI());
+    Path cover = base.resolve("cover.jpg");
+
+    return Optional.ofNullable(Files.isRegularFile(cover) ? new ImageURI(cover.toUri().toString()) : null);
+  }
+
+  public Optional<ImageURI> getBackdrop(Streamable streamable) {
+    Path base = Paths.get(streamable.getUri().toURI());
+    Path backdrop = base.resolve("backdrop.jpg");
+
+    return Optional.ofNullable(Files.isRegularFile(backdrop) ? new ImageURI(backdrop.toUri().toString()) : null);
   }
 
   private static class DescriptionInternal {

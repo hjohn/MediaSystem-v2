@@ -44,8 +44,8 @@ public class FolderQueryService extends AbstractQueryService {
         description.map(Description::getSubtitle).orElse(attributes.get(Attribute.SUBTITLE)),
         description.map(Description::getDescription).orElse(attributes.get(Attribute.DESCRIPTION)),
         description.map(Description::getDate).orElse(null),
-        description.map(Description::getCover).orElse(null),
-        description.map(Description::getBackdrop).orElse(null)
+        descriptionService.getCover(streamable).orElse(null),
+        descriptionService.getBackdrop(streamable).orElse(null)
       ),
       null,
       List.of(),
