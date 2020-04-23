@@ -170,6 +170,11 @@ public class WorkService {
         .map(p -> toWork(p, null))
         .collect(Collectors.toList());
     }
+    else if(type.equals(MediaType.FOLDER)) {
+      return streamStore.findChildren(StreamID.of(workId.getKey())).stream()
+        .map(this::toWork)
+        .collect(Collectors.toList());
+    }
 
     return List.of();
   }

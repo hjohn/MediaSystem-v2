@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.home;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Collection;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
@@ -219,7 +220,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
   private ActionListView<Recommendation> createNewView(ObjectProperty<ImageHandle> backdrop) {
     ActionListView<Recommendation> mediaGridView = createCarousel(
-      recommendationClient.findNew(mediaType -> !mediaType.isComponent()),
+      recommendationClient.findNew(mediaType -> !mediaType.isComponent() && mediaType != MediaType.FOLDER && mediaType != MediaType.FILE),
       createProductionPresentationFunction(),
       new AnnotatedImageCellFactory<>(this::fillRecommendationModel)
     );

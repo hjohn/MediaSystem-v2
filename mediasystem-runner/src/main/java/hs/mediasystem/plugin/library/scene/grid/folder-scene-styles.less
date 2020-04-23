@@ -1,0 +1,44 @@
+@import "../../../../runner/properties.less";
+@import "../media-grid-view.less";
+@import "../../../cell/annotated-image-cell-factory.less";
+
+.folder-scene {
+  -fx-layout: "[Stack!stack-box: {vgrow: ALWAYS}]";
+
+  .stack-box {
+    -fx-layout: "[status-bar: {align: BOTTOM_LEFT, margins: [0.01, 0.01, 0.005, 0.02]}, media-grid-view: {margins: [0.2, 0.02, 0.08, 0.2]}]";
+
+    .media-grid-view {
+      -fx-spacing: 5;
+      -fx-background-color: @glass-color;
+    }
+
+    .status-bar {
+      -fx-alignment: BOTTOM_LEFT;
+    }
+  }
+
+  .list-cell {
+    .label {
+      -fx-line-spacing: -10;  // Broken in 14, let's hope we can get it fixed.
+      -fx-wrap-text: true;
+    }
+
+    #cell-layout.image-overlay();
+
+    -fx-padding: 5;
+
+    &:focused .image-view-effect {
+      #cell-focus.rounded-box();
+    }
+
+    .overlay {
+      .status-indicator {
+        .unknown {
+          -fx-background-color: rgba(125, 255, 125, 0.5);
+          -fx-shape: @shape-folder;
+        }
+      }
+    }
+  }
+}

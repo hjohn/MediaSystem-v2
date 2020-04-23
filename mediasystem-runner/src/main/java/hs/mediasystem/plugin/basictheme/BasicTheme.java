@@ -8,6 +8,8 @@ import hs.mediasystem.plugin.home.HomePresentation;
 import hs.mediasystem.plugin.home.HomeScreenNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
+import hs.mediasystem.plugin.library.scene.grid.FolderPresentation;
+import hs.mediasystem.plugin.library.scene.grid.FolderSetup;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionSetup;
 import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentation;
@@ -45,6 +47,9 @@ public class BasicTheme implements Theme {
     if(cls == GenericCollectionPresentation.class) {
       return LibraryPresentation.class;
     }
+    if(cls == FolderPresentation.class) {
+      return LibraryPresentation.class;
+    }
     if(cls == ParticipationsPresentation.class) {
       return LibraryPresentation.class;
     }
@@ -80,6 +85,9 @@ public class BasicTheme implements Theme {
   private <P extends Presentation, T extends NodeFactory<P>> Class<T> findNodeFactory(Class<P> cls) {
     if(cls == GenericCollectionPresentation.class) {
       return (Class<T>)GenericCollectionSetup.class;
+    }
+    if(cls == FolderPresentation.class) {
+      return (Class<T>)FolderSetup.class;
     }
     if(cls == LibraryPresentation.class) {
       return (Class<T>)LibraryNodeFactory.class;
