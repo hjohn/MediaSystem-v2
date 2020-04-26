@@ -49,7 +49,7 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
   }
 
   private Optional<Identification> identifyByIMDB(String imdb) {
-    JsonNode node = tmdb.query("3/find/" + imdb, "external_source", "imdb_id");
+    JsonNode node = tmdb.query("3/find/" + imdb, null, List.of("external_source", "imdb_id"));
 
     return StreamSupport.stream(node.path("movie_results").spliterator(), false)
       .findFirst()
@@ -77,7 +77,7 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
     return Stream.concat(titleVariations.stream(), alternativeTitleVariations.stream())
       .map(tv -> tv + postFix)
       .peek(q -> LOGGER.fine("Matching '" + q + "' [" + year + "] ..."))
-      .flatMap(q -> StreamSupport.stream(tmdb.query("3/search/movie", "query", q, "language", "en").path("results").spliterator(), false)
+      .flatMap(q -> StreamSupport.stream(tmdb.query("3/search/movie", null, List.of("query", q, "language", "en")).path("results").spliterator(), false)
         .flatMap(jsonNode -> Stream.of(jsonNode.path("title").asText(), jsonNode.path("original_title").asText())
           .filter(t -> !t.isEmpty())
           .distinct()

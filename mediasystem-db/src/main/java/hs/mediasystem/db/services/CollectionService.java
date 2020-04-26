@@ -55,7 +55,7 @@ public class CollectionService {
 
       collections.add(new Collection(
         collectionDefinition.getTitle(),
-        uris.isEmpty() ? null : new ImageURI("multi:landscape:" + uris),
+        uris.isEmpty() ? null : new ImageURI("multi:landscape:" + uris, null),
         backgroundImage.orElse(null),
         collectionDefinition
       ));

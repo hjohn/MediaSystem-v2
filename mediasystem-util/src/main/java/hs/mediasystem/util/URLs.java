@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Map;
 
 public class URLs {
 
@@ -17,11 +18,13 @@ public class URLs {
    * @throws HttpException when the URL uses the HTTP protocol and a response code other than 200 was received
    * @throws IOException when an {@link IOException} occurs
    */
-  public static final byte[] readAllBytes(URL url) throws IOException {
+  public static final byte[] readAllBytes(URL url, Map<String, String> requestProperties) throws IOException {
     URLConnection connection = url.openConnection();
 
     if(connection instanceof HttpURLConnection) {
       HttpURLConnection httpURLConnection = (HttpURLConnection)connection;
+
+      requestProperties.entrySet().stream().forEach(e -> httpURLConnection.addRequestProperty(e.getKey(), e.getValue()));
 
       if(httpURLConnection.getResponseCode() != 200) {
         throw new HttpException(url, httpURLConnection.getResponseCode(), httpURLConnection.getResponseMessage());
@@ -55,5 +58,9 @@ public class URLs {
 
       return data;
     }
+  }
+
+  public static final byte[] readAllBytes(URL url) throws IOException {
+    return readAllBytes(url, Map.of());
   }
 }

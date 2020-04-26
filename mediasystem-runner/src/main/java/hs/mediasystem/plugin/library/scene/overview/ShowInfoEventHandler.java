@@ -61,7 +61,7 @@ public class ShowInfoEventHandler {
 
     for(MediaStream stream : work.getStreams()) {
       GridPane gridPane = Containers.grid("item");
-      String path = stream.getAttributes().getUri().asReadableString().trim();
+      String path = stream.getAttributes().getUri().toString().trim();
 
       // path often contains too few spaces for decent wrapping... add LF's every 80 chars:
       path = addLineFeeds(path, 100);

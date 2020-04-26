@@ -68,7 +68,7 @@ public class GenreGrouping implements Grouping<Work> {
         null,
         RM.getText(entry.getKey().toLowerCase(), "description"),
         null,
-        uris.isEmpty() ? null : new ImageURI("multi::" + uris),
+        uris.isEmpty() ? null : new ImageURI("multi::" + uris, null),
         backgroundURIRef.get(),
         null,
         null,

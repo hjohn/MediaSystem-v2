@@ -32,9 +32,9 @@ import hs.mediasystem.mediamanager.Series;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.StringURI;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -119,12 +119,12 @@ public class DatabaseIT {
       new ImportSource(null, 2, List.of(), new StreamSource(new StreamTags(Set.of("series")), List.of("TMDB")))
     ));
 
-    contentPrint1 = contentPrintProvider.get(new StringURI(Paths.get("testdata/movies/Terminator.txt").toUri().toString()), 100L, 200L);
-    contentPrint2 = contentPrintProvider.get(new StringURI(Paths.get("testdata/movies/Avatar.txt").toUri().toString()), 101L, 201L);
-    contentPrint3 = contentPrintProvider.get(new StringURI(Paths.get("testdata/movies/Matrix.txt").toUri().toString()), 102L, 202L);
-    contentPrint4 = contentPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends").toUri().toString()), null, 400L);
-    contentPrint5 = contentPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends/friends_1x01.txt").toUri().toString()), 301L, 401L);
-    contentPrint6 = contentPrintProvider.get(new StringURI(Paths.get("testdata/series/Friends/friends_1x02.txt").toUri().toString()), 302L, 402L);
+    contentPrint1 = contentPrintProvider.get(Paths.get("testdata/movies/Terminator.txt").toUri(), 100L, 200L);
+    contentPrint2 = contentPrintProvider.get(Paths.get("testdata/movies/Avatar.txt").toUri(), 101L, 201L);
+    contentPrint3 = contentPrintProvider.get(Paths.get("testdata/movies/Matrix.txt").toUri(), 102L, 202L);
+    contentPrint4 = contentPrintProvider.get(Paths.get("testdata/series/Friends").toUri(), null, 400L);
+    contentPrint5 = contentPrintProvider.get(Paths.get("testdata/series/Friends/friends_1x01.txt").toUri(), 301L, 401L);
+    contentPrint6 = contentPrintProvider.get(Paths.get("testdata/series/Friends/friends_1x02.txt").toUri(), 302L, 402L);
   }
 
   private static final DataSource MOVIE_DS = DataSource.instance(MediaType.MOVIE, "TMDB");
@@ -378,10 +378,10 @@ public class DatabaseIT {
   }
 
   private static Streamable streamable(MediaType type, String uri, StreamID sid, String title) {
-    return new Streamable(type, new StringURI(uri), sid, null, Attributes.of(Attribute.TITLE, title));
+    return new Streamable(type, URI.create(uri), sid, null, Attributes.of(Attribute.TITLE, title));
   }
 
   private static Streamable streamable(MediaType type, String uri, StreamID sid, StreamID pid, String title) {
-    return new Streamable(type, new StringURI(uri), sid, pid, Attributes.of(Attribute.TITLE, title));
+    return new Streamable(type, URI.create(uri), sid, pid, Attributes.of(Attribute.TITLE, title));
   }
 }

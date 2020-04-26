@@ -55,17 +55,17 @@ public class DescriptionService {
   }
 
   public Optional<ImageURI> getCover(Streamable streamable) {
-    Path base = Paths.get(streamable.getUri().toURI());
+    Path base = Paths.get(streamable.getUri());
     Path cover = base.resolve("cover.jpg");
 
-    return Optional.ofNullable(Files.isRegularFile(cover) ? new ImageURI(cover.toUri().toString()) : null);
+    return Optional.ofNullable(Files.isRegularFile(cover) ? new ImageURI(cover.toUri().toString(), null) : null);
   }
 
   public Optional<ImageURI> getBackdrop(Streamable streamable) {
-    Path base = Paths.get(streamable.getUri().toURI());
+    Path base = Paths.get(streamable.getUri());
     Path backdrop = base.resolve("backdrop.jpg");
 
-    return Optional.ofNullable(Files.isRegularFile(backdrop) ? new ImageURI(backdrop.toUri().toString()) : null);
+    return Optional.ofNullable(Files.isRegularFile(backdrop) ? new ImageURI(backdrop.toUri().toString(), null) : null);
   }
 
   private static class DescriptionInternal {

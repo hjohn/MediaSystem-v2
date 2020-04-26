@@ -1,19 +1,19 @@
 package hs.mediasystem.domain.work;
 
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.StringURI;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.Optional;
 
 public class StreamAttributes {
-  private final StringURI uri;
+  private final URI uri;
   private final Instant creationTime;  // This is time it was first added to database
   private final Instant lastModificationTime;
   private final Optional<Long> size;
   private final Attributes attributes;
 
-  public StreamAttributes(StringURI uri, Instant creationTime, Instant lastModificationTime, Long size, Attributes attributes) {
+  public StreamAttributes(URI uri, Instant creationTime, Instant lastModificationTime, Long size, Attributes attributes) {
     if(uri == null) {
       throw new IllegalArgumentException("uri cannot be null");
     }
@@ -37,7 +37,7 @@ public class StreamAttributes {
     this.attributes = attributes;
   }
 
-  public StringURI getUri() {
+  public URI getUri() {
     return uri;
   }
 

@@ -10,7 +10,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
@@ -56,7 +55,7 @@ public class MoviesScanner implements Scanner {
         String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
         URI uri = path.toUri();
 
-        ContentPrint contentPrint = contentPrintProvider.get(new StringURI(uri), Files.size(path), Files.getLastModifiedTime(path).toMillis());
+        ContentPrint contentPrint = contentPrintProvider.get(uri, Files.size(path), Files.getLastModifiedTime(path).toMillis());
 
         Attributes attributes = Attributes.of(
           Attribute.TITLE, title,
@@ -67,7 +66,7 @@ public class MoviesScanner implements Scanner {
           Attribute.ID_PREFIX + "IMDB", imdbNumber
         );
 
-        results.add(new Streamable(MediaType.MOVIE, new StringURI(uri), new StreamID(importSourceId, contentPrint.getId(), path.getFileName().toString()), null, attributes));
+        results.add(new Streamable(MediaType.MOVIE, uri, new StreamID(importSourceId, contentPrint.getId(), path.getFileName().toString()), null, attributes));
       }
       catch(RuntimeException | IOException e) {
         LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?

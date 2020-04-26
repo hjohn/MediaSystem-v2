@@ -10,10 +10,10 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.checked.CheckedStream;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,7 +48,7 @@ public class FoldersScanner implements Scanner {
   private List<Streamable> toStreamables(Path path, int importSourceId, StreamID parentId) throws IOException {
     String fileName = path.getFileName().toString();
     DecodeResult result = FILE_NAME_DECODER.decode(fileName);
-    StringURI uri = new StringURI(path.toUri());
+    URI uri = path.toUri();
     Attributes attributes = Attributes.of(
       Attribute.TITLE, result.getTitle(),
       Attribute.SUBTITLE, result.getSubtitle(),

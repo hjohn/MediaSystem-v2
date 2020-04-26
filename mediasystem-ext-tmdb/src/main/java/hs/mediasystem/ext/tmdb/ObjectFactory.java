@@ -30,9 +30,11 @@ public class ObjectFactory {
   @Inject private TheMovieDatabase tmdb;
 
   public Production toProduction(JsonNode node, DataSource dataSource) {
+    ProductionIdentifier identifier = new ProductionIdentifier(dataSource, node.path("id").asText());
+
     return new Production(
-      new ProductionIdentifier(dataSource, node.path("id").asText()),
-      createDetails(node),
+      identifier,
+      createDetails(node, identifier),
       createReception(node),
       node.path("spoken_languages").findValuesAsText("name"),
       node.path("genres").findValuesAsText("name"),
@@ -57,9 +59,11 @@ public class ObjectFactory {
       relatedIdentifiers.add(new Identifier(DataSources.IMDB_MOVIE, imdbId));
     }
 
+    ProductionIdentifier identifier = new ProductionIdentifier(DataSources.TMDB_MOVIE, node.path("id").asText());
+
     return new Movie(
-      new ProductionIdentifier(DataSources.TMDB_MOVIE, node.path("id").asText()),
-      createDetails(node),
+      identifier,
+      createDetails(node, identifier),
       createReception(node),
       runtime == null ? null : Duration.ofMinutes(runtime.intValue()),
       node.path("spoken_languages").findValuesAsText("name"),
@@ -73,9 +77,11 @@ public class ObjectFactory {
   }
 
   public Serie toSerie(JsonNode node, List<Season> seasons) {
+    ProductionIdentifier identifier = new ProductionIdentifier(DataSources.TMDB_SERIE, node.path("id").asText());
+
     return new Serie(
-      new ProductionIdentifier(DataSources.TMDB_SERIE, node.path("id").asText()),
-      createDetails(node),
+      identifier,
+      createDetails(node, identifier),
       createReception(node),
       node.path("languages").findValuesAsText("name"),
       node.path("genres").findValuesAsText("name"),
@@ -88,10 +94,10 @@ public class ObjectFactory {
     );
   }
 
-  private Details createDetails(JsonNode node) {
+  private Details createDetails(JsonNode node, Identifier identifier) {
     String releaseDate = node.get("release_date") == null ? node.path("first_air_date").textValue() : node.get("release_date").textValue();
-    ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original");
-    ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original");
+    ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + identifier.toString());
+    ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier.toString());
 
     return new Details(
       node.get("title") == null ? node.get("name").textValue() : node.get("title").textValue(),

@@ -1,9 +1,9 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.util.StringURI;
 
 import java.io.IOException;
+import java.net.URI;
 
 /**
  * Provides {@link ContentPrint}s.<p>
@@ -22,6 +22,6 @@ import java.io.IOException;
  * updated but the {@link ContentID} is kept the same.<p>
  */
 public interface ContentPrintProvider {
-  ContentPrint get(StringURI uri, Long size, long lastModificationTime) throws IOException;
+  ContentPrint get(URI uri, Long size, long lastModificationTime) throws IOException;
   ContentPrint get(ContentID contentId);
 }

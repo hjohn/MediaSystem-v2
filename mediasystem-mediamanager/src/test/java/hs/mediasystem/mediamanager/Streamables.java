@@ -6,7 +6,8 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.StringURI;
+
+import java.net.URI;
 
 public class Streamables {
   public static Streamable create() {
@@ -18,6 +19,6 @@ public class Streamables {
   }
 
   public static Streamable create(MediaType type, String uri, StreamID streamId, String sequence) {
-    return new Streamable(type, new StringURI(uri), streamId, null, Attributes.of(Attribute.TITLE, "Terminator", Attribute.SEQUENCE, sequence));
+    return new Streamable(type, URI.create(uri), streamId, null, Attributes.of(Attribute.TITLE, "Terminator", Attribute.SEQUENCE, sequence));
   }
 }

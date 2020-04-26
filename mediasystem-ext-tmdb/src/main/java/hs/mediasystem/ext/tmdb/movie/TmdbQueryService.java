@@ -9,6 +9,8 @@ import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 public class TmdbQueryService extends AbstractQueryService {
@@ -21,7 +23,7 @@ public class TmdbQueryService extends AbstractQueryService {
 
   @Override
   public Movie query(Identifier identifier) {
-    JsonNode node = tmdb.query("3/movie/" + identifier.getId(), "append_to_response", "keywords");  // keywords,alternative_titles,recommendations,similar,reviews
+    JsonNode node = tmdb.query("3/movie/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "keywords"));  // keywords,alternative_titles,recommendations,similar,reviews
 
     return objectFactory.toMovie(node);
   }

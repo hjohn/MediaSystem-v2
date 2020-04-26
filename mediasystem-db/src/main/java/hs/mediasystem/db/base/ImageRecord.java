@@ -15,6 +15,9 @@ public class ImageRecord extends DatabaseObject {
   private String url;
 
   @Column
+  private String key;
+
+  @Column
   private LocalDateTime creationTime;
 
   @Column
@@ -23,10 +26,11 @@ public class ImageRecord extends DatabaseObject {
   @Column
   private byte[] image;
 
-  public ImageRecord(String url, byte[] data) {
+  public ImageRecord(String url, String key, byte[] data) {
     this.url = url;
     this.creationTime = LocalDateTime.now();
     this.accessTime = creationTime;
+    this.key = key;
     this.image = data;
   }
 
@@ -55,6 +59,14 @@ public class ImageRecord extends DatabaseObject {
 
   public void setAccessTime(LocalDateTime accessTime) {
     this.accessTime = accessTime;
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
   }
 
   public byte[] getImage() {

@@ -18,8 +18,8 @@ import hs.mediasystem.mediamanager.Movies;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.StringURI;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -132,6 +132,6 @@ public class StreamCacheUpdateServiceTest {
   private static Streamable streamable(int identifier, String uri, String title) {
     Attributes attributes = Attributes.of(Attribute.TITLE, title);
 
-    return new Streamable(MediaType.MOVIE, new StringURI(uri), new StreamID(7, new ContentID(identifier), title), null, attributes);
+    return new Streamable(MediaType.MOVIE, URI.create(uri), new StreamID(7, new ContentID(identifier), title), null, attributes);
   }
 }

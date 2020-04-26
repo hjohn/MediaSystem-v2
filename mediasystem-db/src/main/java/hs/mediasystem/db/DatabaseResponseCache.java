@@ -40,7 +40,9 @@ import javax.inject.Singleton;
  * "!rate-limit": Used to specify a maximum rate at which resources can be accessed.  The rate limit is
  * specified as three semi-colon separated parameters: [name];[maxBurstPermits];[permitRefreshRatePerSecond].<p>
  *
- * "!safe-url": A URL for logging requests stripped off sensitive data (passwords, API key's)
+ * "!safe-url": A URL for logging requests stripped off sensitive data (passwords, API key's)<p>
+ *
+ * "!key": A logical key to store in the cache with the response.
  */
 @Singleton
 public class DatabaseResponseCache extends ResponseCache {
@@ -73,6 +75,7 @@ public class DatabaseResponseCache extends ResponseCache {
     ImageRecord image = store.findImageByURL(uri.toURL()).orElse(null);
     int timeOut = Integer.parseInt(requestHeaders.getOrDefault("!time-out", DEFAULT_TIME_OUT).get(0));
     String safeURL = Optional.ofNullable(requestHeaders.getOrDefault("!safe-url", DEFAULT_NULL).get(0)).orElse(uri.toURL().toString());
+    String key = requestHeaders.getOrDefault("!key", DEFAULT_NULL).get(0);
 
     if(image != null && (FORCE_CACHE_USE.get() || image.getCreationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now()))) {
       // fresh enough, return it
@@ -118,7 +121,7 @@ public class DatabaseResponseCache extends ResponseCache {
 
       if(!(conn instanceof HttpURLConnection) || ((HttpURLConnection)conn).getResponseCode() == 200) {
         // Store the result, if it was succesful:
-        store.store(uri.toURL(), buf);
+        store.store(uri.toURL(), key, buf);
       }
       else if(image != null) {
         // If unsuccesful, for whatever reason, and there is an (expired) cached response, return that:

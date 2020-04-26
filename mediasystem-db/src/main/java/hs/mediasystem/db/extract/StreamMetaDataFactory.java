@@ -54,7 +54,7 @@ public class StreamMetaDataFactory {
         }
 
         index++;
-        snapshots.add(new Snapshot(new ImageURI("localdb://" + contentId.asInt() + "/" + index), (int)offset));
+        snapshots.add(new Snapshot(new ImageURI("localdb://" + contentId.asInt() + "/" + index, null), (int)offset));
       }
 
       return new StreamMetaData(contentId, duration, grabber.getVideoStreams(), grabber.getAudioStreams(), grabber.getSubtitleStreams(), snapshots);

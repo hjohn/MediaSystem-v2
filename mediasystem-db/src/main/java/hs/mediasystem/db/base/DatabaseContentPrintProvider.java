@@ -9,9 +9,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.util.AutoReentrantLock;
 import hs.mediasystem.util.AutoReentrantLock.Key;
 import hs.mediasystem.util.MediaHash;
-import hs.mediasystem.util.StringURI;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -76,7 +76,7 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
    * uri's -- this simple means that the two uri's point to resources that are copies.
    */
   @Override
-  public ContentPrint get(StringURI uri, Long size, long lastModificationTime) throws IOException {
+  public ContentPrint get(URI uri, Long size, long lastModificationTime) throws IOException {
     try(Key key = lock.lock()) {
       ContentID existingContentId = contentIds.get(uri.toString());
 
@@ -203,7 +203,7 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     }
   }
 
-  private ContentPrint updateDirectory(StringURI uri, ContentID contentId, long lastModificationTime) throws IOException {
+  private ContentPrint updateDirectory(URI uri, ContentID contentId, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
     contentPrintDatabase.update(contentId, null, lastModificationTime, hash);
 
@@ -215,7 +215,7 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     return contentPrint;
   }
 
-  private ContentPrint link(StringURI uri, Long size, long lastModificationTime) throws IOException {
+  private ContentPrint link(URI uri, Long size, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
     int id = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
     uriDatabase.store(uri.toString(), id);
@@ -229,8 +229,8 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     return contentPrint;
   }
 
-  private byte[] createHash(StringURI uri) throws IOException {
-    Path path = Paths.get(uri.toURI());
+  private byte[] createHash(URI uri) throws IOException {
+    Path path = Paths.get(uri);
 
     if(Files.isRegularFile(path)) {
       return mediaHash.computeFileHash(path);

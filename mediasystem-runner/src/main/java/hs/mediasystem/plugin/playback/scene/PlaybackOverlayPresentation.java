@@ -4,8 +4,8 @@ import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
-import hs.mediasystem.util.StringURI;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.logging.Logger;
@@ -29,19 +29,19 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
   public final Work work;
   public final ObjectProperty<PlayerPresentation> playerPresentation = new SimpleObjectProperty<>();
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
-  public final StringURI uri;
+  public final URI uri;
   public final Duration startPosition;
 
   @Singleton
   public static class Factory {
     @Inject private PlayerSetting playerSetting;
 
-    public PlaybackOverlayPresentation create(Work work, StringURI uri, Duration startPosition) {
+    public PlaybackOverlayPresentation create(Work work, URI uri, Duration startPosition) {
       return new PlaybackOverlayPresentation(playerSetting, work, uri, startPosition);
     }
   }
 
-  private PlaybackOverlayPresentation(PlayerSetting playerSetting, Work work, StringURI uri, Duration startPosition) {
+  private PlaybackOverlayPresentation(PlayerSetting playerSetting, Work work, URI uri, Duration startPosition) {
     this.work = work;
     this.uri = uri;
     this.startPosition = startPosition;

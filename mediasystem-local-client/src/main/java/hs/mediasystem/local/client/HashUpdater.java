@@ -7,10 +7,10 @@ import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.runner.config.BasicSetup;
 import hs.mediasystem.util.MediaHash;
-import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.Throwables;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -42,7 +42,7 @@ public class HashUpdater {
 
       for(String s : uris) {
         try {
-          Path path = Paths.get(new StringURI(s).toURI());
+          Path path = Paths.get(URI.create(s));
 
           if(Files.isRegularFile(path)) {
             byte[] newHash = mediaHash.computeFileHash(path);

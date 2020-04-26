@@ -38,15 +38,16 @@ public class ImageDatabase {
     }
   }
 
-  public void store(URL url, byte[] data) {
+  public void store(URL url, String key, byte[] data) {
     try(Transaction tx = database.beginTransaction()) {
       ImageRecord image = tx.selectUnique(ImageRecord.class, "url = ?", url.toExternalForm());
 
       if(image == null) {
-        tx.insert(new ImageRecord(url.toExternalForm(), data));
+        tx.insert(new ImageRecord(url.toExternalForm(), key, data));
       }
       else {
         image.setCreationTime(LocalDateTime.now());
+        image.setKey(key);
         image.setImage(data);
 
         tx.update(image);

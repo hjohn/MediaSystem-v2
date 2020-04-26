@@ -19,7 +19,7 @@ public class TmdbVideoLinksQueryService implements VideoLinksQueryService {
 
   @Override
   public List<VideoLink> query(Identifier identifier) {
-    JsonNode info = tmdb.query(identifierToLocation(identifier));
+    JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
 
     return videoLinks.toVideoLinks(info);
   }

@@ -27,20 +27,22 @@ public class PersonRoles {
     List<PersonRole> roles = new ArrayList<>();
 
     for(JsonNode cast : node.path("cast")) {
-      ImageURI imageURI = tmdb.createImageURI(cast.path("profile_path").textValue(), "original");
+      PersonIdentifier identifier = new PersonIdentifier(DataSources.TMDB_PERSON, cast.get("id").asText());
+      ImageURI imageURI = tmdb.createImageURI(cast.path("profile_path").textValue(), "original", "image:person:" + identifier);
 
       roles.add(new PersonRole(
-        new Person(new PersonIdentifier(DataSources.TMDB_PERSON, cast.get("id").asText()), cast.get("name").asText(), imageURI),
+        new Person(identifier, cast.get("name").asText(), imageURI),
         Role.asCast(new Identifier(DataSources.TMDB_CREDIT, cast.get("credit_id").asText()), cast.get("character").asText()),
         cast.get("order").asDouble()
       ));
     }
 
     for(JsonNode guestStar : node.path("guest_stars")) {
-      ImageURI imageURI = tmdb.createImageURI(guestStar.path("profile_path").textValue(), "original");
+      PersonIdentifier identifier = new PersonIdentifier(DataSources.TMDB_PERSON, guestStar.get("id").asText());
+      ImageURI imageURI = tmdb.createImageURI(guestStar.path("profile_path").textValue(), "original", "image:person:" + identifier);
 
       roles.add(new PersonRole(
-        new Person(new PersonIdentifier(DataSources.TMDB_PERSON, guestStar.get("id").asText()), guestStar.get("name").asText(), imageURI),
+        new Person(identifier, guestStar.get("name").asText(), imageURI),
         Role.asGuestStar(new Identifier(DataSources.TMDB_CREDIT, guestStar.get("credit_id").asText()), guestStar.get("character").asText()),
         guestStar.get("order").asDouble() + GUEST_STAR_MINIMUM_VALUE
       ));
@@ -49,10 +51,11 @@ public class PersonRoles {
     int crewCount = 0;
 
     for(JsonNode crew : node.path("crew")) {
-      ImageURI imageURI = tmdb.createImageURI(crew.path("profile_path").textValue(), "original");
+      PersonIdentifier identifier = new PersonIdentifier(DataSources.TMDB_PERSON, crew.get("id").asText());
+      ImageURI imageURI = tmdb.createImageURI(crew.path("profile_path").textValue(), "original", "image:person:" + identifier);
 
       roles.add(new PersonRole(
-        new Person(new PersonIdentifier(DataSources.TMDB_PERSON, crew.get("id").asText()), crew.get("name").asText(), imageURI),
+        new Person(identifier, crew.get("name").asText(), imageURI),
         Role.asCrew(new Identifier(DataSources.TMDB_CREDIT, crew.get("credit_id").asText()), crew.get("department").asText(), crew.get("job").asText()),
         CREW_MINIMUM_VALUE + crewCount++
       ));

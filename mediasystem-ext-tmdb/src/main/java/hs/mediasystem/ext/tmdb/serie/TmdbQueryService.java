@@ -37,11 +37,11 @@ public class TmdbQueryService extends AbstractQueryService {
 
   @Override
   public Serie query(Identifier identifier) {
-    JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "append_to_response", "keywords");  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
+    JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "keywords"));  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
     List<JsonNode> seasons = new ArrayList<>();
 
     for(JsonNode season : node.path("seasons")) {
-      seasons.add(tmdb.query("3/tv/" + identifier.getId() + "/season/" + season.get("season_number").asText()));
+      seasons.add(tmdb.query("3/tv/" + identifier.getId() + "/season/" + season.get("season_number").asText(), "text:json:" + new ProductionIdentifier(DataSources.TMDB_SEASON, identifier.getId() + "/" + season.get("season_number").asText())));
     }
 
     // Popularity... Status... last air date ... inproduction field
@@ -60,14 +60,16 @@ public class TmdbQueryService extends AbstractQueryService {
     String releaseDate = node.path("air_date").textValue();
     int seasonNumber = node.get("season_number").asInt();
 
+    ProductionIdentifier identifier = new ProductionIdentifier(DataSources.TMDB_SEASON, parentId + "/" + seasonNumber);
+
     return new Season(
-      new ProductionIdentifier(DataSources.TMDB_SEASON, parentId + "/" + seasonNumber),
+      identifier,
       new Details(
         node.get("name").asText(),
         null,
         node.get("overview").asText(),
         releaseDate == null || releaseDate.isEmpty() ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
-        tmdb.createImageURI(node.path("poster_path").textValue(), "original"),
+        tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier),
         null
       ),
       seasonNumber,
@@ -81,15 +83,16 @@ public class TmdbQueryService extends AbstractQueryService {
       new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt()) : null;
     int seasonNumber = node.get("season_number").asInt();
     int episodeNumber = node.get("episode_number").asInt();
+    EpisodeIdentifier identifier = new EpisodeIdentifier(DataSources.TMDB_EPISODE, parentId + "/" + seasonNumber + "/" + episodeNumber);
 
     return new Episode(
-      new EpisodeIdentifier(DataSources.TMDB_EPISODE, parentId + "/" + seasonNumber + "/" + episodeNumber),
+      identifier,
       new Details(
         node.get("name").asText(),
         null,
         node.get("overview").asText(),
         releaseDate == null ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
-        tmdb.createImageURI(node.path("still_path").textValue(), "original"),
+        tmdb.createImageURI(node.path("still_path").textValue(), "original", "image:cover:" + identifier),
         null
       ),
       reception,

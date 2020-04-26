@@ -11,12 +11,12 @@ import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.StringURI;
 import hs.mediasystem.util.javafx.action.Action;
 import hs.mediasystem.util.javafx.action.SimpleAction;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.property.SimpleReadOnlyObjectProperty;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -379,7 +379,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
       Dialogs.show(event, Labels.create("description", "No trailer available"));
     }
     else {
-      Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(rootItem, new StringURI("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
+      Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(rootItem, URI.create("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
     }
   }
 

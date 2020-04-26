@@ -48,7 +48,7 @@ class StreamMetaDataCodecTest {
         new SubtitleStream("subtitle", "sublang", "srt")
       ),
       List.of(
-        new Snapshot(new ImageURI("localdb://12345/1"), 34222)
+        new Snapshot(new ImageURI("localdb://12345/1", null), 34222)
       )
     ));
 
@@ -59,7 +59,7 @@ class StreamMetaDataCodecTest {
     assertEquals("title", metaData.getVideoStreams().get(0).getTitle());
     assertEquals("mp3", metaData.getAudioStreams().get(0).getCodec());
     assertEquals("srt", metaData.getSubtitleStreams().get(0).getCodec());
-    assertEquals(new ImageURI("localdb://12345/1"), metaData.getSnapshots().get(0).getImageUri());
+    assertEquals(new ImageURI("localdb://12345/1", null), metaData.getSnapshots().get(0).getImageUri());
   }
 
 }

@@ -24,7 +24,7 @@ public class TmdbRolesQueryService implements RolesQueryService {
 
   @Override
   public List<PersonRole> query(Identifier identifier) {
-    JsonNode info = tmdb.query(identifierToLocation(identifier));
+    JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
 
     return personRoles.toPersonRoles(info);
   }

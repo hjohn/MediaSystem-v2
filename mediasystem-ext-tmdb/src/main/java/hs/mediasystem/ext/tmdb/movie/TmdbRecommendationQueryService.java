@@ -21,7 +21,7 @@ public class TmdbRecommendationQueryService implements RecommendationQueryServic
 
   @Override
   public List<Production> query(ProductionIdentifier identifier) {
-    JsonNode info = tmdb.query(identifierToLocation(identifier));
+    JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
     List<Production> productions = new ArrayList<>();
 
     for(JsonNode result : info.path("results")) {

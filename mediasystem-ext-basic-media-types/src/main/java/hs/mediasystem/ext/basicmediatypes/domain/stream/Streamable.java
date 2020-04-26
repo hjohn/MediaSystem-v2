@@ -3,14 +3,14 @@ package hs.mediasystem.ext.basicmediatypes.domain.stream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.StringURI;
 
+import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 
 public class Streamable {
   private final MediaType type;
-  private final StringURI uri;
+  private final URI uri;
   private final StreamID id;
   private final Optional<StreamID> parentId;
   private final Attributes attributes;
@@ -19,12 +19,12 @@ public class Streamable {
    * Constructs a new instance.
    *
    * @param type a {@link MediaType}, cannot be null
-   * @param uri a {@link StringURI}, cannot be null
+   * @param uri a {@link URI}, cannot be null
    * @param id a {@link StreamID}, cannot be null
    * @param parentId a parent {@link StreamID}, can be null
    * @param attributes an {@link Attributes}, cannot be null
    */
-  public Streamable(MediaType type, StringURI uri, StreamID id, StreamID parentId, Attributes attributes) {
+  public Streamable(MediaType type, URI uri, StreamID id, StreamID parentId, Attributes attributes) {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
@@ -49,12 +49,12 @@ public class Streamable {
   }
 
   public String getName() {
-    String name = uri.asReadableString();
+    String name = uri.toString();
 
     return name.substring(name.lastIndexOf('/') + 1);
   }
 
-  public StringURI getUri() {
+  public URI getUri() {
     return uri;
   }
 
@@ -99,6 +99,6 @@ public class Streamable {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "[" + uri.toURI().getPath() + "]";
+    return getClass().getSimpleName() + "[" + uri.getPath() + "]";
   }
 }

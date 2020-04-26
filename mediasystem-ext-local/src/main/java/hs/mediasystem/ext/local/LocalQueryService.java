@@ -66,7 +66,7 @@ public class LocalQueryService extends AbstractQueryService {
             childStream.getAttributes().get(Attribute.SUBTITLE),
             childStream.getAttributes().get(Attribute.DESCRIPTION),
             null,
-            new ImageURI("localdb://" + childStream.getId().getContentId().asInt() + "/1"),
+            new ImageURI("localdb://" + childStream.getId().getContentId().asInt() + "/1", null),
             null
           ),
           null,

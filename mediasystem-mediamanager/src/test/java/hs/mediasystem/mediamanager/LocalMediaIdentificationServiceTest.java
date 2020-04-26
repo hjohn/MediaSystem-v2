@@ -15,8 +15,8 @@ import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Exceptional;
-import hs.mediasystem.util.StringURI;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -151,6 +151,6 @@ public class LocalMediaIdentificationServiceTest {
   }
 
   private static Streamable createMovie(String uri, Attributes attributes) {
-    return new Streamable(MediaType.MOVIE, new StringURI(uri), STREAM_ID, null, attributes);
+    return new Streamable(MediaType.MOVIE, URI.create(uri), STREAM_ID, null, attributes);
   }
 }

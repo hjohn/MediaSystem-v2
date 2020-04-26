@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Singleton;
@@ -14,7 +15,7 @@ public class HttpImageURIHandler implements ImageURIHandler {
   @Override
   public ImageHandle handle(ImageURI uri) {
     if(uri.getUri().startsWith("http:") || uri.getUri().startsWith("https:")) {
-      return new HttpImageHandle(uri.toURI());
+      return new HttpImageHandle(uri);
     }
     else if(uri.getUri().startsWith("file:")) {
       return new FileImageHandle(uri.toURI());
@@ -75,15 +76,15 @@ public class HttpImageURIHandler implements ImageURIHandler {
   }
 
   private class HttpImageHandle implements ImageHandle {
-    private final URI uri;
+    private final ImageURI uri;
 
-    public HttpImageHandle(URI uri) {
+    public HttpImageHandle(ImageURI uri) {
       this.uri = uri;
     }
 
     @Override
     public byte[] getImageData() throws IOException {
-      return URLs.readAllBytes(uri.toURL());
+      return URLs.readAllBytes(uri.toURL(), uri.getKey() == null ? Map.of() : Map.of("!key", uri.getKey()));
     }
 
     @Override

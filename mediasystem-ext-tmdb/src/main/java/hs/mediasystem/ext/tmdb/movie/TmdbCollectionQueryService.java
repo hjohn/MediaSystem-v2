@@ -27,23 +27,25 @@ public class TmdbCollectionQueryService extends AbstractQueryService {
 
   @Override
   public IdentifierCollection query(Identifier identifier) {
-    JsonNode node = tmdb.query("3/collection/" + identifier.getId());
+    JsonNode node = tmdb.query("3/collection/" + identifier.getId(), "text:json:" + identifier);
     List<Identifier> items = new ArrayList<>();
 
     node.path("parts").forEach(p -> items.add(
       new ProductionIdentifier(DataSources.TMDB_MOVIE, p.path("id").asText())
     ));
 
+    Identifier identifierCollectionIdentifier = new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText());
+
     return new IdentifierCollection(
       new CollectionDetails(
-        new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText()),
+        identifierCollectionIdentifier,
         new Details(
           node.path("name").asText(),
           null,
           node.path("overview").asText(),
           null,
-          tmdb.createImageURI(node.path("poster_path").textValue(), "original"),
-          tmdb.createImageURI(node.path("backdrop_path").textValue(), "original")
+          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifierCollectionIdentifier),
+          tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + identifierCollectionIdentifier)
         )
       ),
       items

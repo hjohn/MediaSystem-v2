@@ -21,7 +21,7 @@ public class TmdbTop100QueryService implements Top100QueryService {
     List<Production> productions = new ArrayList<>();
 
     for(int i = 1; i <= 10; i++) {
-      JsonNode info = tmdb.query("3/movie/top_rated", "page", "" + i);  // popular?
+      JsonNode info = tmdb.query("3/movie/top_rated", null, List.of("page", "" + i));  // popular?
 
       for(JsonNode result : info.path("results")) {
         productions.add(objectFactory.toMovie(result));

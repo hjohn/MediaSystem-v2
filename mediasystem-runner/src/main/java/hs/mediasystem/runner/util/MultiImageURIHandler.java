@@ -52,7 +52,7 @@ public class MultiImageURIHandler implements ImageURIHandler {
       ImageHandleFactory factory = factoryProvider.get();
       String[] parts = MAIN_PATTERN.split(uri.getUri(), 3);
       List<ImageHandle> handles = SPLIT_PATTERN.splitAsStream(parts[2])
-        .map(ImageURI::new).map(factory::fromURI).collect(Collectors.toList());
+        .map(p -> new ImageURI(p, null)).map(factory::fromURI).collect(Collectors.toList());
 
       if(parts[1].equals("landscape")) {
         return new MultiImageHandle(uri, handles, 900, 450, c -> {

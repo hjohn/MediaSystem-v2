@@ -23,21 +23,23 @@ public class TmdbProductionCollectionQueryService implements ProductionCollectio
 
   @Override
   public ProductionCollection query(Identifier identifier) {
-    JsonNode node = tmdb.query("3/collection/" + identifier.getId());
+    JsonNode node = tmdb.query("3/collection/" + identifier.getId(), "text:json:" + identifier);
     List<Production> productions = new ArrayList<>();
 
     node.path("parts").forEach(p -> productions.add(objectFactory.toProduction(p, DataSources.TMDB_MOVIE)));
 
+    Identifier productionCollectionIdentifier = new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText());
+
     return new ProductionCollection(
       new CollectionDetails(
-        new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText()),
+        productionCollectionIdentifier,
         new Details(
           node.path("name").asText(),
           null,
           node.path("overview").asText(),
           null,
-          tmdb.createImageURI(node.path("poster_path").textValue(), "original"),
-          tmdb.createImageURI(node.path("backdrop_path").textValue(), "original")
+          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + productionCollectionIdentifier),
+          tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + productionCollectionIdentifier)
         )
       ),
       productions
