@@ -42,7 +42,14 @@ public class DatabaseFactory {
 
   @Produces
   Connection createConnection() {
-    return pool.getConnection();
+    try {
+      return pool.getConnection();
+    }
+    catch(InterruptedException e) {
+      Thread.currentThread().interrupt();
+
+      throw new RuntimeException("Interrupted while getting connection from pool", e);
+    }
   }
 
   @Produces
