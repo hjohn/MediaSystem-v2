@@ -5,6 +5,7 @@ import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.ImageURIHandler;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,14 +36,14 @@ public class LocalImageURIHandler implements ImageURIHandler {
     }
 
     @Override
-    public byte[] getImageData() {
+    public byte[] getImageData() throws IOException {
       Matcher matcher = PATTERN.matcher(uri.getUri());
 
       if(!matcher.matches()) {
         throw new IllegalArgumentException("Invalid localdb uri: " + uri);
       }
 
-      return imageClient.findImage(matcher.group(1) + ":" + matcher.group(2)).orElse(null);
+      return imageClient.findImage(matcher.group(1) + ":" + matcher.group(2)).orElseThrow(() -> new IOException("No image available in database for: " + uri));
     }
 
     @Override

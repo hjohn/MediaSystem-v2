@@ -129,7 +129,7 @@ public class MultiImageURIHandler implements ImageURIHandler {
     }
 
     @Override
-    public byte[] getImageData() {
+    public byte[] getImageData() throws IOException {
       Canvas c = new Canvas(width, height);
       Scene scene = new Scene(new StackPane(c));
       List<Rectangle2D> locations = positioner.positionsFor(handles.size());
@@ -144,26 +144,37 @@ public class MultiImageURIHandler implements ImageURIHandler {
 
         ImageHandle handle = handles.get(i);
         Rectangle2D location = locations.get(i);
-        Image image = ImageCache.loadImageUptoMaxSize(handle, (int)location.getWidth(), (int)location.getHeight());
-        double areaWidth = location.getWidth();
-        double areaHeight = location.getHeight();
-        double imageWidth = image.getWidth();
-        double imageHeight = image.getHeight();
-        double fitWidth = areaWidth;
-        double fitHeight = areaHeight;
-        double w = Math.round(imageWidth * areaHeight / imageHeight);
 
-        if(w <= areaWidth) {
-          fitWidth = w;
+        try {
+          Image image = ImageCache.loadImageSync(handle, (int)location.getWidth(), (int)location.getHeight());
+          double areaWidth = location.getWidth();
+          double areaHeight = location.getHeight();
+          double imageWidth = image.getWidth();
+          double imageHeight = image.getHeight();
+          double fitWidth = areaWidth;
+          double fitHeight = areaHeight;
+          double w = Math.round(imageWidth * areaHeight / imageHeight);
+
+          if(w <= areaWidth) {
+            fitWidth = w;
+          }
+          else {
+            fitHeight = Math.round(imageHeight * areaWidth / imageWidth);
+          }
+
+          double x = location.getMinX() + (areaWidth - fitWidth) / 2;
+          double y = location.getMinY() + (areaHeight - fitHeight) / 2;
+
+          c.getGraphicsContext2D().drawImage(image, x, y, fitWidth, fitHeight);
         }
-        else {
-          fitHeight = Math.round(imageHeight * areaWidth / imageWidth);
+        catch(InterruptedException e) {
+          Thread.currentThread().interrupt();
+
+          throw new IOException("Interrupted while constructing multi-image image", e);
         }
-
-        double x = location.getMinX() + (areaWidth - fitWidth) / 2;
-        double y = location.getMinY() + (areaHeight - fitHeight) / 2;
-
-        c.getGraphicsContext2D().drawImage(image, x, y, fitWidth, fitHeight);
+        catch(Exception e) {
+          // Leave that part of the multi image blank
+        }
       }
 
       CompletableFuture<WritableImage> writableImageFuture = new CompletableFuture<>();

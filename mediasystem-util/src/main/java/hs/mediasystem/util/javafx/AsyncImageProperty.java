@@ -2,14 +2,16 @@ package hs.mediasystem.util.javafx;
 
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.NamedThreadFactory;
+import hs.mediasystem.util.Throwables;
 
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
@@ -31,16 +33,19 @@ import javafx.scene.image.Image;
  */
 public class AsyncImageProperty extends SimpleObjectProperty<Image> {
   private static final ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(3, new NamedThreadFactory("AsyncImageProperty", Thread.MIN_PRIORITY, true));
+  private static final Logger LOGGER = Logger.getLogger(AsyncImageProperty.class.getName());
 
   private final ObjectProperty<ImageHandle> imageHandle = new SimpleObjectProperty<>();
   public ObjectProperty<ImageHandle> imageHandleProperty() { return imageHandle; }
 
-  private ScheduledFuture<?> loader;
+  private Loader loader;
+  private Future<?> future;
 
   public AsyncImageProperty(Dimension2D maxSize, Duration settlingDelay) {
     imageHandle.addListener((observable, oldValue, value) -> {
-      if(loader != null) {
-        loader.cancel(true);
+      if(future != null) {
+        future.cancel(true);
+        future = null;
         loader = null;
       }
 
@@ -60,8 +65,9 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
 
         // If there was no image still or it is too small, then async load (a better) one:
         if(get() == null || get().getWidth() < maxSize.getWidth() - 1 || get().getHeight() < maxSize.getHeight() - 1) {
-          loader = EXECUTOR.schedule(
-            new Loader(AsyncImageProperty.this, value, maxSize),
+          loader = new Loader(AsyncImageProperty.this, value, maxSize);
+          future = EXECUTOR.schedule(
+            loader,
             settlingDelay.toMillis(),
             TimeUnit.MILLISECONDS
           );
@@ -104,17 +110,31 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
         return;
       }
 
-      Image image = ImageCache.loadImageUptoMaxSize(imageHandle, (int)maxSize.getWidth(), (int)maxSize.getHeight());
-
-      if(Thread.interrupted() || image == null || ref.get() == null) {
-        return;
-      }
-
       Platform.runLater(() -> {
-        AsyncImageProperty property = ref.get();
+        AsyncImageProperty asyncImageProperty = ref.get();
 
-        if(property != null && Objects.equals(property.imageHandle.get(), imageHandle)) {
-          property.set(image);
+        if(asyncImageProperty == null) {
+          return;
+        }
+
+        /*
+         * Manipulates the "future" field safely as it is on the FX thread.  If
+         * this load was cancelled, the equality check will fail.
+         */
+
+        if(asyncImageProperty.loader == Loader.this) {
+          asyncImageProperty.future = ImageCache.loadImageAsync(imageHandle, (int)maxSize.getWidth(), (int)maxSize.getHeight(), EXECUTOR)
+            .thenAcceptAsync(image -> {
+              AsyncImageProperty property = ref.get();
+
+              if(property != null && Objects.equals(property.imageHandle.get(), imageHandle)) {
+                property.set(image);
+              }
+            }, Platform::runLater)
+            .exceptionally(e -> {
+              LOGGER.warning("Unable to load image: " + imageHandle + ": " + Throwables.formatAsOneLine(e.getCause()));
+              return null;
+            });
         }
       });
     }

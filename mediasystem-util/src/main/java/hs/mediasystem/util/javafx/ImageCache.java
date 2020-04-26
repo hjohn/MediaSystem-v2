@@ -2,22 +2,26 @@ package hs.mediasystem.util.javafx;
 
 import hs.mediasystem.util.Cache;
 import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.Throwables;
 
 import java.awt.Dimension;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 import javafx.scene.image.Image;
@@ -31,12 +35,6 @@ public class ImageCache {
   private static final ReferenceQueue<? super CompletableFuture<Image>> REFERENCE_QUEUE = new ReferenceQueue<>();
   private static final NavigableMap<String, ImageFutureWeakReference> CACHE = new TreeMap<>();
   private static final Cache REF_CACHE = new Cache(500 * 1024 * 1024, 300 * 1000);
-
-  public static Image loadImage(ImageHandle handle) {
-    cleanReferenceQueue();
-
-    return loadImage(handle.getKey(), handle, () -> new Image(new ByteArrayInputStream(handle.getImageData())));
-  }
 
   public static Image getImageUptoMaxSize(ImageHandle handle, int w, int h) {
     String key = createKey(handle.getKey(), w, h, true);
@@ -80,42 +78,6 @@ public class ImageCache {
     }
   }
 
-  public static Image loadImageUptoMaxSize(ImageHandle handle, int w, int h) {
-    cleanReferenceQueue();
-
-    String key = createKey(handle.getKey(), w, h, true);
-
-    return loadImage(key, handle, () -> {
-      Image image = null;
-      byte[] data = handle.getImageData();
-
-      if(Thread.interrupted()) {
-        throw new InterruptedException("Image loading interrupted after loading data: " + handle);
-      }
-
-      if(data != null) {
-        Dimension size = determineSize(data);
-
-        if(Thread.interrupted()) {
-          throw new InterruptedException("Image loading interrupted after determining size: " + handle);
-        }
-
-        if(size != null) {
-          if(size.width <= w && size.height <= h) {
-            image = new Image(new ByteArrayInputStream(data));
-          }
-          else {
-            int[] s = computeImageSize(size.width, size.height, w, h);
-
-            image = new Image(new ByteArrayInputStream(data), s[0], s[1], false, true);
-          }
-        }
-      }
-
-      return image;
-    });
-  }
-
   public static int[] computeImageSize(int sourceWidth, int sourceHeight, int finalWidth, int finalHeight) {
     float scale = Math.min((float) finalWidth / sourceWidth, (float) finalHeight / sourceHeight);
 
@@ -125,98 +87,85 @@ public class ImageCache {
     };
   }
 
-  /**
-   * Loads the image matching the given key, optionally using the Image supplier if no previous
-   * load was in progress.  If another load for the same image is in progress this function
-   * waits for it to be completed and then returns the image.
-   *
-   * @param key an image key
-   * @param imageSupplier an Image supplier, which will be called if needed
-   * @return the image matching the given key
-   */
-  private static Image loadImage(String key, ImageHandle imageHandle, Callable<Image> imageSupplier) {
-    CompletableFuture<Image> futureImage;
-    boolean needsCompletion = false;
+  public static CompletableFuture<Image> loadImageAsync(ImageHandle imageHandle, int maxWidth, int maxHeight, Executor executor) {
+    cleanReferenceQueue();
 
-    /*
-     * Obtain an existing Future for the Image to be loaded or create a new one:
-     */
+    String key = maxWidth == 0 || maxHeight == 0 ? imageHandle.getKey() : createKey(imageHandle.getKey(), maxWidth, maxHeight, true);
 
     synchronized(CACHE) {
-      WeakReference<?> ref = CACHE.get(key);
+      ImageFutureWeakReference futureImageRef = CACHE.get(key);
 
-      if(ref != null) {
-        Object content = ref.get();
+      if(futureImageRef != null) {
+        CompletableFuture<Image> futureImage = futureImageRef.get();
 
-        if(content instanceof Image) {
-          return (Image)content;  // The cache had an Image, return it
+        if(futureImage != null && !futureImage.isCancelled()) {
+          return futureImage;
         }
       }
 
-      // Normal flow, create future if needed:
-      @SuppressWarnings("unchecked")
-      WeakReference<CompletableFuture<Image>> futureImageRef = (WeakReference<CompletableFuture<Image>>)ref;
+      CancellableCompletableFuture<Image> futureImage = new CancellableCompletableFuture<>(cf -> {
+        try {
+          Image image = loadImage(imageHandle, maxWidth, maxHeight);
 
-      futureImage = futureImageRef != null ? futureImageRef.get() : null;
-
-      if(futureImage == null) {
-        futureImage = new CompletableFuture<>();
-        store(key, futureImage);
-        needsCompletion = true;
-      }
-    }
-
-    /*
-     * Optionally trigger an image load and use it to complete the Future.  This must happen
-     * outside the synchronized block as the lock would otherwise be held for the duration
-     * of the image loading.
-     */
-
-    if(needsCompletion) {
-      Image image = null;
-
-      try {
-        image = imageSupplier.call();
-
-        futureImage.complete(image);
-      }
-      catch(Exception e) {
-        LOGGER.warning("Unable to load image: " + imageHandle + ": " + Throwables.formatAsOneLine(e));
-
-        futureImage.complete(null);
-      }
-
-      if(image == null) {
-        synchronized(CACHE) {
-          CACHE.remove(key);
-        }
-      }
-    }
-
-    /*
-     * Get the final image result and return it:
-     */
-
-    try {
-      Image image = futureImage.get();
-
-      synchronized(CACHE) {
-        if(image != null) {
-          CACHE.put(key, new ImageFutureWeakReference(key, futureImage, REFERENCE_QUEUE));
+          cf.complete(image);
 
           // Store futureImage, not image, as otherwise the future might get GC'd even though the image wasn't
-          REF_CACHE.add(key, futureImage, (long)image.getWidth() * (long)image.getHeight() * 4);
+          REF_CACHE.add(key, cf, (long)image.getWidth() * (long)image.getHeight() * 4);
         }
-      }
+        catch(InterruptedException e) {
+          cf.cancel(true);
+        }
+        catch(Exception e) {
+          cf.completeExceptionally(e);
+        }
+      }, executor);
 
-      return image;
-    }
-    catch(InterruptedException | ExecutionException e) {
-      throw new RuntimeException(e);
+      CACHE.put(key, new ImageFutureWeakReference(key, futureImage, REFERENCE_QUEUE));  // Must store it in the cache right away, otherwise 2nd invocation for same image would not find the one in progress
+
+      return futureImage;
     }
   }
 
-  private static Dimension determineSize(byte[] data) {
+  public static CompletableFuture<Image> loadImageAsync(ImageHandle imageHandle, Executor executor) {
+    return loadImageAsync(imageHandle, 0, 0, executor);
+  }
+
+  public static Image loadImageSync(ImageHandle imageHandle, int maxWidth, int maxHeight) throws IOException, InterruptedException {
+    try {
+      return loadImageAsync(imageHandle, maxWidth, maxHeight, Runnable::run).get();
+    }
+    catch(ExecutionException e) {
+      throw new IOException("Error loading image: " + imageHandle, e);
+    }
+  }
+
+  private static Image loadImage(ImageHandle imageHandle, int maxWidth, int maxHeight) throws IOException, InterruptedException {
+    byte[] data = imageHandle.getImageData();
+
+    if(Thread.interrupted()) {
+      throw new InterruptedException("Image loading interrupted after loading data: " + imageHandle);
+    }
+
+    if(maxWidth == 0 || maxHeight == 0) {
+      return new Image(new ByteArrayInputStream(data));
+    }
+
+    Dimension size = determineSize(data);
+
+    if(Thread.interrupted()) {
+      throw new InterruptedException("Image loading interrupted after determining size: " + imageHandle);
+    }
+
+    if(size.width <= maxWidth && size.height <= maxHeight) {
+      return new Image(new ByteArrayInputStream(data));
+    }
+
+    int[] s = computeImageSize(size.width, size.height, maxWidth, maxHeight);
+
+    return new Image(new ByteArrayInputStream(data), s[0], s[1], false, true);
+  }
+
+  private static Dimension determineSize(byte[] data) throws IOException {
     try(ImageInputStream is = ImageIO.createImageInputStream(new ByteArrayInputStream(data))) {
       Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(is);
 
@@ -233,18 +182,7 @@ public class ImageCache {
         return new Dimension(w, h);
       }
 
-      return null;
-    }
-    catch(IOException e) {
-      return null;
-    }
-  }
-
-  private static void store(String key, CompletableFuture<Image> imageFuture) {
-    ImageFutureWeakReference imageRef = new ImageFutureWeakReference(key, imageFuture, REFERENCE_QUEUE);
-
-    synchronized(CACHE) {
-      CACHE.put(key, imageRef);
+      throw new IOException("No reader for given image data");
     }
   }
 
@@ -311,6 +249,76 @@ public class ImageCache {
 
     public String getKey() {
       return key;
+    }
+  }
+
+  /**
+   * This subclass is specifically created to allow for cancelling of upstream
+   * futures if all downstream futures were cancelled (this has some limitations
+   * and won't work when sharing the future and allowing arbitrary downstream
+   * operations -- which is why this is not a generic useable class).<p>
+   *
+   * Since CompletableFuture's themselves can not interrupt their worker threads
+   * (because the future does not know which thread), a FutureTask is used
+   * internally (for the first CompletableFuture only), which can be interrupted.<p>
+   *
+   * Use case: if the same image is already being loaded, a 2nd caller should just
+   * wait until that one is finished.  If the first caller is cancelled, but not
+   * the 2nd, it should still complete.  If both are cancelled the loading can
+   * be cancelled.
+   */
+  private static class CancellableCompletableFuture<T> extends CompletableFuture<T> {
+    private final Set<CompletableFuture<?>> notCancelledDependents = Collections.synchronizedSet(new HashSet<>());
+    private final CancellableCompletableFuture<?> parent;
+    private final FutureTask<?> associatedTask;
+
+    public CancellableCompletableFuture(Consumer<CompletableFuture<T>> function, Executor executor) {
+      this.parent = null;
+      this.associatedTask = new FutureTask<>(() -> function.accept(this), null);
+
+      executor.execute(associatedTask);
+    }
+
+    private CancellableCompletableFuture(CancellableCompletableFuture<?> parent) {
+      this.parent = parent;
+      this.associatedTask = null;
+    }
+
+    @Override
+    public <U> CompletableFuture<U> newIncompleteFuture() {
+      CancellableCompletableFuture<U> cf = new CancellableCompletableFuture<>(this);
+
+      notCancelledDependents.add(cf);
+
+      return cf;
+    }
+
+    private void cancel(CompletableFuture<?> child) {
+      notCancelledDependents.remove(child);
+
+      if(notCancelledDependents.isEmpty()) {
+        if(associatedTask != null) {
+          associatedTask.cancel(true);
+        }
+        else {
+          cancel(true);
+        }
+
+        if(parent != null) {
+          parent.cancel(this);
+        }
+      }
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      super.cancel(mayInterruptIfRunning);
+
+      if(parent != null) {
+        parent.cancel(this);
+      }
+
+      return true;
     }
   }
 }
