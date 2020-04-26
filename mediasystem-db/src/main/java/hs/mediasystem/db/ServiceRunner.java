@@ -14,6 +14,7 @@ public class ServiceRunner {
 
     pluginManager.loadPluginAndScan("hs.mediasystem.db", "hs.mediasystem.util", "hs.mediasystem.mediamanager");
 
+    injector.getInstance(ResponseCacheInitializer.class);  // Triggers response cache setup
     injector.getInstance(PluginInitializer.class);  // Triggers plugin initialization
   }
 }
