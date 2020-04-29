@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role.Type;
@@ -22,7 +21,6 @@ import java.util.stream.Stream;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
@@ -53,6 +51,7 @@ public class CastPaneFactory {
     RowConstraints rowConstraints2 = new RowConstraints();
 
     rowConstraints1.setVgrow(Priority.ALWAYS);
+    rowConstraints1.setValignment(VPos.BOTTOM);
     rowConstraints2.setVgrow(Priority.NEVER);
     rowConstraints2.setValignment(VPos.TOP);
 
@@ -82,9 +81,12 @@ public class CastPaneFactory {
 
       imageProperty.imageHandleProperty().set(contributor.getPerson().getImage().map(imageHandleFactory::fromURI).orElse(null));
 
-      BiasedImageView photo = new BiasedImageView(new AspectCorrectLabel("?", 0.75, Orientation.VERTICAL, 1000, 1000));
+      Label ph = Labels.create("ph", "?");
 
-      photo.setOrientation(null);
+      ph.setMaxSize(1000, 1000);
+
+      BiasedImageView photo = new BiasedImageView(ph, 400.0 / 600);
+
       photo.imageProperty().bind(imageProperty);
       photo.setAlignment(Pos.BOTTOM_CENTER);
 

@@ -3,7 +3,6 @@ package hs.mediasystem.plugin.library.scene.overview;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
-import hs.mediasystem.plugin.library.scene.AspectCorrectLabel;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
@@ -344,7 +343,10 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       imageProperty.imageHandleProperty().set(work.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
 
-      Label label = new AspectCorrectLabel("?", 0.75, Orientation.VERTICAL, 1000, 1000);
+      Label label = Labels.create("ph", "?");
+
+      label.setMaxSize(1000, 1000);
+
       BiasedImageView poster = new BiasedImageView(label);
 
       poster.setOrientation(Orientation.VERTICAL);
