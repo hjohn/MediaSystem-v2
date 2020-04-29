@@ -52,8 +52,10 @@ public class MultiButton extends StackPane {
 
     transitionPane.setClipContent(false);
 
-    overlay1.setText("▲");
-    overlay2.setText("▼");
+    if(children.size() > 1) {
+      overlay1.setText("▲");
+      overlay2.setText("▼");
+    }
 
     nodes.get(0).setVisible(true);
 
