@@ -394,10 +394,17 @@ public class WorkService {
 
     return new Work(
       descriptor,
-      createParentForMovieOrEpisode(descriptor).orElse(null),
+      createParentForMovieOrEpisode(descriptor).or(() -> createParentForStream(streamable.getId())).orElse(null),
       state,
       mediaStreams
     );
+  }
+
+  private Optional<Parent> createParentForStream(StreamID streamId) {
+    return streamStore.findParentId(streamId)
+      .flatMap(streamStore::findStream)
+      .map(this::findBestDescriptor)
+      .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getTitle(), d.getDetails().getBackdrop().orElse(null)));
   }
 
   private MediaDescriptor createMinimalDescriptor(Streamable streamable) {
