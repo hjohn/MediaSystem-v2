@@ -13,8 +13,8 @@ public class Sequence {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
-    if(number <= 0) {
-      throw new IllegalArgumentException("number must be positive: " + number);
+    if(number < 0) {
+      throw new IllegalArgumentException("number must not be negative: " + number);
     }
     if(seasonNumber != null && seasonNumber <= 0) {
       throw new IllegalArgumentException("seasonNumber must be positive: " + seasonNumber);

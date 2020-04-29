@@ -16,6 +16,10 @@ public class Episode extends Release {
   public Episode(EpisodeIdentifier identifier, Details details, Reception reception, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
     super(identifier, details, reception);
 
+    if(number < 0) {
+      throw new IllegalArgumentException("number must not be negative: " + number);
+    }
+
     this.seasonNumber = seasonNumber;
     this.number = number;
     this.duration = duration;
@@ -26,6 +30,11 @@ public class Episode extends Release {
     return seasonNumber;
   }
 
+  /**
+   * The number of the episode.
+   *
+   * @return the number of the episode, never negative
+   */
   public int getNumber() {
     return number;
   }
