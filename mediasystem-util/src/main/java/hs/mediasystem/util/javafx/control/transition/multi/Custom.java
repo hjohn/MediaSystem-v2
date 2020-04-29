@@ -1,5 +1,6 @@
 package hs.mediasystem.util.javafx.control.transition.multi;
 
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.transition.EffectList;
 import hs.mediasystem.util.javafx.control.transition.MultiNodeTransition;
 import hs.mediasystem.util.javafx.control.transition.TransitionEffect;
@@ -70,11 +71,16 @@ public class Custom implements MultiNodeTransition {
         state.action = Action.REMOVE;
         state.timeline = new Timeline(new KeyFrame(initialDelay, e -> state.originalIntro.play()));
 
-        if(initialDelay.equals(Duration.ZERO)) {
-          state.originalIntro.play();  // Timelines of Duration.ZERO length donot trigger their event action, so trigger it immediately here instead
+        if(!Nodes.isTreeVisibleAndShowing(node)) {
+          state.intro.interpolate(1);
         }
         else {
-          state.timeline.play();
+          if(initialDelay.equals(Duration.ZERO)) {
+            state.originalIntro.play();  // Timelines of Duration.ZERO length donot trigger their event action, so trigger it immediately here instead
+          }
+          else {
+            state.timeline.play();
+          }
         }
       }
       else if(state.action == Action.REMOVE) {
