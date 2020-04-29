@@ -111,6 +111,8 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   private final Var<Boolean> rootWatched;
   private final Var<Boolean> rootMissing;
 
+  public final Val<Work> episodeOrMovieItem;
+
   private ProductionPresentation(
     PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory,
     Provider<EpisodesPresentation> episodesPresentationProvider,
@@ -130,7 +132,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     this.episodesPresentation = rootItem.getType().isSerie() ? episodesPresentationProvider.get().set(rootItem, children) : null;
     this.episodeItems = episodesPresentation == null ? null : episodesPresentation.episodeItems;
 
-    Val<Work> episodeOrMovieItem = episodeItems == null ? Val.constant(rootItem) : Val.wrap(episodeItem);
+    this.episodeOrMovieItem = episodeItems == null ? Val.constant(rootItem) : Val.wrap(episodeItem);
 
     this.play = playActionFactory.create(episodeOrMovieItem);
     this.resume = resumeActionFactory.create(episodeOrMovieItem);

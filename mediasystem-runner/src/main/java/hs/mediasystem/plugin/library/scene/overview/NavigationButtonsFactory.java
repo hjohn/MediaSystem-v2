@@ -16,6 +16,7 @@ import hs.mediasystem.util.javafx.control.MultiButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -50,10 +51,12 @@ public class NavigationButtonsFactory {
     if(presentation.state.get() != State.LIST) {
       hbox.getChildren().clear();
 
-      hbox.getChildren().add(
-        presentation.rootItem.getType().isSerie() && presentation.state.get() == State.OVERVIEW ?
-          Buttons.create("Episodes", e -> presentation.toListState()) : createPlayButton(presentation)
-      );
+      if(presentation.rootItem.getType().isSerie() && presentation.state.get() == State.OVERVIEW) {
+        hbox.getChildren().add(Buttons.create("Episodes", e -> presentation.toListState()));
+      }
+      else {
+        createPlayButton(presentation).ifPresent(hbox.getChildren()::add);
+      }
 
       if(presentation.rootItem.getId().getDataSource().getName().equals("TMDB")) {
         hbox.getChildren().add(
@@ -65,14 +68,14 @@ public class NavigationButtonsFactory {
     }
   }
 
-  private static MultiButton createPlayButton(ProductionPresentation presentation) {
+  private static Optional<MultiButton> createPlayButton(ProductionPresentation presentation) {
     List<Button> nodes = new ArrayList<>();
 
     if(presentation.resume.enabledProperty().getValue()) {
       nodes.add(create("Resume", "From " + SizeFormatter.SECONDS_AS_POSITION.format(presentation.resume.resumePosition.getValue().toSeconds()), e -> presentation.resume.trigger(e)));
       nodes.add(create("Play", "From start", e -> presentation.play.trigger(e)));
     }
-    else {
+    else if(presentation.episodeOrMovieItem.getValue().getPrimaryStream().isPresent()) {
       nodes.add(Buttons.create(presentation.play));
     }
 
@@ -80,7 +83,7 @@ public class NavigationButtonsFactory {
       nodes.add(Buttons.create(presentation.playTrailer));
     }
 
-    return new MultiButton(nodes);
+    return nodes.isEmpty() ? Optional.empty() : Optional.of(new MultiButton(nodes));
   }
 
   private MultiButton createRelatedButton(ProductionPresentation presentation) {
