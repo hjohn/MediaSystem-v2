@@ -2,6 +2,7 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 
 import hs.mediasystem.util.CryptoUtil;
 import hs.mediasystem.util.HttpException;
@@ -100,6 +101,10 @@ public class TheMovieDatabase {
       connection.addRequestProperty("!rate-limit", "TMDB;10;5");  // TMDB allows a maximum of 30 queries in a period of 10 seconds, this rate limiter allows 10 queries per 5 seconds.
       connection.addRequestProperty("!safe-url", url.toString().replaceAll("api_key=[0-9A-Za-z]+", "api_key=***"));   // Strips api_key from URL for safe logging
       connection.addRequestProperty("!key", key);
+
+      if(connection.getResponseCode() == 404) {
+        return NullNode.instance;
+      }
 
       if(connection.getResponseCode() != 200) {
         throw new HttpException(url, connection.getResponseCode(), connection.getResponseMessage());
