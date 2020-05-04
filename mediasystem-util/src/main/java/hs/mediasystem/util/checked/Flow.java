@@ -1,5 +1,7 @@
 package hs.mediasystem.util.checked;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -11,33 +13,49 @@ import java.util.stream.Stream;
  * @param <T> the type of the {@link Stream}
  * @param <E> the type of exception to allow
  */
-public class CheckedStream<T, E extends Exception> {
+public class Flow<T, E extends Exception> {
   private final Stream<T> stream;
   private final Class<E> exceptionType;
 
-  public static <T, E extends Exception> CheckedStream<T, E> of(Stream<T> stream, Class<E> exceptionType) {
-    return new CheckedStream<>(stream, exceptionType);
+  public static <T, E extends Exception> Flow<T, E> of(Stream<T> stream, Class<E> exceptionType) {
+    return new Flow<>(stream, exceptionType);
   }
 
-  private CheckedStream(Stream<T> stream, Class<E> exceptionType) {
+  public static <T, E extends Exception> Flow<T, E> of(Collection<T> collection, Class<E> exceptionType) {
+    return new Flow<>(collection.stream(), exceptionType);
+  }
+
+  public static <T> Flow<T, IOException> forIOException(Stream<T> stream) {
+    return new Flow<>(stream, IOException.class);
+  }
+
+  public static <T> Flow<T, IOException> forIOException(Collection<T> collection) {
+    return new Flow<>(collection.stream(), IOException.class);
+  }
+
+  private Flow(Stream<T> stream, Class<E> exceptionType) {
     this.stream = stream;
     this.exceptionType = exceptionType;
   }
 
-  public CheckedStream<T, E> filter(ThrowingPredicate<? super T, E> predicate) {
-    return new CheckedStream<>(stream.filter(x -> handlePredicate(predicate, x)), exceptionType);
+  /*
+   * Intermediate operations:
+   */
+
+  public Flow<T, E> filter(ThrowingPredicate<? super T, E> predicate) {
+    return new Flow<>(stream.filter(x -> handlePredicate(predicate, x)), exceptionType);
   }
 
-  public <R> CheckedStream<R, E> flatMap(ThrowingFunction<? super T, ? extends Stream<? extends R>, E> mapper) {
-    return new CheckedStream<>(stream.flatMap(x -> handleFunction(mapper, x)), exceptionType);
+  public <R> Flow<R, E> flatMap(ThrowingFunction<? super T, ? extends Stream<? extends R>, E> mapper) {
+    return new Flow<>(stream.flatMap(x -> handleFunction(mapper, x)), exceptionType);
   }
 
-  public <R> CheckedStream<R, E> map(ThrowingFunction<? super T, ? extends R, E> mapper) {
-    return new CheckedStream<>(stream.map(x -> handleFunction(mapper, x)), exceptionType);
+  public <R> Flow<R, E> map(ThrowingFunction<? super T, ? extends R, E> mapper) {
+    return new Flow<>(stream.map(x -> handleFunction(mapper, x)), exceptionType);
   }
 
-  public CheckedStream<T, E> peek(ThrowingConsumer<? super T, E> action) {
-    return new CheckedStream<>(stream.peek(x -> handleConsumer(action, x)), exceptionType);
+  public Flow<T, E> peek(ThrowingConsumer<? super T, E> action) {
+    return new Flow<>(stream.peek(x -> handleConsumer(action, x)), exceptionType);
   }
 
   private <U> void handleConsumer(ThrowingConsumer<U, E> func, U x) {
@@ -88,6 +106,10 @@ public class CheckedStream<T, E extends Exception> {
     }
   }
 
+  /*
+   * Terminal operations:
+   */
+
   @SuppressWarnings("unchecked")
   public <R, A> R collect(Collector<? super T, A, R> collector) throws E {
     try {
@@ -97,6 +119,10 @@ public class CheckedStream<T, E extends Exception> {
       throw (E)e.getCause();
     }
   }
+
+  /*
+   * Support stuff:
+   */
 
   private static class WrapperException extends RuntimeException {
     WrapperException(Exception cause) {

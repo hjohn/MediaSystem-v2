@@ -10,7 +10,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.checked.CheckedStream;
+import hs.mediasystem.util.checked.Flow;
 
 import java.io.IOException;
 import java.net.URI;
@@ -37,7 +37,7 @@ public class FoldersScanner implements Scanner {
   }
 
   private List<Streamable> scan(Path root, int importSourceId, StreamID parentId) throws IOException {
-    return CheckedStream.of(Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS), IOException.class)
+    return Flow.forIOException(Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS))
         .filter(path -> !path.equals(root))
         .filter(path -> Files.isDirectory(path) || Constants.VIDEOS.matcher(path.getFileName().toString()).matches())
         .map(p -> toStreamables(p, importSourceId, parentId))
