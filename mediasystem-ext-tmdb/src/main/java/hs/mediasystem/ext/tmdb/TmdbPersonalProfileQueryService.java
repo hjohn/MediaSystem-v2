@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
@@ -21,8 +22,8 @@ import hs.mediasystem.util.ImageURI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -91,8 +92,13 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
         backdropURI
       ),
       reception,
-      Collections.emptyList(),
-      genres,
+      new Classification(
+        genres,
+        List.of(),
+        List.of(),
+        Map.of(),
+        node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
+      ),
       node.path("popularity").doubleValue(),
       Set.of()
     );

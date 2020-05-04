@@ -3,6 +3,7 @@ package hs.mediasystem.mediamanager;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class Series {
@@ -34,9 +36,13 @@ public class Series {
       identifier,
       new Details(title, "subtitle", "Power of 3", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
       new Reception(8, 12345),
-      Arrays.asList("en"),
-      Arrays.asList("Action", "Science-Fiction"),
-      Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.KEYWORD, "TMDB"), "12345"), "magic")),
+      new Classification(
+        Arrays.asList("Action", "Science-Fiction"),
+        Arrays.asList("en"),
+        Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.KEYWORD, "TMDB"), "12345"), "magic")),
+        Map.of(),
+        false
+      ),
       State.ENDED,
       LocalDate.of(2009, 6, 6),
       99.0,

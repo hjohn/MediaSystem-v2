@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
@@ -16,8 +17,10 @@ import hs.mediasystem.util.ImageURI;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -36,8 +39,13 @@ public class ObjectFactory {
       identifier,
       createDetails(node, identifier),
       createReception(node),
-      node.path("spoken_languages").findValuesAsText("name"),
-      node.path("genres").findValuesAsText("name"),
+      new Classification(
+        node.path("genres").findValuesAsText("name"),
+        node.path("spoken_languages").findValuesAsText("name"),
+        List.of(),
+        Map.of(),
+        node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
+      ),
       node.path("popularity").doubleValue(),
       Set.of()
     );
@@ -66,9 +74,13 @@ public class ObjectFactory {
       createDetails(node, identifier),
       createReception(node),
       runtime == null ? null : Duration.ofMinutes(runtime.intValue()),
-      node.path("spoken_languages").findValuesAsText("name"),
-      node.path("genres").findValuesAsText("name"),
-      StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new Identifier(DataSources.TMDB_KEYWORD, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
+      new Classification(
+        node.path("genres").findValuesAsText("name"),
+        node.path("spoken_languages").findValuesAsText("name"),
+        StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new Identifier(DataSources.TMDB_KEYWORD, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
+        extractCertifications(node.path("release_dates").path("results")),
+        node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
+      ),
       node.path("popularity").doubleValue(),
       node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       toMovieState(node.path("status").textValue()),
@@ -83,9 +95,13 @@ public class ObjectFactory {
       identifier,
       createDetails(node, identifier),
       createReception(node),
-      node.path("languages").findValuesAsText("name"),
-      node.path("genres").findValuesAsText("name"),
-      StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new Identifier(DataSources.TMDB_KEYWORD, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
+      new Classification(
+        node.path("genres").findValuesAsText("name"),
+        node.path("languages").findValuesAsText("name"),
+        StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new Identifier(DataSources.TMDB_KEYWORD, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
+        extractCertifications(node.path("content_ratings").path("results")),
+        node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
+      ),
       toSerieState(node.path("status").textValue()),
       parseDate(node.path("last_air_date").textValue()),
       node.path("popularity").doubleValue(),
@@ -156,5 +172,30 @@ public class ObjectFactory {
 
   public LocalDate parseDate(String text) {
     return TheMovieDatabase.parseDateOrNull(text);
+  }
+
+  private static Map<String, String> extractCertifications(JsonNode root) {
+    Map<String, String> certifications = new HashMap<>();
+
+    for(JsonNode node : root) {
+      String countryCode = node.path("iso_3166_1").asText();
+      String certification = node.path("rating").asText();
+      int bestType = Integer.MAX_VALUE;
+
+      for(JsonNode releaseDateNode : node.path("release_dates")) {
+        int type = releaseDateNode.path("type").asInt();
+
+        if(type < bestType) {
+          certification = releaseDateNode.path("certification").asText();
+          bestType = type;
+        }
+      }
+
+      if(certification != null && countryCode != null) {
+        certifications.put(countryCode, certification);
+      }
+    }
+
+    return certifications;
   }
 }

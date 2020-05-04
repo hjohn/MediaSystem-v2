@@ -128,9 +128,14 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static Classification createClassification(Production production) {
+    hs.mediasystem.ext.basicmediatypes.domain.Classification c = production.getClassification();
+
     return new Classification(
-      production instanceof Movie ? ((Movie)production).getKeywords().stream().map(Keyword::getText).collect(Collectors.toList()) : List.<String>of(),
-      production.getGenres(),
+      c.getKeywords().stream().map(Keyword::getText).collect(Collectors.toList()),
+      c.getGenres(),
+      c.getLanguages(),
+      c.getContentRatings(),
+      c.getPornographic(),
       production instanceof Movie ? toStage(((Movie)production).getState()) : production instanceof Serie ? toStage(((Serie)production).getState()) : null
     );
   }

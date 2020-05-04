@@ -3,6 +3,7 @@ package hs.mediasystem.ext.local;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
@@ -106,9 +107,13 @@ public class LocalQueryService extends AbstractQueryService {
         descriptionService.getBackdrop(streamable).orElse(null)
       ),
       null,
-      Collections.emptyList(),
-      description.map(Description::getGenres).orElse(List.of()),
-      Collections.emptyList(),
+      new Classification(
+        description.map(Description::getGenres).orElse(List.of()),
+        Collections.emptyList(),
+        Collections.emptyList(),
+        Map.of(),
+        null
+      ),
       null,
       null,
       0,

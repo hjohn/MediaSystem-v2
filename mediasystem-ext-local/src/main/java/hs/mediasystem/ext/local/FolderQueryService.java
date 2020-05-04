@@ -3,6 +3,7 @@ package hs.mediasystem.ext.local;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Folder;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
@@ -14,6 +15,7 @@ import hs.mediasystem.mediamanager.StreamableStore;
 import hs.mediasystem.util.Attributes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -48,8 +50,13 @@ public class FolderQueryService extends AbstractQueryService {
         descriptionService.getBackdrop(streamable).orElse(null)
       ),
       null,
-      List.of(),
-      description.map(Description::getGenres).orElse(List.of())
+      new Classification(
+        description.map(Description::getGenres).orElse(List.of()),
+        List.of(),
+        List.of(),
+        Map.of(),
+        null
+      )
     );
   }
 }

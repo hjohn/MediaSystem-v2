@@ -18,6 +18,7 @@ import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
@@ -412,8 +413,7 @@ public class WorkService {
       new ProductionIdentifier(DataSource.instance(streamable.getType(), DEFAULT_DATA_SOURCE_NAME), "" + streamable.getId().asString()),
       serieHelper.createMinimalDetails(streamable),
       null,
-      List.of(),
-      List.of(),
+      Classification.EMPTY,
       0.0,
       Set.of()
     );

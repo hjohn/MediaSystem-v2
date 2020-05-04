@@ -3,6 +3,7 @@ package hs.mediasystem.mediamanager;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
@@ -14,6 +15,7 @@ import hs.mediasystem.util.ImageURI;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 
 public class Movies {
@@ -31,9 +33,13 @@ public class Movies {
       new Details(title, "subtitle", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
       new Reception(8, 12345),
       Duration.ofHours(2),
-      Arrays.asList("en"),
-      Arrays.asList("Action", "Science-Fiction"),
-      Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.KEYWORD, "TMDB"), "12345"), "timetravel")),
+      new Classification(
+        Arrays.asList("Action", "Science-Fiction"),
+        Arrays.asList("en"),
+        Arrays.asList(new Keyword(new Identifier(DataSource.instance(MediaType.KEYWORD, "TMDB"), "12345"), "timetravel")),
+        Map.of(),
+        false
+      ),
       99.0,
       "Skynet comes",
       State.RELEASED,
