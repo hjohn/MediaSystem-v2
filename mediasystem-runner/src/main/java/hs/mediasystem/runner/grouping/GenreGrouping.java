@@ -61,7 +61,7 @@ public class GenreGrouping implements Grouping<Work> {
         .filter(Objects::nonNull)
         .map(Object::toString)
         .limit(4)
-        .collect(Collectors.joining(","));
+        .collect(Collectors.joining("|"));
 
       Details details = new Details(
         entry.getKey(),

@@ -44,7 +44,7 @@ public class CollectionService {
         .flatMap(Optional::stream)
         .map(Object::toString)
         .limit(3)
-        .collect(Collectors.joining(","));
+        .collect(Collectors.joining("|"));
 
       Optional<ImageURI> backgroundImage = works.stream()
         .map(Work::getDescriptor)

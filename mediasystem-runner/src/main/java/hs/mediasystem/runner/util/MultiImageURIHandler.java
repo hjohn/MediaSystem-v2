@@ -35,11 +35,12 @@ import javax.inject.Singleton;
 /**
  * Supports URL's of format:
  *
- *    multi:[optional parameters]:uri1,uri2
+ *    multi:[optional parameters]:uri1|uri2
  */
 @Singleton
 public class MultiImageURIHandler implements ImageURIHandler {
   private static final Pattern SPLIT_PATTERN = Pattern.compile(",");
+  private static final Pattern URI_SEPARATOR_PATTERN = Pattern.compile(Pattern.quote("|"));
   private static final Pattern SEMI_COLON_PATTERN = Pattern.compile(";");
   private static final Pattern MAIN_PATTERN = Pattern.compile(":");
   private static final Pattern POSITIONAL_PATTERN = Pattern.compile("([0-9]+,[0-9]+)(;[-0-9]+,[-0-9]+,[0-9]+,[0-9]+)+");
@@ -51,7 +52,7 @@ public class MultiImageURIHandler implements ImageURIHandler {
     if(uri.getUri().startsWith("multi:")) {
       ImageHandleFactory factory = factoryProvider.get();
       String[] parts = MAIN_PATTERN.split(uri.getUri(), 3);
-      List<ImageHandle> handles = SPLIT_PATTERN.splitAsStream(parts[2])
+      List<ImageHandle> handles = URI_SEPARATOR_PATTERN.splitAsStream(parts[2])
         .map(p -> new ImageURI(p, null)).map(factory::fromURI).collect(Collectors.toList());
 
       if(parts[1].equals("landscape")) {

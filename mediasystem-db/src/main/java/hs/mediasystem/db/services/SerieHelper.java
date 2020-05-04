@@ -101,7 +101,7 @@ public class SerieHelper {
     int w = h * resolution.getWidth() / resolution.getHeight() / 2;
     int x = (600 - w) / 2;
 
-    return new ImageURI("multi:600,900;" + x + ",0," + w + ",450;" + x + ",450," + w + ",450:" + snapshots.get(0).getImageUri().getUri() + "," + snapshots.get(1).getImageUri().getUri(), null);
+    return new ImageURI("multi:600,900;" + x + ",0," + w + ",450;" + x + ",450," + w + ",450:" + snapshots.get(0).getImageUri().getUri() + "|" + snapshots.get(1).getImageUri().getUri(), null);
   }
 
   private static LocalEpisodeIdentifier createLocalId(Serie serie, Streamable stream) {

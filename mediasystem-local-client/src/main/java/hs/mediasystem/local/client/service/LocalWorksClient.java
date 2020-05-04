@@ -108,10 +108,8 @@ public class LocalWorksClient implements WorksClient {
 
     return mediaStream.getMetaData()
       .filter(smd -> !smd.getVideoStreams().isEmpty())
-      .map(smd -> new ImageURI("multi:600,900;38,3,524,294;38,303,524,294;38,603,524,294:localdb://" + id + "/1,localdb://" + id + "/2,localdb://" + id + "/3", null))
+      .map(smd -> new ImageURI("multi:600,900;38,3,524,294;38,303,524,294;38,603,524,294:localdb://" + id + "/1|localdb://" + id + "/2|localdb://" + id + "/3", null))
       .orElse(null);
-
-    //return new ImageURI("multi:600,900;3,3,594,334;3,563,594,334:localdb://" + id + "/1,localdb://" + id + "/2");
   }
 
   private static ImageURI snapshotsToBackdrop(MediaStream mediaStream) {
