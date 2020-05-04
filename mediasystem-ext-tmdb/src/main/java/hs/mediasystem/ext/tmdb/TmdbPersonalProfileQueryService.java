@@ -19,6 +19,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
 import hs.mediasystem.util.ImageURI;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
   @Inject private TheMovieDatabase tmdb;
 
   @Override
-  public PersonalProfile query(PersonIdentifier identifier) {
+  public PersonalProfile query(PersonIdentifier identifier) throws IOException {
     JsonNode node = tmdb.query("3/person/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "combined_credits"));
     String birthDay = node.path("birthday").textValue();
     String deathDay = node.path("deathday").textValue();
@@ -64,7 +65,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
     );
   }
 
-  private ProductionRole createProductionRole(JsonNode node, boolean isCast) {
+  private ProductionRole createProductionRole(JsonNode node, boolean isCast) throws IOException {
     boolean isMovie = node.get("media_type").textValue().equals("movie");
     ProductionIdentifier identifier = new ProductionIdentifier(DataSource.instance(isMovie ? MediaType.MOVIE : MediaType.SERIE, "TMDB"), node.get("id").asText());
     ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + identifier);

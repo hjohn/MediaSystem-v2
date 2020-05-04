@@ -3,8 +3,9 @@ package hs.mediasystem.ext.basicmediatypes.services;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface VideoLinksQueryService {
-  List<VideoLink> query(Identifier identifier);
+  List<VideoLink> query(Identifier identifier) throws IOException;
 }

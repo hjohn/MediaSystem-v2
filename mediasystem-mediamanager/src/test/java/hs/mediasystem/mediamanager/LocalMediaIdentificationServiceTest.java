@@ -16,6 +16,7 @@ import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.Exceptional;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -87,7 +88,7 @@ public class LocalMediaIdentificationServiceTest {
   }
 
   @Test
-  public void reidentifyShouldCreateIdentificationWithoutMatchingQueryService() {
+  public void reidentifyShouldCreateIdentificationWithoutMatchingQueryService() throws IOException {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier1 = new Identifier(DATA_SOURCE_1, "12345");
     Identifier identifier2 = new Identifier(DATA_SOURCE_2, "12345");
@@ -110,7 +111,7 @@ public class LocalMediaIdentificationServiceTest {
   }
 
   @Test
-  public void reindentifyShouldHandleIdentifyException() {
+  public void reindentifyShouldHandleIdentifyException() throws IOException {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
@@ -129,7 +130,7 @@ public class LocalMediaIdentificationServiceTest {
   }
 
   @Test
-  public void reindentifyShouldHandleQueryException() {
+  public void reindentifyShouldHandleQueryException() throws IOException {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
     Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
     Match match = new Match(Type.ID, 1.0f, Instant.now());

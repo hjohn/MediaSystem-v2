@@ -12,6 +12,7 @@ import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,11 +23,13 @@ public class TmdbProductionCollectionQueryService implements ProductionCollectio
   @Inject private ObjectFactory objectFactory;
 
   @Override
-  public ProductionCollection query(Identifier identifier) {
+  public ProductionCollection query(Identifier identifier) throws IOException {
     JsonNode node = tmdb.query("3/collection/" + identifier.getId(), "text:json:" + identifier);
     List<Production> productions = new ArrayList<>();
 
-    node.path("parts").forEach(p -> productions.add(objectFactory.toProduction(p, DataSources.TMDB_MOVIE)));
+    for(JsonNode p : node.path("parts")) {
+      productions.add(objectFactory.toProduction(p, DataSources.TMDB_MOVIE));
+    }
 
     Identifier productionCollectionIdentifier = new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText());
 

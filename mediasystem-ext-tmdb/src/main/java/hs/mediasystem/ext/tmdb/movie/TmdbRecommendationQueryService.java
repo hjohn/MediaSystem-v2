@@ -10,6 +10,7 @@ import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class TmdbRecommendationQueryService implements RecommendationQueryServic
   @Inject private ObjectFactory objectFactory;
 
   @Override
-  public List<Production> query(ProductionIdentifier identifier) {
+  public List<Production> query(ProductionIdentifier identifier) throws IOException {
     JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
     List<Production> productions = new ArrayList<>();
 

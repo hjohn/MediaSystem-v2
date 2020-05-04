@@ -41,6 +41,7 @@ import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.mediamanager.DescriptorStore;
+import hs.mediasystem.util.Throwables;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -95,7 +96,7 @@ public class WorkService {
   private <T extends Production> T queryProduction(ProductionIdentifier identifier) {
     for(QueryService queryService : queryServices) {
       if(queryService.getDataSource().equals(identifier.getDataSource())) {
-        return (T)queryService.query(identifier);
+        return Throwables.uncheck(() -> (T)queryService.query(identifier));
       }
     }
 
@@ -209,7 +210,7 @@ public class WorkService {
   }
 
   public synchronized List<VideoLink> findVideoLinks(WorkId workId) {
-    return videoLinksQueryServices.get(0).query(toIdentifier(workId));
+    return Throwables.uncheck(() -> videoLinksQueryServices.get(0).query(toIdentifier(workId)));
   }
 
   public synchronized List<Contribution> findContributions(WorkId workId) {
@@ -217,7 +218,7 @@ public class WorkService {
 
     for(RolesQueryService rolesQueryService : rolesQueryServices) {
       if(rolesQueryService.getDataSourceName().equals(identifier.getDataSource().getName())) {
-        return rolesQueryService.query(identifier).stream()
+        return Throwables.uncheck(() -> rolesQueryService.query(identifier)).stream()
           .map(pr -> new Contribution(pr.getPerson(), pr.getRole(), pr.getOrder()))
           .collect(Collectors.toList());
       }
@@ -227,7 +228,7 @@ public class WorkService {
   }
 
   public synchronized List<Work> findRecommendations(WorkId workId) {
-    return recommendationQueryServices.get(0).query((ProductionIdentifier)toIdentifier(workId)).stream()
+    return Throwables.uncheck(() -> recommendationQueryServices.get(0).query((ProductionIdentifier)toIdentifier(workId))).stream()
       .map(p -> toWork(p, null))
       .collect(Collectors.toList());
   }
@@ -257,7 +258,7 @@ public class WorkService {
       ));
     }
 
-    return Optional.ofNullable(productionCollectionQueryServices.get(0).query(identifier));
+    return Optional.ofNullable(Throwables.uncheck(() -> productionCollectionQueryServices.get(0).query(identifier)));
   }
 
   Work toWork(MediaDescriptor descriptor, MediaDescriptor parentDescriptor) {

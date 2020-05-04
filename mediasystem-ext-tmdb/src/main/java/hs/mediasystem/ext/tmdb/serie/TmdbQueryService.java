@@ -15,7 +15,9 @@ import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.PersonRoles;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
+import hs.mediasystem.util.checked.Flow;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -36,8 +38,8 @@ public class TmdbQueryService extends AbstractQueryService {
   }
 
   @Override
-  public Serie query(Identifier identifier) {
-    JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "keywords"));  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
+  public Serie query(Identifier identifier) throws IOException {
+    JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "keywords,content_ratings"));  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
     List<JsonNode> seasons = new ArrayList<>();
 
     for(JsonNode season : node.path("seasons")) {
@@ -47,10 +49,10 @@ public class TmdbQueryService extends AbstractQueryService {
     // Popularity... Status... last air date ... inproduction field
     //['Returning Series', 'Planned', 'In Production', 'Ended', 'Canceled', 'Pilot']
 
-    return objectFactory.toSerie(node, seasons.stream().map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
+    return objectFactory.toSerie(node, Flow.forIOException(seasons.stream()).map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
   }
 
-  private Season toSeason(JsonNode node, String parentId) {
+  private Season toSeason(JsonNode node, String parentId) throws IOException {
     List<JsonNode> episodes = new ArrayList<>();
 
     for(JsonNode episode : node.at("/episodes")) {
@@ -73,11 +75,11 @@ public class TmdbQueryService extends AbstractQueryService {
         null
       ),
       seasonNumber,
-      episodes.stream().map(e -> toEpisode(e, parentId)).collect(Collectors.toList())
+      Flow.forIOException(episodes.stream()).map(e -> toEpisode(e, parentId)).collect(Collectors.toList())
     );
   }
 
-  private Episode toEpisode(JsonNode node, String parentId) {
+  private Episode toEpisode(JsonNode node, String parentId) throws IOException {
     String releaseDate = node.path("air_date").textValue();
     Reception reception = node.get("vote_count").isNumber() && node.get("vote_average").isNumber() ?
       new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt()) : null;

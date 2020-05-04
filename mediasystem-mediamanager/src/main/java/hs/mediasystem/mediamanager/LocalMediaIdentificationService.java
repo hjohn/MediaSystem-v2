@@ -9,6 +9,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +58,9 @@ public class LocalMediaIdentificationService {
    * @throws UnknownStreamableException when given streamable could not be identified
    * @throws UnknownDataSourceException when the given data source name is not known
    * @return a {@link MediaIdentification}, never null
+   * @throws IOException when an I/O error occurs
    */
-  public MediaIdentification identify(Streamable streamable, MediaDescriptor parent, String dataSourceName) {
+  public MediaIdentification identify(Streamable streamable, MediaDescriptor parent, String dataSourceName) throws IOException {
     MediaType type = streamable.getType();
     DataSource dataSource = DataSource.instance(type, dataSourceName);
     IdentificationService service = identificationServicesByDataSource.get(dataSource);
@@ -70,7 +72,7 @@ public class LocalMediaIdentificationService {
     return performIdentificationCall(streamable, parent, service);
   }
 
-  private MediaIdentification performIdentificationCall(Streamable streamable, MediaDescriptor parent, IdentificationService service) {
+  private MediaIdentification performIdentificationCall(Streamable streamable, MediaDescriptor parent, IdentificationService service) throws IOException {
     Identification identification = service.identify(streamable, parent).orElseThrow(() -> new UnknownStreamableException(streamable, service));
     Identifier identifier = identification.getPrimaryIdentifier();
 
@@ -81,7 +83,7 @@ public class LocalMediaIdentificationService {
     );
   }
 
-  public MediaDescriptor query(Identifier identifier) {
+  public MediaDescriptor query(Identifier identifier) throws IOException {
     QueryService queryService = queryServicesByDataSource.get(identifier.getDataSource());
 
     if(queryService == null) {

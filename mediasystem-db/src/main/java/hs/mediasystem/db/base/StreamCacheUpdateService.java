@@ -18,6 +18,7 @@ import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -331,7 +332,7 @@ public class StreamCacheUpdateService {
 
           return result;   // if identification was succesful, no need to try next data source
         }
-        catch(Exception e) {
+        catch(IOException e) {
           if(cause == null) {
             cause = e;
           }

@@ -9,6 +9,7 @@ import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.tmdb.PersonRoles;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -23,7 +24,7 @@ public class TmdbRolesQueryService implements RolesQueryService {
   }
 
   @Override
-  public List<PersonRole> query(Identifier identifier) {
+  public List<PersonRole> query(Identifier identifier) throws IOException {
     JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
 
     return personRoles.toPersonRoles(info);

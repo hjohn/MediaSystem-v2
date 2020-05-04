@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import hs.mediasystem.util.CryptoUtil;
 import hs.mediasystem.util.HttpException;
 import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.RuntimeIOException;
 import hs.mediasystem.util.Throwables;
 
 import java.io.IOException;
@@ -31,7 +30,7 @@ public class TheMovieDatabase {
 
   private JsonNode configuration;
 
-  public JsonNode query(String query, String key, List<String> parameters) {
+  public JsonNode query(String query, String key, List<String> parameters) throws IOException {
     if(parameters.size() % 2 != 0) {
       throw new IllegalArgumentException("Uneven number of vararg 'parameters': must provide pairs of name/value");
     }
@@ -48,12 +47,12 @@ public class TheMovieDatabase {
 
       return getURL(new URL("http://api.themoviedb.org/" + query + "?api_key=" + apiKey + sb.toString()), key);
     }
-    catch(RuntimeIOException | IOException e) {
-      throw new RuntimeIOException("While executing query: " + query + "; key=" + key + "; parameters=" + parameters, e);
+    catch(IOException e) {
+      throw new IOException("While executing query: " + query + "; key=" + key + "; parameters=" + parameters, e);
     }
   }
 
-  public JsonNode query(String query, String key) {
+  public JsonNode query(String query, String key) throws IOException {
     return query(query, key, List.of());
   }
 
@@ -67,7 +66,7 @@ public class TheMovieDatabase {
     }
   }
 
-  public ImageURI createImageURI(String path, String size, String key) {
+  public ImageURI createImageURI(String path, String size, String key) throws IOException {
     if(path == null || size == null) {
       return null;
     }
@@ -81,7 +80,7 @@ public class TheMovieDatabase {
     }
   }
 
-  private JsonNode getConfiguration() {
+  private JsonNode getConfiguration() throws IOException {
     if(configuration == null) {
       synchronized(this) {
         if(configuration == null) {
@@ -93,7 +92,7 @@ public class TheMovieDatabase {
     return configuration;
   }
 
-  private JsonNode getURL(URL url, String key) {
+  private JsonNode getURL(URL url, String key) throws IOException {
     try {
       HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
@@ -115,7 +114,7 @@ public class TheMovieDatabase {
       }
     }
     catch(IOException e) {
-      throw new RuntimeIOException("Exception while reading: " + url, e);
+      throw new IOException("Exception while reading: " + url, e);
     }
   }
 }

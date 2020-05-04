@@ -42,9 +42,9 @@ public class TmdbIdentificationServiceTest {
 
   @Test
   public void shouldIdentifyMovies() throws JsonProcessingException, IOException {
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Terminator 5 Genisys", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80000,\"original_title\":\"Terminator Genisys\",\"release_date\":\"2015-07-01\",\"title\":\"Terminator Genisys\"}]}"));
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Terminator, The 5 Genisys", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "The Terminator 5 Genisys", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Terminator 5 Genisys", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80000,\"original_title\":\"Terminator Genisys\",\"release_date\":\"2015-07-01\",\"title\":\"Terminator Genisys\"}]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Terminator, The 5 Genisys", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "The Terminator 5 Genisys", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5")), null).get();
 
@@ -55,7 +55,7 @@ public class TmdbIdentificationServiceTest {
 
   @Test
   public void shouldIdentifyMovies2() throws JsonProcessingException, IOException {
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"original_title\":\"Michiel de Ruyter\",\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"original_title\":\"Michiel de Ruyter\",\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")), null).get();
 
@@ -66,7 +66,7 @@ public class TmdbIdentificationServiceTest {
 
   @Test
   public void shouldNotFailWhenNoOriginalTitlePresent() throws JsonProcessingException, IOException {
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")), null).get();
 
@@ -77,10 +77,10 @@ public class TmdbIdentificationServiceTest {
 
   @Test
   public void shouldUseAltTitle() throws JsonProcessingException, IOException {
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Admiral, The", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "The Admiral", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
-    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Admiral", "language", "en")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Admiral, The", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "The Admiral", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
+    when(tmdb.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Admiral", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.ALTERNATIVE_TITLE, "Admiral, The", Attribute.YEAR, "2015")), null).get();
 

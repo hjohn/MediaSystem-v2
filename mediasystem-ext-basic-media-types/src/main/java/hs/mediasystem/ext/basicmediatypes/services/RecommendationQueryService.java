@@ -3,6 +3,7 @@ package hs.mediasystem.ext.basicmediatypes.services;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface RecommendationQueryService {
@@ -13,5 +14,5 @@ public interface RecommendationQueryService {
    * @param identifier a Movie or a Serie identifier, cannot be null
    * @return a list of recommended Productions, never null
    */
-  List<Production> query(ProductionIdentifier identifier);
+  List<Production> query(ProductionIdentifier identifier) throws IOException;
 }

@@ -9,6 +9,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Person.Gender;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
+import hs.mediasystem.util.Throwables;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,9 @@ public class PersonService {
   @Inject private List<PersonalProfileQueryService> personalProfileQueryServices;
 
   public Optional<Person> findPerson(PersonId id) {
-    return Optional.ofNullable(personalProfileQueryServices.get(0).query(new PersonIdentifier(id.getDataSource(), id.getKey())))
+    PersonalProfile personalProfile = Throwables.uncheck(() -> personalProfileQueryServices.get(0).query(new PersonIdentifier(id.getDataSource(), id.getKey())));
+
+    return Optional.ofNullable(personalProfile)
       .map(this::toPerson);
   }
 

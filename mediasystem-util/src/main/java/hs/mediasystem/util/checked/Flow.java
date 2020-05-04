@@ -2,6 +2,7 @@ package hs.mediasystem.util.checked;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -109,6 +110,26 @@ public class Flow<T, E extends Exception> {
   /*
    * Terminal operations:
    */
+
+  @SuppressWarnings("unchecked")
+  public CheckedOptional<T> min(Comparator<? super T> comparator) throws E {
+    try {
+      return CheckedOptional.from(stream.min(comparator));
+    }
+    catch(WrapperException e) {
+      throw (E)e.getCause();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public CheckedOptional<T> max(Comparator<? super T> comparator) throws E {
+    try {
+      return CheckedOptional.from(stream.max(comparator));
+    }
+    catch(WrapperException e) {
+      throw (E)e.getCause();
+    }
+  }
 
   @SuppressWarnings("unchecked")
   public <R, A> R collect(Collector<? super T, A, R> collector) throws E {

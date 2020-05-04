@@ -15,6 +15,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.util.ImageURI;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -32,7 +33,7 @@ import javax.inject.Singleton;
 public class ObjectFactory {
   @Inject private TheMovieDatabase tmdb;
 
-  public Production toProduction(JsonNode node, DataSource dataSource) {
+  public Production toProduction(JsonNode node, DataSource dataSource) throws IOException {
     ProductionIdentifier identifier = new ProductionIdentifier(dataSource, node.path("id").asText());
 
     return new Production(
@@ -51,7 +52,7 @@ public class ObjectFactory {
     );
   }
 
-  public Movie toMovie(JsonNode node) {
+  public Movie toMovie(JsonNode node) throws IOException {
     Number runtime = node.path("runtime").numberValue();
 
     JsonNode collectionPath = node.path("belongs_to_collection");
@@ -88,7 +89,7 @@ public class ObjectFactory {
     );
   }
 
-  public Serie toSerie(JsonNode node, List<Season> seasons) {
+  public Serie toSerie(JsonNode node, List<Season> seasons) throws IOException {
     ProductionIdentifier identifier = new ProductionIdentifier(DataSources.TMDB_SERIE, node.path("id").asText());
 
     return new Serie(
@@ -110,7 +111,7 @@ public class ObjectFactory {
     );
   }
 
-  private Details createDetails(JsonNode node, Identifier identifier) {
+  private Details createDetails(JsonNode node, Identifier identifier) throws IOException {
     String releaseDate = node.get("release_date") == null ? node.path("first_air_date").textValue() : node.get("release_date").textValue();
     ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + identifier.toString());
     ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier.toString());

@@ -4,6 +4,8 @@ import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 
+import java.io.IOException;
+
 public interface QueryService {
   DataSource getDataSource();
 
@@ -14,5 +16,5 @@ public interface QueryService {
    * @param identifier an {@link Identifier}, cannot be null
    * @return a {@link MediaDescriptor}, never null
    */
-  MediaDescriptor query(Identifier identifier);
+  MediaDescriptor query(Identifier identifier) throws IOException;
 }

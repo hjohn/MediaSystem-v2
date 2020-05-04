@@ -7,6 +7,7 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
+import hs.mediasystem.util.Throwables;
 
 import java.time.Instant;
 import java.util.Comparator;
@@ -59,7 +60,7 @@ public class WorksService {
   }
 
   public synchronized List<Work> findTop100() {
-    return top100QueryServices.get(0).query().stream()
+    return Throwables.uncheck(() -> top100QueryServices.get(0).query()).stream()
       .map(p -> workService.toWork(p, null))
       .collect(Collectors.toList());
   }

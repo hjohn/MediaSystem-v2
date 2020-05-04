@@ -14,7 +14,10 @@ import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.TextMatcher;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.util.Attributes;
+import hs.mediasystem.util.checked.CheckedOptional;
+import hs.mediasystem.util.checked.Flow;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -40,23 +43,25 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
   }
 
   @Override
-  public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
+  public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) throws IOException {
     Attributes attributes = streamable.getAttributes();
 
-    return Optional.ofNullable((String)attributes.get(Attribute.ID_PREFIX + "IMDB"))
+    return CheckedOptional.ofNullable((String)attributes.get(Attribute.ID_PREFIX + "IMDB"))
       .flatMap(this::identifyByIMDB)
-      .or(() -> identifyByStream(attributes));
+      .or(() -> identifyByStream(attributes))
+      .toOptional();
   }
 
-  private Optional<Identification> identifyByIMDB(String imdb) {
+  private CheckedOptional<Identification> identifyByIMDB(String imdb) throws IOException {
     JsonNode node = tmdb.query("3/find/" + imdb, null, List.of("external_source", "imdb_id"));
 
-    return StreamSupport.stream(node.path("movie_results").spliterator(), false)
+    return CheckedOptional.from(StreamSupport.stream(node.path("movie_results").spliterator(), false)
       .findFirst()
-      .map(n -> new Identification(List.of(new Identifier(DataSources.TMDB_MOVIE, n.get("id").asText())), new Match(Type.ID, 1, Instant.now())));
+      .map(n -> new Identification(List.of(new Identifier(DataSources.TMDB_MOVIE, n.get("id").asText())), new Match(Type.ID, 1, Instant.now())))
+    );
   }
 
-  private Optional<Identification> identifyByStream(Attributes attributes) {
+  private CheckedOptional<Identification> identifyByStream(Attributes attributes) throws IOException {
     List<String> titleVariations = TextMatcher.createVariations(attributes.get(Attribute.TITLE));
     List<String> alternativeTitleVariations = TextMatcher.createVariations(attributes.get(Attribute.ALTERNATIVE_TITLE));
 
@@ -74,10 +79,10 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
 
     String postFix = (seq != null && !seq.equals("1") ? " " + seq : "") + (!subtitle.isEmpty() ? " " + subtitle : "");
 
-    return Stream.concat(titleVariations.stream(), alternativeTitleVariations.stream())
+    return Flow.forIOException(Stream.concat(titleVariations.stream(), alternativeTitleVariations.stream()))
       .map(tv -> tv + postFix)
       .peek(q -> LOGGER.fine("Matching '" + q + "' [" + year + "] ..."))
-      .flatMap(q -> StreamSupport.stream(tmdb.query("3/search/movie", null, List.of("query", q, "language", "en")).path("results").spliterator(), false)
+      .flatMap(q -> StreamSupport.stream(tmdb.query("3/search/movie", null, List.of("query", q, "language", "en", "include_adult", "true")).path("results").spliterator(), false)
         .flatMap(jsonNode -> Stream.of(jsonNode.path("title").asText(), jsonNode.path("original_title").asText())
           .filter(t -> !t.isEmpty())
           .distinct()

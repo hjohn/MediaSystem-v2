@@ -5,6 +5,7 @@ import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 
+import java.io.IOException;
 import java.util.Optional;
 
 public interface IdentificationService {
@@ -17,5 +18,5 @@ public interface IdentificationService {
    * @param parent a parent descriptor, can be null
    * @return an {@link Identification}, never null
    */
-  Optional<Identification> identify(Streamable streamable, MediaDescriptor parent);
+  Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) throws IOException;
 }

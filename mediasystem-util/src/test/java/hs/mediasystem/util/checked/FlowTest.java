@@ -1,6 +1,7 @@
 package hs.mediasystem.util.checked;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,6 +41,18 @@ class FlowTest {
 
     // Exception is thrown here:
     assertThrows(IOException.class, () -> s2.collect(Collectors.toList()));
+
+    // Does not throw an exception:
+    Flow<String, IOException> s3 = Flow.forIOException(List.of("aa", "b", "c").stream()).map(this::toUpperCase);
+
+    // Exception is thrown here:
+    assertThrows(IOException.class, () -> s3.min(Comparator.naturalOrder()));
+
+    // Does not throw an exception:
+    Flow<String, IOException> s4 = Flow.forIOException(List.of("aa", "b", "c").stream()).map(this::toUpperCase);
+
+    // Exception is thrown here:
+    assertThrows(IOException.class, () -> s4.max(Comparator.naturalOrder()));
   }
 
   /**

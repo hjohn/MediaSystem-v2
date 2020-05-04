@@ -9,6 +9,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.util.ImageURI;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +24,7 @@ public class PersonRoles {
   @Inject private TheMovieDatabase tmdb;
 
   // TODO use "order", maybe "gender"
-  public List<PersonRole> toPersonRoles(JsonNode node) {
+  public List<PersonRole> toPersonRoles(JsonNode node) throws IOException {
     List<PersonRole> roles = new ArrayList<>();
 
     for(JsonNode cast : node.path("cast")) {

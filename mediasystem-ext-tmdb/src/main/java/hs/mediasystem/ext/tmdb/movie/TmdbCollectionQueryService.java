@@ -11,6 +11,7 @@ import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class TmdbCollectionQueryService extends AbstractQueryService {
   }
 
   @Override
-  public IdentifierCollection query(Identifier identifier) {
+  public IdentifierCollection query(Identifier identifier) throws IOException {
     JsonNode node = tmdb.query("3/collection/" + identifier.getId(), "text:json:" + identifier);
     List<Identifier> items = new ArrayList<>();
 

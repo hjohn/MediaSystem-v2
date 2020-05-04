@@ -19,6 +19,7 @@ import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.HashMap;
@@ -59,7 +60,7 @@ public class StreamCacheUpdateServiceTest {
   }
 
   @Test
-  void shouldAddMedia() throws InterruptedException {
+  void shouldAddMedia() throws InterruptedException, IOException {
     Streamable stream1 = streamable(1234, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
     StreamID streamId1 = stream1.getId();
 
@@ -80,7 +81,7 @@ public class StreamCacheUpdateServiceTest {
   }
 
   @Test
-  void shouldAddAndRemoveMedia() throws InterruptedException {
+  void shouldAddAndRemoveMedia() throws InterruptedException, IOException {
     Streamable streamable1 = streamable(20, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
     Streamable streamable2 = streamable(21, "/home/user/Battlestar%20Galactica%20Renamed", "Battlestar Galactica");
 
@@ -107,7 +108,7 @@ public class StreamCacheUpdateServiceTest {
   }
 
   @Test
-  public void shouldReplaceExistingMediaIfAttributesDiffer() throws InterruptedException {
+  public void shouldReplaceExistingMediaIfAttributesDiffer() throws InterruptedException, IOException {
     Streamable streamable1 = streamable(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica");
     Streamable streamable2 = streamable(123, "/home/user/Battlestar%20Galactica", "Battlestar Galactica v2");
 

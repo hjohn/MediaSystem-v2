@@ -9,6 +9,7 @@ import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.ext.tmdb.VideoLinks;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -18,7 +19,7 @@ public class TmdbVideoLinksQueryService implements VideoLinksQueryService {
   @Inject private VideoLinks videoLinks;
 
   @Override
-  public List<VideoLink> query(Identifier identifier) {
+  public List<VideoLink> query(Identifier identifier) throws IOException {
     JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
 
     return videoLinks.toVideoLinks(info);
