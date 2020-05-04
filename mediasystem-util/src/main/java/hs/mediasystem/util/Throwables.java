@@ -2,6 +2,7 @@ package hs.mediasystem.util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.concurrent.Callable;
 
 public class Throwables {
 
@@ -47,5 +48,33 @@ public class Throwables {
     throwable.printStackTrace(new PrintWriter(stringWriter));
 
     return stringWriter.toString();
+  }
+
+  public static boolean isProgrammingError(Throwable throwable) {
+    if(!(throwable instanceof RuntimeException)) {
+      return false;
+    }
+
+    if(!throwable.getClass().getName().startsWith("java.lang.")) {
+      return false;
+    }
+
+    return true;
+  }
+
+  public static WrappedCheckedException uncheck(Throwable throwable) {
+    return new WrappedCheckedException(throwable);
+  }
+
+  public static <T> T uncheck(Callable<T> callable) {
+    try {
+      return callable.call();
+    }
+    catch(RuntimeException e) {
+      throw e;
+    }
+    catch(Exception e) {
+      throw uncheck(e);
+    }
   }
 }
