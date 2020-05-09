@@ -9,6 +9,7 @@ import hs.mediasystem.runner.root.RootPresentation;
 import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.expose.Expose;
 
@@ -99,6 +100,12 @@ public class Annotations {
       .allowedValues(p -> p.audioTracks())
       .format(AudioTrack::getDescription)
       .as("audioTrack");
+
+    Expose.listProperty(PlayerPresentation::statOverlayProperty)
+      .of(PlayerPresentation.class)
+      .allowedValues(p -> p.statOverlays())
+      .format(StatOverlay::getDescription)
+      .as("statOverlay");
 
     Expose.listProperty((GridViewPresentation<Object> p) -> p.sortOrder)
       .of(GridViewPresentation.class)

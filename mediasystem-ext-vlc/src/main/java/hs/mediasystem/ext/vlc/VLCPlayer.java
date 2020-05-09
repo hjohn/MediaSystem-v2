@@ -6,10 +6,11 @@ import hs.mediasystem.ext.vlc.util.Accessor;
 import hs.mediasystem.ext.vlc.util.BeanBooleanProperty;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerEvent;
+import hs.mediasystem.ui.api.player.PlayerEvent.Type;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
+import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
-import hs.mediasystem.ui.api.player.PlayerEvent.Type;
 import hs.mediasystem.util.javafx.Events;
 import hs.mediasystem.util.javafx.control.ResizableWritableImageView;
 
@@ -349,6 +350,16 @@ public class VLCPlayer implements PlayerPresentation {
 
   private final ObservableList<Subtitle> subtitles = FXCollections.observableArrayList(Subtitle.DISABLED);
   private final ObservableList<AudioTrack> audioTracks = FXCollections.observableArrayList(AudioTrack.NO_AUDIO_TRACK);
+
+  @Override
+  public Property<StatOverlay> statOverlayProperty() {
+    return null;
+  }
+
+  @Override
+  public ObservableList<StatOverlay> statOverlays() {
+    return FXCollections.emptyObservableList();
+  }
 
   @Override
   public void play(String uri, long positionInMillis) {

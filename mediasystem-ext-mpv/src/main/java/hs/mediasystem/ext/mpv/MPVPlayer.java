@@ -6,10 +6,11 @@ import com.sun.jna.ptr.LongByReference;
 import hs.mediasystem.ext.mpv.MPV.mpv_event;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerEvent;
+import hs.mediasystem.ui.api.player.PlayerEvent.Type;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
+import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
-import hs.mediasystem.ui.api.player.PlayerEvent.Type;
 import hs.mediasystem.util.javafx.Events;
 
 import java.net.URI;
@@ -25,6 +26,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -37,6 +39,10 @@ import org.reactfx.value.Var;
 
 public class MPVPlayer implements PlayerPresentation {
   private static final Logger LOGGER = Logger.getLogger(MPVPlayer.class.getName());
+  private static final ObservableList<StatOverlay> STAT_OVERLAYS = FXCollections.unmodifiableObservableList(FXCollections.observableArrayList(
+    StatOverlay.DISABLED,
+    new StatOverlay(1, "Main")
+  ));
 
   private final MPV mpv = MPV.INSTANCE;
   private final long handle;
@@ -51,6 +57,7 @@ public class MPVPlayer implements PlayerPresentation {
   private final Var<Double> brightness = Var.newSimpleVar(1.0);
   private final Var<AudioTrack> audioTrack = Var.newSimpleVar(null);
   private final Var<Subtitle> subtitle = Var.newSimpleVar(null);
+  private final Var<StatOverlay> statOverlay = Var.newSimpleVar(StatOverlay.DISABLED);
   private final BooleanProperty paused = new SimpleBooleanProperty(false);
   private final BooleanProperty muted = new SimpleBooleanProperty(false);
 
@@ -78,6 +85,9 @@ public class MPVPlayer implements PlayerPresentation {
     if(errorCode != 0) {
       throw new IllegalStateException("Error setting window id: " + errorCode);
     }
+
+    setProperty("video-sync", "display-resample");  // default uses audio for video-sync, this is a newer better option that is vsync aware
+    setProperty("load-stats-overlay", "yes");
 
     errorCode = mpv.mpv_initialize(handle);
 
@@ -110,6 +120,26 @@ public class MPVPlayer implements PlayerPresentation {
 
     paused.addListener((obs, old, current) -> setProperty("pause", current ? "yes" : "no"));
     muted.addListener((obs, old, current) -> setProperty("mute", current ? "yes" : "no"));
+
+    statOverlay.addListener(new ChangeListener<StatOverlay>() {
+      private boolean visible;
+
+      @Override
+      public void changed(ObservableValue<? extends StatOverlay> obs, StatOverlay p, StatOverlay v) {
+        if(v.getId() >= 1) {
+          if(!visible) {
+            mpv.mpv_command(handle, new String[] {"script-binding", "stats/display-stats-toggle"});
+            visible = true;
+          }
+        }
+        else {
+          if(visible) {
+            mpv.mpv_command(handle, new String[] {"script-binding", "stats/display-stats-toggle"});
+            visible = false;
+          }
+        }
+      }
+    });
 
     addTrackListeners();
   }
@@ -225,6 +255,16 @@ public class MPVPlayer implements PlayerPresentation {
   @Override
   public ObservableList<AudioTrack> audioTracks() {
     return FXCollections.unmodifiableObservableList(audioTracks);
+  }
+
+  @Override
+  public Property<StatOverlay> statOverlayProperty() {
+    return statOverlay;
+  }
+
+  @Override
+  public ObservableList<StatOverlay> statOverlays() {
+    return STAT_OVERLAYS;
   }
 
   @Override
@@ -344,6 +384,10 @@ public class MPVPlayer implements PlayerPresentation {
     LOGGER.finest("Setting \"" + propertyName + "\" to: " + value);
 
     if(errorCode != 0) {
+      if(errorCode == MPV.MPV_ERROR_PROPERTY_NOT_FOUND) {
+        throw new IllegalStateException("Error while setting property \"" + propertyName + "\" to \"" + value + "\": property not found");
+      }
+
       throw new IllegalStateException("Error while setting property \"" + propertyName + "\" to \"" + value + "\": " + errorCode);
     }
   }

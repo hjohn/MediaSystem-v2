@@ -87,4 +87,7 @@ public interface PlayerPresentation {
   Object getDisplayComponent();
 
   ObjectProperty<EventHandler<PlayerEvent>> onPlayerEvent();
+
+  Property<StatOverlay> statOverlayProperty();
+  ObservableList<StatOverlay> statOverlays();
 }

@@ -20,10 +20,12 @@ action-target:
   muted:
     order: 7
     label: Mute
+  statOverlay:
+    order: 8
+    label: Statistics Overlay
   position:
     label: Position
     visible: false
   paused:
     label: Pause
     visible: false
-    
