@@ -72,6 +72,8 @@ public class MPVPlayer implements PlayerPresentation {
   private final ChangeListener<? super AudioTrack> audioTrackListener = (obs, p, v) -> setProperty("aid", v.getId() == -1 ? "no" : "" + v.getId());
   private final ChangeListener<? super Subtitle> subtitleTrackListener = (obs, p, v) -> setProperty("sid", v.getId() == -1 ? "no" : "" + v.getId());
 
+  private volatile boolean quit;
+
   public MPVPlayer(PlayerWindowIdSupplier supplier) {
     this.handle = mpv.mpv_create();
 
@@ -79,26 +81,33 @@ public class MPVPlayer implements PlayerPresentation {
       throw new IllegalStateException("MPV could not be created (out of memory?)");
     }
 
-    this.wid = supplier.getWindowId();
-    int errorCode = mpv.mpv_set_option(handle, "wid", 4, new LongByReference(wid).getPointer());
+    try {
+      this.wid = supplier.getWindowId();
+      int errorCode = mpv.mpv_set_option(handle, "wid", 4, new LongByReference(wid).getPointer());
 
-    if(errorCode != 0) {
-      throw new IllegalStateException("Error setting window id: " + errorCode);
+      if(errorCode != 0) {
+        throw new IllegalStateException("Error setting window id: " + errorCode);
+      }
+
+      setProperty("video-sync", "display-resample");  // default uses audio for video-sync, this is a newer better option that is vsync aware
+      setProperty("load-stats-overlay", "yes");
+
+      errorCode = mpv.mpv_initialize(handle);
+
+      if(errorCode != 0) {
+        throw new IllegalStateException("Error initializing MPV: " + errorCode);
+      }
+
+      errorCode = mpv.mpv_observe_property(handle, 0, "time-pos", 0);
+
+      if(errorCode != 0) {
+        throw new IllegalStateException("Error initializing property: " + errorCode);
+      }
     }
+    catch(Exception e) {
+      mpv.mpv_destroy(handle);
 
-    setProperty("video-sync", "display-resample");  // default uses audio for video-sync, this is a newer better option that is vsync aware
-    setProperty("load-stats-overlay", "yes");
-
-    errorCode = mpv.mpv_initialize(handle);
-
-    if(errorCode != 0) {
-      throw new IllegalStateException("Error initializing MPV: " + errorCode);
-    }
-
-    errorCode = mpv.mpv_request_event(handle, MPV.MPV_EVENT_TICK, 1);
-
-    if(errorCode != 0) {
-      throw new IllegalStateException("Error initializing MPV event: " + errorCode);
+      throw e;
     }
 
     Thread thread = new Thread(this::eventLoop, "MPV-EventLoop");
@@ -156,6 +165,7 @@ public class MPVPlayer implements PlayerPresentation {
 
   @Override
   public void play(String uriString, long positionInMillis) {
+    ensureAlive();
 
     // Reset some properties
     removeTrackListeners();
@@ -183,13 +193,22 @@ public class MPVPlayer implements PlayerPresentation {
 
   @Override
   public void stop() {
+    ensureAlive();
+
     isPlaying.set(false);
     mpv.mpv_command(handle, new String[] {"stop"});
   }
 
   @Override
   public void dispose() {
-    throw new UnsupportedOperationException();
+    mpv.mpv_command(handle, new String[] {"quit"});
+    quit = true;
+  }
+
+  void ensureAlive() {
+    if(quit) {
+      throw new IllegalStateException("player has been disposed");
+    }
   }
 
   @Override
@@ -284,9 +303,17 @@ public class MPVPlayer implements PlayerPresentation {
 
   private void eventLoop() {
     for(;;) {
-      mpv_event event = mpv.mpv_wait_event(handle, -1);  // negative value means wait until something arrives
+      mpv_event event = mpv.mpv_wait_event(handle, 1);  // wait max one second
 
-      if(event.event_id == MPV.MPV_EVENT_TICK) {
+      if(quit) {
+        LOGGER.fine("Stopping MPV Event Loop thread");
+
+        mpv.mpv_destroy(handle);
+
+        return;
+      }
+
+      if(event.event_id == MPV.MPV_EVENT_PROPERTY_CHANGE) {
         String timePos = getProperty("time-pos");
 
         if(timePos != null) {
@@ -351,7 +378,7 @@ public class MPVPlayer implements PlayerPresentation {
           Events.dispatchEvent(onPlayerEvent, new PlayerEvent(Type.FINISHED), null);
         }
       }
-      else {
+      else if(event.event_id != MPV.MPV_EVENT_NONE) {
         LOGGER.finest("Unused Event Received: " + event.event_id);
       }
     }
@@ -364,6 +391,8 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   private String getProperty(String propertyName) {
+    ensureAlive();
+
     Pointer ptr = mpv.mpv_get_property_string(handle, propertyName);
 
     if(ptr != null) {
@@ -379,6 +408,8 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   private void setProperty(String propertyName, String value) {
+    ensureAlive();
+
     int errorCode = mpv.mpv_set_property_string(handle, propertyName, value);
 
     LOGGER.finest("Setting \"" + propertyName + "\" to: " + value);

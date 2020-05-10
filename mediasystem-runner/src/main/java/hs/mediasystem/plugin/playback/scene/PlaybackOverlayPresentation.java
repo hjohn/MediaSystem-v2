@@ -110,6 +110,6 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
   @Override
   public void navigateBack(Event e) {
-    playerPresentation.get().stop();
+    playerPresentation.get().dispose();
   }
 }
