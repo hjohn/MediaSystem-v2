@@ -12,24 +12,40 @@
     -fx-border-width: 0 0 2 0;
     -fx-border-color: @glass-color;
 
+    .left-title-box {
+      .heading-drop-shadow;
+    }
+
     .label.title {
       .style-heading1;
       .text-fill-highlight;
-      .heading-drop-shadow; 
     }
 
     .label.release-year {
       .style-heading2;
-      .heading-drop-shadow;
     }
 
     .label.genres {
       .style-p2;
-      .heading-drop-shadow;
     }
 
-    .status-indicator {
-      -fx-padding: 20 0 0 0;
+    .subtitle-box {
+      -fx-alignment: center-left;
+      -fx-spacing: 1em;
+
+      .content-rating, .adult-rating {
+        -fx-background-color: fadeout(@text-primary, 5%);
+        -fx-background-radius: 10px;
+        -fx-padding: 0em 0.5em 0em 0.5em;
+        -fx-text-fill: transparent;
+        .bold;
+      }
+    }
+
+    .right-title-box {
+      .status-indicator {
+        -fx-padding: 20 0 0 0;
+      }
     }
   }
 

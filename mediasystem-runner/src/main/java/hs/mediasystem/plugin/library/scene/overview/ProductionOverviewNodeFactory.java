@@ -107,8 +107,14 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       }
 
       VBox leftTitleBox = Containers.vbox(
+        "left-title-box",
         titleLabel,
-        Labels.create("release-year", WorkBinder.createYearRange(work)),
+        Containers.hbox(
+          "subtitle-box",
+          Labels.create("release-year", WorkBinder.createYearRange(work)),
+          Labels.create("content-rating", extractContentRating(work), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT),
+          Labels.create("adult-rating", Boolean.TRUE.equals(work.getDetails().getClassification().getPornographic()) ? "XXX" : "", Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT)
+        ),
         Labels.create("genres", work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")))
       );
 
@@ -127,6 +133,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           "title-panel",
           leftTitleBox,
           Containers.vbox(
+            "right-title-box",
             createStarRating(work.getDetails().getReception().orElse(null), 20, 8),
             indicatorPane
           )
@@ -144,6 +151,10 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       getStyleClass().add("main-panel");
       getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
+    }
+
+    private String extractContentRating(Work work) {
+      return work.getDetails().getClassification().getContentRatings().get("US");
     }
 
     private Pane createDynamicBox() {

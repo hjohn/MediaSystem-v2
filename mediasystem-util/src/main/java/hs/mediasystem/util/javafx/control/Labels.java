@@ -2,13 +2,38 @@ package hs.mediasystem.util.javafx.control;
 
 import java.util.function.Consumer;
 
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
+import javafx.scene.text.Text;
 
 public class Labels {
   public static final Option HIDE_IF_EMPTY = label -> hideIfEmpty(label.textProperty()).accept(label);
+  public static final Option REVERSE_CLIP_TEXT = label -> {
+    InvalidationListener listener = (obs) -> {
+      Text text = new Text();
+
+      text.setFont(label.getFont());
+      text.setText(label.getText());
+
+      Bounds b = label.getLayoutBounds();
+      Insets insets = label.getInsets();
+      Region.layoutInArea(text, b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight(), 0, insets, false, false, label.getAlignment().getHpos(), label.getAlignment().getVpos(), true);
+
+      Rectangle r = new Rectangle(-insets.getLeft(), -insets.getTop(), b.getWidth() + insets.getRight(), b.getHeight() + insets.getBottom());
+
+      label.setClip(Shape.subtract(r, text));
+    };
+
+    label.layoutBoundsProperty().addListener(listener);
+  };
 
   public static final Option hideIfEmpty(StringExpression x) {
     return hide(x.isEmpty());
