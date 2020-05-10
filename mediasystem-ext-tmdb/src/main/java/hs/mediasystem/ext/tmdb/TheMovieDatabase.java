@@ -2,7 +2,6 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
 
 import hs.mediasystem.util.CryptoUtil;
 import hs.mediasystem.util.HttpException;
@@ -30,6 +29,16 @@ public class TheMovieDatabase {
 
   private JsonNode configuration;
 
+  /**
+   * Queries the movie database.
+   *
+   * @param query a query
+   * @param key a logical key which identifies the result for use in http caching
+   * @param parameters parameters to append to the url
+   * @return a {@link JsonNode}
+   * @throws HttpException when there was a status code that was not in the 200 range
+   * @throws IOException when there was a general I/O error
+   */
   public JsonNode query(String query, String key, List<String> parameters) throws IOException {
     if(parameters.size() % 2 != 0) {
       throw new IllegalArgumentException("Uneven number of vararg 'parameters': must provide pairs of name/value");
@@ -101,17 +110,18 @@ public class TheMovieDatabase {
       connection.addRequestProperty("!safe-url", url.toString().replaceAll("api_key=[0-9A-Za-z]+", "api_key=***"));   // Strips api_key from URL for safe logging
       connection.addRequestProperty("!key", key);
 
-      if(connection.getResponseCode() == 404) {
-        return NullNode.instance;
-      }
+      int responseCode = connection.getResponseCode();
 
-      if(connection.getResponseCode() != 200) {
-        throw new HttpException(url, connection.getResponseCode(), connection.getResponseMessage());
+      if(responseCode < 200 || responseCode >= 300) {
+        throw new HttpException(url, responseCode, connection.getResponseMessage());
       }
 
       try(InputStream is = connection.getInputStream()) {
         return objectMapper.readTree(is);
       }
+    }
+    catch(HttpException e) {
+      throw e;
     }
     catch(IOException e) {
       throw new IOException("Exception while reading: " + url, e);
