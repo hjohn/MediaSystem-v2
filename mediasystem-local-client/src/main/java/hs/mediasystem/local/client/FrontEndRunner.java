@@ -2,6 +2,7 @@ package hs.mediasystem.local.client;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.ServiceRunner;
 import hs.mediasystem.runner.NavigateEvent;
@@ -20,6 +21,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -101,14 +103,18 @@ public class FrontEndRunner extends Application {
 
   private static void loadPlayerPlugins(BeanDefinitionStore store) throws IOException {
     PluginManager pluginManager = new PluginManager(store);
-
+    List<Plugin> plugins = new ArrayList<>();
     Path root = Paths.get("ui-plugins");
 
     if(Files.exists(root)) {
+      LOGGER.fine("Loading UI plugins from: " + root);
+
       Files.find(root, 1, (p, a) -> !p.equals(root)).forEach(p -> {
         try {
           List<URL> urls = Files.find(p, 1, (cp, a) -> !cp.equals(p)).map(Path::toUri).map(uri -> {
             try {
+              LOGGER.fine("Found UI plugin: " + uri);
+
               return uri.toURL();
             }
             catch(MalformedURLException e) {
@@ -116,7 +122,9 @@ public class FrontEndRunner extends Application {
             }
           }).collect(Collectors.toList());
 
-          pluginManager.loadPluginAndScan(urls.toArray(new URL[] {}));
+          if(!urls.isEmpty()) {
+            plugins.add(pluginManager.loadPluginAndScan(urls.toArray(new URL[] {})));
+          }
         }
         catch(IOException e) {
           throw new IllegalStateException(e);
@@ -124,14 +132,16 @@ public class FrontEndRunner extends Application {
       });
     }
     else {
-      pluginManager.loadPluginAndScan(
+      plugins.add(pluginManager.loadPluginAndScan(
         URI.create("file:/P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/classes/").toURL(),
         new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/dependencies-only.jar")
-      );
-      pluginManager.loadPluginAndScan(
+      ));
+      plugins.add(pluginManager.loadPluginAndScan(
         URI.create("file:/P:/Dev/git/MediaSystem-v2/mediasystem-ext-mpv/target/classes/").toURL(),
         new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-mpv/target/dependencies-only.jar")
-      );
+      ));
     }
+
+    LOGGER.info(plugins.size() + " UI plugins loaded from: " + root);
   }
 }
