@@ -88,7 +88,7 @@ public class InputActionHandler {
         continue;
       }
 
-      LOGGER.info("Input Mapping Key '" + key + "' converted to valid key combination: " + combination);
+      LOGGER.fine("Input Mapping Key '" + key + "' converted to valid key combination: " + combination);
 
       for(String action : inputMappings.get(key) instanceof List ? (List<String>)inputMappings.get(key) : List.of(inputMappings.get(key).toString())) {
         String[] parts = action.split(":");
