@@ -14,16 +14,20 @@ public abstract class ConfigurationProvider<T> implements Provider<T> {
 
   private final Class<T> configClass;
   private final String path;
+  private final T defaultValue;
 
   @Inject @Named("configuration") private JsonNode config;
 
-  public ConfigurationProvider(Class<T> configClass, String path) {
+  public ConfigurationProvider(Class<T> configClass, String path, T defaultValue) {
     this.configClass = configClass;
     this.path = path;
+    this.defaultValue = defaultValue;
   }
 
   @Override
   public T get() {
-    return OBJECT_MAPPER.convertValue(config.findPath(path), configClass);
+    JsonNode node = config.findPath(path);
+
+    return node.isMissingNode() ? defaultValue : OBJECT_MAPPER.convertValue(node, configClass);
   }
 }

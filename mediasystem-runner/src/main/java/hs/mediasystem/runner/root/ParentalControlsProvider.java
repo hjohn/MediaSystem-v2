@@ -9,9 +9,10 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ParentalControlsProvider extends ConfigurationProvider<ParentalControls> {
+  private static final ParentalControls DEFAULT = new ParentalControls(null, null, List.of());
 
   public ParentalControlsProvider() {
-    super(ParentalControls.class, "parental-controls");
+    super(ParentalControls.class, "parental-controls", DEFAULT);
   }
 
   public static class ParentalControls {
