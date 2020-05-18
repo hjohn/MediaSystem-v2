@@ -14,7 +14,7 @@ public class ImageRecord extends DatabaseObject {
   @Column
   private String url;
 
-  @Column
+  @Column(name = "logical_key")
   private String key;
 
   @Column
