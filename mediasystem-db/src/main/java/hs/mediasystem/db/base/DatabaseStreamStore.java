@@ -57,7 +57,14 @@ public class DatabaseStreamStore implements StreamableStore {
 
     database.forEach(r -> {
       try {
-        putInCache(codec.fromRecord(r));
+        CachedStream cs = codec.fromRecord(r);
+
+        if(importSourceProvider.getStreamSource(cs.getImportSourceId() & 0xffff) != null) {
+          putInCache(cs);
+        }
+        else {
+          badIds.add(r.getId());
+        }
       }
       catch(IOException e) {
         LOGGER.warning("Exception decoding record: " + r + ": " + Throwables.formatAsOneLine(e));
@@ -68,7 +75,7 @@ public class DatabaseStreamStore implements StreamableStore {
 
     badIds.stream().forEach(database::delete);
 
-    LOGGER.fine("Loaded " + cache.size() + " cached stream records, deleted " + badIds.size() + " bad ones");
+    LOGGER.fine("Loaded " + cache.size() + " cached stream records, deleted " + badIds.size() + " bad or unused ones");
   }
 
   synchronized Map<StreamID, Streamable> findByImportSourceId(long importSourceId) {
