@@ -36,7 +36,6 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
   @Inject private UriDatabase uriDatabase;
   @Inject private ContentPrintDatabase contentPrintDatabase;
 
-  // Note: lock can be held a long time currently (>5 seconds when hashing over network)
   private final AutoReentrantLock lock = new AutoReentrantLock();
   private final Set<ContentID> seenIds = new HashSet<>();  // contains all id's that have are in database and have been seen recently
   private final Set<ContentID> markedIds = new HashSet<>();  // contains all id's that have been marked for deletion
@@ -79,10 +78,11 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
   public ContentPrint get(URI uri, Long size, long lastModificationTime) throws IOException {
     try(Key key = lock.lock()) {
       ContentID existingContentId = contentIds.get(uri.toString());
+      ContentPrint print = contentPrints.get(existingContentId);
+
+      key.earlyUnlock();
 
       if(existingContentId != null) {
-        ContentPrint print = contentPrints.get(existingContentId);
-
         if(Objects.equals(print.getSize(), size) && print.getLastModificationTime() == lastModificationTime) {
           markSeen(existingContentId);
 
@@ -143,7 +143,9 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
    * @param id an id to mark as seen
    */
   private void markSeen(ContentID id) {
-    seenIds.add(id);
+    try(Key key = lock.lock()) {
+      seenIds.add(id);
+    }
   }
 
   /**
@@ -205,28 +207,34 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
 
   private ContentPrint updateDirectory(URI uri, ContentID contentId, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
-    contentPrintDatabase.update(contentId, null, lastModificationTime, hash);
 
-    ContentPrint contentPrint = new ContentPrint(contentId, null, lastModificationTime, hash);
+    try(Key key = lock.lock()) {
+      contentPrintDatabase.update(contentId, null, lastModificationTime, hash);
 
-    // No need to update contentIds or the uriStore as the name and id remains unchanged.
-    contentPrints.put(contentId, contentPrint);
+      ContentPrint contentPrint = new ContentPrint(contentId, null, lastModificationTime, hash);
 
-    return contentPrint;
+      // No need to update contentIds or the uriStore as the name and id remains unchanged.
+      contentPrints.put(contentId, contentPrint);
+
+      return contentPrint;
+    }
   }
 
   private ContentPrint link(URI uri, Long size, long lastModificationTime) throws IOException {
     byte[] hash = createHash(uri);
-    int id = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
-    uriDatabase.store(uri.toString(), id);
 
-    ContentID contentId = new ContentID(id);
-    ContentPrint contentPrint = new ContentPrint(contentId, size, lastModificationTime, hash);
+    try(Key key = lock.lock()) {
+      int id = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
+      uriDatabase.store(uri.toString(), id);
 
-    contentIds.put(uri.toString(), contentId);
-    contentPrints.put(contentId, contentPrint);
+      ContentID contentId = new ContentID(id);
+      ContentPrint contentPrint = new ContentPrint(contentId, size, lastModificationTime, hash);
 
-    return contentPrint;
+      contentIds.put(uri.toString(), contentId);
+      contentPrints.put(contentId, contentPrint);
+
+      return contentPrint;
+    }
   }
 
   private byte[] createHash(URI uri) throws IOException {
