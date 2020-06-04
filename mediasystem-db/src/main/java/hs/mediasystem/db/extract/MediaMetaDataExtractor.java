@@ -67,7 +67,7 @@ public class MediaMetaDataExtractor {
           try {
             createMetaData(contentId);
           }
-          catch(Exception e) {
+          catch(Throwable e) {
             LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
 
             recentFailures.add(contentId);
