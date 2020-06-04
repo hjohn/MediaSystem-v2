@@ -26,6 +26,8 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LibraryNodeFactory implements NodeFactory<LibraryPresentation> {
+  private static final LessLoader LESS_LOADER = new LessLoader(LibraryNodeFactory.class);
+
   @Inject private ViewPortFactory viewPortFactory;
   @Inject @Nullable @Named("general.library.fade-out-delay") private Long fadeOutDelay = 30L;
 
@@ -34,7 +36,7 @@ public class LibraryNodeFactory implements NodeFactory<LibraryPresentation> {
     EntityView node = new EntityView(viewPortFactory, presentation, fadeOutDelay.intValue());
 
     node.backgroundPane.backdropProperty().bindBidirectional(presentation.backdrop);
-    node.getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
+    node.getStylesheets().add(LESS_LOADER.compile("styles.less"));
 
     return node;
   }

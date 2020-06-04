@@ -32,6 +32,8 @@ import org.reactfx.EventStreams;
 
 @Singleton
 public class FolderSetup implements NodeFactory<FolderPresentation> {
+  private static final LessLoader LESS_LOADER = new LessLoader(FolderSetup.class);
+
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
   @Inject private FolderPresentation.Factory folderPresentationFactory;
   @Inject private WorkClient workClient;
@@ -43,7 +45,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
   public Node create(FolderPresentation presentation) {
     StylableVBox root = StylableContainers.vbox("folder-scene", createMediaGridView(presentation), viewStatusBarFactory.create(presentation));
 
-    root.getStylesheets().add(LessLoader.compile(getClass().getResource("folder-scene-styles.less")).toExternalForm());
+    root.getStylesheets().add(LESS_LOADER.compile("folder-scene-styles.less"));
 
     return root;
   }

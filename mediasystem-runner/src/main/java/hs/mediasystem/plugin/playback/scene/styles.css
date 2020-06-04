@@ -1,4 +1,4 @@
-@import "../../../runner/properties.less";
+@import "${root}/hs/mediasystem/runner/properties.less";
 
 #video-overlay {
   -fx-background-color: linear-gradient(from 0% 75% to 0% 100%, rgba(0, 0, 0, 0), black 50%);

@@ -39,6 +39,7 @@ import javax.inject.Singleton;
 @Singleton
 public class ShowInfoEventHandler {
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.UK).withZone(ZoneOffset.systemDefault());
+  private static final LessLoader LESS_LOADER = new LessLoader(ShowInfoEventHandler.class);
 
   @Inject private ImageHandleFactory imageHandleFactory;
 
@@ -56,7 +57,7 @@ public class ShowInfoEventHandler {
     VBox listBox = Containers.vbox("list-panel");
     VBox vbox = Containers.vbox("main-panel");
 
-    vbox.getStylesheets().add(LessLoader.compile(getClass().getResource("show-info-styles.less")).toExternalForm());
+    vbox.getStylesheets().add(LESS_LOADER.compile("show-info-styles.less"));
     vbox.getChildren().addAll(titleBox, listBox);
 
     for(MediaStream stream : work.getStreams()) {

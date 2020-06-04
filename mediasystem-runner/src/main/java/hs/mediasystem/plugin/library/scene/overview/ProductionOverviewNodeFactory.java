@@ -65,6 +65,8 @@ import org.reactfx.value.Val;
 
 @Singleton
 public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPresentation> {
+  private static final LessLoader LESS_LOADER = new LessLoader(ProductionOverviewNodeFactory.class);
+
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ShowInfoEventHandler showInfoEventHandler;
   @Inject private CastPaneFactory castPaneFactory;
@@ -150,7 +152,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       HBox.setHgrow(descriptionBox, Priority.ALWAYS);
 
       getStyleClass().add("main-panel");
-      getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
+      getStylesheets().add(LESS_LOADER.compile("styles.less"));
     }
 
     private String extractContentRating(Work work) {

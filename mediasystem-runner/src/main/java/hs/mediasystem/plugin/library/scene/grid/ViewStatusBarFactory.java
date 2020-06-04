@@ -17,6 +17,7 @@ import org.reactfx.value.Val;
 
 @Singleton
 public class ViewStatusBarFactory {
+  private static final LessLoader LESS_LOADER = new LessLoader(ViewStatusBarFactory.class);
   private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
 
   public VBox create(GridViewPresentation<?> presentation) {
@@ -32,7 +33,7 @@ public class ViewStatusBarFactory {
     GridPane gridPane = new GridPane();
     VBox vbox = Containers.vbox("status-bar", Labels.create("total", binding), gridPane);
 
-    vbox.getStylesheets().add(LessLoader.compile(AbstractSetup.class.getResource("status-bar.less")).toExternalForm());
+    vbox.getStylesheets().add(LESS_LOADER.compile("status-bar.less"));
 
     gridPane.at(0, 0).add(Containers.hbox("header-with-shortcut", Labels.create("header", RESOURCES.getText("header.order")), Labels.create("remote-shortcut, red")));
     gridPane.at(0, 1).add(Labels.create("status-bar-element", Val.wrap(presentation.sortOrder).map(so -> RESOURCES.getText("sort-order", so.resourceKey)).orElseConst("Unknown")));

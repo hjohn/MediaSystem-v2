@@ -44,6 +44,8 @@ import org.reactfx.value.Val;
 public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implements NodeFactory<P> {
   protected static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
 
+  private static final LessLoader LESS_LOADER = new LessLoader(AbstractSetup.class);
+
   @Inject private ContextLayout contextLayout;
   @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
   @Inject private BinderProvider binderProvider;
@@ -218,7 +220,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     };
 
     areaPane.setMinSize(1, 1);
-    areaPane.getStylesheets().add(LessLoader.compile(AbstractSetup.class.getResource("styles.less")).toExternalForm());
+    areaPane.getStylesheets().add(LESS_LOADER.compile("styles.less"));
 
     configurePanes(areaPane, rightOverlayPanel, presentation);
 

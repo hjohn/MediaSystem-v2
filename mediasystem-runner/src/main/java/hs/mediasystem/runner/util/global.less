@@ -1,54 +1,54 @@
-@import "../media-look.less";
-@import "../properties.less";
+@import "${root}/hs/mediasystem/runner/media-look.less";
+@import "${root}/hs/mediasystem/runner/properties.less";
 
 .root {
   -c-theme-primary: @theme-primary;
   -c-base: tint(@theme-primary, 50%);
-  
+
   -c-glass: fade(@theme-primary, 20%);
-  
+
   -c-dark-glass-highlight: rgba(255, 255, 255, 0.6);
   -c-dark-glass-medium: rgba(128, 128, 128, 0.6);
   -c-dark-glass: @glass-color;
-  
+
   -c-tinted-glass: @tinted-glass;
   -c-tinted-glass-dark: darken(@tinted-glass, 50%, relative);
   -c-tinted-glass-black: darken(@tinted-glass, 90%, relative);
-  
-  -c-shadow: derive(-c-base, -75%);    
+
+  -c-shadow: derive(-c-base, -75%);
   -c-shadow-highlight: derive(-c-base, -50%);
-  
+
   -c-highlight: rgb(255, 222, 0);
   -c-highlight-50: rgb(255, 222, 0, 0.5);
   -c-highlight-75: rgb(255, 222, 0, 0.75);
 
   /* normal text colors */
-    
+
   -c-text: @text-primary;
   -c-text-highlight: tint(@text-primary, 50%);
   -c-text-focused: tint(@text-primary, 50%);
   -c-text-unobtrusive: shade(@text-primary, 33%);
-  
+
   /* dark text colors */
-  
+
   -c-text-dark: shade(@text-primary, 25%);
   -c-text-dark-highlight: -c-base;
   -c-text-dark-unobtrusive: shade(@text-primary, 50%);
-  
+
   /* special text colors */
-  
+
   -c-text-watermark: rgba(173, 216, 230, 0.1);
 }
 
 /* Change some JavaFX defaults globally */
 
-.root {  
+.root {
   -fx-background-color: transparent;
-  
+
   .text-style-base;
-  
+
   -fx-text-fill: -c-text;
-  
+
   -fx-focus-color: rgb(255, 255, 0);
   -fx-accent: -fx-focus-color;
 }
@@ -69,7 +69,7 @@
 /*
  * ListCell, TreeCell and TableCell: remove odd/even styling
  */
- 
+
 .list-cell:even, .tree-cell:even, .table-cell:even, .list-cell:odd, .tree-cell:odd, .table-cell:odd {
   -fx-background-color: transparent;
 }
@@ -78,7 +78,7 @@
  * ListCell and TreeCell: hide empty cells
  */
 
-.list-cell:empty, .tree-cell:empty {  
+.list-cell:empty, .tree-cell:empty {
   -fx-border-color: transparent;
   -fx-border-width: 1;
   -fx-border-insets: 1;
@@ -87,7 +87,7 @@
 /*
  * Keyboard shortcut styling
  */
- 
+
 .label.shortcut {
   -base: rgb(255, 245, 230);
   -fx-border-width: 1;
@@ -144,7 +144,7 @@
 /*
  * Styles to allow controls to look enabled while disabled.
  */
- 
+
 .enabled-look .label:disabled,
 .enabled-look .button:disabled,
 .enabled-look .toggle-button:disabled,

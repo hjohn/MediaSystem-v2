@@ -43,6 +43,8 @@ import javafx.util.Duration;
 import org.reactfx.value.Val;
 
 public class PlaybackOverlayPane extends StackPane {
+  private static final LessLoader LESS_LOADER = new LessLoader(PlaybackOverlayPane.class);
+
   public final ObjectProperty<PlayerPresentation> player = new SimpleObjectProperty<>();
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
 
@@ -80,7 +82,7 @@ public class PlaybackOverlayPane extends StackPane {
     this.player.set(presentation.playerPresentation.get());
     this.overlayVisible.bind(presentation.overlayVisible);
 
-    getStylesheets().add(LessLoader.compile(getClass().getResource("styles.css")).toExternalForm());
+    getStylesheets().add(LESS_LOADER.compile("styles.css"));
 
     setId("playback-overlay");
 

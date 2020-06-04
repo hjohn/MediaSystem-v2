@@ -74,6 +74,8 @@ import org.reactfx.value.Var;
 
 @Singleton
 public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
+  private static final LessLoader LESS_LOADER = new LessLoader(HomeScreenNodeFactory.class);
+
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private CollectionPresentationProvider collectionPresentationProvider;
   @Inject private ProductionPresentation.Factory productionPresentationFactory;
@@ -172,7 +174,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     StackPane root = Containers.stack("media-look", grid);
 
-    root.getStylesheets().add(LessLoader.compile(getClass().getResource("styles.less")).toExternalForm());
+    root.getStylesheets().add(LESS_LOADER.compile("styles.less"));
 
     return root;
   }

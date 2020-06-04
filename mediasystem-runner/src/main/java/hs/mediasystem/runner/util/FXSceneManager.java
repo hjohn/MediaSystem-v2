@@ -42,6 +42,8 @@ import javafx.stage.StageStyle;
  * fail if there are other Windows with the same title.
  */
 public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
+  private static final LessLoader LESS_LOADER = new LessLoader(FXSceneManager.class);
+
   private final Stage mainStage;
   private final Stage contentStage;  // child stage of main stage
   private final StackPane mainStagePane = new StackPane();
@@ -68,7 +70,7 @@ public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
     rootPane.setBackground(Background.EMPTY);
 
     scene.setFill(Color.BLACK);
-    scene.getStylesheets().add(LessLoader.compile(getClass().getResource("global.less")).toExternalForm());
+    scene.getStylesheets().add(LESS_LOADER.compile("global.less"));
 
     contentStage = new Stage(StageStyle.TRANSPARENT);
     contentStage.setTitle(title + " Dialog");
