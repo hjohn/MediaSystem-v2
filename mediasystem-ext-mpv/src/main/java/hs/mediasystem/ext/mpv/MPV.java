@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface MPV extends Library {
-  MPV INSTANCE = Native.load("mpv", MPV.class, Map.of(Library.OPTION_STRING_ENCODING, "UTF-8"));  // FIXME works on linux, now make it work for windows again
+  MPV INSTANCE = Native.load("mpv", MPV.class, Map.of(Library.OPTION_STRING_ENCODING, "UTF-8"));
 
   /*
    * Event ID's
