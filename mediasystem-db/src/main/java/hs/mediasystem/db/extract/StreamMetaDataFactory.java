@@ -48,7 +48,13 @@ public class StreamMetaDataFactory {
           grabber.setFrameNumber((int)offset);
 
           ByteArrayOutputStream baos = new ByteArrayOutputStream();
-          ImageIO.write(toBufferedImage(grabber.grabKeyFrame()), "jpg", baos);
+          Frame frame = grabber.grabKeyFrame();  // returns null sometimes on bad files?
+
+          if(frame == null) {
+            throw new IllegalStateException("Couldn't grab frame " + offset + "/" + frameCount + " from " + file + ", unknown error");
+          }
+
+          ImageIO.write(toBufferedImage(frame), "jpg", baos);
 
           store.storeImage(contentId, index, baos.toByteArray());
         }
