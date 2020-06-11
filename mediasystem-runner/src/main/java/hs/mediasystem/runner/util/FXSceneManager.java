@@ -96,7 +96,7 @@ public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
 
   @Override
   public void display() {
-    Screen screen = determineScreen();
+    Screen screen = getScreen();
 
     setupStageLocation(mainStage, screen);
     setupStageLocation(contentStage, screen);
@@ -133,7 +133,7 @@ public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
   public void setScreenNumber(int screenNumber) {
     this.screenNumber = screenNumber;
 
-    Screen screen = determineScreen();
+    Screen screen = getScreen();
 
     setupStageLocation(mainStage, screen);
     setupStageLocation(contentStage, screen);
@@ -146,7 +146,8 @@ public class FXSceneManager implements SceneManager, PlayerWindowIdSupplier {
     return Pointer.nativeValue(hwnd.getPointer());
   }
 
-  private Screen determineScreen() {
+  @Override
+  public Screen getScreen() {
     ObservableList<Screen> screens = Screen.getScreens();
 
     return screens.size() <= screenNumber ? Screen.getPrimary() : screens.get(screenNumber);

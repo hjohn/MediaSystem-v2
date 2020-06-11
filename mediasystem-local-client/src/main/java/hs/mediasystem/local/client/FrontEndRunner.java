@@ -28,7 +28,10 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javafx.application.Application;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
@@ -94,6 +97,23 @@ public class FrontEndRunner extends Application {
 
     sceneManager.display();
     sceneManager.getRootPane().fireEvent(NavigateEvent.to(provider.get()));
+
+    logDisplayStats(sceneManager);
+  }
+
+  private static void logDisplayStats(SceneManager sceneManager) {
+    Screen screen = sceneManager.getScreen();
+    Rectangle2D bounds = screen.getBounds();
+
+    LOGGER.info("Screen size: " + bounds.getWidth() + "x" + bounds.getHeight() + " [" + bounds.getWidth() * screen.getOutputScaleX() + "x" + bounds.getHeight() * screen.getOutputScaleY() + "]");
+    LOGGER.info("Screen dpi: " + screen.getDpi());
+    LOGGER.info("Screen OutputScaleX/Y: " + screen.getOutputScaleX() + "x" + screen.getOutputScaleY());
+
+    Window window = sceneManager.getScene().getWindow();
+
+    LOGGER.info("Window size: " + window.getWidth() + "x" + window.getHeight() + " [" + window.getWidth() * window.getOutputScaleX() + "x" + window.getHeight() * window.getOutputScaleY() + "]");
+    LOGGER.info("Window OutputScaleX/Y: " + window.getOutputScaleX() + "x" + window.getOutputScaleY());
+    LOGGER.info("Window RenderScaleX/Y: " + window.getRenderScaleX() + "x" + window.getRenderScaleY());
   }
 
   public static class FXSceneManagerConfiguration {
