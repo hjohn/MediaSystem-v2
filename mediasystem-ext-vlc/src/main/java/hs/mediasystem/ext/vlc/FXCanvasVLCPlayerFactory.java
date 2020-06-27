@@ -10,4 +10,9 @@ public class FXCanvasVLCPlayerFactory extends AbstractVLCPlayerFactory {
   public FXCanvasVLCPlayerFactory() {
     super("VLC (integrated)", Mode.CANVAS, null);
   }
+
+  @Override
+  public IntegrationMethod getIntegrationMethod() {
+    return IntegrationMethod.PIXEL_BUFFER;
+  }
 }

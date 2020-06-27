@@ -1,17 +1,17 @@
 package hs.mediasystem.runner.util;
 
-import javafx.beans.property.ObjectProperty;
+import hs.mediasystem.runner.util.FXSceneManager.SceneLayout;
+
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Paint;
 import javafx.stage.Screen;
 
 public interface SceneManager {
   StackPane getRootPane();
   Scene getScene();
+  void setSceneLayout(SceneLayout sceneLayout);
   void setPlayerRoot(Object root);
   void disposePlayerRoot();
-  ObjectProperty<Paint> fillProperty();
 
   Screen getScreen();
   int getScreenNumber();

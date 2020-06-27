@@ -5,14 +5,17 @@ import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.ServiceRunner;
+import hs.mediasystem.plugin.playback.scene.PlayerSetting;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.runner.RootPresentationHandler;
 import hs.mediasystem.runner.StartupPresentationProvider;
 import hs.mediasystem.runner.config.BasicSetup;
 import hs.mediasystem.runner.config.LoggingConfigurer;
 import hs.mediasystem.runner.expose.Annotations;
-import hs.mediasystem.runner.util.FXSceneManager;
+import hs.mediasystem.runner.util.FXSceneManager.SceneLayout;
 import hs.mediasystem.runner.util.SceneManager;
+import hs.mediasystem.ui.api.player.PlayerFactory;
+import hs.mediasystem.ui.api.player.PlayerFactory.IntegrationMethod;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -32,10 +35,6 @@ import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Named;
 
 public class FrontEndRunner extends Application {
   private static final Logger LOGGER = Logger.getLogger(FrontEndRunner.class.getName());
@@ -69,15 +68,6 @@ public class FrontEndRunner extends Application {
     LoggingConfigurer.configure();
 
     Injector injector = BasicSetup.create();
-    FXSceneManagerConfiguration configuration = injector.getInstance(FXSceneManagerConfiguration.class);
-
-    LOGGER.info("Creating Scene on screen " + configuration.screenNumber + " with always on top set to " + configuration.alwaysOnTop);
-
-    SceneManager sceneManager = new FXSceneManager("MediaSystem", configuration.screenNumber.intValue(), configuration.alwaysOnTop);
-
-    injector.registerInstance(sceneManager);
-
-    loadPlayerPlugins(injector.getStore());
 
     ServiceRunner.start(injector);  // Triggers configuration of service layer
 
@@ -91,10 +81,21 @@ public class FrontEndRunner extends Application {
       "hs.mediasystem.local.client.service"
     );
 
+    loadPlayerPlugins(injector.getStore());
+
     StartupPresentationProvider provider = injector.getInstance(StartupPresentationProvider.class);
 
     injector.getInstance(RootPresentationHandler.class);
 
+    SceneManager sceneManager = injector.getInstance(SceneManager.class);
+    PlayerSetting playerSetting = injector.getInstance(PlayerSetting.class);
+
+    SceneLayout sceneLayout = playerSetting.getPlayerFactory()
+      .map(PlayerFactory::getIntegrationMethod)
+      .map(im -> im == IntegrationMethod.WINDOW ? SceneLayout.CHILD : SceneLayout.ROOT)
+      .orElse(SceneLayout.ROOT);
+
+    sceneManager.setSceneLayout(sceneLayout);
     sceneManager.display();
     sceneManager.getRootPane().fireEvent(NavigateEvent.to(provider.get()));
 
@@ -114,11 +115,6 @@ public class FrontEndRunner extends Application {
     LOGGER.info("Window size: " + window.getWidth() + "x" + window.getHeight() + " [" + window.getWidth() * window.getOutputScaleX() + "x" + window.getHeight() * window.getOutputScaleY() + "]");
     LOGGER.info("Window OutputScaleX/Y: " + window.getOutputScaleX() + "x" + window.getOutputScaleY());
     LOGGER.info("Window RenderScaleX/Y: " + window.getRenderScaleX() + "x" + window.getRenderScaleY());
-  }
-
-  public static class FXSceneManagerConfiguration {
-    @Inject @Nullable @Named("general.screen") public Long screenNumber = 0L;
-    @Inject @Nullable @Named("general.alwaysOnTop") public Boolean alwaysOnTop = false;
   }
 
   private static void loadPlayerPlugins(BeanDefinitionStore store) throws IOException {

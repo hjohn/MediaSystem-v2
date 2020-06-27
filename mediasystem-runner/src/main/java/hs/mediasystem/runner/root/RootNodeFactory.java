@@ -41,7 +41,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 import javax.inject.Inject;
@@ -333,22 +332,14 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
           sceneManager.setPlayerRoot(backgroundNode);
         }
 
-        sceneManager.fillProperty().set(Color.TRANSPARENT);
-
         presentation.clockVisible.set(false);
       }
       else {
         backgroundNodeActive = false;
 
-        sceneManager.fillProperty().set(Color.BLACK);
         presentation.clockVisible.set(true);
 
-        // dispose player root instantly closes the AWT pane, causing a flash when fill isn't BLACK yet, delay it therefore:
-        new Timeline(new KeyFrame(Duration.seconds(1), e -> {
-          if(!backgroundNodeActive) {
-            sceneManager.disposePlayerRoot();
-          }
-        })).play();
+        sceneManager.disposePlayerRoot();
       }
     });
 

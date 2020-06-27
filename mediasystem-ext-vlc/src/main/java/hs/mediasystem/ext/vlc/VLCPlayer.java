@@ -33,8 +33,10 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritablePixelFormat;
+import javafx.scene.layout.StackPane;
 
 import org.reactfx.Change;
 import org.reactfx.EventStreams;
@@ -61,7 +63,8 @@ public class VLCPlayer implements PlayerPresentation {
   }
 
   private final MediaPlayer mediaPlayer;
-  private final Object canvas;
+  private final ResizableWritableImageView canvas;
+  private final StackPane displayComponent;
   private final AtomicInteger frameNumber = new AtomicInteger();
 
   private volatile boolean videoOutputStarted;
@@ -94,11 +97,18 @@ public class VLCPlayer implements PlayerPresentation {
       });
 
       this.canvas = null;
+      this.displayComponent = null;
       this.mediaPlayer = mp;
     }
     else {
       final ResizableWritableImageView canvas = new ResizableWritableImageView(16, 16);
       final WritablePixelFormat<ByteBuffer> byteBgraInstance = PixelFormat.getByteBgraPreInstance();
+
+      displayComponent = new StackPane(canvas);
+
+      canvas.setPreserveRatio(true);
+      canvas.fitWidthProperty().bind(displayComponent.widthProperty());
+      canvas.fitHeightProperty().bind(displayComponent.heightProperty());
 
       DirectMediaPlayer mp = factory.newDirectMediaPlayer(
         new BufferFormatCallback() {
@@ -365,10 +375,8 @@ public class VLCPlayer implements PlayerPresentation {
   public void play(String uri, long positionInMillis) {
     frameNumber.set(0);
 
-    if(canvas instanceof ResizableWritableImageView) {
-      ResizableWritableImageView resizableWritableImageView = (ResizableWritableImageView)canvas;
-
-      resizableWritableImageView.clear();
+    if(canvas != null) {
+      canvas.clear();
     }
 
     position.setValue(0L);
@@ -403,8 +411,8 @@ public class VLCPlayer implements PlayerPresentation {
   }
 
   @Override
-  public Object getDisplayComponent() {
-    return canvas;
+  public Node getDisplayComponent() {
+    return displayComponent;
   }
 
   @Override

@@ -4,6 +4,7 @@ import hs.mediasystem.ui.api.player.PlayerFactory;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -16,11 +17,15 @@ public class PlayerSetting implements Supplier<PlayerPresentation> {
   @Inject private Provider<List<PlayerFactory>> playerFactoriesProvider;
   @Inject @Named("general.player.factoryClass") private String factoryClassName;
 
-  @Override
-  public PlayerPresentation get() {
+  public Optional<PlayerFactory> getPlayerFactory() {
     return playerFactoriesProvider.get().stream()
       .filter(f -> f.getClass().getName().equals(factoryClassName))
-      .findFirst()
+      .findFirst();
+  }
+
+  @Override
+  public PlayerPresentation get() {
+    return getPlayerFactory()
       .map(f -> f.create())
       .orElse(null);
   }

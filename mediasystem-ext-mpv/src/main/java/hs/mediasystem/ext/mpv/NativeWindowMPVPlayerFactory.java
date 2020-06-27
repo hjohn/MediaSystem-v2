@@ -20,4 +20,9 @@ public class NativeWindowMPVPlayerFactory implements PlayerFactory {
   public PlayerPresentation create() {
     return new MPVPlayer(supplier);
   }
+
+  @Override
+  public IntegrationMethod getIntegrationMethod() {
+    return IntegrationMethod.WINDOW;
+  }
 }

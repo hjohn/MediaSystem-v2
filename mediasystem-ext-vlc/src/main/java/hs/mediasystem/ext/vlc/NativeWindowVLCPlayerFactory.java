@@ -13,4 +13,9 @@ public class NativeWindowVLCPlayerFactory extends AbstractVLCPlayerFactory {
   public NativeWindowVLCPlayerFactory(PlayerWindowIdSupplier supplier) {
     super("VLC (native window)", Mode.WID, supplier);
   }
+
+  @Override
+  public IntegrationMethod getIntegrationMethod() {
+    return IntegrationMethod.WINDOW;
+  }
 }

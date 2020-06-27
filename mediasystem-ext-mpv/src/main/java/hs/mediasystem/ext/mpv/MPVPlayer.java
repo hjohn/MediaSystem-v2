@@ -30,6 +30,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 
 import org.reactfx.Change;
 import org.reactfx.EventStreams;
@@ -292,7 +293,7 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   @Override
-  public Object getDisplayComponent() {
+  public Node getDisplayComponent() {
     return null;
   }
 

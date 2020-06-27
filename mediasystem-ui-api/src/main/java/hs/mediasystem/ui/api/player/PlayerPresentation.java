@@ -7,6 +7,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 
 import org.reactfx.value.Val;
 
@@ -84,7 +85,7 @@ public interface PlayerPresentation {
    */
   Property<Double> brightnessProperty();
 
-  Object getDisplayComponent();
+  Node getDisplayComponent();
 
   ObjectProperty<EventHandler<PlayerEvent>> onPlayerEvent();
 
