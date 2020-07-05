@@ -19,7 +19,7 @@ import javafx.stage.StageStyle;
  *
  * The layout {@link SceneLayout#ROOT} is suitable for incorporating video
  * directly as a JavaFX node, while the {@link SceneLayout#CHILD} is best
- * when video can only be incorporated by specificying a native window to
+ * when video can only be incorporated by specifying a native window to
  * use.
  */
 public class FXSceneManager implements SceneManager {

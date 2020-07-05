@@ -1,6 +1,19 @@
 package hs.mediasystem.ext.vlc;
 
-import com.sun.jna.Memory;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.reactfx.Change;
+import org.reactfx.EventStreams;
+import org.reactfx.SuspendableEventStream;
+import org.reactfx.value.Val;
+import org.reactfx.value.Var;
 
 import hs.mediasystem.ext.vlc.util.Accessor;
 import hs.mediasystem.ext.vlc.util.BeanBooleanProperty;
@@ -12,19 +25,6 @@ import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.javafx.Events;
-import hs.mediasystem.util.javafx.control.ResizableWritableImageView;
-
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
-
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -34,36 +34,24 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-import javafx.scene.image.PixelFormat;
-import javafx.scene.image.WritablePixelFormat;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-
-import org.reactfx.Change;
-import org.reactfx.EventStreams;
-import org.reactfx.SuspendableEventStream;
-import org.reactfx.value.Val;
-import org.reactfx.value.Var;
-
-import uk.co.caprica.vlcj.binding.internal.libvlc_media_t;
-import uk.co.caprica.vlcj.player.MediaPlayer;
-import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-import uk.co.caprica.vlcj.player.MediaPlayerFactory;
-import uk.co.caprica.vlcj.player.TrackDescription;
-import uk.co.caprica.vlcj.player.direct.BufferFormat;
-import uk.co.caprica.vlcj.player.direct.BufferFormatCallback;
-import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
-import uk.co.caprica.vlcj.player.direct.RenderCallback;
-import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
+import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
+import uk.co.caprica.vlcj.javafx.videosurface.ImageViewVideoSurfaceFactory;
+import uk.co.caprica.vlcj.media.MediaRef;
+import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.base.TrackDescription;
 import uk.co.caprica.vlcj.player.embedded.EmbeddedMediaPlayer;
-import uk.co.caprica.vlcj.player.embedded.videosurface.windows.WindowsVideoSurfaceAdapter;
+import uk.co.caprica.vlcj.player.embedded.videosurface.WindowsVideoSurfaceAdapter;
 
 public class VLCPlayer implements PlayerPresentation {
   public enum Mode {
     CANVAS, WID
   }
 
-  private final MediaPlayer mediaPlayer;
-  private final ResizableWritableImageView canvas;
+  private final EmbeddedMediaPlayer mediaPlayer;
+  private final ImageView canvas;
   private final StackPane displayComponent;
   private final AtomicInteger frameNumber = new AtomicInteger();
 
@@ -86,82 +74,39 @@ public class VLCPlayer implements PlayerPresentation {
 
     MediaPlayerFactory factory = new MediaPlayerFactory(arguments);
 
+    this.mediaPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer();
+    
     if(mode == Mode.WID) {
-      EmbeddedMediaPlayer mp = factory.newEmbeddedMediaPlayer();
+      this.canvas = null;
+      this.displayComponent = null;
 
-      mp.setVideoSurface(new DeferredComponentIdVideoSurface(new WindowsVideoSurfaceAdapter()) {
+      this.mediaPlayer.videoSurface().set(new DeferredComponentIdVideoSurface(new WindowsVideoSurfaceAdapter()) {
         @Override
         protected long getComponentId() {
           return supplier.getWindowId();
         }
       });
-
-      this.canvas = null;
-      this.displayComponent = null;
-      this.mediaPlayer = mp;
     }
     else {
-      final ResizableWritableImageView canvas = new ResizableWritableImageView(16, 16);
-      final WritablePixelFormat<ByteBuffer> byteBgraInstance = PixelFormat.getByteBgraPreInstance();
-
-      displayComponent = new StackPane(canvas);
-
+      this.canvas = new ImageView();
+      this.displayComponent = new StackPane(canvas);
+      
+//      final ResizableWritableImageView canvas = new ResizableWritableImageView(16, 16);  // FIXME can be simplied to be only resizable?
+            
+//      pane.setAlignment(Pos.CENTER);
+      
       canvas.setPreserveRatio(true);
       canvas.fitWidthProperty().bind(displayComponent.widthProperty());
       canvas.fitHeightProperty().bind(displayComponent.heightProperty());
-
-      DirectMediaPlayer mp = factory.newDirectMediaPlayer(
-        new BufferFormatCallback() {
-          @Override
-          public BufferFormat getBufferFormat(final int width, final int height) {
-            System.out.println("[FINE] VLCPlayer: Buffer size changed to " + width + "x" + height);
-
-            Platform.runLater(new Runnable() {
-              @Override
-              public void run() {
-                canvas.resize(width, height);
-              }
-            });
-
-            return new RV32BufferFormat(width, height);
-          }
-        },
-        new RenderCallback() {
-          AtomicReference<ByteBuffer> currentByteBuffer = new AtomicReference<>();
-
-          @Override
-          public void display(DirectMediaPlayer mp, Memory[] memory, final BufferFormat bufferFormat) {
-            final int renderFrameNumber = frameNumber.incrementAndGet();
-
-            currentByteBuffer.set(memory[0].getByteBuffer(0, memory[0].size()));
-
-            Platform.runLater(new Runnable() {
-              @Override
-              public void run() {
-                ByteBuffer byteBuffer = currentByteBuffer.get();
-                int actualFrameNumber = frameNumber.get();
-
-                if(renderFrameNumber == actualFrameNumber) {
-                  canvas.getPixelWriter().setPixels(0, 0, bufferFormat.getWidth(), bufferFormat.getHeight(), byteBgraInstance, byteBuffer, bufferFormat.getPitches()[0]);
-                }
-                else {
-                  System.out.println("[FINE] " + VLCPlayer.this.getClass().getSimpleName() + " - Skipped late frame " + renderFrameNumber + " (actual = " + actualFrameNumber + ")");
-                }
-              }
-            });
-          }
-        }
-      );
-
-      this.canvas = canvas;
-      this.mediaPlayer = mp;
+     
+      this.mediaPlayer.videoSurface().set(ImageViewVideoSurfaceFactory.videoSurfaceForImageView(canvas));
     }
 
     SuspendableEventStream<Change<Long>> positionChanges = EventStreams.changesOf(position).suppressible();
 
-    positionChanges.observe(c -> mediaPlayer.setTime(c.getNewValue().longValue()));  // Basically, only called when updated externally, not by player
+    positionChanges.observe(c -> mediaPlayer.controls().setTime(c.getNewValue().longValue()));  // Basically, only called when updated externally, not by player
 
-    mediaPlayer.addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
+    mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
       private final AtomicInteger ignoreFinish = new AtomicInteger();
       private boolean videoAdjusted;
 
@@ -169,7 +114,7 @@ public class VLCPlayer implements PlayerPresentation {
       public void timeChanged(final MediaPlayer mediaPlayer, final long newTime) {
         Platform.runLater(() -> positionChanges.suspendWhile(() -> position.setValue(newTime)));
 
-        final int currentSubtitleId = mediaPlayer.getSpu();
+        final int currentSubtitleId = mediaPlayer.subpictures().track();
 
         if(currentSubtitleId > 0 && currentSubtitleId != getSubtitleInternal().getId()) {
           System.out.println("[INFO] VLCPlayer: Subtitle changed externally to " + currentSubtitleId + ", updating to match");
@@ -181,7 +126,7 @@ public class VLCPlayer implements PlayerPresentation {
         }
 
         if(!videoAdjusted) {
-          mediaPlayer.setAdjustVideo(true);
+          mediaPlayer.video().setAdjustVideo(true);
           videoAdjusted = true;
         }
       }
@@ -191,69 +136,86 @@ public class VLCPlayer implements PlayerPresentation {
         Platform.runLater(() -> length.setValue(newLength));
       }
 
+//      @Override
+//      public void newMedia(MediaPlayer mediaPlayer) {
+//        System.out.println("[FINE] VLCPlayer: Event[newMedia]");
+//        updateSubtitles();
+//        videoAdjusted = false;
+//
+//        // mediaPlayer.play();
+//      }
+
       @Override
-      public void newMedia(MediaPlayer mediaPlayer) {
-        System.out.println("[FINE] VLCPlayer: Event[newMedia]");
+      public void mediaChanged(MediaPlayer mediaPlayer, MediaRef mediaRef) {
+        System.out.println("[FINE] VLCPlayer: Event[mediaChanged]: " + mediaRef);
         updateSubtitles();
         videoAdjusted = false;
-
-        // mediaPlayer.play();
       }
+
+//      @Override
+//      public void mediaMetaChanged(MediaPlayer mediaPlayer, int metaType) {
+//        // 12 = NowPlaying(?), 13 = Publisher(?), 15 = ArtworkURL(?)
+//      }
 
       @Override
-      public void mediaChanged(MediaPlayer mediaPlayer, libvlc_media_t media, String mrl) {
-        System.out.println("[FINE] VLCPlayer: Event[mediaChanged] '" + mrl + "': " + media);
+      public void paused(MediaPlayer mediaPlayer) {
+        pausedProperty.update(true); 
       }
+      
+      @Override
+      public void playing(MediaPlayer mediaPlayer) {
+        pausedProperty.update(false);
+      }
+      
+      @Override
+      public void stopped(MediaPlayer mediaPlayer) {
+        videoOutputStarted = false; 
+      }
+      
+//      muted
+      
+//      @Override
+//      public void mediaStateChanged(final MediaPlayer mediaPlayer, int newState) {
+//        // IDLE/CLOSE=0, OPENING=1, BUFFERING=2, PLAYING=3, PAUSED=4, STOPPING=5, ENDED=6, ERROR=7
+//        if(newState >= 5) {
+//          videoOutputStarted = false;
+//        }
+//
+//        System.out.println("[FINE] VLCPlayer: Event[mediaStateChanged]: " + newState);
+//
+//        pausedProperty.update(newState == 4);
+//      }
 
       @Override
-      public void mediaMetaChanged(MediaPlayer mediaPlayer, int metaType) {
-        // 12 = NowPlaying(?), 13 = Publisher(?), 15 = ArtworkURL(?)
+      public void mediaPlayerReady(MediaPlayer mediaPlayer) {
+        System.out.println("[FINE] VLCPlayer: Event[mediaPlayerReady]");
+        Platform.runLater(() -> {
+          updateSubtitles();
+          updateAudioTracks();
+          System.out.println(">>> AudioTracks are now: " + audioTracks + ", setting to: " + getAudioTrackInternal());
+          audioTrack.setValue(getAudioTrackInternal());
+        });
       }
 
-      @Override
-      public void mediaStateChanged(final MediaPlayer mediaPlayer, int newState) {
-        // IDLE/CLOSE=0, OPENING=1, BUFFERING=2, PLAYING=3, PAUSED=4, STOPPING=5, ENDED=6, ERROR=7
-        if(newState >= 5) {
-          videoOutputStarted = false;
-        }
-
-        System.out.println("[FINE] VLCPlayer: Event[mediaStateChanged]: " + newState);
-
-        pausedProperty.update(newState == 4);
-      }
-
-      @Override
-      public void mediaParsedChanged(MediaPlayer mediaPlayer, int parsed) {
-        System.out.println("[FINE] VLCPlayer: Event[mediaParsedChanged]: " + parsed);
-        if(parsed == 1) {
-          Platform.runLater(() -> {
-            updateSubtitles();
-            updateAudioTracks();
-            System.out.println(">>> AudioTracks are now: " + audioTracks + ", setting to: " + getAudioTrackInternal());
-            audioTrack.setValue(getAudioTrackInternal());
-          });
-        }
-      }
-
-      @Override
-      public void mediaSubItemAdded(MediaPlayer mediaPlayer, libvlc_media_t subItem) {
-        ignoreFinish.incrementAndGet();
-        int i = 1;
-
-        System.out.println("VLCPlayer: mediaSubItemAdded: " + subItem.toString());
-
-        for(TrackDescription desc : mediaPlayer.getTitleDescriptions()) {
-          System.out.println(i++ + " : " + desc.description());
-        }
-      }
+//      @Override
+//      public void mediaSubItemAdded(MediaPlayer mediaPlayer, libvlc_media_t subItem) {
+//        ignoreFinish.incrementAndGet();
+//        int i = 1;
+//
+//        System.out.println("VLCPlayer: mediaSubItemAdded: " + subItem.toString());
+//
+//        for(TrackDescription desc : mediaPlayer.getTitleDescriptions()) {
+//          System.out.println(i++ + " : " + desc.description());
+//        }
+//      }
 
       @Override
       public void videoOutput(final MediaPlayer mediaPlayer, int newCount) {
         System.out.println("VLCPlayer: videoOutput");
 
         Platform.runLater(() -> {
-          mediaPlayer.setVolume(volume.getValue().intValue());
-          mediaPlayer.mute(mutedProperty.get());
+          mediaPlayer.audio().setVolume(volume.getValue().intValue());
+          mediaPlayer.audio().setMute(mutedProperty.get());
         });
 
         videoOutputStarted = true;
@@ -261,35 +223,35 @@ public class VLCPlayer implements PlayerPresentation {
 
       @Override
       public void finished(MediaPlayer mediaPlayer) {
-        if(ignoreFinish.get() == 0) {
+//        if(ignoreFinish.get() == 0) {
           videoOutputStarted = false;
           System.out.println("VLCPlayer: Finished");
           Events.dispatchEvent(onPlayerEvent, new PlayerEvent(Type.FINISHED), null);
-        }
-        else {
-          int index = mediaPlayer.subItemIndex();
-
-          List<String> subItems = mediaPlayer.subItems();
-
-          if(index>= 0 && index < subItems.size()) {
-            System.out.println("Finished: " + subItems.get(index));
-          }
-          else {
-            index = 0;
-          }
-
-          ignoreFinish.decrementAndGet();
-          System.out.println("VLCPlayer: Adding more media");
-          // mediaPlayer.playMedia(subItems.get(index));
-        }
+//        }
+//        else {
+//          int index = mediaPlayer.subItemIndex();
+//
+//          List<String> subItems = mediaPlayer.subItems();
+//
+//          if(index>= 0 && index < subItems.size()) {
+//            System.out.println("Finished: " + subItems.get(index));
+//          }
+//          else {
+//            index = 0;
+//          }
+//
+//          ignoreFinish.decrementAndGet();
+//          System.out.println("VLCPlayer: Adding more media");
+//          // mediaPlayer.playMedia(subItems.get(index));
+//        }
       }
     });
 
-    volume.addListener((obs, old, value) -> mediaPlayer.setVolume(value.intValue()));
-    audioDelay.addListener((obs, old, value) -> mediaPlayer.setAudioDelay(value * 1000));
-    subtitleDelay.addListener((obs, old, value) -> mediaPlayer.setSpuDelay(-value * 1000));
-    rate.addListener((obs, old, value) -> mediaPlayer.setRate(value.floatValue()));
-    brightness.addListener((obs, old, value) -> mediaPlayer.setBrightness(value.floatValue()));
+    volume.addListener((obs, old, value) -> mediaPlayer.audio().setVolume(value.intValue()));
+    audioDelay.addListener((obs, old, value) -> mediaPlayer.audio().setDelay(value * 1000));
+    subtitleDelay.addListener((obs, old, value) -> mediaPlayer.subpictures().setDelay(-value * 1000));
+    rate.addListener((obs, old, value) -> mediaPlayer.controls().setRate(value.floatValue()));
+    brightness.addListener((obs, old, value) -> mediaPlayer.video().setBrightness(value.floatValue()));
 
     mutedProperty = new BeanBooleanProperty(new Accessor<Boolean>() {
       private boolean cachedMuteStatus = false;
@@ -297,7 +259,7 @@ public class VLCPlayer implements PlayerPresentation {
       @Override
       public Boolean read() {
         if(videoOutputStarted) {
-          cachedMuteStatus = mediaPlayer.isMute();
+          cachedMuteStatus = mediaPlayer.audio().isMute();
         }
 
         return cachedMuteStatus;
@@ -305,7 +267,7 @@ public class VLCPlayer implements PlayerPresentation {
 
       @Override
       public void write(Boolean value) {
-        mediaPlayer.mute(value);
+        mediaPlayer.audio().setMute(value);
       }
     });
     pausedProperty = new BeanBooleanProperty(new Accessor<Boolean>() {
@@ -316,20 +278,20 @@ public class VLCPlayer implements PlayerPresentation {
 
       @Override
       public void write(Boolean value) {
-        mediaPlayer.setPause(value);
+        mediaPlayer.controls().setPause(value);
       }
     });
 
-    subtitle.addListener((obs, old, value) -> mediaPlayer.setSpu(value.getId()));
+    subtitle.addListener((obs, old, value) -> mediaPlayer.subpictures().setTrack(value.getId()));
     audioTrack.addListener((obs, old, value) -> {
       if(value != null) {
-        mediaPlayer.setAudioTrack(value.getId());
+        mediaPlayer.audio().setTrack(value.getId());
       }
     });
   }
 
   public AudioTrack getAudioTrackInternal() {
-    int index = mediaPlayer.getAudioTrack();
+    int index = mediaPlayer.audio().track();
 
     if(index == -1 || index >= audioTracks.size()) {
       return AudioTrack.NO_AUDIO_TRACK;
@@ -339,11 +301,11 @@ public class VLCPlayer implements PlayerPresentation {
   }
 
   public void setAudioTrackInternal(AudioTrack audioTrack) {
-    mediaPlayer.setAudioTrack(audioTrack.getId());
+    mediaPlayer.audio().setTrack(audioTrack.getId());
   }
 
   public Subtitle getSubtitleInternal() {
-    int id = mediaPlayer.getSpu();
+    int id = mediaPlayer.subpictures().track();
 
     for(Subtitle subtitle : subtitles) {
       if(subtitle.getId() == id) {
@@ -355,7 +317,7 @@ public class VLCPlayer implements PlayerPresentation {
   }
 
   public void setSubtitleInternal(Subtitle subtitle) {
-    mediaPlayer.setSpu(subtitle.getId());
+    mediaPlayer.subpictures().setTrack(subtitle.getId());
   }
 
   private final ObservableList<Subtitle> subtitles = FXCollections.observableArrayList(Subtitle.DISABLED);
@@ -375,17 +337,17 @@ public class VLCPlayer implements PlayerPresentation {
   public void play(String uri, long positionInMillis) {
     frameNumber.set(0);
 
-    if(canvas != null) {
-      canvas.clear();
-    }
+//    if(canvas != null) {  FIXME
+//      canvas.clear();
+//    }
 
     position.setValue(0L);
-    audioDelay.setValue(mediaPlayer.getAudioDelay() / 1000);
+    audioDelay.setValue(mediaPlayer.audio().delay() / 1000);
     audioTrack.setValue(getAudioTrackInternal());
-    brightness.setValue((double)mediaPlayer.getBrightness());
-    rate.setValue((double)mediaPlayer.getRate());
+    brightness.setValue((double)mediaPlayer.video().brightness());
+    rate.setValue(1.0); // FIXME (double)mediaPlayer.getRate());
     subtitle.setValue(getSubtitleInternal());
-    subtitleDelay.setValue(-mediaPlayer.getSpuDelay() / 1000);
+    subtitleDelay.setValue(-mediaPlayer.subpictures().delay() / 1000);
 
     List<String> arguments = new ArrayList<>();
 
@@ -393,16 +355,16 @@ public class VLCPlayer implements PlayerPresentation {
       arguments.add("start-time=" + positionInMillis / 1000);
     }
 
-    mediaPlayer.setRepeat(false);
-    mediaPlayer.setPlaySubItems(true);
-    mediaPlayer.playMedia(uri, arguments.toArray(new String[arguments.size()]));
+    mediaPlayer.controls().setRepeat(false);
+//    mediaPlayer.setPlaySubItems(true); FIXME
+    mediaPlayer.media().play(uri, arguments.toArray(new String[arguments.size()]));
 
     System.out.println("[FINE] Playing: " + uri);
   }
 
   @Override
   public void stop() {
-    mediaPlayer.stop();
+    mediaPlayer.controls().stop();
   }
 
   @Override
@@ -418,7 +380,7 @@ public class VLCPlayer implements PlayerPresentation {
   @Override
   public void showSubtitle(Path path) {
     System.out.println("[INFO] VLCPlayer.showSubtitle: path = " + path.toString());
-    mediaPlayer.setSubTitleFile(path.toString());
+    mediaPlayer.subpictures().setSubTitleFile(path.toString());
   }
 
   private void updateSubtitles() {
@@ -426,7 +388,7 @@ public class VLCPlayer implements PlayerPresentation {
       subtitles.subList(1, subtitles.size()).clear();
     }
 
-    for(TrackDescription spuDescription : mediaPlayer.getSpuDescriptions()) {
+    for(TrackDescription spuDescription : mediaPlayer.subpictures().trackDescriptions()) {
       if(spuDescription.id() >= 0) {
         subtitles.add(new Subtitle(spuDescription.id(), spuDescription.description()));
       }
@@ -443,7 +405,7 @@ public class VLCPlayer implements PlayerPresentation {
      */
 
     next:
-    for(TrackDescription description : mediaPlayer.getAudioDescriptions()) {
+    for(TrackDescription description : mediaPlayer.audio().trackDescriptions()) {
       foundIds.add(description.id());
 
       for(AudioTrack audioTrack : audioTracks) {

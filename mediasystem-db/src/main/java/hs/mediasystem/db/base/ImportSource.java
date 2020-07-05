@@ -34,4 +34,9 @@ public class ImportSource {
   public StreamSource getStreamSource() {
     return streamSource;
   }
+  
+  @Override
+  public String toString() {
+    return "ImportSource[id=" + id + ", scannerClass=" + scanner.getClass() + ", streamSource=" + streamSource + ", roots=" + roots + "]";
+  }
 }

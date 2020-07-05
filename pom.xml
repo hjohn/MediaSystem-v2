@@ -11,7 +11,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.jackson>2.9.9</version.jackson>
-    <version.javafx>11.0.2</version.javafx>
+    <version.javafx>14.0.1</version.javafx>
     <version.ddif>1.1.1</version.ddif>
     <version.junit5>5.6.0</version.junit5>
     <version.mockito>2.23.4</version.mockito>
