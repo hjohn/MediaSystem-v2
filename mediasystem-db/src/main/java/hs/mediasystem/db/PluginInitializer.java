@@ -5,6 +5,7 @@ import hs.ddif.core.inject.instantiator.Instantiator;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
+import hs.ddif.plugins.PluginScopeResolver;
 import hs.mediasystem.db.base.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
@@ -34,11 +35,12 @@ public class PluginInitializer {
 
   @Inject private Instantiator instantiator;
   @Inject private BeanDefinitionStore store;
+  @Inject private PluginScopeResolver pluginScopeResolver;
   @Inject @Nullable @Named("general.basedir") private String baseDir = ".";
 
   @PostConstruct
   private void postConstruct() throws IOException, BeanResolutionException {
-    PluginManager pluginManager = new PluginManager(store);
+    PluginManager pluginManager = new PluginManager(store, pluginScopeResolver);
     List<Plugin> plugins = new ArrayList<>();
     Path root = Paths.get(baseDir, "plugins");
 

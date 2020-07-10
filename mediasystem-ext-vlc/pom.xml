@@ -26,6 +26,10 @@
       <artifactId>vlcj</artifactId>
       <version>3.9.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-annotations</artifactId>
+    </dependency>
 
     <!-- Test Dependencies -->
     <dependency>
@@ -41,7 +45,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
+
   <build>
     <plugins>
       <plugin>
@@ -52,7 +56,7 @@
           <target>1.8</target>
         </configuration>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>

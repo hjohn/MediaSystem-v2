@@ -1,6 +1,6 @@
 package hs.mediasystem.runner;
 
-import hs.ddif.core.Produces;
+import hs.ddif.annotations.Produces;
 import hs.mediasystem.runner.util.FXSceneManager;
 import hs.mediasystem.runner.util.SceneManager;
 

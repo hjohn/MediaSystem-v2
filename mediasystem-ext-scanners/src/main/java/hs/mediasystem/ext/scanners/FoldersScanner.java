@@ -1,5 +1,6 @@
 package hs.mediasystem.ext.scanners;
 
+import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
@@ -23,9 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
+@PluginScoped
 public class FoldersScanner implements Scanner {
   private static final NameDecoder FILE_NAME_DECODER = new NameDecoder(Mode.FILE);
 

@@ -2,6 +2,7 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
@@ -14,9 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
+@PluginScoped
 public class PersonRoles {
   private static final double GUEST_STAR_MINIMUM_VALUE = 1e6;
   private static final double CREW_MINIMUM_VALUE = 1e12;

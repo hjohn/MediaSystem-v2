@@ -2,8 +2,10 @@ package hs.mediasystem.local.client;
 
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.plugins.ComponentScanner;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
+import hs.ddif.plugins.PluginScopeResolver;
 import hs.mediasystem.db.ServiceRunner;
 import hs.mediasystem.plugin.playback.scene.PlayerSetting;
 import hs.mediasystem.runner.NavigateEvent;
@@ -73,7 +75,8 @@ public class FrontEndRunner extends Application {
 
     Annotations.initialize();
 
-    new PluginManager(injector.getStore()).loadPluginAndScan(
+    ComponentScanner.scan(
+      injector.getStore(),
       "hs.mediasystem.runner",
       "hs.mediasystem.presentation",
       "hs.mediasystem.plugin",
@@ -81,7 +84,7 @@ public class FrontEndRunner extends Application {
       "hs.mediasystem.local.client.service"
     );
 
-    loadPlayerPlugins(injector.getStore());
+    loadPlayerPlugins(injector.getStore(), injector.getInstance(PluginScopeResolver.class));
 
     StartupPresentationProvider provider = injector.getInstance(StartupPresentationProvider.class);
 
@@ -117,8 +120,8 @@ public class FrontEndRunner extends Application {
     LOGGER.info("Window RenderScaleX/Y: " + window.getRenderScaleX() + "x" + window.getRenderScaleY());
   }
 
-  private static void loadPlayerPlugins(BeanDefinitionStore store) throws IOException {
-    PluginManager pluginManager = new PluginManager(store);
+  private static void loadPlayerPlugins(BeanDefinitionStore store, PluginScopeResolver pluginScopeResolver) throws IOException {
+    PluginManager pluginManager = new PluginManager(store, pluginScopeResolver);
     List<Plugin> plugins = new ArrayList<>();
     Path root = Paths.get("ui-plugins");
 

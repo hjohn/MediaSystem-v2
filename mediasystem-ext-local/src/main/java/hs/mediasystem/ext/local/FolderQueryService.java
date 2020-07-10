@@ -1,5 +1,6 @@
 package hs.mediasystem.ext.local;
 
+import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
@@ -19,9 +20,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
+@PluginScoped
 public class FolderQueryService extends AbstractQueryService {
   private static final DataSource FOLDER = DataSource.instance(MediaType.FOLDER, "LOCAL");
 

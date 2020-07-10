@@ -2,6 +2,7 @@ package hs.mediasystem.ext.tmdb.serie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
@@ -29,9 +30,8 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
+@PluginScoped
 public class TmdbIdentificationService extends AbstractIdentificationService {
   private static final Logger LOGGER = Logger.getLogger(TmdbIdentificationService.class.getName());
   private static final Pattern SEQUENCES = Pattern.compile("0*([1-9][0-9]+)");

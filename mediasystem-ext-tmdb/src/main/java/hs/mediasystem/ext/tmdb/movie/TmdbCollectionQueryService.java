@@ -2,6 +2,7 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
@@ -16,9 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
+@PluginScoped
 public class TmdbCollectionQueryService extends AbstractQueryService {
   @Inject private TheMovieDatabase tmdb;
 

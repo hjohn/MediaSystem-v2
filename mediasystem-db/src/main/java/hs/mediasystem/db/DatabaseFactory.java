@@ -6,7 +6,7 @@ import hs.database.core.SimpleConnectionPoolDataSource;
 import hs.database.core.SimpleDatabaseStatementTranslator;
 import hs.database.schema.DatabaseStatementTranslator;
 import hs.database.schema.DatabaseUpdater;
-import hs.ddif.core.Produces;
+import hs.ddif.annotations.Produces;
 
 import java.sql.Connection;
 import java.util.Map;

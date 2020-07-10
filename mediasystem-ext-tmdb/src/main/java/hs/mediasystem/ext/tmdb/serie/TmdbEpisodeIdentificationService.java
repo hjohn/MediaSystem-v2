@@ -1,5 +1,6 @@
 package hs.mediasystem.ext.tmdb.serie;
 
+import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
@@ -23,9 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.inject.Singleton;
-
-@Singleton
+@PluginScoped
 public class TmdbEpisodeIdentificationService extends AbstractIdentificationService {
 
   public TmdbEpisodeIdentificationService() {

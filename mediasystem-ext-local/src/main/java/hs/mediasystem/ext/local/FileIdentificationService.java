@@ -1,5 +1,6 @@
 package hs.mediasystem.ext.local;
 
+import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
@@ -14,9 +15,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Singleton;
-
-@Singleton
+@PluginScoped
 public class FileIdentificationService extends AbstractIdentificationService {
   private static final DataSource FILE = DataSource.instance(MediaType.FILE, "LOCAL");
 

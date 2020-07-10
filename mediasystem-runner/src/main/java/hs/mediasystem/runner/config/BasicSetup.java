@@ -8,6 +8,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.store.BeanDefinitionStore;
 import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.plugins.PluginScopeResolver;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,12 +21,14 @@ public class BasicSetup {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
 
   public static Injector create() throws IOException {
-    Injector injector = new Injector(true);
+    PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
+    Injector injector = new Injector(true, pluginScopeResolver);
     JsonNode node = OBJECT_MAPPER.readTree(new File("mediasystem.yaml"));
 
     injector.registerInstance(node, AnnotationDescriptor.named("configuration"));
     injector.registerInstance(injector.getInstantiator());  // Register instantiator
     injector.registerInstance(injector.getStore());  // Register store
+    injector.registerInstance(pluginScopeResolver);  // Register plugin scope resolver
 
     /*
      * Add configuration fields to Injector
