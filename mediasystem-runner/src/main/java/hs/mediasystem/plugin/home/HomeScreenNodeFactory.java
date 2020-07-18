@@ -9,18 +9,22 @@ import hs.mediasystem.plugin.library.scene.base.BackgroundPane;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation.State;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.PresentationLoader;
+import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.CollectionClient;
 import hs.mediasystem.ui.api.RecommendationClient;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
+import hs.mediasystem.util.ResourceImageHandle;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.Tuple;
+import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
+import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
@@ -35,13 +39,16 @@ import hs.mediasystem.util.javafx.control.transition.effects.Slide;
 import hs.mediasystem.util.javafx.control.transition.effects.Slide.Direction;
 import hs.mediasystem.util.javafx.control.transition.multi.Custom;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.Consumer;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -49,6 +56,7 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -69,6 +77,7 @@ import javafx.util.Duration;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -140,6 +149,9 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
       else if(current.equals("New")) {
         listView = createNewView(bgPane.backdropProperty());
       }
+      else if(current.equals("Options")) {
+        listView = createOptionsView(bgPane.backdropProperty());
+      }
       else {
         listView = null;
       }
@@ -179,21 +191,19 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     return root;
   }
 
-  private Function<Recommendation, ProductionPresentation> createProductionPresentationFunction() {
-    return r -> {
-      boolean hasParent = r.getWork().getType().isComponent();
-      WorkId id = hasParent ?
-          r.getWork().getParent().map(Parent::getId).orElseThrow() :
-          r.getWork().getId();
+  private ProductionPresentation getRecommendedProductionPresentation(Recommendation r) {
+    boolean hasParent = r.getWork().getType().isComponent();
+    WorkId id = hasParent ?
+        r.getWork().getParent().map(Parent::getId).orElseThrow() :
+        r.getWork().getId();
 
-      return productionPresentationFactory.create(id, hasParent ? State.EPISODE : State.OVERVIEW, hasParent ? r.getWork().getId() : null);
-    };
+    return productionPresentationFactory.create(id, hasParent ? State.EPISODE : State.OVERVIEW, hasParent ? r.getWork().getId() : null);
   }
 
   private ActionListView<Recommendation> createWatchRecommendationView(ObjectProperty<ImageHandle> backdrop) {
     ActionListView<Recommendation> mediaGridView = createCarousel(
       recommendationClient.findRecommendations(100),
-      createProductionPresentationFunction(),
+      e -> PresentationLoader.navigate(e, () -> getRecommendedProductionPresentation(e.getItem())),
       new AnnotatedImageCellFactory<>(this::fillRecommendationModel)
     );
 
@@ -208,7 +218,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   private ActionListView<Collection> createCollectionView(ObjectProperty<ImageHandle> backdrop) {
     ActionListView<Collection> mediaGridView = createCarousel(
       collectionClient.findCollections(),
-      c -> collectionPresentationProvider.createPresentation(c.getDefinition().getType(), c.getDefinition().getTag()),
+      e -> PresentationLoader.navigate(e, () -> collectionPresentationProvider.createPresentation(e.getItem().getDefinition().getType(), e.getItem().getDefinition().getTag())),
       new AnnotatedImageCellFactory<>(this::fillCollectionModel)
     );
 
@@ -223,7 +233,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   private ActionListView<Recommendation> createNewView(ObjectProperty<ImageHandle> backdrop) {
     ActionListView<Recommendation> mediaGridView = createCarousel(
       recommendationClient.findNew(mediaType -> !mediaType.isComponent() && mediaType != MediaType.FOLDER && mediaType != MediaType.FILE),
-      createProductionPresentationFunction(),
+      e -> PresentationLoader.navigate(e, () -> getRecommendedProductionPresentation(e.getItem())),
       new AnnotatedImageCellFactory<>(this::fillRecommendationModel)
     );
 
@@ -233,6 +243,85 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     );
 
     return mediaGridView;
+  }
+
+  private ActionListView<Option> createOptionsView(ObjectProperty<ImageHandle> backdrop) {
+    ActionListView<Option> mediaGridView = createCarousel(
+      List.of(
+        new Option("Help", new ResourceImageHandle(HomeScreenNodeFactory.class, "help.jpg"), this::onHelp),
+        new Option("Exit", new ResourceImageHandle(HomeScreenNodeFactory.class, "exit.jpg"), this::onExit)
+      ),
+      e -> e.getItem().action.accept(e),
+      new AnnotatedImageCellFactory<>(this::fillOption)
+    );
+
+    backdrop.unbind();
+    backdrop.set(new ResourceImageHandle(HomeScreenNodeFactory.class, "options-backdrop.jpg"));
+
+    return mediaGridView;
+  }
+
+  private void onExit(ItemSelectedEvent<Option> event) {
+    VBox content = Containers.vbox(
+      "content",
+      Labels.create("text", "Do you want to exit MediaSystem?"),
+      Containers.hbox(
+        "buttons",
+        Buttons.create("Cancel", e -> Event.fireEvent(e.getTarget(), NavigateEvent.back())),
+        Buttons.create("Exit", e -> System.exit(0))
+      )
+    );
+
+    content.getStylesheets().add(LESS_LOADER.compile("exit-styles.less"));
+
+    Dialogs.show(event, content);
+  }
+
+  private void onHelp(ItemSelectedEvent<Option> event) {
+    try {
+      try(InputStream stream = HomeScreenNodeFactory.class.getResourceAsStream("/help.markdown")) {
+        String markdownText = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        MarkdownTextArea textArea = new MarkdownTextArea(markdownText);
+        VirtualizedScrollPane<MarkdownTextArea> scrollPane = new VirtualizedScrollPane<>(textArea);
+
+        scrollPane.getStylesheets().add(LESS_LOADER.compile("help-styles.less"));
+
+        Node node = (Node)event.getSource();
+
+        scrollPane.setFocusTraversable(true);
+        scrollPane.setMinSize(node.getScene().getWidth() / 2, node.getScene().getHeight() / 2);
+
+        scrollPane.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+          if(e.getCode().isNavigationKey()) {
+            if(KeyCode.UP == e.getCode()) {
+              scrollPane.scrollBy(0, -50);
+              e.consume();
+            }
+            else if(KeyCode.DOWN == e.getCode()) {
+              scrollPane.scrollBy(0, 50);
+              e.consume();
+            }
+          }
+        });
+
+        Dialogs.show(event, scrollPane);
+      }
+    }
+    catch(IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private static class Option {
+    public final String title;
+    public final ImageHandle imageHandle;
+    public final Consumer<ItemSelectedEvent<Option>> action;
+
+    public Option(String title, ImageHandle imageHandle, Consumer<ItemSelectedEvent<Option>> action) {
+      this.title = title;
+      this.imageHandle = imageHandle;
+      this.action = action;
+    }
   }
 
   private final class MenuCellFactory implements Callback<ListView<String>, ListCell<String>> {
@@ -300,7 +389,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     linearLayout.reflectionEnabledProperty().set(false);
     linearLayout.cellAlignmentProperty().set(0.5);
 
-    ListView<String> listView = new ListView<>(FXCollections.observableArrayList("Home", "Collections", "New"));
+    ListView<String> listView = new ListView<>(FXCollections.observableArrayList("Home", "Collections", "New", "Options"));
     CarouselSkin<String> skin = new CarouselSkin<>(listView);
 
     listView.setCellFactory(new MenuCellFactory());
@@ -312,7 +401,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   }
 
 
-  private static <T> ActionListView<T> createCarousel(List<T> items, Function<T, ? extends Presentation> presentationSupplier, Callback<ListView<T>, ListCell<T>> cellFactory) {
+  private static <T> ActionListView<T> createCarousel(List<T> items, Consumer<ItemSelectedEvent<T>> onSelect, Callback<ListView<T>, ListCell<T>> cellFactory) {
     ActionListView<T> listView = new ActionListView<>();
 
     listView.setCellFactory(cellFactory);
@@ -320,7 +409,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     listView.getSelectionModel().select(0);
     listView.getFocusModel().focus(0);
     listView.setOrientation(Orientation.HORIZONTAL);
-    listView.onItemSelected.set(e -> PresentationLoader.navigate(e, () -> presentationSupplier.apply(listView.getSelectionModel().getSelectedItem())));
+    listView.onItemSelected.set(onSelect::accept);
 
     CarouselSkin<T> skin = new CarouselSkin<>(listView);
 //    RayLayout layout = new RayLayout() {
@@ -401,6 +490,11 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     model.imageHandle.set(collection.getImage().map(imageHandleFactory::fromURI).orElse(null));
     model.watchedFraction.set(-1);
     model.age.set(null);
+  }
+
+  private void fillOption(Option option, AnnotatedImageCellFactory.Model model) {
+    model.title.set(option.title);
+    model.imageHandle.set(option.imageHandle);
   }
 }
 

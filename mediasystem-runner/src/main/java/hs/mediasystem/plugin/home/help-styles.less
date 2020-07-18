@@ -1,0 +1,23 @@
+@import "${root}/hs/mediasystem/runner/properties.less";
+
+.styled-text-area {
+  -fx-background-color: transparent;
+}
+
+.text {
+  -fx-fill: @text-primary;
+}
+
+.heading1 { -fx-font-size: 36px; }
+.heading2 { -fx-font-size: 30px; }
+.heading3 { -fx-font-size: 25px; }
+
+.text {
+  &.heading1, &.heading2, &.heading3 {
+    -fx-fill: @text-primary-highlight;
+  }
+
+  &.code { -fx-font-family: monospaced; }
+  &.emphasis { -fx-font-style: italic; }
+  &.strong { .black; }
+}

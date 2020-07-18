@@ -107,7 +107,7 @@ public class AnnotatedImageCellFactory<T> implements Callback<ListView<T>, ListC
   public CarouselListCell<T> call(ListView<T> view) {
     return new CarouselListCell<>() {
       private final BiasedImageView imageView = new BiasedImageView();
-      private final AsyncImageProperty asyncImageProperty = new AsyncImageProperty(600, 400);
+      private final AsyncImageProperty asyncImageProperty = new AsyncImageProperty(900, 600);
 
       private final StatusIndicator indicator = new StatusIndicator();
       private final Label parentTitle = Labels.create("parent-title", Labels.HIDE_IF_EMPTY);
