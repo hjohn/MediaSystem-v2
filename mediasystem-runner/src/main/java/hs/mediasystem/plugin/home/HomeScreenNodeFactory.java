@@ -13,6 +13,7 @@ import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.runner.util.MarkdownTextView;
 import hs.mediasystem.ui.api.CollectionClient;
 import hs.mediasystem.ui.api.RecommendationClient;
 import hs.mediasystem.ui.api.domain.Recommendation;
@@ -77,7 +78,6 @@ import javafx.util.Duration;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
@@ -279,30 +279,13 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     try {
       try(InputStream stream = HomeScreenNodeFactory.class.getResourceAsStream("/help.markdown")) {
         String markdownText = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        MarkdownTextArea textArea = new MarkdownTextArea(markdownText);
-        VirtualizedScrollPane<MarkdownTextArea> scrollPane = new VirtualizedScrollPane<>(textArea);
-
-        scrollPane.getStylesheets().add(LESS_LOADER.compile("help-styles.less"));
-
+        MarkdownTextView textView = new MarkdownTextView();
         Node node = (Node)event.getSource();
 
-        scrollPane.setFocusTraversable(true);
-        scrollPane.setMinSize(node.getScene().getWidth() / 2, node.getScene().getHeight() / 2);
+        textView.markdownText.set(markdownText);
+        textView.setMinSize(node.getScene().getWidth() / 2, node.getScene().getHeight() / 2);
 
-        scrollPane.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-          if(e.getCode().isNavigationKey()) {
-            if(KeyCode.UP == e.getCode()) {
-              scrollPane.scrollBy(0, -50);
-              e.consume();
-            }
-            else if(KeyCode.DOWN == e.getCode()) {
-              scrollPane.scrollBy(0, 50);
-              e.consume();
-            }
-          }
-        });
-
-        Dialogs.show(event, scrollPane);
+        Dialogs.show(event, textView);
       }
     }
     catch(IOException e) {
