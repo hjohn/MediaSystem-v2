@@ -50,6 +50,8 @@ public class RootPresentationHandler {
     sceneManager.getScene().addEventHandler(NavigateEvent.NAVIGATION_BACK, e -> handleNavigateBackEvent(e));
     sceneManager.getScene().setOnKeyPressed(this::onKeyPressed);
     sceneManager.getScene().setOnKeyReleased(this::onKeyReleased);
+
+    sceneManager.getRootPane().getStyleClass().setAll("media-look");
   }
 
   private KeyCode keyPressedCode;

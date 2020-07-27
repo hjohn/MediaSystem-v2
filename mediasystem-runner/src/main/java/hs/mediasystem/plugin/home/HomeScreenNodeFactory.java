@@ -184,11 +184,9 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     grid.at(0, 0).spanning(2, 8).add(Containers.stack("main-menu-container", menuBackgroundLabel, menuListView));
 
-    StackPane root = Containers.stack("media-look", grid);
+    grid.getStylesheets().add(LESS_LOADER.compile("styles.less"));
 
-    root.getStylesheets().add(LESS_LOADER.compile("styles.less"));
-
-    return root;
+    return grid;
   }
 
   private ProductionPresentation getRecommendedProductionPresentation(Recommendation r) {
