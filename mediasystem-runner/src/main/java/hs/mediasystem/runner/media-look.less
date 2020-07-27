@@ -28,14 +28,14 @@
 {
   -fx-background-color: transparent;
 }
- 
+
 .dialog {
   -fx-spacing: 5;
   -fx-padding: 20;
-  
+
   -c-border: @theme-primary;
   -c-bg: fade(@theme-primary, 20%);
-  
+
   -c-b1: derive(-c-border, 25%);
   -c-b2: derive(-c-border, -30%);
   -c-b3: derive(-c-border, -50%);
@@ -45,11 +45,11 @@
   -c-bg1: derive(-c-bg, 5%);
   -c-bg2: derive(-c-bg, -100%);
   -c-bg3: derive(-c-bg, -160%);
-  
-  -fx-border-color: 
-    linear-gradient(to right, -c-b1, -c-b2 2%, -c-b3) 
-    linear-gradient(to bottom, -c-b3, -c-b3 25%, -c-b2 50%, -c-b4 98%, -c-b5) 
-    linear-gradient(to right, -c-b3, -c-b4 98%, -c-b5) 
+
+  -fx-border-color:
+    linear-gradient(to right, -c-b1, -c-b2 2%, -c-b3)
+    linear-gradient(to bottom, -c-b3, -c-b3 25%, -c-b2 50%, -c-b4 98%, -c-b5)
+    linear-gradient(to right, -c-b3, -c-b4 98%, -c-b5)
     linear-gradient(to bottom, -c-b1, -c-b3 2%, -c-b2 50%, -c-b3 98%, -c-b3),
     rgba(0, 0, 0, 0.5),
     rgba(0, 0, 0, 0.5);
@@ -61,22 +61,22 @@
   -fx-background-color: linear-gradient(from 25% 0% to 75% 100%, -c-bg3, -c-bg1 28%, -c-bg2 68%, -c-bg3), linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 1.0));
   -fx-background-radius: 23, 23;
   -fx-background-insets: 1, 1;
-} 
+}
 
 .media-look,
 .dialog {
   @control-focus: rgb(255, 255, 0);
   @control-border: darken(@theme-primary, 50%, relative);
   @control-bg: fade(darken(@theme-primary, 75%, relative), 40%);
-  
+
   .button,
   .toggle-button {
     -fx-background-color: @control-bg;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
-  
+
     -fx-text-fill: @text-primary-highlight;
-  
+
     -fx-border-color: transparent, @control-border;
     -fx-border-width: 3, 2;
     -fx-border-insets: 0, 5.4;
@@ -86,18 +86,18 @@
   .check-box {
     -fx-text-fill: @text-primary-highlight;
   }
-  
+
   .check-box > .box {
     -fx-background-color: @control-bg;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
-      
+
     -fx-border-color: transparent, @control-border;
     -fx-border-width: 3, 2;
     -fx-border-insets: 0, 5.4;
-    -fx-border-radius: 5.4, 0;    
+    -fx-border-radius: 5.4, 0;
   }
-  
+
   .check-box:selected > .box > .mark,
   .check-box:indeterminate > .box > .mark {
     -fx-background-color: @text-primary-highlight;
@@ -111,27 +111,27 @@
     -fx-background-color: @control-bg;
     -fx-background-insets: 0;
     -fx-background-radius: 0;
-  
+
     -fx-text-fill: @text-primary-highlight;
-  
+
     -fx-border-color: transparent, @control-border;
     -fx-border-width: 3, 2;
     -fx-border-insets: 0, 5.4;
     -fx-border-radius: 5.4, 0;
-    
+
     .text-field, .increment-arrow-button, .decrement-arrow-button {
       -fx-background-color: @control-bg;
       -fx-text-fill: @text-primary-highlight;
     }
-    
+
     .increment-arrow, .decrement-arrow {
       -fx-background-color: @text-primary-highlight;
     }
   }
 
   .spinner.focused,
-  .check-box.focused > .box, 
-  .combo-box-base.focused, 
+  .check-box.focused > .box,
+  .combo-box-base.focused,
   .button.focused,
   .toggle-button.focused,
   .list-view.focused:external-focus,  /* without mouse focus */
@@ -142,7 +142,7 @@
     -fx-border-insets: 0, 5.4;
     -fx-border-radius: 5.4, 0;    
   }
-  
+
   .slider .track
   {
     -fx-background-color: @control-bg;
@@ -151,13 +151,12 @@
     -fx-border-insets: -2;
     -fx-border-radius: 5.4;
   }
-  
+
   .slider .axis {
     -fx-tick-label-fill: @text-primary;
     -fx-fill: @control-border;
   }
- 
-  
+
   .slider.focused *.thumb,
   .slider:focused *.thumb
   {
@@ -169,7 +168,7 @@
     -fx-background-radius: 17.4, 14, 13, 12;
     -fx-background-insets: -3.4, 0, 1, 2;
   }
-  
+
   /*
   .slider.focused:external-focus,
   .slider:focused:external-focus
@@ -179,7 +178,7 @@
     -fx-border-insets: 0, 5.4;
     -fx-border-radius: 5.4, 0;
   }
-  
+
   .slider.focused:internal-focus *.thumb,
   .slider:focused:internal-focus *.thumb
   {
