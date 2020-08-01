@@ -1,0 +1,38 @@
+@import "${root}/hs/mediasystem/runner/properties.less";
+
+.dialog {
+  .content {
+    -fx-fill-width: true;
+  }
+
+  .title {
+    .style-heading2;
+    .heading-drop-shadow;
+    -fx-text-fill: @text-primary-highlight;
+  }
+
+  .result-box {
+    -fx-padding: 1em 0 0 0;
+    -fx-spacing: 1em;
+  }
+
+  .progress-box {
+    -fx-padding: 0.5em;
+
+    .progress-bar {
+      -fx-max-width: infinity;
+    }
+  }
+
+  .exclamation {
+    -fx-text-fill: transparent;
+    -fx-background-color: @text-accent;
+    .style-heading1;
+    .black;
+    -fx-effect: innershadow(three-pass-box, rgba(0, 0, 0, 0.8), 0.4em, 0.5, 0, 0);
+    -fx-alignment: center;
+    -fx-background-radius: 100;
+    -fx-min-width: 1.5em;
+    -fx-min-height: 1.5em;
+  }
+}
