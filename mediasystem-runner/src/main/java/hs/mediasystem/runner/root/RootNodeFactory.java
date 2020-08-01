@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.animation.Transition;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -37,10 +38,13 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
 import javax.inject.Inject;
@@ -311,7 +315,16 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
     }};
   }
 
-  private boolean backgroundNodeActive = false;
+  private final Transition transition = new Transition() {
+    {
+      setCycleDuration(Duration.millis(500));
+    }
+
+    @Override
+    protected void interpolate(double frac) {
+      sceneManager.getRootPane().setBackground(new Background(new BackgroundFill(new Color(0, 0, 0, frac), null, null)));
+    }
+  };
 
   private Node createViewPort(RootPresentation presentation) {
     ViewPort viewPort = viewPortFactory.create(presentation, n -> {
@@ -327,19 +340,21 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
         Object backgroundNode = n.getProperties().get("background");
 
         if(backgroundNode != null) {
-          backgroundNodeActive = true;
-
           sceneManager.setPlayerRoot(backgroundNode);
         }
+
+        transition.setRate(-1.0);
+        transition.playFrom(Duration.millis(500));
 
         presentation.clockVisible.set(false);
       }
       else {
-        backgroundNodeActive = false;
-
         presentation.clockVisible.set(true);
 
         sceneManager.disposePlayerRoot();
+
+        transition.setRate(1.0);
+        transition.playFromStart();
       }
     });
 

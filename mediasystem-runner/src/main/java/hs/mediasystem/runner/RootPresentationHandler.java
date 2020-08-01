@@ -51,7 +51,7 @@ public class RootPresentationHandler {
     sceneManager.getScene().setOnKeyPressed(this::onKeyPressed);
     sceneManager.getScene().setOnKeyReleased(this::onKeyReleased);
 
-    sceneManager.getRootPane().getStyleClass().setAll("media-look");
+    sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
   }
 
   private KeyCode keyPressedCode;
