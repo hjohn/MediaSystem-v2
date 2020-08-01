@@ -49,7 +49,7 @@ public class DialogPane<R> extends StackPane {
   }
 
   @SuppressWarnings("unchecked")
-  public synchronized R showDialog(Scene scene, boolean synchronous) {
+  public synchronized R showDialog(Scene scene, boolean synchronous, boolean closable) {
     if(finished) {
       return result;
     }
@@ -64,7 +64,7 @@ public class DialogPane<R> extends StackPane {
 
     dialogGlass = new DialogGlass(scene, this, delay);
 
-    oldPresentation = scene.getRoot().getProperties().put("presentation2", new NavigablePresentation(this));
+    oldPresentation = scene.getRoot().getProperties().put("presentation2", new NavigablePresentation(this, closable));
 
     requestFocus();
 
@@ -73,6 +73,10 @@ public class DialogPane<R> extends StackPane {
     }
 
     return null;
+  }
+
+  public synchronized R showDialog(Scene scene, boolean synchronous) {
+    return showDialog(scene, synchronous, true);
   }
 
   public synchronized void close(R result) {
@@ -211,14 +215,18 @@ public class DialogPane<R> extends StackPane {
 
   public static class NavigablePresentation implements Presentation, Navigable {
     private final DialogPane<?> dialogPane;
+    private final boolean closable;
 
-    public NavigablePresentation(DialogPane<?> dialogPane) {
+    public NavigablePresentation(DialogPane<?> dialogPane, boolean closable) {
       this.dialogPane = dialogPane;
+      this.closable = closable;
     }
 
     @Override
     public void navigateBack(Event e) {
-      dialogPane.close();
+      if(closable) {
+        dialogPane.close();
+      }
     }
   }
 }
