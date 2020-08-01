@@ -2,6 +2,7 @@ package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 
@@ -147,6 +148,17 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
   @Override
   public void navigateBack(Event e) {
-    playerPresentation.get().dispose();
+    PlayerPresentation presentation = playerPresentation.get();
+
+    Dialogs.showProgressDialog(e, false, new Task<>() {
+      @Override
+      protected Void call() throws Exception {
+        updateTitle("Stopping Video...");
+
+        presentation.dispose();  // dispose can take a while with VLC, do it asynchronously so JavaFX does not freeze
+
+        return null;
+      }
+    });
   }
 }
