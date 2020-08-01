@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.runner.util.Localizable;
 import hs.mediasystem.ui.api.player.PlayerFactory;
+import hs.mediasystem.util.Localizable;
 
 import java.util.List;
 import java.util.stream.Collectors;
