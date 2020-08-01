@@ -1,12 +1,11 @@
 package hs.mediasystem.runner.util;
 
 import hs.mediasystem.util.Localizable;
+import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -124,16 +123,12 @@ public class Dialogs {
       return ((Localizable)t).toLocalizedString();
     }
 
-    StringWriter stringWriter = new StringWriter();
-    PrintWriter printWriter = new PrintWriter(stringWriter);
-
-    t.printStackTrace(printWriter);
-
     return "### Unexpected error\n"
         + "MediaSystem could not complete the current action because of "
-        + "an internal error.  Technical details:\n\n"
+        + "an internal error.\n"
+        + "#### Technical details\n"
         + "```\n"
-        + stringWriter.toString()
+        + Throwables.toString(t)
         + "```\n";
   }
 }
