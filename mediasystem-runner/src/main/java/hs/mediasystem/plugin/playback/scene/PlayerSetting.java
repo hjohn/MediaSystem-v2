@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.playback.scene;
 
+import hs.mediasystem.ui.api.player.NativePlayerInitializationException;
 import hs.mediasystem.ui.api.player.PlayerFactory;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 
@@ -23,9 +24,14 @@ public class PlayerSetting {
   }
 
   public PlayerPresentation getConfigured() {
-    return getPlayerFactory()
-      .map(f -> f.create())
-      .orElse(null);
+    try {
+      return getPlayerFactory()
+        .map(f -> f.create())
+        .orElse(null);
+    }
+    catch(Exception e) {
+      throw new NativePlayerInitializationException(e);
+    }
   }
 
   public String getConfiguredName() {
