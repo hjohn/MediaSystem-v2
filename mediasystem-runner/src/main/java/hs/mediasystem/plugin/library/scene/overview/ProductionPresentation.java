@@ -5,8 +5,8 @@ import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.presentation.AbstractPresentation;
+import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.Navigable;
-import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Sequence;
@@ -43,7 +43,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
 
   @Singleton
   public static class Factory {
-    @Inject private PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory;
+    @Inject private PlaybackOverlayPresentation.TaskFactory playbackOverlayPresentationFactory;
     @Inject private Provider<EpisodesPresentation> episodesPresentationProvider;
     @Inject private PlayAction.Factory playActionFactory;
     @Inject private ResumeAction.Factory resumeActionFactory;
@@ -80,7 +80,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
     MAIN, PLAY_RESUME, RELATED
   }
 
-  private final PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory;
+  private final PlaybackOverlayPresentation.TaskFactory playbackOverlayPresentationFactory;
   private final WorkClient workClient;
 
   private final ObjectProperty<VideoLink> trailerVideoLink = new SimpleObjectProperty<>();
@@ -114,7 +114,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
   public final Val<Work> episodeOrMovieItem;
 
   private ProductionPresentation(
-    PlaybackOverlayPresentation.Factory playbackOverlayPresentationFactory,
+    PlaybackOverlayPresentation.TaskFactory playbackOverlayPresentationFactory,
     Provider<EpisodesPresentation> episodesPresentationProvider,
     PlayAction.Factory playActionFactory,
     ResumeAction.Factory resumeActionFactory,
@@ -381,7 +381,7 @@ public class ProductionPresentation extends AbstractPresentation implements Navi
       Dialogs.show(event, Labels.create("description", "No trailer available"));
     }
     else {
-      Event.fireEvent(event.getTarget(), NavigateEvent.to(playbackOverlayPresentationFactory.create(rootItem, URI.create("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO)));
+      PresentationLoader.navigate(event, playbackOverlayPresentationFactory.create(rootItem, URI.create("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO));
     }
   }
 

@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
-import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.javafx.action.Action;
@@ -23,7 +23,7 @@ public class ResumeAction implements Action {
 
   @Singleton
   public static class Factory {
-    @Inject private PlaybackOverlayPresentation.Factory factory;
+    @Inject private PlaybackOverlayPresentation.TaskFactory factory;
 
     public ResumeAction create(ObservableValue<Work> work) {
       return new ResumeAction(factory, work);
@@ -32,11 +32,11 @@ public class ResumeAction implements Action {
 
   public final Val<Duration> resumePosition;
 
-  private final PlaybackOverlayPresentation.Factory factory;
+  private final PlaybackOverlayPresentation.TaskFactory factory;
   private final Val<Work> resumableWork;
   private final Val<Boolean> enabled;
 
-  private ResumeAction(PlaybackOverlayPresentation.Factory factory, ObservableValue<Work> work) {
+  private ResumeAction(PlaybackOverlayPresentation.TaskFactory factory, ObservableValue<Work> work) {
     this.factory = factory;
 
     Val<Work> playableWork = Val.filter(work, Objects::nonNull)
@@ -60,8 +60,7 @@ public class ResumeAction implements Action {
   @Override
   public void trigger(Event event) {
     resumableWork.ifPresent(w -> {
-      Event.fireEvent(event.getTarget(), NavigateEvent.to(factory.create(w, w.getPrimaryStream().orElseThrow().getAttributes().getUri(), resumePosition.getValue())));
-      event.consume();
+      PresentationLoader.navigate(event, factory.create(w, w.getPrimaryStream().orElseThrow().getAttributes().getUri(), resumePosition.getValue()));
     });
   }
 }

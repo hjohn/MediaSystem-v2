@@ -5,7 +5,6 @@ import hs.mediasystem.ui.api.player.PlayerPresentation;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -13,7 +12,7 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 
 @Singleton
-public class PlayerSetting implements Supplier<PlayerPresentation> {
+public class PlayerSetting {
   @Inject private Provider<List<PlayerFactory>> playerFactoriesProvider;
   @Inject @Named("general.player.factoryClass") private String factoryClassName;
 
@@ -23,10 +22,17 @@ public class PlayerSetting implements Supplier<PlayerPresentation> {
       .findFirst();
   }
 
-  @Override
-  public PlayerPresentation get() {
+  public PlayerPresentation getConfigured() {
     return getPlayerFactory()
       .map(f -> f.create())
       .orElse(null);
+  }
+
+  public String getConfiguredName() {
+    return factoryClassName;
+  }
+
+  public List<PlayerFactory> getAvailablePlayerFactories() {
+    return playerFactoriesProvider.get();
   }
 }

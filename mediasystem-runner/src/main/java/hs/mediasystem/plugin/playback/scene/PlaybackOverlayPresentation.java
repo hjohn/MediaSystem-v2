@@ -6,6 +6,10 @@ import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.logging.Logger;
@@ -16,6 +20,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.Task;
 import javafx.event.Event;
 
 import javax.inject.Inject;
@@ -33,19 +38,51 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
   public final Duration startPosition;
 
   @Singleton
-  public static class Factory {
+  public static class TaskFactory {
     @Inject private PlayerSetting playerSetting;
 
-    public PlaybackOverlayPresentation create(Work work, URI uri, Duration startPosition) {
-      return new PlaybackOverlayPresentation(playerSetting, work, uri, startPosition);
+    public Task<PlaybackOverlayPresentation> create(Work work, URI uri, Duration startPosition) {
+      return new Task<>() {
+        @Override
+        protected PlaybackOverlayPresentation call() throws Exception {
+          updateTitle("Playing Video...");
+          updateMessage("Please wait...");
+
+          if(uri.getScheme().equals("file")) {
+            updateProgress(1, 10);
+
+            try(FileChannel fc = FileChannel.open(Paths.get(uri), StandardOpenOption.READ)) {
+              ByteBuffer buf = ByteBuffer.allocate(16);
+
+              // Read some data from the first 10-20 MB, to make sure stream is "ready" (hard disk spinning up)
+              for(int i = 0, j = 0; j < 10; i += 4096 + i * 2, j++) {
+                fc.read(buf);
+                fc.position(i);
+
+                buf.clear();
+
+                updateProgress(j, 10);
+              }
+            }
+          }
+
+          PlayerPresentation playerPresentation = playerSetting.getConfigured();
+
+          if(playerPresentation == null) {
+            throw new MissingPlayerPresentationException(playerSetting.getConfiguredName(), playerSetting.getAvailablePlayerFactories());
+          }
+
+          return new PlaybackOverlayPresentation(playerPresentation, work, uri, startPosition);
+        }
+      };
     }
   }
 
-  private PlaybackOverlayPresentation(PlayerSetting playerSetting, Work work, URI uri, Duration startPosition) {
+  private PlaybackOverlayPresentation(PlayerPresentation playerPresentation, Work work, URI uri, Duration startPosition) {
     this.work = work;
     this.uri = uri;
     this.startPosition = startPosition;
-    this.playerPresentation.set(playerSetting.get());
+    this.playerPresentation.set(playerPresentation);
 
     this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
       private long totalTimeViewed;

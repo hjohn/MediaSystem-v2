@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
-import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.javafx.action.Action;
 
@@ -22,18 +22,18 @@ public class PlayAction implements Action {
 
   @Singleton
   public static class Factory {
-    @Inject private PlaybackOverlayPresentation.Factory factory;
+    @Inject private PlaybackOverlayPresentation.TaskFactory factory;
 
     public PlayAction create(ObservableValue<Work> work) {
       return new PlayAction(factory, work);
     }
   }
 
-  private final PlaybackOverlayPresentation.Factory factory;
+  private final PlaybackOverlayPresentation.TaskFactory factory;
   private final Val<Work> playableMediaItem;
   private final Val<Boolean> enabled;
 
-  private PlayAction(PlaybackOverlayPresentation.Factory factory, ObservableValue<Work> work) {
+  private PlayAction(PlaybackOverlayPresentation.TaskFactory factory, ObservableValue<Work> work) {
     this.factory = factory;
     this.playableMediaItem = Val.wrap(work)
       .filter(Objects::nonNull)
@@ -54,8 +54,7 @@ public class PlayAction implements Action {
   @Override
   public void trigger(Event event) {
     playableMediaItem.ifPresent(w -> {
-      Event.fireEvent(event.getTarget(), NavigateEvent.to(factory.create(w, w.getPrimaryStream().orElseThrow().getAttributes().getUri(), Duration.ZERO)));
-      event.consume();
+      PresentationLoader.navigate(event, factory.create(w, w.getPrimaryStream().orElseThrow().getAttributes().getUri(), Duration.ZERO));
     });
   }
 }

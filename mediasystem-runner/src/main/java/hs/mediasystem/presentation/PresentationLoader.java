@@ -22,4 +22,10 @@ public class PresentationLoader {
 
     event.consume();
   }
+
+  public static <T extends Presentation> void navigate(Event event, Task<T> task) {
+    Dialogs.showProgressDialog(event, task).ifPresent(p -> Event.fireEvent(event.getTarget(), NavigateEvent.to(p)));
+
+    event.consume();
+  }
 }
