@@ -116,9 +116,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     ListView<String> menuListView = createMenu();
 
-    menuListView.setFocusTraversable(false);  // focus should never be here, horizontal carousel should always get it instead
-
-    optionContainer.addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+    grid.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
       if(e.getCode().isNavigationKey()) {
         int index = menuListView.getSelectionModel().getSelectedIndex();
 
