@@ -6,6 +6,7 @@ import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -45,7 +46,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
     public Task<PlaybackOverlayPresentation> create(Work work, URI uri, Duration startPosition) {
       return new Task<>() {
         @Override
-        protected PlaybackOverlayPresentation call() throws Exception {
+        protected PlaybackOverlayPresentation call() {
           updateTitle("Playing Video...");
           updateMessage("Please wait...");
 
@@ -64,6 +65,9 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
                 updateProgress(j, 10);
               }
+            }
+            catch(IOException e) {
+              throw new VideoUnavailableException(e, Paths.get(uri));
             }
           }
 

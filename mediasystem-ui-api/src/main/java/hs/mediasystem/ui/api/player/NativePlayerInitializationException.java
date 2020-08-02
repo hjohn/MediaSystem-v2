@@ -21,7 +21,7 @@ public class NativePlayerInitializationException extends RuntimeException implem
         + "MediaSystem with the correct player in `mediasystem.yaml`.\n"
         + "#### Technical details\n"
         + "```\n"
-        + Throwables.toString(this)
+        + Throwables.toString(getCause())
         + "```\n";
   }
 }
