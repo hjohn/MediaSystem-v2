@@ -11,6 +11,7 @@ import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.PostConstructCaller;
 
 import java.net.URI;
+import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -53,6 +54,7 @@ class DatabaseStreamsStoreTest {
     Streamable sa1 = new Streamable(MediaType.SERIE, URI.create("file://dir1"), streamId1, null, Attributes.of(Attribute.TITLE, "SerieTitle1"));
     Streamable sa2 = new Streamable(MediaType.SERIE, URI.create("file://dir2"), streamId2, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
     Streamable sa3 = new Streamable(MediaType.SERIE, URI.create("file://dir2"), streamId3, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
+    Instant now = Instant.now();
 
     @BeforeEach
     void beforeEach() {
@@ -61,9 +63,9 @@ class DatabaseStreamsStoreTest {
       when(contentPrintProvider.get(new ContentID(2))).thenReturn(new ContentPrint(new ContentID(2), 200L, 22345L, new byte[] {1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
       when(contentPrintProvider.get(new ContentID(3))).thenReturn(new ContentPrint(new ContentID(3), 300L, 32345L, new byte[] {2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
 
-      store.put(sa1);
-      store.put(sa2);
-      store.put(sa3);
+      store.put(sa1, now);
+      store.put(sa2, now);
+      store.put(sa3, now);
 
       verify(database, times(3)).store(any(StreamRecord.class));
     }
@@ -96,7 +98,7 @@ class DatabaseStreamsStoreTest {
       class AfterReaddingRemovedElement {
         @BeforeEach
         void beforeEach() {
-          store.put(sa3);
+          store.put(sa3, now);
         }
 
         @Test

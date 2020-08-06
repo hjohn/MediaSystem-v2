@@ -19,6 +19,7 @@ import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -239,7 +240,7 @@ public class StreamCacheUpdateService {
     }
   }
 
-  public synchronized void update(int importSourceId, List<Streamable> results) {
+  public synchronized void update(int importSourceId, List<Streamable> results, Instant scanStartTime) {
     Map<StreamID, Streamable> existingStreams = streamStore.findByImportSourceId(importSourceId);  // Returns all active streams (not deleted)
 
     for(Streamable found : results) {
@@ -248,7 +249,7 @@ public class StreamCacheUpdateService {
 
         if(existing == null || !found.equals(existing)) {
           try(Key key = storeConsistencyLock.lock()) {
-            streamStore.put(found);  // Adds as new or modify it
+            streamStore.put(found, scanStartTime);  // Adds as new or modify it
           }
 
           LOGGER.finer((existing == null ? "New stream found: " : "Existing stream modified: ") + found);

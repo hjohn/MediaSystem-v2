@@ -51,6 +51,11 @@ public class DatabaseStreamStore implements StreamableStore {
   @Inject private CachedStreamCodec codec;
   @Inject private ContentPrintProvider contentPrintProvider;
 
+  private final Comparator<CachedStream> reversedCreationOrder = Comparator
+      .comparing(CachedStream::getCreationTime)
+      .thenComparing(Comparator.comparingLong(cs -> contentPrintProvider.get(cs.getStreamable().getId().getContentId()).getLastModificationTime()))
+      .reversed();
+
   @PostConstruct
   private void postConstruct() {
     List<Integer> badIds = new ArrayList<>();
@@ -160,7 +165,7 @@ public class DatabaseStreamStore implements StreamableStore {
   public synchronized List<Streamable> findNewest(int maximum, Predicate<MediaType> filter) {
     return cache.values().stream()
       .filter(cs -> filter.test(cs.getStreamable().getType()))
-      .sorted(Comparator.comparing(CachedStream::getCreationTime).reversed())
+      .sorted(reversedCreationOrder)
       .limit(maximum)
       .map(CachedStream::getStreamable)
       .collect(Collectors.toList());
@@ -247,8 +252,8 @@ public class DatabaseStreamStore implements StreamableStore {
     removeFromCache(streamId);
   }
 
-  synchronized void put(Streamable streamable) {
-    CachedStream updatedCachedStream = toUpdatedCachedStream(streamable);
+  synchronized void put(Streamable streamable, Instant time) {
+    CachedStream updatedCachedStream = toUpdatedCachedStream(streamable, time);
 
     database.store(codec.toRecord(updatedCachedStream));
 
@@ -265,11 +270,11 @@ public class DatabaseStreamStore implements StreamableStore {
     });
   }
 
-  private CachedStream toUpdatedCachedStream(Streamable streamable) {
+  private CachedStream toUpdatedCachedStream(Streamable streamable, Instant time) {
     CachedStream existingCS = cache.get(streamable.getId());
 
     if(existingCS == null) {
-      return new CachedStream(streamable, null, Instant.ofEpochMilli(contentPrintProvider.get(streamable.getId().getContentId()).getLastModificationTime()), null, null);
+      return new CachedStream(streamable, null, time, null, null);
     }
 
     return new CachedStream(streamable, existingCS.getIdentification().orElse(null), existingCS.getCreationTime(), null, null);  // enrich times cleared, as new stream attributes means enrichment must be done again

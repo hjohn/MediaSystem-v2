@@ -325,13 +325,15 @@ public class DatabaseIT {
   }
 
   static class AddSomeMovies {
+    private static final Instant NOW = Instant.now();
+
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
         streamable(MediaType.MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "Terminator"), "Terminator"),
         streamable(MediaType.MOVIE, "testdata/movies/Avatar.txt", new StreamID(1, contentPrint2.getId(), "Avatar"), "Avatar"),
         streamable(MediaType.MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
-      ));
+      ), NOW);
 
       Thread.sleep(500);
       System.out.println("... hoping all have been enriched now ...");
@@ -339,17 +341,19 @@ public class DatabaseIT {
 
     @AfterAll
     static void afterAll() {
-      updateService.update(1, List.of());  // Should remove everything
+      updateService.update(1, List.of(), NOW);  // Should remove everything
     }
   }
 
   static class RemoveAvatarAndModifyOne {
+    private static final Instant NOW = Instant.now();
+
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
         streamable(MediaType.MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "The Terminator"), "The Terminator"),
         streamable(MediaType.MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
-      ));
+      ), NOW);
 
       Thread.sleep(500);
       System.out.println("... hoping all have been enriched now ...");
@@ -357,6 +361,8 @@ public class DatabaseIT {
   }
 
   static class AddFriends {
+    private static final Instant NOW = Instant.now();
+
     @BeforeAll
     static void beforeAll() throws InterruptedException {
       StreamID sid = new StreamID(2, contentPrint4.getId(), "Friends");
@@ -365,7 +371,7 @@ public class DatabaseIT {
         streamable(MediaType.SERIE, "testdata/series/Friends", sid, "Friends"),
         streamable(MediaType.EPISODE, "testdata/series/Friends/friends_1x01.txt", new StreamID(2, contentPrint5.getId(), "1x01"), sid, "1x01"),
         streamable(MediaType.EPISODE, "testdata/series/Friends/friends_1x02.txt", new StreamID(2, contentPrint6.getId(), "1x02"), sid, "1x02")
-      ));
+      ), NOW);
 
       Thread.sleep(500);
       System.out.println("... hoping all have been enriched now ...");
@@ -373,7 +379,7 @@ public class DatabaseIT {
 
     @AfterAll
     static void afterAll() {
-      updateService.update(2, List.of());  // Should remove everything
+      updateService.update(2, List.of(), NOW);  // Should remove everything
     }
   }
 

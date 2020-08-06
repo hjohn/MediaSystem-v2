@@ -5,6 +5,7 @@ import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +41,7 @@ public class ScannerController {
    */
   private synchronized void scanAll() {
     List<ImportSource> sources = importSourceProvider.getImportSources();
+    Instant time = Instant.now();
 
     LOGGER.info("Initiating scan with " + sources.size() + " scanners...");
 
@@ -56,7 +58,7 @@ public class ScannerController {
 
           LOGGER.fine(scannerName + " returned " + results.size() + " items while scanning '" + root + "'");
 
-          updateService.update(importSourceId, results);
+          updateService.update(importSourceId, results, time);
         }
         catch(Throwable t) {
           LOGGER.warning(scannerName + " failed while scanning '" + root + "' with: " + Throwables.formatAsOneLine(t));
