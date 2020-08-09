@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.collections.FXCollections;
 import javafx.geometry.Orientation;
@@ -220,16 +221,19 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     private Pane buildStreamInfoPanel(MediaStream stream) {
       return Containers.vbox(
         "stream-info-panel",
-        stream.getMetaData().map(md -> Containers.hbox(
-          "duration-box",
-          Labels.create("duration-icon", "🕑"),
-          Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(md.getLength().toSeconds()))
-        )).orElse(null),
-        stream.getState().getLastConsumptionTime().map(time -> Containers.hbox(
-          "last-watched-box",
-          Labels.create("last-watched-icon", "📷"),
-          Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
-        )).orElse(null)
+        Stream.concat(
+          stream.getMetaData().map(md -> Containers.hbox(
+            "duration-box",
+            Labels.create("duration-icon", "🕑"),
+            Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(md.getLength().toSeconds()))
+          )).stream(),
+          stream.getState().getLastConsumptionTime().map(time -> Containers.hbox(
+            "last-watched-box",
+            Labels.create("last-watched-icon", "📷"),
+            Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
+          )).stream()
+        ).collect(Collectors.toList()),
+        Containers.MOUSE_TRANSPARENT
       );
     }
 
@@ -333,6 +337,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         });
 
       updateStreamInfoPane(streamInfoPane);
+
+      streamInfoPane.setMouseTransparent(true);
 
       borderPane.setCenter(transitionPane);
       borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(presentation), streamInfoPane));

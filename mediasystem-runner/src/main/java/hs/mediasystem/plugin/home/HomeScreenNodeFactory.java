@@ -102,7 +102,6 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     bgPane.getStyleClass().add("background-image");
     backdropContainer.getChildren().addAll(bgPane, clip);
 
-    grid.at(1, 0).spanning(10, 9).add(backdropContainer);
 
     TransitionPane optionContainer = new TransitionPane(new Custom(
       Duration.millis(500),
@@ -111,8 +110,6 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     ));
 
     optionContainer.getStyleClass().add("option-container");
-
-    grid.at(0, 5).spanning(11, 5).add(optionContainer);
 
     ListView<String> menuListView = createMenu();
 
@@ -180,7 +177,9 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     Label menuBackgroundLabel = Labels.create("menu-background", ">");
     StackPane.setAlignment(menuBackgroundLabel, Pos.CENTER_LEFT);
 
-    grid.at(0, 0).spanning(2, 8).add(Containers.stack("main-menu-container", menuBackgroundLabel, menuListView));
+    grid.at(1, 0).spanning(10, 9).add(backdropContainer);
+    grid.at(0, 5).spanning(11, 5).add(optionContainer);
+    grid.at(0, 1).spanning(2, 5).add(Containers.stack("main-menu-container", menuBackgroundLabel, menuListView));
 
     grid.getStylesheets().add(LESS_LOADER.compile("styles.less"));
 
@@ -354,6 +353,8 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
         }
 
         protected void updateItem(String item, boolean empty) {
+          super.updateItem(item, empty);
+
           if(!empty) {
             this.setText(item);
           }

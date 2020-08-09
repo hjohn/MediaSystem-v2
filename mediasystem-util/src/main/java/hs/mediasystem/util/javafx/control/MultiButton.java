@@ -15,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.util.Duration;
 
@@ -50,6 +51,23 @@ public class MultiButton extends StackPane {
     this.getChildren().add(overlay1);
     this.getChildren().add(overlay2);
 
+    overlay1.setPickOnBounds(false);
+    overlay2.setPickOnBounds(false);
+
+    overlay1.setOnMouseClicked(e -> {
+      if(e.getButton() == MouseButton.PRIMARY) {
+        changeFace(-1);
+        e.consume();
+      }
+    });
+
+    overlay2.setOnMouseClicked(e -> {
+      if(e.getButton() == MouseButton.PRIMARY) {
+        changeFace(1);
+        e.consume();
+      }
+    });
+
     transitionPane.setClipContent(false);
 
     if(children.size() > 1) {
@@ -64,27 +82,45 @@ public class MultiButton extends StackPane {
 
     transitionPane.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
       if(e.getCode().isNavigationKey()) {
-        int newIndex = activeIndex;
-
-        if(KeyCode.UP == e.getCode() && activeIndex > 0) {
-          newIndex = activeIndex - 1;
+        if(KeyCode.UP == e.getCode()) {
+          if(changeFace(-1)) {
+            e.consume();
+          }
         }
-        else if(KeyCode.DOWN == e.getCode() && activeIndex < nodes.size() - 1) {
-          newIndex = activeIndex + 1;
-        }
-
-        if(newIndex != activeIndex) {
-          Node child = nodes.get(newIndex);
-
-          getChildren().remove(child);
-
-          child.setVisible(true);
-
-          transitionPane.add(newIndex < activeIndex, child);
-          activeIndex = newIndex;
-          e.consume();
+        else if(KeyCode.DOWN == e.getCode()) {
+          if(changeFace(1)) {
+            e.consume();
+          }
         }
       }
     });
+  }
+
+  private boolean changeFace(int direction) {
+    int newIndex = activeIndex;
+
+    newIndex = activeIndex + direction;
+
+    if(newIndex < 0) {
+      newIndex = 0;
+    }
+    if(newIndex >= nodes.size()) {
+      newIndex = nodes.size() - 1;
+    }
+
+    if(newIndex != activeIndex) {
+      Node child = nodes.get(newIndex);
+
+      getChildren().remove(child);
+
+      child.setVisible(true);
+
+      transitionPane.add(newIndex < activeIndex, child);
+      activeIndex = newIndex;
+
+      return true;
+    }
+
+    return false;
   }
 }

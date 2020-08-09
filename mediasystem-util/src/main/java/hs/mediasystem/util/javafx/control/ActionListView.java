@@ -7,6 +7,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.event.EventTarget;
+import javafx.scene.Node;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -25,7 +28,23 @@ public class ActionListView<T> extends ListView<T> {
       @Override
       public void handle(MouseEvent event) {
         if(event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
-          onItemSelected(event);
+          EventTarget target = event.getTarget();
+
+          if(target instanceof Node) {
+            Node node = (Node)target;
+
+            while(node != null) {
+              if(node instanceof ListCell) {
+                ListCell<?> listCell = (ListCell<?>)node;
+
+                if(ActionListView.this.getFocusModel().getFocusedIndex() == listCell.getIndex()) {
+                  onItemSelected(event);
+                }
+              }
+
+              node = node.getParent();
+            }
+          }
         }
       }
     });

@@ -183,6 +183,8 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       private Rectangle clip = null;
 
       {
+        groupHeaderPane.setMouseTransparent(true);
+
         getChildren().add(groupHeaderPane);
 
         groupHeaderPane.setViewOrder(-1);

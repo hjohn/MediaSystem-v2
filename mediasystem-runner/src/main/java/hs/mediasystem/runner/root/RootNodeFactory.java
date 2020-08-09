@@ -141,7 +141,13 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
 
     frameRateMeter.start();
 */
-    StackPane stackPane = new StackPane(viewPort, logoPane, createProgressPane(presentation), clockPane); //, fpsPane);
+    StackPane progressPane = createProgressPane(presentation);
+
+    logoPane.setMouseTransparent(true);
+    progressPane.setMouseTransparent(true);
+    clockPane.setMouseTransparent(true);
+
+    StackPane stackPane = new StackPane(viewPort, logoPane, progressPane, clockPane); //, fpsPane);
     ParentalControls parentalControls = parentalControlsProvider.get();
 
     if(parentalControls.passcode != null && !parentalControls.passcode.isEmpty()) {

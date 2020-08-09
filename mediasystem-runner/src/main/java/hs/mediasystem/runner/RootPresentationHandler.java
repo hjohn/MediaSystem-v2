@@ -21,6 +21,8 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -50,6 +52,7 @@ public class RootPresentationHandler {
     sceneManager.getScene().addEventHandler(NavigateEvent.NAVIGATION_BACK, e -> handleNavigateBackEvent(e));
     sceneManager.getScene().setOnKeyPressed(this::onKeyPressed);
     sceneManager.getScene().setOnKeyReleased(this::onKeyReleased);
+    sceneManager.getScene().setOnMouseClicked(this::onMouseClicked);
 
     sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
   }
@@ -111,6 +114,13 @@ public class RootPresentationHandler {
     }
 
     handleKeyEvent(event, false);
+  }
+
+  private void onMouseClicked(MouseEvent event) {
+    if(event.getButton() == MouseButton.SECONDARY) {
+      Event.fireEvent(event.getTarget(), NavigateEvent.back());
+      event.consume();
+    }
   }
 
   private void handleKeyEvent(KeyEvent event, boolean longPress) {

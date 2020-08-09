@@ -18,6 +18,7 @@ import javafx.scene.layout.VBox;
 
 public class Containers {
   public static final Option HIDE_IF_EMPTY = pane -> hide(Bindings.isEmpty(pane.getChildren().filtered(Node::isVisible)));
+  public static final Option MOUSE_TRANSPARENT = pane -> pane.setMouseTransparent(true);
 
   public static final Option hideIfEmpty(StringExpression x) {
     return hide(x.isEmpty());
@@ -37,23 +38,31 @@ public class Containers {
   public interface Option extends Consumer<Pane> {
   }
 
-  public static HBox hbox(String styleClass, Node... nodes) {
+  public static HBox hbox(String styleClass, List<Node> nodes, Option... options) {
     HBox hbox = new HBox();
 
-    addChildren(hbox, Arrays.asList(nodes));
+    addChildren(hbox, nodes);
     addStyleClass(hbox, styleClass);
 
+    for(Option option : options) {
+      option.accept(hbox);
+    }
+
     return hbox;
+  }
+
+  public static HBox hbox(String styleClass, Node... nodes) {
+    return hbox(styleClass, Arrays.asList(nodes));
   }
 
   public static HBox hbox(Node... nodes) {
     return hbox(null, nodes);
   }
 
-  public static VBox vbox(String styleClass, BooleanBinding visibility, Node... nodes) {
+  public static VBox vbox(String styleClass, BooleanBinding visibility, List<Node> nodes, Option... options) {
     VBox vbox = new VBox();
 
-    addChildren(vbox, Arrays.asList(nodes));
+    addChildren(vbox, nodes);
     addStyleClass(vbox, styleClass);
 
     if(visibility != null) {
@@ -61,7 +70,19 @@ public class Containers {
       vbox.visibleProperty().bind(visibility);
     }
 
+    for(Option option : options) {
+      option.accept(vbox);
+    }
+
     return vbox;
+  }
+
+  public static VBox vbox(String styleClass, BooleanBinding visibility, Node... nodes) {
+    return vbox(styleClass, visibility, Arrays.asList(nodes));
+  }
+
+  public static VBox vbox(String styleClass, List<Node> nodes, Option... options) {
+    return vbox(styleClass, null, nodes, options);
   }
 
   public static VBox vbox(String styleClass, Node... nodes) {
