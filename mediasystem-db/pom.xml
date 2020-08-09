@@ -26,9 +26,9 @@
       <version>2.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
-      <groupId>hs.database</groupId>
-      <artifactId>database-core</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <groupId>hs.mediasystem</groupId>
+      <artifactId>mediasystem-database-core</artifactId>
+      <version>2.0.0-SNAPSHOT</version>
     </dependency>
 
     <!-- Frame grab dependencies -->

@@ -34,6 +34,8 @@
     <module>mediasystem-ext-tmdb</module>
     <module>mediasystem-ext-vlc</module>
 
+    <module>mediasystem-database-core</module>
+
     <module>mediasystem-package</module>
   </modules>
 
