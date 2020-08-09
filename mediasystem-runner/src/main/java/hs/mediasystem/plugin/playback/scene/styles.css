@@ -8,14 +8,14 @@
   -fx-font-size: 64px;
   -fx-font-weight: bold;
   -fx-text-fill: white;
-  -fx-wrap-text: true;  
+  -fx-wrap-text: true;
 }
 
 #video-overlay .video-subtitle {
   -fx-font-size: 36px;
   -fx-font-weight: bold;
   -fx-text-fill: white;
-  -fx-padding: 0 0 20 0;
+  -fx-padding: 0;
   -fx-wrap-text: true;
 }
 
@@ -43,7 +43,7 @@
 
 .time.label, .position.label, .osd {
   -fx-padding: 2 5 2 5;
-  
+
   -fx-background-radius: 5;
   -fx-background-color: rgba(0, 0, 0, 0.4);
 }
@@ -78,7 +78,7 @@
   -fx-background-color: -c-shadow-highlight, derive(-c-base, -22%), linear-gradient(to bottom, derive(-c-base,-15.5%), derive(-c-base,34%) 30%, derive(-c-base,68%));
   -fx-background-insets: 1 0 -1 0, 0, 1;
   -fx-background-radius: 0.2em, 0.2em, 0.1em;
-  
+
   -fx-padding: 0.208333em;
 }
 

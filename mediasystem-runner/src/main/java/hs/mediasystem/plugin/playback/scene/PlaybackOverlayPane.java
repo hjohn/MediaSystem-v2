@@ -123,13 +123,13 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).filter(p -> !p.getType().isSerie()).map(Parent::getName);
+          Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).filter(p -> p.getType().isSerie()).map(Parent::getName);
           Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getDetails).map(Details::getTitle);
 
           HBox.setHgrow(this, Priority.ALWAYS);
           getChildren().addAll(
-            Labels.create("video-title", title, Labels.apply(label -> label.setEffect(SpecialEffects.createNeonEffect(64)))),
-            Labels.create("video-subtitle", serieName.orElseConst(""), Labels.HIDE_IF_EMPTY)
+            Labels.create("video-subtitle", serieName.orElseConst(""), Labels.HIDE_IF_EMPTY),
+            Labels.create("video-title", title, Labels.apply(label -> label.setEffect(SpecialEffects.createNeonEffect(64))))
           );
         }});
       }});
