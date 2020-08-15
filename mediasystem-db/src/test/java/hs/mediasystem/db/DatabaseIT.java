@@ -3,6 +3,7 @@ package hs.mediasystem.db;
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.ddif.core.util.AnnotationDescriptor;
+import hs.ddif.plugins.PluginScopeResolver;
 import hs.mediasystem.db.base.ImportSource;
 import hs.mediasystem.db.base.ImportSourceProvider;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
@@ -33,6 +34,7 @@ import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
@@ -88,14 +90,19 @@ public class DatabaseIT {
 
   @BeforeAll
   static void beforeAll() throws SecurityException, IOException, BeanResolutionException {
-    Injector injector = new Injector(true);
+    PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
+    Injector injector = new Injector(true, pluginScopeResolver);
+
+    injector.registerInstance(pluginScopeResolver);  // Register plugin scope resolver
+
+    String basePath = new File(DatabaseIT.class.getClassLoader().getResource(".").getFile()).getAbsolutePath().toString() + "/";
 
     injector.registerInstance("org.postgresql.Driver", AnnotationDescriptor.named("database.driverClass"));
     injector.registerInstance(databaseURL, AnnotationDescriptor.named("database.url"));
     injector.registerInstance("testuser", AnnotationDescriptor.named("database.user"));
     injector.registerInstance("test", AnnotationDescriptor.named("database.password"));
     injector.registerInstance("SET search_path = public", AnnotationDescriptor.named("database.postConnectSql"));
-    injector.registerInstance("testdata", AnnotationDescriptor.named("general.basedir"));
+    injector.registerInstance(basePath + "/testdata", AnnotationDescriptor.named("general.basedir"));
 
     injector.register(MovieIdentificationService.class);
     injector.register(MovieQueryService.class);
@@ -106,7 +113,7 @@ public class DatabaseIT {
     injector.registerInstance(injector.getStore());
     injector.registerInstance(injector.getInstantiator());
 
-    ServiceRunner.start(injector);
+    ServiceRunner.startWithoutPlugins(injector);
 
     updateService = injector.getInstance(StreamCacheUpdateService.class);
     workService = injector.getInstance(WorkService.class);
@@ -119,12 +126,12 @@ public class DatabaseIT {
       new ImportSource(null, 2, List.of(), new StreamSource(new StreamTags(Set.of("series")), List.of("TMDB")))
     ));
 
-    contentPrint1 = contentPrintProvider.get(Paths.get("testdata/movies/Terminator.txt").toUri(), 100L, 200L);
-    contentPrint2 = contentPrintProvider.get(Paths.get("testdata/movies/Avatar.txt").toUri(), 101L, 201L);
-    contentPrint3 = contentPrintProvider.get(Paths.get("testdata/movies/Matrix.txt").toUri(), 102L, 202L);
-    contentPrint4 = contentPrintProvider.get(Paths.get("testdata/series/Friends").toUri(), null, 400L);
-    contentPrint5 = contentPrintProvider.get(Paths.get("testdata/series/Friends/friends_1x01.txt").toUri(), 301L, 401L);
-    contentPrint6 = contentPrintProvider.get(Paths.get("testdata/series/Friends/friends_1x02.txt").toUri(), 302L, 402L);
+    contentPrint1 = contentPrintProvider.get(Paths.get(basePath + "testdata/movies/Terminator.txt").toUri(), 100L, 200L);
+    contentPrint2 = contentPrintProvider.get(Paths.get(basePath + "testdata/movies/Avatar.txt").toUri(), 101L, 201L);
+    contentPrint3 = contentPrintProvider.get(Paths.get(basePath + "testdata/movies/Matrix.txt").toUri(), 102L, 202L);
+    contentPrint4 = contentPrintProvider.get(Paths.get(basePath + "testdata/series/Friends").toUri(), null, 400L);
+    contentPrint5 = contentPrintProvider.get(Paths.get(basePath + "testdata/series/Friends/friends_1x01.txt").toUri(), 301L, 401L);
+    contentPrint6 = contentPrintProvider.get(Paths.get(basePath + "testdata/series/Friends/friends_1x02.txt").toUri(), 302L, 402L);
   }
 
   private static final DataSource MOVIE_DS = DataSource.instance(MediaType.MOVIE, "TMDB");

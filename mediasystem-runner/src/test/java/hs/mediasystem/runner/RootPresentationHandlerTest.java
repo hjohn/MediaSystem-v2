@@ -42,7 +42,7 @@ public class RootPresentationHandlerTest {
   private BottomPresentation bottomPresentation = new BottomPresentation();
 
   @BeforeAll
-  public void beforeAll() {
+  public static void beforeAll() {
     Platform.startup(() -> {});
   }
 
