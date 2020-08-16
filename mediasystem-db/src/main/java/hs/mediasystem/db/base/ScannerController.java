@@ -4,7 +4,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
 
-import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -47,22 +46,16 @@ public class ScannerController {
 
     for(ImportSource source : sources) {
       String scannerName = source.getScanner().getClass().getSimpleName();
-      List<Path> roots = source.getRoots();
 
-      for(int i = 0; i < roots.size(); i++) {
-        Path root = roots.get(i);
+      try {
+        List<Streamable> results = source.getScanner().scan(source.getRoot(), source.getId());
 
-        try {
-          int importSourceId = source.getId() + i * 65536;
-          List<Streamable> results = source.getScanner().scan(root, importSourceId);
+        LOGGER.fine(scannerName + " returned " + results.size() + " items while scanning: " + source);
 
-          LOGGER.fine(scannerName + " returned " + results.size() + " items while scanning '" + root + "'");
-
-          updateService.update(importSourceId, results, time);
-        }
-        catch(Throwable t) {
-          LOGGER.warning(scannerName + " failed while scanning '" + root + "' with: " + Throwables.formatAsOneLine(t));
-        }
+        updateService.update(source.getId(), results, time);
+      }
+      catch(Throwable t) {
+        LOGGER.warning("Failed scanning: " + source + "; exception: " + Throwables.formatAsOneLine(t));
       }
     }
   }

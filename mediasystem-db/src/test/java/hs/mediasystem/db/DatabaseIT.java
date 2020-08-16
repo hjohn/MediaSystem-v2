@@ -122,8 +122,8 @@ public class DatabaseIT {
     contentPrintProvider = injector.getInstance(ContentPrintProvider.class);
 
     importSourceProvider.set(List.of(
-      new ImportSource(null, 1, List.of(), new StreamSource(new StreamTags(Set.of("movies")), List.of("TMDB"))),
-      new ImportSource(null, 2, List.of(), new StreamSource(new StreamTags(Set.of("series")), List.of("TMDB")))
+      new ImportSource(null, 1, null, new StreamSource(new StreamTags(Set.of("movies")), List.of("TMDB"))),
+      new ImportSource(null, 2, null, new StreamSource(new StreamTags(Set.of("series")), List.of("TMDB")))
     ));
 
     contentPrint1 = contentPrintProvider.get(Paths.get(basePath + "testdata/movies/Terminator.txt").toUri(), 100L, 200L);

@@ -86,10 +86,16 @@ public class CollectionLocationManager {
       for(Scanner scanner : scanners) {
         if(scanner.getClass().getSimpleName().equals(type)) {
           List<Path> paths = definition.getPaths().stream()
-            .map(s -> Paths.get(s))
+            .map(Paths::get)
             .collect(Collectors.toList());
 
-          sources.add(new ImportSource(scanner, definition.getId(), paths, new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification() == null ? Collections.emptyList() : List.of(definition.getIdentification()))));
+          for(int i = 0; i < paths.size(); i++) {
+            sources.add(new ImportSource(
+              scanner,
+              definition.getId() + i * 65536, paths.get(i),
+              new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification() == null ? Collections.emptyList() : List.of(definition.getIdentification()))
+            ));
+          }
         }
       }
     }
@@ -114,7 +120,7 @@ public class CollectionLocationManager {
     private final Set<String> tags;
     private final String identification;
 
-    public ImportDefinition(String type, int id, List<String> tags, Set<String> paths, String identification) {
+    public ImportDefinition(String type, int id, Set<String> tags, List<String> paths, String identification) {
       this.type = type;
       this.id = id;
       this.tags = Collections.unmodifiableSet(new HashSet<>(tags));

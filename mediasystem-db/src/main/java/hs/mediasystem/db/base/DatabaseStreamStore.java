@@ -64,7 +64,7 @@ public class DatabaseStreamStore implements StreamableStore {
       try {
         CachedStream cs = codec.fromRecord(r);
 
-        if(importSourceProvider.getStreamSource(cs.getImportSourceId() & 0xffff) != null) {
+        if(importSourceProvider.getImportSource(cs.getImportSourceId()) != null) {
           putInCache(cs);
         }
         else {
@@ -114,7 +114,7 @@ public class DatabaseStreamStore implements StreamableStore {
 
   private Stream<Streamable> stream(MediaType type, String tag) {
     return cache.values().stream()
-      .filter(cs -> tag == null ? true : importSourceProvider.getStreamSource(cs.getImportSourceId() & 0xffff).getStreamSource().getTags().contains(tag))  // TODO performance here might suck somewhat
+      .filter(cs -> tag == null ? true : importSourceProvider.getImportSource(cs.getImportSourceId()).getStreamSource().getTags().contains(tag))  // TODO performance here might suck somewhat
       .map(CachedStream::getStreamable)
       .filter(s -> type == null ? true : s.getType().equals(type));
   }
@@ -153,7 +153,7 @@ public class DatabaseStreamStore implements StreamableStore {
       return null;
     }
 
-    return importSourceProvider.getStreamSource(cache.get(streamId).getImportSourceId() & 0xffff).getStreamSource();
+    return importSourceProvider.getImportSource(cache.get(streamId).getImportSourceId()).getStreamSource();
   }
 
   @Override

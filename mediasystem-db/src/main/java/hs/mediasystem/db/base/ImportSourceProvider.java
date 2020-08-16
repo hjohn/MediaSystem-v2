@@ -19,7 +19,7 @@ public class ImportSourceProvider {
     this.importSourcesById = Collections.unmodifiableMap(importSources.stream().collect(Collectors.toMap(ImportSource::getId, Function.identity())));
   }
 
-  public synchronized ImportSource getStreamSource(int importSourceId) {
+  public synchronized ImportSource getImportSource(int importSourceId) {
     return importSourcesById.get(importSourceId);
   }
 
