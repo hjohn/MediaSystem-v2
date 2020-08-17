@@ -221,22 +221,19 @@ public class StreamCacheUpdateService {
     try {
       IdentifierCollection descriptor = (IdentifierCollection)identificationService.query(collectionIdentifier);
 
-      fetchAndStoreCollectionItems(descriptor);
+      for(Identifier identifier : descriptor.getItems()) {
+        try {
+          descriptorStore.add(identificationService.query(identifier));
+        }
+        catch(Exception e) {
+          LOGGER.warning("Exception while fetching descriptor for " + identifier + " in collection " + collectionIdentifier + ": " + Throwables.formatAsOneLine(e));
+        }
+      }
+
       descriptorStore.add(descriptor);
     }
     catch(Exception e) {
       LOGGER.warning("Exception while fetching collection descriptor for " + collectionIdentifier + ": " + Throwables.formatAsOneLine(e));
-    }
-  }
-
-  private void fetchAndStoreCollectionItems(IdentifierCollection identifierCollection) {
-    for(Identifier identifier : identifierCollection.getItems()) {
-      try {
-        descriptorStore.add(identificationService.query(identifier));
-      }
-      catch(Exception e) {
-        LOGGER.warning("Exception while fetching descriptor for " + identifier + ": " + Throwables.formatAsOneLine(e));
-      }
     }
   }
 
@@ -257,7 +254,13 @@ public class StreamCacheUpdateService {
           asyncEnrich(found);
         }
         else {
-          // Check if descriptor store contains the relevant descriptors:
+
+          /*
+           * Checks to see if items are complete; this only occurs if normal operations were interrupted.
+           * Cache use should not be forced here as partial data cached may not be in sync with new data
+           * that will be fetched.
+           */
+
           streamStore.findIdentification(existing.getId()).stream().map(Identification::getIdentifiers).flatMap(Collection::stream).forEach(identifier -> {
             if(identificationService.isQueryServiceAvailable(identifier.getDataSource())) {
               MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
@@ -266,7 +269,7 @@ public class StreamCacheUpdateService {
                 // One or more descriptors are missing, enrich:
                 LOGGER.warning("Existing stream is missing descriptors in cache (" + identifier + ") -> refetching: " + found);
 
-                asyncEnrich(found);
+                asyncEnrich(found, normalCachingExecutor);
               }
               else if(mediaDescriptor instanceof Production) {
                 Production production = (Production)mediaDescriptor;
@@ -278,14 +281,14 @@ public class StreamCacheUpdateService {
                   if(identifierCollection == null) {
                     LOGGER.warning("Existing stream is missing collection data in cache (" + collectionIdentifier + ") -> refetching: " + found);
 
-                    asyncEnrich(found);
+                    asyncEnrich(found, normalCachingExecutor);
                   }
                   else {
                     for(Identifier collectionItemIdentifier : identifierCollection.getItems()) {
                       if(descriptorStore.find(collectionItemIdentifier).orElse(null) == null) {
                         LOGGER.warning("Existing stream is missing collection items in cache (" + collectionItemIdentifier + " is missing, out of " + identifierCollection.getItems() + " from " + collectionIdentifier + ") -> refetching: " + found);
 
-                        asyncEnrich(found);
+                        asyncEnrich(found, normalCachingExecutor);
                         break;
                       }
                     }
