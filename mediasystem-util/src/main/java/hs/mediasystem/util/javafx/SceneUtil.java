@@ -8,6 +8,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Logger;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
@@ -54,13 +55,19 @@ public class SceneUtil {
       @Override
       public void changed(ObservableValue<? extends Node> observable, Node oldValue, Node newValue) {
         if(oldValue != null) {
-          oldValue.getStyleClass().remove("focused");
-          oldValue.fireEvent(new FocusEvent(false));
+          // Made async because some components (markdown view) donot like having their styles changed right away it seems
+          Platform.runLater(() -> {
+            oldValue.getStyleClass().remove("focused");
+            oldValue.fireEvent(new FocusEvent(false));
+          });
+
           LOGGER.fine("Focus removed from: " + oldValue);
         }
         if(newValue != null) {
-          newValue.getStyleClass().add("focused");
-          newValue.fireEvent(new FocusEvent(true));
+          Platform.runLater(() -> {
+            newValue.getStyleClass().add("focused");
+            newValue.fireEvent(new FocusEvent(true));
+          });
 
           LOGGER.fine("Focus set to: " + newValue + " (old=" + oldValue + ")");
         }
