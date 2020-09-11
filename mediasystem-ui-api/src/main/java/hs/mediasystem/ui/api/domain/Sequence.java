@@ -1,9 +1,15 @@
 package hs.mediasystem.ui.api.domain;
 
+import java.util.Comparator;
 import java.util.Optional;
 
 public class Sequence {
-  public enum Type {SPECIAL, EXTRA, EPISODE}
+  public static final Comparator<Sequence> COMPARATOR = Comparator
+      .comparingInt((Sequence o) -> o.getType().ordinal())
+      .thenComparingInt((Sequence o) -> o.getSeasonNumber().orElse(0))
+      .thenComparingInt((Sequence o) -> o.getNumber());
+
+  public enum Type {EPISODE, SPECIAL, EXTRA}
 
   private final Type type;
   private final int number;

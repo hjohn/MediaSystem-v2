@@ -27,18 +27,6 @@ import org.reactfx.value.Var;
 
 public class EpisodesPresentation extends AbstractPresentation {
   private static final String SYSTEM = "MediaSystem:Episode";
-  private static final Comparator<Work> SEASON_ORDER = (w1, w2) -> {
-    int s1 = toSeasonBarIndex(w1);
-    int s2 = toSeasonBarIndex(w2);
-
-    return Integer.compare(s1 <= 0 ? Integer.MAX_VALUE - 10 - s1 : s1, s2 <= 0 ? Integer.MAX_VALUE - 10 - s2 : s2);
-  };
-  private static final Comparator<Work> EPISODE_ORDER = (w1, w2) -> {
-    int e1 = w1.getDetails().getSequence().map(Sequence::getNumber).orElse(0);
-    int e2 = w2.getDetails().getSequence().map(Sequence::getNumber).orElse(0);
-
-    return Integer.compare(e1, e2);
-  };
 
   @Inject private SettingsClient settingsClient;
 
@@ -53,7 +41,7 @@ public class EpisodesPresentation extends AbstractPresentation {
 
   public EpisodesPresentation set(Work serieItem, List<Work> episodes) {
     episodes.stream()
-      .sorted(SEASON_ORDER.thenComparing(EPISODE_ORDER))
+      .sorted(Comparator.comparing(w -> w.getDetails().getSequence().orElseThrow(), Sequence.COMPARATOR))
       .forEachOrdered(internalEpisodeItems::add);
 
     String settingKey = "last-selected:" + serieItem.getId();
