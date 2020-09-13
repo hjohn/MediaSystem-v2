@@ -139,7 +139,13 @@ public class ActionTarget {
   }
 
   public Class<?> getTargetClass() {
-    return path.get(path.size() - 1).getDeclaringClass();
+    Class<?> cls = path.get(path.size() - 1).getDeclaringClass();
+
+    while(cls.getDeclaringClass() != null) {
+      cls = cls.getDeclaringClass();
+    }
+
+    return cls;
   }
 
   public String getTargetName() {
@@ -214,7 +220,7 @@ public class ActionTarget {
   /**
    * Returns a {@link Trigger} which can be used to run the action.  If <code>null</code>
    * the action is unavailable.
-   * 
+   *
    * @param root the object that supplies the trigger
    * @return a {@link Trigger} which can be used to run the action, or <code>null</code> if action is currently unavailable
    */
@@ -224,7 +230,7 @@ public class ActionTarget {
     if(exposedControl instanceof ExposedMethod) {
       @SuppressWarnings("unchecked")
       ExposedMethod<Object, V> exposedMethod = (ExposedMethod<Object, V>)exposedControl;
-      
+
       return exposedMethod.getTrigger(root);
     }
 

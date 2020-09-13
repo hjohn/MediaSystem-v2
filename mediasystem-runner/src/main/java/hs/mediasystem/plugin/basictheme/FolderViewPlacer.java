@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.basictheme;
 
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
-import hs.mediasystem.plugin.library.scene.grid.FolderPresentation;
+import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory.FolderPresentation;
 import hs.mediasystem.plugin.library.scene.grid.FolderSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.ui.api.domain.Work;

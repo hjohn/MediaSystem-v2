@@ -1,10 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid.participation;
 
 import hs.mediasystem.domain.work.PersonId;
-import hs.mediasystem.plugin.library.scene.BinderProvider;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory;
 import hs.mediasystem.ui.api.PersonClient;
-import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
@@ -15,13 +13,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-public class ParticipationsPresentation extends GridViewPresentation<Participation> {
-  public final Person person;
+@Singleton
+public class ParticipationsPresentationFactory extends GridViewPresentationFactory {
 
   private static final List<SortOrder<Participation>> SORT_ORDERS = List.of(
     new SortOrder<>("popularity", Comparator.comparing((Participation p) -> p.getPopularity()).reversed()),
@@ -41,27 +38,19 @@ public class ParticipationsPresentation extends GridViewPresentation<Participati
     new Filter<>("unwatched", p -> p.getWork().getPrimaryStream().isPresent() && !p.getWork().getState().isConsumed().getValue())
   );
 
-  @Singleton
-  public static class Factory {
-    @Inject private PersonClient personClient;
-    @Inject private SettingsClient settingsClient;
-    @Inject private BinderProvider binderProvider;
+  @Inject private PersonClient personClient;
 
-    public ParticipationsPresentation create(PersonId id) {
-      Person person = personClient.findPerson(id).orElseThrow();
-
-      return new ParticipationsPresentation(
-        settingsClient,
-        binderProvider,
-        person,
-        FXCollections.observableList(person.getParticipations())
-      );
-    }
+  public ParticipationsPresentation create(PersonId id) {
+    return new ParticipationsPresentation(personClient.findPerson(id).orElseThrow());
   }
 
-  protected ParticipationsPresentation(SettingsClient settingsClient, BinderProvider binderProvider, Person person, ObservableList<Participation> items) {
-    super(settingsClient.of(SYSTEM_PREFIX + "Roles"), binderProvider, items, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
+  public class ParticipationsPresentation extends GridViewPresentation<Participation> {
+    public final Person person;
 
-    this.person = person;
+    public ParticipationsPresentation(Person person) {
+      super("Roles", FXCollections.observableList(person.getParticipations()), new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
+
+      this.person = person;
+    }
   }
 }

@@ -2,10 +2,10 @@ package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
-import hs.mediasystem.plugin.library.scene.grid.FolderPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.collection.CollectionType;
 import hs.mediasystem.ui.api.WorksClient;
@@ -40,7 +40,7 @@ public class FoldersCollectionType implements CollectionType {
     new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
   );
 
-  @Inject private FolderPresentation.Factory factory;
+  @Inject private FolderPresentationFactory factory;
   @Inject private WorksClient worksClient;
 
   @Override

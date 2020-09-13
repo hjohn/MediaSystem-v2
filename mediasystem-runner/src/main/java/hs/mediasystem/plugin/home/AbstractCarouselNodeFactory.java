@@ -3,8 +3,9 @@ package hs.mediasystem.plugin.home;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation.State;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
@@ -17,7 +18,7 @@ import javax.inject.Inject;
 
 public abstract class AbstractCarouselNodeFactory {
   @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private ProductionPresentation.Factory productionPresentationFactory;
+  @Inject private ProductionPresentationFactory productionPresentationFactory;
 
   protected void fillRecommendationModel(Recommendation recommendation, String parentTitle, String title, String subtitle, AnnotatedImageCellFactory.Model model) {
     model.parentTitle.set(parentTitle);

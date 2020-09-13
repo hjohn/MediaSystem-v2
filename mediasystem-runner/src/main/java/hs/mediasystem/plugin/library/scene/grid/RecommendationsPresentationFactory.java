@@ -1,8 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
-import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 
@@ -10,12 +8,12 @@ import java.time.LocalDate;
 import java.util.List;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-public class RecommendationsPresentation extends GridViewPresentation<Work> {
+@Singleton
+public class RecommendationsPresentationFactory extends GridViewPresentationFactory {
 
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
     new SortOrder<>("best", (a, b) -> 0),
@@ -34,23 +32,15 @@ public class RecommendationsPresentation extends GridViewPresentation<Work> {
     new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
   );
 
-  @Singleton
-  public static class Factory {
-    @Inject private WorkClient workClient;
-    @Inject private SettingsClient settingsClient;
-    @Inject private BinderProvider binderProvider;
+  @Inject private WorkClient workClient;
 
-    public RecommendationsPresentation create(Work work) {
-      return new RecommendationsPresentation(
-        settingsClient,
-        binderProvider,
-        work,
-        FXCollections.observableList(workClient.findRecommendations(work.getId()))
-      );
-    }
+  public RecommendationsPresentation create(Work work) {
+    return new RecommendationsPresentation(work);
   }
 
-  protected RecommendationsPresentation(SettingsClient settingsClient, BinderProvider binderProvider, Work work, ObservableList<Work> recommendations) {
-    super(settingsClient.of(SYSTEM_PREFIX + "Recommendations"), binderProvider, recommendations, new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), work);
+  public class RecommendationsPresentation extends GridViewPresentation<Work> {
+    public RecommendationsPresentation(Work work) {
+      super("Recommendations", FXCollections.observableList(workClient.findRecommendations(work.getId())), new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), work);
+    }
   }
 }

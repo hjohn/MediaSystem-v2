@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.basictheme;
 
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
-import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsPresentation;
+import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsPresentationFactory.ParticipationsPresentation;
 import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.ui.api.domain.Participation;

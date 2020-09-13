@@ -2,10 +2,10 @@ package hs.mediasystem.plugin.series.menu;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.collection.CollectionType;
 import hs.mediasystem.ui.api.WorksClient;
@@ -31,8 +31,7 @@ public class SeriesCollectionType implements CollectionType {
   private static final List<Filter<Work>> FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("released-recently", r -> r.getDetails().getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent()),
-    new Filter<>("watched-recently", r -> r.getState().getLastConsumptionTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent()
-    )
+    new Filter<>("watched-recently", r -> r.getState().getLastConsumptionTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent())
   );
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
@@ -40,7 +39,7 @@ public class SeriesCollectionType implements CollectionType {
     new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
   );
 
-  @Inject private GenericCollectionPresentation.Factory factory;
+  @Inject private GenericCollectionPresentationFactory factory;
   @Inject private WorksClient worksClient;
 
   @Override

@@ -3,7 +3,7 @@ package hs.mediasystem.plugin.basictheme;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionOverviewNodeFactory;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.control.GridPane;

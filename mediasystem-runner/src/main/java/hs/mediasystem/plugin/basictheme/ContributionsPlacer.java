@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.basictheme;
 
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
-import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentation;
+import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory.ContributionsPresentation;
 import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.util.ImageHandle;

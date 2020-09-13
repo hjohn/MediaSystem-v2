@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -18,7 +19,7 @@ import org.reactfx.value.Val;
 @Singleton
 public class ViewStatusBarFactory {
   private static final LessLoader LESS_LOADER = new LessLoader(ViewStatusBarFactory.class);
-  private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentation.class);
+  private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentationFactory.class);
 
   public VBox create(GridViewPresentation<?> presentation) {
     Val<Integer> totalItemCount = presentation.totalItemCount;

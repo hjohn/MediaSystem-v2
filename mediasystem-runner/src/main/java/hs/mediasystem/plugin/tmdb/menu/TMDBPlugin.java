@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.tmdb.menu;
 
 import hs.mediasystem.plugin.library.scene.WorkBinder;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
@@ -39,7 +39,7 @@ public class TMDBPlugin implements Plugin {
     new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
   );
 
-  @Inject private GenericCollectionPresentation.Factory factory;
+  @Inject private GenericCollectionPresentationFactory factory;
   @Inject private WorksClient worksClient;
 
   @Override

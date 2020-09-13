@@ -4,7 +4,8 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation;
+import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory.FolderPresentation;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.util.LessLoader;
@@ -34,8 +35,8 @@ import org.reactfx.EventStreams;
 public class FolderSetup implements NodeFactory<FolderPresentation> {
   private static final LessLoader LESS_LOADER = new LessLoader(FolderSetup.class);
 
-  @Inject private ProductionPresentation.Factory productionPresentationFactory;
-  @Inject private FolderPresentation.Factory folderPresentationFactory;
+  @Inject private ProductionPresentationFactory productionPresentationFactory;
+  @Inject private FolderPresentationFactory folderPresentationFactory;
   @Inject private WorkClient workClient;
   @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
   @Inject private ViewStatusBarFactory viewStatusBarFactory;

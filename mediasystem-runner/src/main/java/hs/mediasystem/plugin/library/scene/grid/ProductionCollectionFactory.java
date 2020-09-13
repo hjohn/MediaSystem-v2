@@ -2,9 +2,10 @@ package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory.GenericCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 
@@ -16,7 +17,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ProductionCollectionFactory {
-  @Inject private GenericCollectionPresentation.Factory factory;
+  @Inject private GenericCollectionPresentationFactory factory;
   @Inject private WorkClient workClient;
 
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(

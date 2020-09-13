@@ -2,10 +2,10 @@ package hs.mediasystem.plugin.movies.menu;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.collection.CollectionType;
 import hs.mediasystem.runner.grouping.CollectionGrouping;
@@ -50,7 +50,7 @@ public class MoviesCollectionType implements CollectionType {
     new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
   );
 
-  @Inject private GenericCollectionPresentation.Factory factory;
+  @Inject private GenericCollectionPresentationFactory factory;
   @Inject private GenreGrouping genreGrouper;
   @Inject private CollectionGrouping collectionGrouper;
   @Inject private WorksClient worksClient;

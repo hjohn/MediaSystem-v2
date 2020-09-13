@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.presentation.Presentation;
 
 public class EpisodePresentation implements Presentation {

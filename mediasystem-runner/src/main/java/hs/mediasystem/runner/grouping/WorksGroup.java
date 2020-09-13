@@ -1,7 +1,7 @@
 package hs.mediasystem.runner.grouping;
 
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentation.Parent;
+import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Parent;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
 

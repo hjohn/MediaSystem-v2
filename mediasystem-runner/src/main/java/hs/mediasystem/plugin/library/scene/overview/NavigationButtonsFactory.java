@@ -3,9 +3,10 @@ package hs.mediasystem.plugin.library.scene.overview;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.grid.ProductionCollectionFactory;
-import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentation;
-import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentation;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentation.State;
+import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
+import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.SizeFormatter;
@@ -33,8 +34,8 @@ import org.reactfx.EventStreams;
 @Singleton
 public class NavigationButtonsFactory {
   @Inject private ProductionCollectionFactory productionCollectionFactory;
-  @Inject private RecommendationsPresentation.Factory recommendationsPresentationFactory;
-  @Inject private ContributionsPresentation.Factory contributionsPresentationFactory;
+  @Inject private RecommendationsPresentationFactory recommendationsPresentationFactory;
+  @Inject private ContributionsPresentationFactory contributionsPresentationFactory;
 
   public HBox create(ProductionPresentation presentation) {
     HBox hbox = Containers.hbox("navigation-area");
