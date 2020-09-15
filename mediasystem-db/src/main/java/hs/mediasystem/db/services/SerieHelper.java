@@ -91,11 +91,11 @@ public class SerieHelper {
   private static ImageURI createImage(StreamMetaData metaData) {
     List<Snapshot> snapshots = metaData.getSnapshots();
 
-    if(metaData.getVideoStreams().isEmpty() || snapshots.size() < 2) {
+    if(metaData.getVideoTracks().isEmpty() || snapshots.size() < 2) {
       return null;
     }
 
-    Resolution resolution = metaData.getVideoStreams().get(0).getResolution();
+    Resolution resolution = metaData.getVideoTracks().get(0).getResolution();
 
     int h = 900;
     int w = h * resolution.getWidth() / resolution.getHeight() / 2;

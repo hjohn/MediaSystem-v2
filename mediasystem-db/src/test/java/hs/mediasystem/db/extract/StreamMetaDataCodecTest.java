@@ -3,12 +3,12 @@ package hs.mediasystem.db.extract;
 import hs.ddif.core.Injector;
 import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.domain.work.AudioStream;
+import hs.mediasystem.domain.work.AudioTrack;
 import hs.mediasystem.domain.work.Resolution;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.StreamMetaData;
-import hs.mediasystem.domain.work.SubtitleStream;
-import hs.mediasystem.domain.work.VideoStream;
+import hs.mediasystem.domain.work.SubtitleTrack;
+import hs.mediasystem.domain.work.VideoTrack;
 import hs.mediasystem.util.ImageURI;
 
 import java.io.IOException;
@@ -39,13 +39,13 @@ class StreamMetaDataCodecTest {
       new ContentID(120),
       Duration.ofSeconds(999),
       List.of(
-        new VideoStream("title", "lang", "mp4", new Resolution(100, 200, 1.2f), 1234567L, 23.93f)
+        new VideoTrack("title", "lang", "mp4", new Resolution(100, 200, 1.2f), 1234567L, 23.93f)
       ),
       List.of(
-        new AudioStream("audiotitle", "audiolang", "mp3", 3)
+        new AudioTrack("audiotitle", "audiolang", "mp3", 3)
       ),
       List.of(
-        new SubtitleStream("subtitle", "sublang", "srt")
+        new SubtitleTrack("subtitle", "sublang", "srt")
       ),
       List.of(
         new Snapshot(new ImageURI("localdb://12345/1", null), 34222)
@@ -56,9 +56,9 @@ class StreamMetaDataCodecTest {
 
     assertEquals(new ContentID(120), metaData.getContentId());
     assertEquals(Duration.ofSeconds(999), metaData.getLength());
-    assertEquals("title", metaData.getVideoStreams().get(0).getTitle());
-    assertEquals("mp3", metaData.getAudioStreams().get(0).getCodec());
-    assertEquals("srt", metaData.getSubtitleStreams().get(0).getCodec());
+    assertEquals("title", metaData.getVideoTracks().get(0).getTitle());
+    assertEquals("mp3", metaData.getAudioTracks().get(0).getCodec());
+    assertEquals("srt", metaData.getSubtitleTracks().get(0).getCodec());
     assertEquals(new ImageURI("localdb://12345/1", null), metaData.getSnapshots().get(0).getImageUri());
   }
 

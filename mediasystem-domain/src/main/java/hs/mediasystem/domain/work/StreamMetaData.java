@@ -1,5 +1,7 @@
 package hs.mediasystem.domain.work;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import hs.mediasystem.domain.stream.ContentID;
 
 import java.time.Duration;
@@ -10,23 +12,24 @@ import java.util.Objects;
 public class StreamMetaData {
   private final ContentID contentId;
   private final Duration duration;
-  private final List<VideoStream> videoStreams;
-  private final List<AudioStream> audioStreams;
-  private final List<SubtitleStream> subtitleStreams;
+  private final List<VideoTrack> videoTracks;
+  private final List<AudioTrack> audioTracks;
+  private final List<SubtitleTrack> subtitleTracks;
   private final List<Snapshot> snapshots;
 
-  public StreamMetaData(ContentID contentId, Duration duration, List<VideoStream> videoStreams, List<AudioStream> audioStreams, List<SubtitleStream> subtitleStreams, List<Snapshot> snapshots) {
+  // TODO remove aliases after a while
+  public StreamMetaData(ContentID contentId, Duration duration, @JsonAlias("videoStreams") List<VideoTrack> videoTracks, @JsonAlias("audioStreams") List<AudioTrack> audioTracks, @JsonAlias("subtitleStreams") List<SubtitleTrack> subtitleTracks, List<Snapshot> snapshots) {
     if(contentId == null) {
       throw new IllegalArgumentException("contentId cannot be null");
     }
-    if(videoStreams == null) {
-      throw new IllegalArgumentException("videoStreams cannot be null");
+    if(videoTracks == null) {
+      throw new IllegalArgumentException("videoTracks cannot be null");
     }
-    if(audioStreams == null) {
-      throw new IllegalArgumentException("audioStreams cannot be null");
+    if(audioTracks == null) {
+      throw new IllegalArgumentException("audioTracks cannot be null");
     }
-    if(subtitleStreams == null) {
-      throw new IllegalArgumentException("subtitleStreams cannot be null");
+    if(subtitleTracks == null) {
+      throw new IllegalArgumentException("subtitleTracks cannot be null");
     }
     if(duration == null) {
       throw new IllegalArgumentException("duration cannot be null");
@@ -40,9 +43,9 @@ public class StreamMetaData {
 
     this.contentId = contentId;
     this.duration = duration;
-    this.videoStreams = Collections.unmodifiableList(videoStreams);
-    this.audioStreams = Collections.unmodifiableList(audioStreams);
-    this.subtitleStreams = Collections.unmodifiableList(subtitleStreams);
+    this.videoTracks = Collections.unmodifiableList(videoTracks);
+    this.audioTracks = Collections.unmodifiableList(audioTracks);
+    this.subtitleTracks = Collections.unmodifiableList(subtitleTracks);
     this.snapshots = Collections.unmodifiableList(snapshots);
   }
 
@@ -54,16 +57,16 @@ public class StreamMetaData {
     return duration;
   }
 
-  public List<VideoStream> getVideoStreams() {
-    return videoStreams;
+  public List<VideoTrack> getVideoTracks() {
+    return videoTracks;
   }
 
-  public List<AudioStream> getAudioStreams() {
-    return audioStreams;
+  public List<AudioTrack> getAudioTracks() {
+    return audioTracks;
   }
 
-  public List<SubtitleStream> getSubtitleStreams() {
-    return subtitleStreams;
+  public List<SubtitleTrack> getSubtitleTracks() {
+    return subtitleTracks;
   }
 
   public List<Snapshot> getSnapshots() {

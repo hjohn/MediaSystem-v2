@@ -63,7 +63,7 @@ public class StreamMetaDataFactory {
         snapshots.add(new Snapshot(new ImageURI("localdb://" + contentId.asInt() + "/" + index, null), (int)offset));
       }
 
-      return new StreamMetaData(contentId, duration, grabber.getVideoStreams(), grabber.getAudioStreams(), grabber.getSubtitleStreams(), snapshots);
+      return new StreamMetaData(contentId, duration, grabber.getVideoTracks(), grabber.getAudioTracks(), grabber.getSubtitleTracks(), snapshots);
     }
     finally {
       grabber.stop();

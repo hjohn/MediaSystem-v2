@@ -1,16 +1,14 @@
 package hs.mediasystem.domain.work;
 
-public class AudioStream {
+public class SubtitleTrack {
   private final String title;
   private final String language;
   private final String codec;
-  private final long channelLayout;
 
-  public AudioStream(String title, String language, String codec, long channelLayout) {
+  public SubtitleTrack(String title, String language, String codec) {
     this.title = title;
     this.language = language;
     this.codec = codec;
-    this.channelLayout = channelLayout;
   }
 
   public String getTitle() {
@@ -23,9 +21,5 @@ public class AudioStream {
 
   public String getCodec() {
     return codec;
-  }
-
-  public long getChannelLayout() {
-    return channelLayout;
   }
 }

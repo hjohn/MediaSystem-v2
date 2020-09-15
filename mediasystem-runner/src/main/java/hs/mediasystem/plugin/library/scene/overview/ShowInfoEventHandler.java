@@ -1,13 +1,13 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.domain.work.AudioStream;
+import hs.mediasystem.domain.work.AudioTrack;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Snapshot;
-import hs.mediasystem.domain.work.SubtitleStream;
-import hs.mediasystem.domain.work.VideoStream;
+import hs.mediasystem.domain.work.SubtitleTrack;
+import hs.mediasystem.domain.work.VideoTrack;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Work;
@@ -124,71 +124,71 @@ public class ShowInfoEventHandler {
           );
         }
 
-        List<VideoStream> videoStreams = metaData.getVideoStreams();
+        List<VideoTrack> videoTracks = metaData.getVideoTracks();
 
-        for(int i = 0; i < videoStreams.size(); i++) {
-          VideoStream videoStream = videoStreams.get(i);
+        for(int i = 0; i < videoTracks.size(); i++) {
+          VideoTrack videoTrack = videoTracks.get(i);
 
           gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Video Streams"));
           gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
 
-          if(videoStream.getTitle() != null) {
+          if(videoTrack.getTitle() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
-            gridPane.at(3).add(Labels.create("value", addLineFeeds(videoStream.getTitle(), 80)));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(videoTrack.getTitle(), 80)));
             gridPane.nextRow();
           }
 
           gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
-          gridPane.at(3).add(Labels.create("value", addLineFeeds(videoStream.getCodec(), 80)));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(videoTrack.getCodec(), 80)));
           gridPane.nextRow();
         }
 
-        List<AudioStream> audioStreams = metaData.getAudioStreams();
+        List<AudioTrack> audioTracks = metaData.getAudioTracks();
 
-        for(int i = 0; i < audioStreams.size(); i++) {
-          AudioStream audioStream = audioStreams.get(i);
+        for(int i = 0; i < audioTracks.size(); i++) {
+          AudioTrack audioTrack = audioTracks.get(i);
 
           gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Audio Streams"));
           gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
 
-          if(audioStream.getTitle() != null) {
+          if(audioTrack.getTitle() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
-            gridPane.at(3).add(Labels.create("value", addLineFeeds(audioStream.getTitle(), 80)));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(audioTrack.getTitle(), 80)));
             gridPane.nextRow();
           }
 
           gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
-          gridPane.at(3).add(Labels.create("value", addLineFeeds(audioStream.getCodec(), 80)));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(audioTrack.getCodec(), 80)));
           gridPane.nextRow();
 
-          if(audioStream.getLanguage() != null) {
+          if(audioTrack.getLanguage() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Language"));
-            gridPane.at(3).add(Labels.create("value", audioStream.getLanguage()));
+            gridPane.at(3).add(Labels.create("value", audioTrack.getLanguage()));
             gridPane.nextRow();
           }
         }
 
-        List<SubtitleStream> subtitleStreams = metaData.getSubtitleStreams();
+        List<SubtitleTrack> subtitleTracks = metaData.getSubtitleTracks();
 
-        for(int i = 0; i < subtitleStreams.size(); i++) {
-          SubtitleStream subtitleStream = subtitleStreams.get(i);
+        for(int i = 0; i < subtitleTracks.size(); i++) {
+          SubtitleTrack subtitleTrack = subtitleTracks.get(i);
 
           gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Subtitle Streams"));
           gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
 
-          if(subtitleStream.getTitle() != null) {
+          if(subtitleTrack.getTitle() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
-            gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleStream.getTitle(), 80)));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleTrack.getTitle(), 80)));
             gridPane.nextRow();
           }
 
           gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
-          gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleStream.getCodec(), 80)));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleTrack.getCodec(), 80)));
           gridPane.nextRow();
 
-          if(subtitleStream.getLanguage() != null) {
+          if(subtitleTrack.getLanguage() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Language"));
-            gridPane.at(3).add(Labels.create("value", subtitleStream.getLanguage()));
+            gridPane.at(3).add(Labels.create("value", subtitleTrack.getLanguage()));
             gridPane.nextRow();
           }
         }

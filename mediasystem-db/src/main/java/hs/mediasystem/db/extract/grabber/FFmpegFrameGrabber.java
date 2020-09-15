@@ -49,10 +49,10 @@
 
 package hs.mediasystem.db.extract.grabber;
 
-import hs.mediasystem.domain.work.AudioStream;
+import hs.mediasystem.domain.work.AudioTrack;
 import hs.mediasystem.domain.work.Resolution;
-import hs.mediasystem.domain.work.SubtitleStream;
-import hs.mediasystem.domain.work.VideoStream;
+import hs.mediasystem.domain.work.SubtitleTrack;
+import hs.mediasystem.domain.work.VideoTrack;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -943,8 +943,8 @@ public class FFmpegFrameGrabber extends FrameGrabber {
         }
     }
 
-    public List<SubtitleStream> getSubtitleStreams() {
-      List<SubtitleStream> streams = new ArrayList<>();
+    public List<SubtitleTrack> getSubtitleTracks() {
+      List<SubtitleTrack> streams = new ArrayList<>();
       int nb_streams = oc.nb_streams();
 
       for (int i = 0; i < nb_streams; i++) {
@@ -955,15 +955,15 @@ public class FFmpegFrameGrabber extends FrameGrabber {
             String language = createLanguageString(st);
             String codec = createCodecString(par);
 
-            streams.add(new SubtitleStream(createTitleString(st), language, codec));
+            streams.add(new SubtitleTrack(createTitleString(st), language, codec));
           }
       }
 
       return streams;
     }
 
-    public List<AudioStream> getAudioStreams() {
-      List<AudioStream> streams = new ArrayList<>();
+    public List<AudioTrack> getAudioTracks() {
+      List<AudioTrack> streams = new ArrayList<>();
       int nb_streams = oc.nb_streams();
 
       for (int i = 0; i < nb_streams; i++) {
@@ -974,15 +974,15 @@ public class FFmpegFrameGrabber extends FrameGrabber {
             String language = createLanguageString(st);
             String codec = createCodecString(par);
 
-            streams.add(new AudioStream(createTitleString(st), language, codec, par.channel_layout()));
+            streams.add(new AudioTrack(createTitleString(st), language, codec, par.channel_layout()));
           }
       }
 
       return streams;
     }
 
-    public List<VideoStream> getVideoStreams() {
-      List<VideoStream> streams = new ArrayList<>();
+    public List<VideoTrack> getVideoTracks() {
+      List<VideoTrack> streams = new ArrayList<>();
       int nb_streams = oc.nb_streams();
 
       for (int i = 0; i < nb_streams; i++) {
@@ -1005,7 +1005,7 @@ public class FFmpegFrameGrabber extends FrameGrabber {
             Float fRate = avg_frame_rate.num() == 0 || avg_frame_rate.den() == 0 ? null : (float)avg_frame_rate.num() / avg_frame_rate.den();
             Long frameCount = fRate == null ? null : (long)(oc.duration() * (fRate / 1000 / 1000));
 
-            streams.add(new VideoStream(createTitleString(st), language, codec, resolution, frameCount, fRate));
+            streams.add(new VideoTrack(createTitleString(st), language, codec, resolution, frameCount, fRate));
           }
       }
 

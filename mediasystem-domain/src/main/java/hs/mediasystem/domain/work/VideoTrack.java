@@ -1,6 +1,6 @@
 package hs.mediasystem.domain.work;
 
-public class VideoStream {
+public class VideoTrack {
   private final String title;
   private final String language;
   private final String codec;
@@ -8,7 +8,7 @@ public class VideoStream {
   private final Long frameCount;
   private final Float frameRate;
 
-  public VideoStream(String title, String language, String codec, Resolution resolution, Long frameCount, Float frameRate) {
+  public VideoTrack(String title, String language, String codec, Resolution resolution, Long frameCount, Float frameRate) {
     this.title = title;
     this.language = language;
     this.codec = codec;

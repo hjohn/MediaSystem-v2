@@ -107,7 +107,7 @@ public class LocalWorksClient implements WorksClient {
     int id = mediaStream.getId().getContentId().asInt();
 
     return mediaStream.getMetaData()
-      .filter(smd -> !smd.getVideoStreams().isEmpty())
+      .filter(smd -> !smd.getVideoTracks().isEmpty())
       .map(smd -> new ImageURI("multi:600,900;38,3,524,294;38,303,524,294;38,603,524,294:localdb://" + id + "/1|localdb://" + id + "/2|localdb://" + id + "/3", null))
       .orElse(null);
   }
@@ -116,7 +116,7 @@ public class LocalWorksClient implements WorksClient {
     int id = mediaStream.getId().getContentId().asInt();
 
     return mediaStream.getMetaData()
-      .filter(smd -> !smd.getVideoStreams().isEmpty())
+      .filter(smd -> !smd.getVideoTracks().isEmpty())
       .map(smd -> new ImageURI("localdb://" + id + "/2", null))
       .orElse(null);
   }
