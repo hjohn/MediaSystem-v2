@@ -19,7 +19,6 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.Labels;
 
-import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -114,17 +113,17 @@ public class ShowInfoEventHandler {
         );
       });
 
-      stream.getMetaData().ifPresent(metaData -> {
-        if(metaData.getLength() != Duration.ZERO) {
-          gridPane.addRow(
-            Labels.create("title", "Duration"),
-            Labels.create("value", SizeFormatter.DURATION.format(metaData.getLength().toSeconds())),
-            GridPane.FILL,
-            GridPane.FILL
-          );
-        }
+      stream.getDuration().ifPresent(d -> {
+        gridPane.addRow(
+          Labels.create("title", "Duration"),
+          Labels.create("value", SizeFormatter.DURATION.format(d.toSeconds())),
+          GridPane.FILL,
+          GridPane.FILL
+            );
+      });
 
-        List<VideoTrack> videoTracks = metaData.getVideoTracks();
+      stream.getMediaStructure().ifPresent(ms -> {
+        List<VideoTrack> videoTracks = ms.getVideoTracks();
 
         for(int i = 0; i < videoTracks.size(); i++) {
           VideoTrack videoTrack = videoTracks.get(i);
@@ -143,7 +142,7 @@ public class ShowInfoEventHandler {
           gridPane.nextRow();
         }
 
-        List<AudioTrack> audioTracks = metaData.getAudioTracks();
+        List<AudioTrack> audioTracks = ms.getAudioTracks();
 
         for(int i = 0; i < audioTracks.size(); i++) {
           AudioTrack audioTrack = audioTracks.get(i);
@@ -168,7 +167,7 @@ public class ShowInfoEventHandler {
           }
         }
 
-        List<SubtitleTrack> subtitleTracks = metaData.getSubtitleTracks();
+        List<SubtitleTrack> subtitleTracks = ms.getSubtitleTracks();
 
         for(int i = 0; i < subtitleTracks.size(); i++) {
           SubtitleTrack subtitleTrack = subtitleTracks.get(i);
@@ -196,19 +195,17 @@ public class ShowInfoEventHandler {
 
       HBox snapshotsBox = Containers.hbox("snapshots-box");
 
-      stream.getMetaData().ifPresent(metaData -> {
-        metaData.getSnapshots().stream().map(Snapshot::getImageUri).map(imageHandleFactory::fromURI).forEach(handle -> {
-          BiasedImageView imageView = new BiasedImageView();
-          AsyncImageProperty property = new AsyncImageProperty(600, 400);
+      stream.getSnapshots().stream().map(Snapshot::getImageUri).map(imageHandleFactory::fromURI).forEach(handle -> {
+        BiasedImageView imageView = new BiasedImageView();
+        AsyncImageProperty property = new AsyncImageProperty(600, 400);
 
-          imageView.setOrientation(Orientation.HORIZONTAL);
-          imageView.imageProperty().bind(property);
+        imageView.setOrientation(Orientation.HORIZONTAL);
+        imageView.imageProperty().bind(property);
 //          imageView.setPrefWidth(20);
 //          imageView.setPrefHeight(20);
-          property.imageHandleProperty().set(handle);
+        property.imageHandleProperty().set(handle);
 
-          snapshotsBox.getChildren().add(imageView);
-        });
+        snapshotsBox.getChildren().add(imageView);
       });
 
       gridPane.addRow(Labels.create("title", "Snapshots"), snapshotsBox, GridPane.FILL, GridPane.FILL);

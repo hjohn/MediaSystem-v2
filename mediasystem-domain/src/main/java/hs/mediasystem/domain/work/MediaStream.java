@@ -2,17 +2,21 @@ package hs.mediasystem.domain.work;
 
 import hs.mediasystem.domain.stream.StreamID;
 
+import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 public class MediaStream {
   private final StreamID id;
   private final Optional<StreamID> parentId;
-  private final StreamAttributes attributes;
+  private final StreamAttributes attributes;  // physical attributes
   private final State state;
-  private final Optional<StreamMetaData> metaData;
+  private final Optional<Duration> duration;
+  private final Optional<MediaStructure> mediaStructure;  // logical attributes (tracks)
+  private final List<Snapshot> snapshots;
   private final Optional<Match> match;
 
-  public MediaStream(StreamID id, StreamID parentId, StreamAttributes attributes, State state, StreamMetaData metaData, Match match) {
+  public MediaStream(StreamID id, StreamID parentId, StreamAttributes attributes, State state, Duration duration, MediaStructure mediaStructure, List<Snapshot> snapshots, Match match) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -27,7 +31,9 @@ public class MediaStream {
     this.parentId = Optional.ofNullable(parentId);
     this.attributes = attributes;
     this.state = state;
-    this.metaData = Optional.ofNullable(metaData);
+    this.duration = Optional.ofNullable(duration);
+    this.mediaStructure = Optional.ofNullable(mediaStructure);
+    this.snapshots = List.copyOf(snapshots);
     this.match = Optional.ofNullable(match);
   }
 
@@ -47,8 +53,16 @@ public class MediaStream {
     return state;
   }
 
-  public Optional<StreamMetaData> getMetaData() {
-    return metaData;
+  public Optional<Duration> getDuration() {
+    return duration;
+  }
+
+  public Optional<MediaStructure> getMediaStructure() {
+    return mediaStructure;
+  }
+
+  public List<Snapshot> getSnapshots() {
+    return snapshots;
   }
 
   public Optional<Match> getMatch() {

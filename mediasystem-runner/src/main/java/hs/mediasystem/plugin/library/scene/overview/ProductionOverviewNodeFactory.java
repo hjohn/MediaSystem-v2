@@ -223,10 +223,10 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       return Containers.vbox(
         "stream-info-panel",
         Stream.concat(
-          stream.getMetaData().map(md -> Containers.hbox(
+          stream.getDuration().map(d -> Containers.hbox(
             "duration-box",
             Labels.create("duration-icon", "🕑"),
-            Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(md.getLength().toSeconds()))
+            Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
           )).stream(),
           stream.getState().getLastConsumptionTime().map(time -> Containers.hbox(
             "last-watched-box",

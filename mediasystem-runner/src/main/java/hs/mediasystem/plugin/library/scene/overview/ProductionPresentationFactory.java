@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
@@ -138,7 +137,7 @@ public class ProductionPresentationFactory {
       this.episodeWatched.addListener(obs -> updateSeasonWatchedFraction());
 
       this.totalDuration = episodeOrMovieItem.map(r -> r.getPrimaryStream()
-        .flatMap(ms -> ms.getMetaData().map(StreamMetaData::getLength).map(d -> (int)d.toSeconds()))
+        .flatMap(ms -> ms.getDuration().map(d -> (int)d.toSeconds()))
         .orElse(null));
 
       this.rootWatched = rootItem.getState().isConsumed();

@@ -65,7 +65,7 @@ public class RecommendationService {
     StreamID id = stream.getId();
     State state = work.getState();
     Duration position = state.getResumePosition();
-    Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
+    Duration length = stream.getDuration().orElse(null);
     boolean watched = state.isConsumed();
 
     return getIdentifier(id)
@@ -89,7 +89,7 @@ public class RecommendationService {
     StreamID id = stream.getId();
     State state = work.getState();
     Duration position = state.getResumePosition();
-    Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
+    Duration length = stream.getDuration().orElse(null);
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
     boolean watched = state.isConsumed();
 
@@ -113,7 +113,7 @@ public class RecommendationService {
 
     boolean watched = state.isConsumed();
     Duration position = state.getResumePosition();
-    Duration length = stream.getMetaData().map(StreamMetaData::getLength).orElse(null);
+    Duration length = stream.getDuration().orElse(null);
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
     return getIdentifier(parentId).flatMap(

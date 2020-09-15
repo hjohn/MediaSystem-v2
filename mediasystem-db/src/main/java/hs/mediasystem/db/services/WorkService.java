@@ -10,6 +10,7 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStream;
+import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.State;
 import hs.mediasystem.domain.work.StreamAttributes;
@@ -377,7 +378,9 @@ public class WorkService {
       parentId,
       new StreamAttributes(streamable.getUri(), streamStore.findCreationTime(id).orElseThrow(), Instant.ofEpochMilli(contentPrint.getLastModificationTime()), contentPrint.getSize(), streamable.getAttributes()),
       state,
-      md,
+      md != null ? md.getLength() : totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null,
+      md == null ? null : new MediaStructure(md.getVideoTracks(), md.getAudioTracks(), md.getSubtitleTracks()),
+      md == null ? List.of() : md.getSnapshots(),
       match
     );
   }
