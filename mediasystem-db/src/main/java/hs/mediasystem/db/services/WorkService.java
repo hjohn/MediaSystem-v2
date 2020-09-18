@@ -2,14 +2,12 @@ package hs.mediasystem.db.services;
 
 import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
-import hs.mediasystem.db.base.StreamStateService;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
-import hs.mediasystem.domain.work.State;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
@@ -36,8 +34,6 @@ import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.mediamanager.DescriptorStore;
 import hs.mediasystem.util.Throwables;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -54,7 +50,6 @@ public class WorkService {
   private static final String DEFAULT_DATA_SOURCE_NAME = "DEFAULT";
 
   @Inject private DatabaseStreamStore streamStore;
-  @Inject private StreamStateService stateService;
   @Inject private DescriptorStore descriptorStore;
   @Inject private SerieHelper serieHelper;
   @Inject private List<QueryService> queryServices;
@@ -64,8 +59,6 @@ public class WorkService {
   @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
   @Inject private StreamCacheUpdateService updateService;
   @Inject private MediaStreamService mediaStreamService;
-
-  private static final State UNWATCHED_STATE = new State(null, false, Duration.ZERO);
 
   synchronized Optional<Work> find(StreamID streamId) {
     return streamStore.findStream(streamId).map(this::toWork);
@@ -304,7 +297,6 @@ public class WorkService {
       return new Work(
         episode,
         parent,
-        mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
         mediaStreams
       );
     }
@@ -316,7 +308,6 @@ public class WorkService {
     return new Work(
       descriptor,
       createParentForMovieOrEpisode(descriptor).orElse(null),
-      mediaStreams.stream().findFirst().map(MediaStream::getState).orElse(UNWATCHED_STATE),
       mediaStreams
     );
   }
@@ -338,21 +329,8 @@ public class WorkService {
     return Optional.empty();
   }
 
-  private State toState(Streamable streamable) {
-    ContentID contentId = streamable.getId().getContentId();
-
-    // TODO for Series, need to compute last watched time and watched status based on its children
-
-    Instant lastWatchedTime = stateService.getLastWatchedTime(contentId);
-    boolean watched = stateService.isWatched(contentId);
-    Duration resumePosition = Duration.ofSeconds(stateService.getResumePosition(contentId));
-
-    return new State(lastWatchedTime, watched, resumePosition);
-  }
-
   Work toWork(Streamable streamable) {
     MediaDescriptor descriptor = findBestDescriptor(streamable);
-    State state = toState(streamable);
 
     List<MediaStream> mediaStreams = streamStore.findStreams(descriptor.getIdentifier()).stream()
       .map(mediaStreamService::toMediaStream)
@@ -365,7 +343,6 @@ public class WorkService {
     return new Work(
       descriptor,
       createParentForMovieOrEpisode(descriptor).or(() -> createParentForStream(streamable.getId())).orElse(null),
-      state,
       mediaStreams
     );
   }

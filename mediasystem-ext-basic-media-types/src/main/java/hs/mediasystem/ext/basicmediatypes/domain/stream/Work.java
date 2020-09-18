@@ -3,7 +3,6 @@ package hs.mediasystem.ext.basicmediatypes.domain.stream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
-import hs.mediasystem.domain.work.State;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
@@ -17,19 +16,15 @@ public class Work {
   private final Optional<WorkId> parentId;
   private final MediaType type;
   private final MediaDescriptor descriptor;
-  private final State state;
   private final List<MediaStream> streams;
   private final Optional<Parent> parent;
 
-  public Work(MediaDescriptor descriptor, Parent parent, State state, List<MediaStream> streams) {
+  public Work(MediaDescriptor descriptor, Parent parent, List<MediaStream> streams) {
     if(descriptor == null) {
       throw new IllegalArgumentException("descriptor cannot be null");
     }
     if(streams == null || streams.stream().filter(Objects::isNull).findAny().isPresent()) {
       throw new IllegalArgumentException("streams cannot be null or contain nulls: " + streams);
-    }
-    if(state == null) {
-      throw new IllegalArgumentException("state cannot be null");
     }
 
     this.id = new WorkId(descriptor.getIdentifier().getDataSource(), descriptor.getIdentifier().getId());
@@ -37,7 +32,6 @@ public class Work {
     this.parentId = Optional.ofNullable(descriptor.getIdentifier().getRootIdentifier() == null ? null : new WorkId(descriptor.getIdentifier().getRootIdentifier().getDataSource(), descriptor.getIdentifier().getRootIdentifier().getId()));
     this.type = descriptor.getIdentifier().getDataSource().getType();
     this.descriptor = descriptor;
-    this.state = state;
     this.streams = streams;
   }
 
@@ -63,10 +57,6 @@ public class Work {
 
   public MediaDescriptor getDescriptor() {
     return descriptor;
-  }
-
-  public State getState() {
-    return state;
   }
 
   public List<MediaStream> getStreams() {

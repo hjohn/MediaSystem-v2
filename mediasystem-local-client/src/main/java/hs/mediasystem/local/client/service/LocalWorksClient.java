@@ -23,7 +23,6 @@ import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageURI;
 
-import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -37,11 +36,6 @@ import javax.inject.Singleton;
 public class LocalWorksClient implements WorksClient {
   @Inject private WorksService worksService;
   @Inject private StateFactory stateFactory;
-
-  @Override
-  public List<Work> findLastWatched(int maximum, Instant after) {
-    return worksService.findLastWatched(maximum, after).stream().map(this::toWork).collect(Collectors.toList());
-  }
 
   @Override
   public List<Work> findNewest(int maximum, Predicate<MediaType> filter) {
