@@ -172,7 +172,7 @@ public class DatabaseStreamStore implements StreamableStore {
   }
 
   public synchronized Optional<Instant> findDiscoveryTime(StreamID streamId) {
-    return Optional.ofNullable(cache.get(findParentId(streamId).orElse(streamId))).map(CachedStream::getDiscoveryTime);
+    return Optional.ofNullable(cache.get(streamId)).map(CachedStream::getDiscoveryTime);
   }
 
   synchronized Set<Streamable> findUnenrichedStreams() {
