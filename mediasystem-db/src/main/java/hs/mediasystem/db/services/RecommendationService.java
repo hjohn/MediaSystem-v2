@@ -65,7 +65,7 @@ public class RecommendationService {
    * @return a {@link List} of {@link Recommendation}s, never null but can be empty
    */
   public List<Recommendation> findNew(Predicate<MediaType> filter) {
-    return worksService.findNewest(100, filter).stream()
+    return worksService.findNewest(200, filter).stream()
       .map(this::toNewRecommendation)
       .collect(Collectors.toList());
   }
