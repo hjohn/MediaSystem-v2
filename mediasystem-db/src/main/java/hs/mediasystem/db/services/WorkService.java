@@ -3,21 +3,15 @@ package hs.mediasystem.db.services;
 import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
 import hs.mediasystem.db.base.StreamStateService;
-import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
-import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStream;
-import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.State;
-import hs.mediasystem.domain.work.StreamAttributes;
-import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
@@ -31,8 +25,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
@@ -63,7 +55,6 @@ public class WorkService {
 
   @Inject private DatabaseStreamStore streamStore;
   @Inject private StreamStateService stateService;
-  @Inject private DefaultStreamMetaDataStore metaDataStore;
   @Inject private DescriptorStore descriptorStore;
   @Inject private SerieHelper serieHelper;
   @Inject private List<QueryService> queryServices;
@@ -72,7 +63,7 @@ public class WorkService {
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
   @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
   @Inject private StreamCacheUpdateService updateService;
-  @Inject private ContentPrintProvider contentPrintProvider;
+  @Inject private MediaStreamService mediaStreamService;
 
   private static final State UNWATCHED_STATE = new State(null, false, Duration.ZERO);
 
@@ -291,7 +282,7 @@ public class WorkService {
         int slash = id.indexOf("/");
         StreamID sid = StreamID.of(id.substring(slash + 1));
 
-        mediaStreams = streamStore.findStream(sid).map(this::toMediaStream).stream().collect(Collectors.toList());
+        mediaStreams = streamStore.findStream(sid).map(mediaStreamService::toMediaStream).stream().collect(Collectors.toList());
       }
       else {
         List<Streamable> childStreams = streamStore.findStreams(descriptor.getIdentifier());
@@ -306,7 +297,7 @@ public class WorkService {
          */
 
         mediaStreams = childStreams.stream()
-          .map(this::toMediaStream)
+          .map(mediaStreamService::toMediaStream)
           .collect(Collectors.toList());
       }
 
@@ -319,7 +310,7 @@ public class WorkService {
     }
 
     List<MediaStream> mediaStreams = streamStore.findStreams(descriptor.getIdentifier()).stream()
-      .map(this::toMediaStream)
+      .map(mediaStreamService::toMediaStream)
       .collect(Collectors.toList());
 
     return new Work(
@@ -359,42 +350,16 @@ public class WorkService {
     return new State(lastWatchedTime, watched, resumePosition);
   }
 
-  private MediaStream toMediaStream(Streamable streamable) {
-    Match match = streamStore.findIdentification(streamable.getId()).map(Identification::getMatch).orElse(null);
-    StreamID id = streamable.getId();
-    StreamID parentId = streamStore.findParentId(id).orElse(null);
-    State state = toState(streamable);
-    StreamMetaData md = metaDataStore.find(id.getContentId()).orElse(null);
-    int totalDuration = stateService.getTotalDuration(id.getContentId());
-
-    if(md == null && totalDuration != -1) {
-      md = new StreamMetaData(id.getContentId(), Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-    }
-
-    ContentPrint contentPrint = contentPrintProvider.get(id.getContentId());
-
-    return new MediaStream(
-      id,
-      parentId,
-      new StreamAttributes(streamable.getUri(), streamStore.findCreationTime(id).orElseThrow(), Instant.ofEpochMilli(contentPrint.getLastModificationTime()), contentPrint.getSize(), streamable.getAttributes()),
-      state,
-      md != null ? md.getLength() : totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null,
-      md == null ? null : new MediaStructure(md.getVideoTracks(), md.getAudioTracks(), md.getSubtitleTracks()),
-      md == null ? List.of() : md.getSnapshots(),
-      match
-    );
-  }
-
   Work toWork(Streamable streamable) {
     MediaDescriptor descriptor = findBestDescriptor(streamable);
     State state = toState(streamable);
 
     List<MediaStream> mediaStreams = streamStore.findStreams(descriptor.getIdentifier()).stream()
-      .map(this::toMediaStream)
+      .map(mediaStreamService::toMediaStream)
       .collect(Collectors.toList());
 
     if(mediaStreams.isEmpty()) {
-      mediaStreams = List.of(toMediaStream(streamable));
+      mediaStreams = List.of(mediaStreamService.toMediaStream(streamable));
     }
 
     return new Work(
