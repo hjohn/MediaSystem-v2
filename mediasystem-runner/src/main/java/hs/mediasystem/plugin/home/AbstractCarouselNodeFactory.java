@@ -33,7 +33,7 @@ public abstract class AbstractCarouselNodeFactory {
     double fraction = recommendation.getLength().map(len -> recommendation.getPosition().toSeconds() / (double)len.toSeconds()).orElse(0.0);
 
     model.watchedFraction.set(recommendation.isWatched() ? 1.0 : fraction > 0 ? fraction : -1);
-    model.age.set(Optional.of(recommendation.getLastTimeWatched())
+    model.age.set(Optional.of(recommendation.getSampleTime())
       .map(i -> i.atZone(ZoneId.systemDefault()))
       .map(ZonedDateTime::toLocalDateTime)
       .map(SizeFormatter::formatTimeAgo)

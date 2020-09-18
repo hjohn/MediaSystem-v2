@@ -7,6 +7,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
+/**
+ * Recommends a {@link Work} based on another work or (a specific stream of) itself.
+ */
 public class Recommendation {
   private final Instant instant;
   private final Work work;
@@ -44,10 +47,20 @@ public class Recommendation {
     this.watched = watched;
   }
 
+  /**
+   * Returns an {@link Instant} indicating the relevant time for this recommendation.
+   *
+   * @return an {@link Instant} indicating the relevant time for this recommendation, never null
+   */
   public Instant getInstant() {
     return instant;
   }
 
+  /**
+   * Returns a {@link Work} that is recommended.
+   *
+   * @return a {@link Work} that is recommended, never null
+   */
   public Work getWork() {
     return work;
   }

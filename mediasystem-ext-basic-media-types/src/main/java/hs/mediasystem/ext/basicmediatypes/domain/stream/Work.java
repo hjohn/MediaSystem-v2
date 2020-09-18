@@ -11,6 +11,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Represents a work of art, like a movie, serie or episode, or a single stream of an unknown type.<p>
+ *
+ * The descriptor of a Work can either be supplied from an external database or if unavailable,
+ * generated on demand with what little information is available.<p>
+ *
+ * In all cases, the streams which are part of a work all match with the descriptor, in other words
+ * all streams that are part of a work will have the same identifier.  When multiple streams are
+ * part of a work they will be different cuts, encodings or even parts of the same work.  A stream
+ * can also represent more than just the work it is associated with, eg. multiple episodes in a single
+ * stream can belong to multiple works.
+ */
 public class Work {
   private final WorkId id;
   private final Optional<WorkId> parentId;
