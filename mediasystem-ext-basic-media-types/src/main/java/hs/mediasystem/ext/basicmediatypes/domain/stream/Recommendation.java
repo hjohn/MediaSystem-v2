@@ -1,9 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-
 import java.time.Instant;
-import java.util.Optional;
 
 /**
  * Recommends a {@link Work} based on another work or (a specific stream of) itself.
@@ -11,24 +8,23 @@ import java.util.Optional;
 public class Recommendation {
   private final Instant instant;
   private final Work work;
-  private final Optional<MediaDescriptor> parent;
-  private final MediaDescriptor mediaDescriptor;
 
-  public Recommendation(Instant instant, Work work, MediaDescriptor parent, MediaDescriptor mediaDescriptor) {
+  /**
+   * Constructs a new instance.
+   *
+   * @param instant an {@link Instant} indicating the relevant time for this recommendation, cannot be null
+   * @param work a {@link Work} that is recommended, cannot be null
+   */
+  public Recommendation(Instant instant, Work work) {
     if(instant == null) {
       throw new IllegalArgumentException("instant cannot be null");
     }
     if(work == null) {
       throw new IllegalArgumentException("work cannot be null");
     }
-    if(mediaDescriptor == null) {
-      throw new IllegalArgumentException("mediaDescriptor cannot be null");
-    }
 
     this.instant = instant;
     this.work = work;
-    this.parent = Optional.ofNullable(parent);
-    this.mediaDescriptor = mediaDescriptor;
   }
 
   /**
@@ -47,13 +43,5 @@ public class Recommendation {
    */
   public Work getWork() {
     return work;
-  }
-
-  public Optional<MediaDescriptor> getParent() {
-    return parent;
-  }
-
-  public MediaDescriptor getMediaDescriptor() {
-    return mediaDescriptor;
   }
 }

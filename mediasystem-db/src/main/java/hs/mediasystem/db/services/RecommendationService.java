@@ -67,17 +67,13 @@ public class RecommendationService {
   public List<Recommendation> findNew(Predicate<MediaType> filter) {
     return worksService.findNewest(100, filter).stream()
       .map(this::toNewRecommendation)
-      .flatMap(Optional::stream)
       .collect(Collectors.toList());
   }
 
-  private Optional<Recommendation> toNewRecommendation(Work work) {
+  private Recommendation toNewRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
-    StreamID id = stream.getId();
 
-    return findBestIdentifier(id)
-      .flatMap(descriptorStore::find)
-      .map(descriptor -> new Recommendation(stream.getAttributes().getDiscoveryTime(), work, null, descriptor));
+    return new Recommendation(stream.getAttributes().getDiscoveryTime(), work);
   }
 
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(MediaStream stream) {
@@ -91,22 +87,18 @@ public class RecommendationService {
   }
 
   private Optional<Recommendation> toProductionRecommendation(MediaStream stream) {
-    StreamID id = stream.getId();
     State state = stream.getState();
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
-    return findBestIdentifier(id).flatMap(descriptorStore::find).map(descriptor -> {
-      if(state.isConsumed()) {
-        // TODO Must be a movie, find collection for "next"
-      }
-      else if(!state.getResumePosition().isZero()) {  // Partially watched movie
-        return workService.find(stream.getId())
-          .map(w -> new Recommendation(lastWatchedTime, w, null, descriptor))
-          .orElse(null);
-      }
+    if(state.isConsumed()) {
+      // TODO Must be a movie, find collection for "next"
+    }
+    else if(!state.getResumePosition().isZero()) {  // Partially watched movie
+      return workService.find(stream.getId())
+        .map(w -> new Recommendation(lastWatchedTime, w));
+    }
 
-      return null;
-    });
+    return Optional.empty();
   }
 
   private Optional<Recommendation> toEpisodeRecommendation(MediaStream stream) {
@@ -129,7 +121,7 @@ public class RecommendationService {
                 .map(ms -> {
                   if(!ms.getState().isConsumed() && ms.getState().getResumePosition().isZero()) {
                     return workService.find(ms.getId())
-                      .map(w -> new Recommendation(lastWatchedTime, w, serie, nextEpisode))
+                      .map(w -> new Recommendation(lastWatchedTime, w))
                       .orElse(null);
                   }
 
@@ -140,7 +132,7 @@ public class RecommendationService {
           }
           else if(!position.isZero()) {
             return workService.find(stream.getId())
-              .map(w -> new Recommendation(lastWatchedTime, w, serie, episode))
+              .map(w -> new Recommendation(lastWatchedTime, w))
               .orElse(null);
           }
         }

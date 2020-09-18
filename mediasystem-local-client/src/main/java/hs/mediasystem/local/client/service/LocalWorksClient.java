@@ -5,6 +5,7 @@ import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
@@ -57,19 +58,15 @@ public class LocalWorksClient implements WorksClient {
     return worksService.findTop100().stream().map(this::toWork).collect(Collectors.toList());
   }
 
-  Work toWork(hs.mediasystem.ext.basicmediatypes.domain.stream.Work work, MediaDescriptor parent) {
+  Work toWork(hs.mediasystem.ext.basicmediatypes.domain.stream.Work work) {
     return new Work(
       work.getId(),
       work.getType(),
       work.getParent().orElse(null),
-      createDetails(work.getDescriptor(), parent, work.getPrimaryStream()),
+      createDetails(work.getDescriptor(), work.getParent().orElse(null), work.getPrimaryStream()),
       toState(work.getPrimaryStream().map(MediaStream::getId).map(StreamID::getContentId).orElse(null)),
       work.getStreams()
     );
-  }
-
-  Work toWork(hs.mediasystem.ext.basicmediatypes.domain.stream.Work work) {
-    return toWork(work, null);
   }
 
   /*
@@ -77,7 +74,7 @@ public class LocalWorksClient implements WorksClient {
    * - image is taken from descriptor or otherwise from stream
    * - backdrop is taken from descriptor or otherwise from its parent
    */
-  private static Details createDetails(MediaDescriptor descriptor, MediaDescriptor parent, Optional<MediaStream> mediaStream) {
+  private static Details createDetails(MediaDescriptor descriptor, Parent parent, Optional<MediaStream> mediaStream) {
     return new Details(
       descriptor.getDetails().getTitle(),
       descriptor.getDetails().getSubtitle().orElse(null),
@@ -86,7 +83,7 @@ public class LocalWorksClient implements WorksClient {
       descriptor.getDetails().getImage().or(() -> mediaStream.map(LocalWorksClient::snapshotsToCover)).orElse(null),
       descriptor.getDetails().getBackdrop()
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
-        .or(() -> parent == null ? Optional.empty() : parent.getDetails().getBackdrop())
+        .or(() -> parent == null ? Optional.empty() : parent.getBackdrop())
         .orElse(null),
       descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
       descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,
