@@ -7,6 +7,7 @@ import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactor
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.ui.api.domain.Recommendation;
+import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
 
@@ -21,18 +22,20 @@ public abstract class AbstractCarouselNodeFactory {
   @Inject private ProductionPresentationFactory productionPresentationFactory;
 
   protected void fillRecommendationModel(Recommendation recommendation, String parentTitle, String title, String subtitle, AnnotatedImageCellFactory.Model model) {
+    Work work = recommendation.getWork();
+
     model.parentTitle.set(parentTitle);
     model.title.set(title);
     model.subtitle.set(subtitle);
-    model.sequence.set(recommendation.getWork().getDetails().getSequence()
+    model.sequence.set(work.getDetails().getSequence()
       .map(seq -> seq.getSeasonNumber().map(s -> s + "x").orElse("") + seq.getNumber())
       .orElse(null)
     );
-    model.imageHandle.set(recommendation.getWork().getDetails().getBackdrop().map(imageHandleFactory::fromURI).orElse(null));
+    model.imageHandle.set(work.getDetails().getBackdrop().map(imageHandleFactory::fromURI).orElse(null));
 
-    double fraction = recommendation.getLength().map(len -> recommendation.getPosition().toSeconds() / (double)len.toSeconds()).orElse(0.0);
+    double fraction = work.getWatchedFraction();
 
-    model.watchedFraction.set(recommendation.isWatched() ? 1.0 : fraction > 0 ? fraction : -1);
+    model.watchedFraction.set(work.isWatched() ? 1.0 : fraction > 0 ? fraction : -1);
     model.age.set(Optional.of(recommendation.getSampleTime())
       .map(i -> i.atZone(ZoneId.systemDefault()))
       .map(ZonedDateTime::toLocalDateTime)

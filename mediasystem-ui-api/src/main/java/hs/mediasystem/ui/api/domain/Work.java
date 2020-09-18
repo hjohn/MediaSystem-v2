@@ -5,6 +5,7 @@ import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,8 +58,42 @@ public class Work {
     return details;
   }
 
+  // TODO state returned here is not the same type as the one in MediaStream, should be removed and an alternative solution devised for updating viewed state in views
   public State getState() {
     return state;
+  }
+
+  public double getWatchedFraction() {
+    MediaStream bestStream = determineBestStream();
+
+    if(bestStream == null) {
+      return 0;
+    }
+
+    long resumePosition = bestStream.getState().getResumePosition().toSeconds();
+
+    return bestStream.getDuration().map(d -> resumePosition / (double)d.toSeconds()).orElse(0.0);
+  }
+
+  public boolean isWatched() {
+    MediaStream bestStream = determineBestStream();
+
+    return bestStream == null ? false : bestStream.getState().isConsumed();
+  }
+
+  private MediaStream determineBestStream() {
+    // This could take into account that two or more streams form a whole, and must also
+    // deal with alternative streams (different cuts)
+
+    MediaStream bestStream = null;
+
+    for(MediaStream stream : streams) {
+      if(bestStream == null || stream.getState().getLastConsumptionTime().orElse(Instant.MIN).isAfter(bestStream.getState().getLastConsumptionTime().orElse(Instant.MIN))) {
+        bestStream = stream;
+      }
+    }
+
+    return bestStream;
   }
 
   public List<MediaStream> getStreams() {

@@ -1,8 +1,6 @@
 package hs.mediasystem.ui.api.domain;
 
-import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 
 /**
  * Represents a Work that is recommended based on some criteria.<p>
@@ -12,17 +10,18 @@ import java.util.Optional;
  */
 public class Recommendation {
   private final Work work;
-  private final boolean isWatched;
-  private final Optional<Duration> length;
-  private final Duration position;
   private final Instant sampleTime;
 
-  public Recommendation(Work work, Instant sampleTime, boolean isWatched, Duration length, Duration position) {
+  public Recommendation(Work work, Instant sampleTime) {
+    if(work == null) {
+      throw new IllegalArgumentException("work cannot be null");
+    }
+    if(sampleTime == null) {
+      throw new IllegalArgumentException("sampleTime cannot be null");
+    }
+
     this.work = work;
     this.sampleTime = sampleTime;
-    this.isWatched = isWatched;
-    this.length = Optional.ofNullable(length);
-    this.position = position;
   }
 
   /**
@@ -32,10 +31,6 @@ public class Recommendation {
    */
   public Work getWork() {
     return work;
-  }
-
-  public boolean isWatched() {
-    return isWatched;
   }
 
   /**
@@ -49,13 +44,5 @@ public class Recommendation {
    */
   public Instant getSampleTime() {
     return sampleTime;
-  }
-
-  public Optional<Duration> getLength() {
-    return length;
-  }
-
-  public Duration getPosition() {
-    return position;
   }
 }

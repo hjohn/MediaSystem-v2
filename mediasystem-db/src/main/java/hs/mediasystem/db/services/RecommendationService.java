@@ -74,14 +74,10 @@ public class RecommendationService {
   private Optional<Recommendation> toNewRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
     StreamID id = stream.getId();
-    State state = stream.getState();
-    Duration position = state.getResumePosition();
-    Duration length = stream.getDuration().orElse(null);
-    boolean watched = state.isConsumed();
 
     return findBestIdentifier(id)
       .flatMap(descriptorStore::find)
-      .map(descriptor -> new Recommendation(stream.getAttributes().getDiscoveryTime(), work, null, descriptor, id, length, position, watched));
+      .map(descriptor -> new Recommendation(stream.getAttributes().getDiscoveryTime(), work, null, descriptor));
   }
 
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(MediaStream stream) {
@@ -97,8 +93,6 @@ public class RecommendationService {
   private Optional<Recommendation> toProductionRecommendation(MediaStream stream) {
     StreamID id = stream.getId();
     State state = stream.getState();
-    Duration position = state.getResumePosition();
-    Duration length = stream.getDuration().orElse(null);
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
     return findBestIdentifier(id).flatMap(descriptorStore::find).map(descriptor -> {
@@ -107,7 +101,7 @@ public class RecommendationService {
       }
       else if(!state.getResumePosition().isZero()) {  // Partially watched movie
         return workService.find(stream.getId())
-          .map(w -> new Recommendation(lastWatchedTime, w, null, descriptor, id, length, position, state.isConsumed()))
+          .map(w -> new Recommendation(lastWatchedTime, w, null, descriptor))
           .orElse(null);
       }
 
@@ -117,12 +111,10 @@ public class RecommendationService {
 
   private Optional<Recommendation> toEpisodeRecommendation(MediaStream stream) {
     StreamID parentId = stream.getParentId().orElseThrow(() -> new IllegalArgumentException("stream must represent an episode: " + stream));
-    StreamID id = stream.getId();
     State state = stream.getState();
 
     boolean watched = state.isConsumed();
     Duration position = state.getResumePosition();
-    Duration length = stream.getDuration().orElse(null);
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
     return findBestIdentifier(parentId).flatMap(
@@ -137,7 +129,7 @@ public class RecommendationService {
                 .map(ms -> {
                   if(!ms.getState().isConsumed() && ms.getState().getResumePosition().isZero()) {
                     return workService.find(ms.getId())
-                      .map(w -> new Recommendation(lastWatchedTime, w, serie, nextEpisode, ms.getId(), null, ms.getState().getResumePosition(), false))
+                      .map(w -> new Recommendation(lastWatchedTime, w, serie, nextEpisode))
                       .orElse(null);
                   }
 
@@ -148,7 +140,7 @@ public class RecommendationService {
           }
           else if(!position.isZero()) {
             return workService.find(stream.getId())
-              .map(w -> new Recommendation(lastWatchedTime, w, serie, episode, id, length, position, false))
+              .map(w -> new Recommendation(lastWatchedTime, w, serie, episode))
               .orElse(null);
           }
         }
