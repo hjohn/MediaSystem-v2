@@ -52,7 +52,7 @@ public class DatabaseStreamStore implements StreamableStore {
   @Inject private ContentPrintProvider contentPrintProvider;
 
   private final Comparator<CachedStream> reversedCreationOrder = Comparator
-      .comparing(CachedStream::getCreationTime)
+      .comparing(CachedStream::getDiscoveryTime)
       .thenComparing(Comparator.comparingLong(cs -> contentPrintProvider.get(cs.getStreamable().getId().getContentId()).getLastModificationTime()))
       .reversed();
 
@@ -171,8 +171,8 @@ public class DatabaseStreamStore implements StreamableStore {
       .collect(Collectors.toList());
   }
 
-  public synchronized Optional<Instant> findCreationTime(StreamID streamId) {
-    return Optional.ofNullable(cache.get(findParentId(streamId).orElse(streamId))).map(CachedStream::getCreationTime);
+  public synchronized Optional<Instant> findDiscoveryTime(StreamID streamId) {
+    return Optional.ofNullable(cache.get(findParentId(streamId).orElse(streamId))).map(CachedStream::getDiscoveryTime);
   }
 
   synchronized Set<Streamable> findUnenrichedStreams() {
@@ -223,7 +223,7 @@ public class DatabaseStreamStore implements StreamableStore {
     CachedStream newCS = new CachedStream(
       cs.getStreamable(),
       cs.getIdentification().orElse(null),
-      cs.getCreationTime(),
+      cs.getDiscoveryTime(),
       Instant.now(),
       nextEnrichTime
     );
@@ -277,7 +277,7 @@ public class DatabaseStreamStore implements StreamableStore {
       return new CachedStream(streamable, null, time, null, null);
     }
 
-    return new CachedStream(streamable, existingCS.getIdentification().orElse(null), existingCS.getCreationTime(), null, null);  // enrich times cleared, as new stream attributes means enrichment must be done again
+    return new CachedStream(streamable, existingCS.getIdentification().orElse(null), existingCS.getDiscoveryTime(), null, null);  // enrich times cleared, as new stream attributes means enrichment must be done again
   }
 
   private Optional<CachedStream> toIdentifiedCachedStream(StreamID streamId, Identification identification) {
@@ -287,7 +287,7 @@ public class DatabaseStreamStore implements StreamableStore {
       return Optional.empty();
     }
 
-    return Optional.of(new CachedStream(existingCS.getStreamable(), identification, existingCS.getCreationTime(), existingCS.getLastEnrichTime(), existingCS.getNextEnrichTime()));
+    return Optional.of(new CachedStream(existingCS.getStreamable(), identification, existingCS.getDiscoveryTime(), existingCS.getLastEnrichTime(), existingCS.getNextEnrichTime()));
   }
 
   private void removeFromCache(StreamID streamId) {

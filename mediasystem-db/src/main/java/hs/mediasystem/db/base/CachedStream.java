@@ -9,21 +9,21 @@ import java.util.Optional;
 public class CachedStream {
   private final Streamable streamable;
   private final Optional<Identification> identification;
-  private final Instant creationTime;
+  private final Instant discoveryTime;
   private final Instant lastEnrichTime;
   private final Instant nextEnrichTime;
 
-  public CachedStream(Streamable streamable, Identification identification, Instant creationTime, Instant lastEnrichTime, Instant nextEnrichTime) {
+  public CachedStream(Streamable streamable, Identification identification, Instant discoveryTime, Instant lastEnrichTime, Instant nextEnrichTime) {
     if(streamable == null) {
       throw new IllegalArgumentException("streamable cannot be null");
     }
-    if(creationTime == null) {
-      throw new IllegalArgumentException("creationTime cannot be null");
+    if(discoveryTime == null) {
+      throw new IllegalArgumentException("discoveryTime cannot be null");
     }
 
     this.streamable = streamable;
     this.identification = Optional.ofNullable(identification);
-    this.creationTime = creationTime;
+    this.discoveryTime = discoveryTime;
     this.lastEnrichTime = lastEnrichTime;
     this.nextEnrichTime = nextEnrichTime;
   }
@@ -36,8 +36,8 @@ public class CachedStream {
     return identification;
   }
 
-  public Instant getCreationTime() {
-    return creationTime;
+  public Instant getDiscoveryTime() {
+    return discoveryTime;
   }
 
   public Instant getLastEnrichTime() {

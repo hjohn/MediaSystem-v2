@@ -70,7 +70,7 @@ public class RecommendationService {
 
     return getIdentifier(id)
       .flatMap(descriptorStore::find)
-      .map(descriptor -> new Recommendation(stream.getAttributes().getCreationTime(), work, null, descriptor, id, length, position, watched));
+      .map(descriptor -> new Recommendation(stream.getAttributes().getDiscoveryTime(), work, null, descriptor, id, length, position, watched));
   }
 
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(Work work) {

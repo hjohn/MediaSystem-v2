@@ -8,17 +8,17 @@ import java.util.Optional;
 
 public class StreamAttributes {
   private final URI uri;
-  private final Instant creationTime;  // This is time it was first added to database
+  private final Instant discoveryTime;
   private final Instant lastModificationTime;
   private final Optional<Long> size;
   private final Attributes attributes;
 
-  public StreamAttributes(URI uri, Instant creationTime, Instant lastModificationTime, Long size, Attributes attributes) {
+  public StreamAttributes(URI uri, Instant discoveryTime, Instant lastModificationTime, Long size, Attributes attributes) {
     if(uri == null) {
       throw new IllegalArgumentException("uri cannot be null");
     }
-    if(creationTime == null) {
-      throw new IllegalArgumentException("creationTime cannot be null");
+    if(discoveryTime == null) {
+      throw new IllegalArgumentException("discoveryTime cannot be null");
     }
     if(lastModificationTime == null) {
       throw new IllegalArgumentException("lastModifiedTime cannot be null");
@@ -31,7 +31,7 @@ public class StreamAttributes {
     }
 
     this.uri = uri;
-    this.creationTime = creationTime;
+    this.discoveryTime = discoveryTime;
     this.lastModificationTime = lastModificationTime;
     this.size = Optional.ofNullable(size);
     this.attributes = attributes;
@@ -41,8 +41,13 @@ public class StreamAttributes {
     return uri;
   }
 
-  public Instant getCreationTime() {
-    return creationTime;
+  /**
+   * Returns the time the item was first discovered.
+   *
+   * @return the time the item was first discovered, never <code>null</code>
+   */
+  public Instant getDiscoveryTime() {
+    return discoveryTime;
   }
 
   public Instant getLastModificationTime() {

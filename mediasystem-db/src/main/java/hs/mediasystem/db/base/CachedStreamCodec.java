@@ -74,7 +74,7 @@ public class CachedStreamCodec {
       record.setContentId(stream.getStreamable().getId().getContentId().asInt());
       record.setName(stream.getStreamable().getId().getName());
       record.setImportSourceId(stream.getStreamable().getId().getImportSourceId());
-      record.setCreationMillis(stream.getCreationTime().toEpochMilli());
+      record.setCreationMillis(stream.getDiscoveryTime().toEpochMilli());
       record.setLastEnrichTime(stream.getLastEnrichTime() == null ? null : stream.getLastEnrichTime().getEpochSecond());
       record.setNextEnrichTime(stream.getNextEnrichTime() == null ? null : stream.getNextEnrichTime().getEpochSecond());
       record.setJson(objectMapper.writeValueAsBytes(stream.getStreamable()));

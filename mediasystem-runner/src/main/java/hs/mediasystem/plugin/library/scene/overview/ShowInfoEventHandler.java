@@ -91,7 +91,7 @@ public class ShowInfoEventHandler {
 
       gridPane.addRow(
         Labels.create("title", "First Seen"),
-        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getAttributes().getCreationTime().atOffset(ZoneOffset.UTC))),
+        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getAttributes().getDiscoveryTime().atOffset(ZoneOffset.UTC))),
         GridPane.FILL,
         GridPane.FILL
       );

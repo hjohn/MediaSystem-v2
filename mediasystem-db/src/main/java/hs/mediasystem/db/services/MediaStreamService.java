@@ -53,7 +53,7 @@ public class MediaStreamService {
     return new MediaStream(
       id,
       parentId,
-      new StreamAttributes(streamable.getUri(), streamStore.findCreationTime(id).orElseThrow(), Instant.ofEpochMilli(contentPrint.getLastModificationTime()), contentPrint.getSize(), streamable.getAttributes()),
+      new StreamAttributes(streamable.getUri(), streamStore.findDiscoveryTime(id).orElseThrow(), Instant.ofEpochMilli(contentPrint.getLastModificationTime()), contentPrint.getSize(), streamable.getAttributes()),
       state,
       md != null ? md.getLength() : totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null,
       md == null ? null : new MediaStructure(md.getVideoTracks(), md.getAudioTracks(), md.getSubtitleTracks()),
