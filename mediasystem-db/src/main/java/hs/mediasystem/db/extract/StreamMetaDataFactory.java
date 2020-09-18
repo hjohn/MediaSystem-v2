@@ -37,11 +37,11 @@ public class StreamMetaDataFactory {
       Duration duration = Duration.ofNanos(grabber.getLengthInTime() * 1000L);
       long frameCount = grabber.getLengthInFrames();
 
-      // Grab 5 snapshots from 20, 35, 50, 65, 80% of stream.
+      // Grab 12 snapshots from 5, 12.5, 20, 27.5, 35, 42.5, 50, 57.5, 65, 72.5, 80, 87.5% of stream.
       List<Snapshot> snapshots = new ArrayList<>();
       int index = 0;
 
-      for(long offset = frameCount / 5; offset < frameCount * 9 / 10; offset += frameCount * 3 / 20) {
+      for(long offset = frameCount / 20; offset < frameCount * 9 / 10; offset += frameCount * 75 / 1000) {
         if(!store.existsSnapshot(contentId, index)) {
           LOGGER.finest("Grabbing frame #" + index + " at frame " + offset + "/" + frameCount + " with aspect " + grabber.getAspectRatio());
 
