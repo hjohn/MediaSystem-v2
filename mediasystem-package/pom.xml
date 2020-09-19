@@ -39,6 +39,29 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeGroupIds>hs.mediasystem</includeGroupIds>
+              <includeScope>runtime</includeScope>
+              <includes>**/*.less</includes>
+              <includes>**/*.css</includes>
+              <includes>**/*.yaml</includes>
+              <outputDirectory>${project.build.directory}/alternateLocation</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <executions>
           <execution>
@@ -52,6 +75,68 @@
                   <mainClass>hs.mediasystem.local.client.NonJavaFXFrontEndRunner</mainClass>
                 </transformer>
               </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+          <groupId>com.akathist.maven.plugins.launch4j</groupId>
+          <artifactId>launch4j-maven-plugin</artifactId>
+          <executions>
+              <execution>
+                  <id>l4j-clui</id>
+                  <phase>package</phase>
+                  <goals>
+                      <goal>launch4j</goal>
+                  </goals>
+                      <configuration>
+                      <headerType>console</headerType>
+                      <dontWrapJar>true</dontWrapJar>
+                      <jar>mediasystem.jar</jar>
+                      <outfile>${project.build.directory}/MediaSystem.exe</outfile>
+                      <downloadUrl>http://java.com/download</downloadUrl>
+                      <classPath>
+                          <mainClass>hs.mediasystem.local.client.NonJavaFXFrontEndRunner</mainClass>
+                      </classPath>
+                      <jre>
+                          <bundledJre64Bit>false</bundledJre64Bit>
+                          <bundledJreAsFallback>false</bundledJreAsFallback>
+                          <minVersion>11</minVersion>
+                          <jdkPreference>preferJre</jdkPreference>
+                          <runtimeBits>64</runtimeBits>
+                          <opts>
+                            <opt>-Dfile.encoding="UTF-8"</opt>
+                          </opts>
+                      </jre>
+                      <versionInfo>
+                          <fileVersion>1.0.0.0</fileVersion>
+                          <txtFileVersion>${project.version}</txtFileVersion>
+                          <fileDescription>${project.name}</fileDescription>
+                          <copyright>C</copyright>
+                          <productVersion>1.0.0.0</productVersion>
+                          <txtProductVersion>1.0.0.0</txtProductVersion>
+                          <productName>${project.name}</productName>
+                          <internalName>MediaSystem</internalName>
+                          <originalFilename>MediaSystem.exe</originalFilename>
+                      </versionInfo>
+                  </configuration>
+              </execution>
+          </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>make-bundles</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <appendAssemblyId>false</appendAssemblyId>
+              <descriptors>
+                <descriptor>src/main/assembly/zip.xml</descriptor>
+              </descriptors>
             </configuration>
           </execution>
         </executions>

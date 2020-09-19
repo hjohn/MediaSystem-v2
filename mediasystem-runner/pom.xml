@@ -126,6 +126,35 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
       </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/conf</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/java</directory>
+                  <include>**/*.less</include>
+                  <include>**/*.css</include>
+                  <include>**/*.yaml</include>
+                  <include>**/*.html</include>
+                </resource>
+                <resource>
+                  <directory>src/main/resources</directory>
+                  <include>**/*.html</include>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>
