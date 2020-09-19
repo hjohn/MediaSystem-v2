@@ -45,6 +45,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO document why the public methods are synchronized
 @Singleton
 public class WorkService {
   private static final String DEFAULT_DATA_SOURCE_NAME = "DEFAULT";
@@ -317,7 +318,7 @@ public class WorkService {
       Movie movie = (Movie)descriptor;
 
       return movie.getCollectionIdentifier()
-        .flatMap(ci -> find(toWorkId(ci)))
+        .flatMap(ci -> find(toWorkId(ci)))   // TODO this can trigger a remote look-up
         .map(r -> new Parent(r.getId(), r.getDetails().getTitle(), r.getDetails().getBackdrop().orElse(null)));
     }
 
@@ -329,6 +330,7 @@ public class WorkService {
     return Optional.empty();
   }
 
+  // FIXME This can potentially be extremely slow as it can do for example a collection query... not acceptable really
   Work toWork(Streamable streamable) {
     MediaDescriptor descriptor = findBestDescriptor(streamable);
 

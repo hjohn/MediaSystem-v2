@@ -2,6 +2,10 @@ package hs.mediasystem.domain.stream;
 
 import java.util.Objects;
 
+/**
+ * Unique identifier for a stream based on its content.  The same streams
+ * will have the same identifier, even if they have different names.
+ */
 public class ContentID {
   private final int id;
 

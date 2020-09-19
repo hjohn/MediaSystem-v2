@@ -13,7 +13,7 @@ import org.reactfx.value.Var;
 
 @Singleton
 public class StateFactory {
-  @Inject private StreamStateService streamStateService;
+  @Inject private StreamStateService streamStateService;  // TODO this still refers directly to the back-end
 
   public State create(ContentID contentId) {
     if(contentId == null) {

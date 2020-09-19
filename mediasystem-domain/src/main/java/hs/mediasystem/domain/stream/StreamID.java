@@ -4,6 +4,11 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Uniquely identifies a stream based on location and its name.  Unlike
+ * the content id, the stream id is unique even if the content of two
+ * streams is the same.
+ */
 public class StreamID {
   private static final Pattern PATTERN = Pattern.compile("([-0-9]+):([0-9]+):(.*)");
 
