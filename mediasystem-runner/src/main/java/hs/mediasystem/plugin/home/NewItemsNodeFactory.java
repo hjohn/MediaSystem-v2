@@ -1,39 +1,35 @@
 package hs.mediasystem.plugin.home;
 
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
+import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
-import hs.mediasystem.ui.api.RecommendationClient;
-import hs.mediasystem.ui.api.domain.Recommendation;
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
 
-import java.time.LocalDate;
-
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class NewItemsNodeFactory extends AbstractCarouselNodeFactory {
-  @Inject private RecommendationClient recommendationClient;
+public class NewItemsNodeFactory extends AbstractCarouselNodeFactory implements NodeFactory<NewItemsPresentation> {
 
-  public ActionListView<Recommendation> create() {
-    HorizontalCarousel<Recommendation> mediaGridView = new HorizontalCarousel<>(
-      recommendationClient.findNew(mediaType -> !mediaType.isComponent() && mediaType != MediaType.FOLDER && mediaType != MediaType.FILE),
-      e -> PresentationLoader.navigate(e, () -> getRecommendedProductionPresentation(e.getItem())),
-      new AnnotatedImageCellFactory<Recommendation>(this::fillRecommendationModel)
+  @Override
+  public ActionListView<NewItemsPresentation.Item> create(NewItemsPresentation presentation) {
+    HorizontalCarousel<NewItemsPresentation.Item> mediaGridView = new HorizontalCarousel<>(
+      presentation.getNewItems(),
+      e -> PresentationLoader.navigate(e, () -> getRecommendedProductionPresentation(e.getItem().recommendation)),
+      new AnnotatedImageCellFactory<NewItemsPresentation.Item>(this::fillRecommendationModel)
     );
+
+    Nodes.safeBindBidirectionalSelectedItemToModel(mediaGridView, presentation.selectedItem);
 
     return mediaGridView;
   }
 
-  private void fillRecommendationModel(Recommendation recommendation, AnnotatedImageCellFactory.Model model) {
-    boolean hasParent = recommendation.getWork().getType().isComponent();
-
+  private void fillRecommendationModel(NewItemsPresentation.Item item, AnnotatedImageCellFactory.Model model) {
     fillRecommendationModel(
-      recommendation,
-      hasParent ? recommendation.getWork().getParent().map(p -> p.getName()).orElse(null) : null,
-      recommendation.getWork().getDetails().getTitle(),
-      !hasParent ? recommendation.getWork().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null) : null,
+      item.recommendation,
+      item.parentTitle,
+      item.title,
+      item.subtitle,
       model
     );
   }

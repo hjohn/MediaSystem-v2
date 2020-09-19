@@ -68,6 +68,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private CollectionPresentationProvider collectionPresentationProvider;
   @Inject private CollectionClient collectionClient;
+  @Inject private NewItemsPresentation.Factory newItemsPresentationFactory;
   @Inject private NewItemsNodeFactory newItemsNodeFactory;
   @Inject private RecommendationsPresentation.Factory recommendationsPresentationFactory;
   @Inject private RecommendationsNodeFactory recommendationsNodeFactory;
@@ -194,11 +195,12 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     return mediaGridView;
   }
 
-  private ActionListView<Recommendation> createNewView(ObjectProperty<ImageHandle> backdrop) {
-    ActionListView<Recommendation> mediaGridView = newItemsNodeFactory.create();
+  private ActionListView<NewItemsPresentation.Item> createNewView(ObjectProperty<ImageHandle> backdrop) {
+    NewItemsPresentation presentation = newItemsPresentationFactory.create();
+    ActionListView<NewItemsPresentation.Item> mediaGridView = newItemsNodeFactory.create(presentation);
 
-    backdrop.bind(Val.wrap(mediaGridView.getSelectionModel().selectedItemProperty())
-      .map(item -> item.getWork().getParent().filter(p -> p.getType().isSerie()).flatMap(Parent::getBackdrop).or(() -> item.getWork().getDetails().getBackdrop()).orElse(null))
+    backdrop.bind(Val.wrap(presentation.selectedItem)
+      .map(item -> item.recommendation.getWork().getParent().filter(p -> p.getType().isSerie()).flatMap(Parent::getBackdrop).or(() -> item.recommendation.getWork().getDetails().getBackdrop()).orElse(null))
       .map(imageHandleFactory::fromURI)
     );
 
