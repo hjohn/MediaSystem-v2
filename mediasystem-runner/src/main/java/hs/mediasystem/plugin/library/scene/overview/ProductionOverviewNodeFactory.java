@@ -318,7 +318,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         }
       });
 
-      return Containers.vbox("dynamic-panel", Containers.vbox("episode-list-dynamic-panel", seasonsBar, gridView));
+      VBox vbox = Containers.vbox("episode-list-dynamic-panel", seasonsBar, gridView);
+
+      VBox.setVgrow(vbox, Priority.ALWAYS);
+
+      return Containers.vbox("dynamic-panel", vbox);
     }
 
     private Pane buildEpisodeDynamicUI() {
