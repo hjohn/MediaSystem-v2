@@ -247,53 +247,22 @@ public class WorkService {
     return Optional.ofNullable(Throwables.uncheck(() -> productionCollectionQueryServices.get(0).query(identifier)));
   }
 
+  // FIXME This can potentially be extremely slow as it can do for example a collection query... not acceptable really
+  Work toWork(Streamable streamable) {
+    MediaDescriptor descriptor = findBestDescriptor(streamable);
+    MediaDescriptor parentDescriptor = streamStore.findParentId(streamable.getId())
+      .flatMap(streamStore::findStream)
+      .map(this::findBestDescriptor)
+      .orElse(null);
+
+    return toWork(descriptor, parentDescriptor);
+  }
+
   Work toWork(MediaDescriptor descriptor, MediaDescriptor parentDescriptor) {
-    if(parentDescriptor != null) {
-      Details details = parentDescriptor.getDetails();
-      Parent parent = new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), details.getTitle(), details.getBackdrop().orElse(null));
-      Episode episode = (Episode)descriptor;
-
-      List<MediaStream> mediaStreams;
-
-      if(descriptor.getIdentifier().getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
-        String id = descriptor.getIdentifier().getId();
-        int slash = id.indexOf("/");
-        StreamID sid = StreamID.of(id.substring(slash + 1));
-
-        mediaStreams = streamStore.findStream(sid).map(mediaStreamService::toMediaStream).stream().collect(Collectors.toList());
-      }
-      else {
-        List<Streamable> childStreams = streamStore.findStreams(descriptor.getIdentifier());
-
-        /*
-         * When multiple streams are returned for an Episode, there are two cases:
-         * - Stream is split over multiple files
-         * - There are multiple versions of the same episode (or one is a preview)
-         *
-         * The top level State should be a reduction of all the stream states,
-         * but currently we just pick the first stream's State.
-         */
-
-        mediaStreams = childStreams.stream()
-          .map(mediaStreamService::toMediaStream)
-          .collect(Collectors.toList());
-      }
-
-      return new Work(
-        episode,
-        parent,
-        mediaStreams
-      );
-    }
-
-    List<MediaStream> mediaStreams = streamStore.findStreams(descriptor.getIdentifier()).stream()
-      .map(mediaStreamService::toMediaStream)
-      .collect(Collectors.toList());
-
     return new Work(
       descriptor,
-      createParentForMovieOrEpisode(descriptor).orElse(null),
-      mediaStreams
+      parentDescriptor == null ? createParentForMovieOrEpisode(descriptor).orElse(null) : createParent(parentDescriptor),
+      createMediaStreams(descriptor.getIdentifier())
     );
   }
 
@@ -303,52 +272,49 @@ public class WorkService {
 
       return movie.getCollectionIdentifier()
         .flatMap(ci -> find(toWorkId(ci)))   // TODO this can trigger a remote look-up
-        .map(r -> new Parent(r.getId(), r.getDetails().getTitle(), r.getDetails().getBackdrop().orElse(null)));
+        .map(w -> new Parent(w.getId(), w.getDetails().getTitle(), w.getDetails().getBackdrop().orElse(null)));
     }
 
     if(descriptor instanceof Episode) {
       return descriptorStore.find(descriptor.getIdentifier().getRootIdentifier())
-        .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getTitle(), d.getDetails().getBackdrop().orElse(null)));
+        .map(this::createParent);
     }
 
     return Optional.empty();
   }
 
-  // FIXME This can potentially be extremely slow as it can do for example a collection query... not acceptable really
-  Work toWork(Streamable streamable) {
-    MediaDescriptor descriptor = findBestDescriptor(streamable);
+  private List<MediaStream> createMediaStreams(Identifier identifier) {
+    List<MediaStream> mediaStreams;
 
-    List<MediaStream> mediaStreams = streamStore.findStreams(descriptor.getIdentifier()).stream()
-      .map(mediaStreamService::toMediaStream)
-      .collect(Collectors.toList());
+    if(identifier.getDataSource().getName().equals(DEFAULT_DATA_SOURCE_NAME)) {
+      String id = identifier.getId();
+      StreamID sid = StreamID.of(id.substring(id.indexOf("/") + 1));
 
-    if(mediaStreams.isEmpty()) {
-      mediaStreams = List.of(mediaStreamService.toMediaStream(streamable));
+      mediaStreams = streamStore.findStream(sid).map(mediaStreamService::toMediaStream).stream().collect(Collectors.toList());
+    }
+    else {
+
+      /*
+       * When multiple streams are returned for an Episode, there are two cases:
+       * - Stream is split over multiple files
+       * - There are multiple versions of the same episode (or one is a preview)
+       *
+       * The top level State should be a reduction of all the stream states,
+       * but currently we just pick the first stream's State.
+       */
+
+      mediaStreams = streamStore.findStreams(identifier).stream()
+        .map(mediaStreamService::toMediaStream)
+        .collect(Collectors.toList());
     }
 
-    return new Work(
-      descriptor,
-      createParentForMovieOrEpisode(descriptor).or(() -> createParentForStream(streamable.getId())).orElse(null),
-      mediaStreams
-    );
+    return mediaStreams;
   }
 
-  private Optional<Parent> createParentForStream(StreamID streamId) {
-    return streamStore.findParentId(streamId)
-      .flatMap(streamStore::findStream)
-      .map(this::findBestDescriptor)
-      .map(d -> new Parent(toWorkId(d.getIdentifier()), d.getDetails().getTitle(), d.getDetails().getBackdrop().orElse(null)));
-  }
+  private Parent createParent(MediaDescriptor descriptor) {
+    Details details = descriptor.getDetails();
 
-  private MediaDescriptor createMinimalDescriptor(Streamable streamable) {
-    return new Production(
-      new ProductionIdentifier(DataSource.instance(streamable.getType(), DEFAULT_DATA_SOURCE_NAME), "" + streamable.getId().asString()),
-      serieHelper.createMinimalDetails(streamable),
-      null,
-      Classification.EMPTY,
-      0.0,
-      Set.of()
-    );
+    return new Parent(toWorkId(descriptor.getIdentifier()), details.getTitle(), details.getBackdrop().orElse(null));
   }
 
   private MediaDescriptor findBestDescriptor(Streamable streamable) {
@@ -362,6 +328,17 @@ public class WorkService {
     return streamStore.findIdentification(streamable.getId())
         .flatMap(identification -> descriptorStore.find(identification.getPrimaryIdentifier()))
         .orElseGet(() -> createMinimalDescriptor(streamable));
+  }
+
+  private MediaDescriptor createMinimalDescriptor(Streamable streamable) {
+    return new Production(
+      new ProductionIdentifier(DataSource.instance(streamable.getType(), DEFAULT_DATA_SOURCE_NAME), "" + streamable.getId().asString()),
+      serieHelper.createMinimalDetails(streamable),
+      null,
+      Classification.EMPTY,
+      0.0,
+      Set.of()
+    );
   }
 
   private static WorkId toWorkId(Identifier identifier) {
