@@ -67,6 +67,7 @@ public class LocalQueryService extends AbstractQueryService {
             childStream.getAttributes().get(Attribute.SUBTITLE),
             childStream.getAttributes().get(Attribute.DESCRIPTION),
             null,
+            null,
             new ImageURI("localdb://" + childStream.getId().getContentId().asInt() + "/1", null),
             null
           ),
@@ -83,6 +84,7 @@ public class LocalQueryService extends AbstractQueryService {
       new ProductionIdentifier(SEASON, identifier.getId() + "/" + e.getKey()),
       new Details(
         "Season " + e.getKey(),
+        null,
         null,
         null,
         null,
@@ -104,6 +106,7 @@ public class LocalQueryService extends AbstractQueryService {
         description.map(Description::getDescription).orElse(attributes.get(Attribute.ALTERNATIVE_TITLE)),
         description.map(Description::getDate).orElse(null),
         descriptionService.getCover(streamable).orElse(null),
+        null,
         descriptionService.getBackdrop(streamable).orElse(null)
       ),
       null,

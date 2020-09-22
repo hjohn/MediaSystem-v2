@@ -45,7 +45,8 @@ public class TmdbCollectionQueryService extends AbstractQueryService {
           null,
           node.path("overview").asText(),
           null,
-          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifierCollectionIdentifier),
+          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifierCollectionIdentifier),  // as cover
+          null,
           tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + identifierCollectionIdentifier)
         )
       ),

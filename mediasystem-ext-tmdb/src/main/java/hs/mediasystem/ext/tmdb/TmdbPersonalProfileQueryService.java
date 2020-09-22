@@ -90,6 +90,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
         node.path("overview").textValue(),
         TheMovieDatabase.parseDateOrNull(releaseDate),
         posterURI,
+        null,
         backdropURI
       ),
       reception,

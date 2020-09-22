@@ -78,7 +78,7 @@ public class PlaybackOverlayPane extends StackPane {
 
   public PlaybackOverlayPane(PlaybackOverlayPresentation presentation, ImageHandleFactory imageHandleFactory) {
     this.presentation.set(presentation);
-    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work).map(Work::getDetails).map(d -> d.getImage().orElse(null)).map(imageHandleFactory::fromURI);
+    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work).map(Work::getDetails).map(d -> d.getSampleImage().orElse(null)).map(imageHandleFactory::fromURI);
     this.player.set(presentation.playerPresentation.get());
     this.overlayVisible.bind(presentation.overlayVisible);
 

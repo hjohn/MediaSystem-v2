@@ -34,7 +34,7 @@ public class Series {
   public static Serie create(ProductionIdentifier identifier, String title, List<Episode> episodes) {
     return new Serie(
       identifier,
-      new Details(title, "subtitle", "Power of 3", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
+      new Details(title, "subtitle", "Power of 3", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
       new Reception(8, 12345),
       new Classification(
         Arrays.asList("Action", "Science-Fiction"),
@@ -49,7 +49,7 @@ public class Series {
       Arrays.asList(
         new Season(
           new ProductionIdentifier(DataSource.instance(MediaType.SEASON, "TMDB"), "1"),
-          new Details("Season 1", "subtitle", "", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
+          new Details("Season 1", "subtitle", "", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
           1,
           episodes
         )

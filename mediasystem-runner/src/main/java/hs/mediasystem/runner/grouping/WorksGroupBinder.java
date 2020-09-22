@@ -33,7 +33,7 @@ public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup
 
   @Override
   public Function<WorksGroup, ImageHandle> imageHandleExtractor() {
-    return wg -> wg.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null);
+    return wg -> wg.getDetails().getCover().map(imageHandleFactory::fromURI).orElse(null);
   }
 
   @Override

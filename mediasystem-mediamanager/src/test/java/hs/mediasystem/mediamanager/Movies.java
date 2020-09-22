@@ -30,7 +30,7 @@ public class Movies {
   public static Movie create(ProductionIdentifier identifier, String title) {
     return new Movie(
       identifier,
-      new Details(title, "subtitle", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
+      new Details(title, "subtitle", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
       new Reception(8, 12345),
       Duration.ofHours(2),
       new Classification(

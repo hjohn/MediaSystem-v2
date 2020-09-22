@@ -71,8 +71,9 @@ public class LocalWorksClient implements WorksClient {
 
   /*
    * Note:
-   * - image is taken from descriptor or otherwise from stream
-   * - backdrop is taken from descriptor or otherwise from its parent
+   * - cover image is created from multiple snapshots if missing
+   * - sample image is taken first snapshot if missing (don't use backdrop, it is not a sample!)
+   * - backdrop is taken from parent or from the second snapshot if missing
    */
   private static Details createDetails(MediaDescriptor descriptor, Parent parent, Optional<MediaStream> mediaStream) {
     return new Details(
@@ -80,10 +81,15 @@ public class LocalWorksClient implements WorksClient {
       descriptor.getDetails().getSubtitle().orElse(null),
       descriptor.getDetails().getDescription().orElse(null),
       descriptor.getDetails().getDate().orElse(null),
-      descriptor.getDetails().getImage().or(() -> mediaStream.map(LocalWorksClient::snapshotsToCover)).orElse(null),
+      descriptor.getDetails().getCover()
+        .or(() -> mediaStream.map(LocalWorksClient::snapshotsToCover))
+        .orElse(null),
+      descriptor.getDetails().getSampleImage()
+        .or(() -> mediaStream.map(LocalWorksClient::snapshotsToSampleImage))
+        .orElse(null),
       descriptor.getDetails().getBackdrop()
-        .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
         .or(() -> parent == null ? Optional.empty() : parent.getBackdrop())
+        .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
         .orElse(null),
       descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
       descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,
@@ -100,6 +106,15 @@ public class LocalWorksClient implements WorksClient {
     return mediaStream.getMediaStructure()
       .filter(ms -> !ms.getVideoTracks().isEmpty())
       .map(ms -> new ImageURI("multi:600,900;38,3,524,294;38,303,524,294;38,603,524,294:localdb://" + id + "/1|localdb://" + id + "/2|localdb://" + id + "/3", null))
+      .orElse(null);
+  }
+
+  private static ImageURI snapshotsToSampleImage(MediaStream mediaStream) {
+    int id = mediaStream.getId().getContentId().asInt();
+
+    return mediaStream.getMediaStructure()
+      .filter(ms -> !ms.getVideoTracks().isEmpty())
+      .map(ms -> new ImageURI("localdb://" + id + "/1", null))
       .orElse(null);
   }
 

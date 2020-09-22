@@ -40,7 +40,7 @@ public class Episodes {
   public static Episode create(EpisodeIdentifier identifier, String title, int season, int episodeNumber) {
     return new Episode(
       identifier,
-      new Details(title, "Subtitle", "Stuff", LocalDate.of(2012, 6, 6), new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
+      new Details(title, "Subtitle", "Stuff", LocalDate.of(2012, 6, 6), null, new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
       new Reception(8, 12345),
       Duration.ofMinutes(40),
       season,

@@ -67,14 +67,12 @@ public class SerieHelper {
 
   public Details createMinimalDetails(Streamable streamable) {
     Optional<StreamMetaData> metaData = metaDataProvider.find(streamable.getId().getContentId());
-    ImageURI image;
+    ImageURI cover = null;
+    ImageURI image = metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 1).map(list -> list.get(1)).map(Snapshot::getImageUri).orElse(null);
     ImageURI backdrop = null;
 
-    if(streamable.getType().isComponent()) {
-      image = metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 1).map(list -> list.get(1)).map(Snapshot::getImageUri).orElse(null);
-    }
-    else {
-      image = metaData.map(SerieHelper::createImage).orElse(null);
+    if(!streamable.getType().isComponent()) {
+      cover = metaData.map(SerieHelper::createCover).orElse(null);
       backdrop = metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 2).map(list -> list.get(2)).map(Snapshot::getImageUri).orElse(null);
     }
 
@@ -83,12 +81,13 @@ public class SerieHelper {
       streamable.getAttributes().get(Attribute.SUBTITLE),
       streamable.getAttributes().get(Attribute.DESCRIPTION),
       null,
+      cover,
       image,
       backdrop
     );
   }
 
-  private static ImageURI createImage(StreamMetaData metaData) {
+  private static ImageURI createCover(StreamMetaData metaData) {
     List<Snapshot> snapshots = metaData.getSnapshots();
 
     if(metaData.getVideoTracks().isEmpty() || snapshots.size() < 2) {

@@ -41,6 +41,7 @@ public class FileQueryService extends AbstractQueryService {
         streamable.getAttributes().get(Attribute.ALTERNATIVE_TITLE),
         null,
         null,
+        null,
         null
       ),
       null,

@@ -299,7 +299,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     model.title.set(collection.getTitle());
     model.subtitle.set(null);
     model.sequence.set(null);
-    model.imageHandle.set(collection.getImage().map(imageHandleFactory::fromURI).orElse(null));
+    model.imageHandle.set(collection.getCover().map(imageHandleFactory::fromURI).orElse(null));
     model.watchedFraction.set(-1);
     model.age.set(null);
   }

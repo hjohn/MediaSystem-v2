@@ -40,7 +40,7 @@ public class CollectionService {
       String uris = works.stream()
         .map(Work::getDescriptor)
         .map(MediaDescriptor::getDetails)
-        .map(Details::getImage)
+        .map(Details::getCover)
         .flatMap(Optional::stream)
         .map(Object::toString)
         .limit(3)

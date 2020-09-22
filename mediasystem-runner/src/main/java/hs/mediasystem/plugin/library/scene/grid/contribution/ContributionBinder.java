@@ -31,7 +31,7 @@ public class ContributionBinder implements MediaGridViewCellFactory.Binder<Contr
 
   @Override
   public Function<Contribution, ImageHandle> imageHandleExtractor() {
-    return c -> c.getPerson().getImage().map(imageHandleFactory::fromURI).orElse(null);
+    return c -> c.getPerson().getCover().map(imageHandleFactory::fromURI).orElse(null);
   }
 
   @Override

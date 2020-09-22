@@ -15,7 +15,7 @@ public class Person {
   private final PersonId id;
   private final String name;
   private final Optional<String> biography;
-  private final Optional<ImageURI> image;
+  private final Optional<ImageURI> cover;
   private final double popularity;
   private final Optional<Gender> gender;
   private final Optional<String> birthPlace;
@@ -23,7 +23,7 @@ public class Person {
   private final Optional<LocalDate> deathDate;
   private final List<Participation> participations;
 
-  public Person(PersonId id, String name, String biography, ImageURI image, Gender gender, double popularity, String birthPlace, LocalDate birthDate, LocalDate deathDate, List<Participation> participations) {
+  public Person(PersonId id, String name, String biography, ImageURI cover, Gender gender, double popularity, String birthPlace, LocalDate birthDate, LocalDate deathDate, List<Participation> participations) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -37,7 +37,7 @@ public class Person {
     this.id = id;
     this.name = name;
     this.biography = Optional.ofNullable(biography);
-    this.image = Optional.ofNullable(image);
+    this.cover = Optional.ofNullable(cover);
     this.popularity = popularity;
     this.gender = Optional.ofNullable(gender);
     this.birthPlace = Optional.ofNullable(birthPlace);
@@ -58,8 +58,8 @@ public class Person {
     return biography;
   }
 
-  public Optional<ImageURI> getImage() {
-    return image;
+  public Optional<ImageURI> getCover() {
+    return cover;
   }
 
   public Optional<Gender> getGender() {

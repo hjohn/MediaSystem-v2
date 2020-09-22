@@ -71,7 +71,8 @@ public class TmdbQueryService extends AbstractQueryService {
         null,
         node.get("overview").asText(),
         releaseDate == null || releaseDate.isEmpty() ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
-        tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier),
+        tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier),  // as cover
+        null,
         null
       ),
       seasonNumber,
@@ -94,7 +95,8 @@ public class TmdbQueryService extends AbstractQueryService {
         null,
         node.get("overview").asText(),
         releaseDate == null ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
-        tmdb.createImageURI(node.path("still_path").textValue(), "original", "image:cover:" + identifier),
+        null,
+        tmdb.createImageURI(node.path("still_path").textValue(), "original", "image:cover:" + identifier),  // as sample image
         null
       ),
       reception,

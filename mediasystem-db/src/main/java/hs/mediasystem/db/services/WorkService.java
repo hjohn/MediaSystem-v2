@@ -251,23 +251,7 @@ public class WorkService {
     if(parentDescriptor != null) {
       Details details = parentDescriptor.getDetails();
       Parent parent = new Parent(new WorkId(parentDescriptor.getIdentifier().getDataSource(), parentDescriptor.getIdentifier().getId()), details.getTitle(), details.getBackdrop().orElse(null));
-      Episode ep = (Episode)descriptor;
-      Episode episode = new Episode(  // New Episode created here to add backdrop to Episode if one is missing
-        (EpisodeIdentifier)ep.getIdentifier(),
-        new Details(
-          ep.getTitle(),
-          ep.getDetails().getSubtitle().orElse(null),
-          ep.getDescription().orElse(null),
-          ep.getDate().orElse(null),
-          ep.getImage().orElse(null),
-          ep.getBackdrop().or(() -> details.getBackdrop()).orElse(null)
-        ),
-        ep.getReception(),
-        ep.getDuration(),
-        ep.getSeasonNumber(),
-        ep.getNumber(),
-        ep.getPersonRoles()
-      );
+      Episode episode = (Episode)descriptor;
 
       List<MediaStream> mediaStreams;
 

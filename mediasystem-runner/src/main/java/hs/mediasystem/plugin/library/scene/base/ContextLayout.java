@@ -124,7 +124,7 @@ public class ContextLayout {
     panel.title.set(details.getTitle());
     panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getReleaseDate().orElse(null)));
     panel.overview.set(details.getDescription().orElse(null));
-    panel.imageURI.set(details.getImage().orElse(null));
+    panel.imageURI.set(details.getCover().orElse(null));
 
     return panel;
   }
@@ -134,7 +134,7 @@ public class ContextLayout {
 
     panel.title.set(person.getName());
 
-    person.getImage().ifPresent(panel.imageURI::set);
+    person.getCover().ifPresent(panel.imageURI::set);
     person.getBiography().ifPresent(panel.biography::set);
     person.getBirthPlace().ifPresent(panel.birthPlace::set);
     person.getBirthDate().ifPresent(bd -> panel.birthDate.set(MediaItemFormatter.formattedLocalDate(bd) + person.getDeathDate().map(MediaItemFormatter::formattedLocalDate).map(x -> " - " + x).orElse("")));

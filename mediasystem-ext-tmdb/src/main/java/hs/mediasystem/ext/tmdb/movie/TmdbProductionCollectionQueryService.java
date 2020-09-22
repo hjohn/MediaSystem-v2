@@ -41,7 +41,8 @@ public class TmdbProductionCollectionQueryService implements ProductionCollectio
           null,
           node.path("overview").asText(),
           null,
-          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + productionCollectionIdentifier),
+          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + productionCollectionIdentifier),  // as cover
+          null,
           tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + productionCollectionIdentifier)
         )
       ),

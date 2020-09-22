@@ -79,7 +79,7 @@ public class CastPaneFactory {
       Contribution contributor = topContributors.get(i);
       AsyncImageProperty imageProperty = new AsyncImageProperty(400, 600);
 
-      imageProperty.imageHandleProperty().set(contributor.getPerson().getImage().map(imageHandleFactory::fromURI).orElse(null));
+      imageProperty.imageHandleProperty().set(contributor.getPerson().getCover().map(imageHandleFactory::fromURI).orElse(null));
 
       Label ph = Labels.create("ph", "?");
 

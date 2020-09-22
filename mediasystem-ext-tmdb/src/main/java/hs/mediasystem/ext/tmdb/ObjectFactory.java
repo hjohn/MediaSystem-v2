@@ -122,6 +122,7 @@ public class ObjectFactory {
       node.path("overview").textValue(),
       parseDate(releaseDate),
       posterURI,
+      null,
       backdropURI
     );
   }

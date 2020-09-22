@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.home;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
@@ -31,7 +32,11 @@ public abstract class AbstractCarouselNodeFactory {
       .map(seq -> seq.getSeasonNumber().map(s -> s + "x").orElse("") + seq.getNumber())
       .orElse(null)
     );
-    model.imageHandle.set(work.getDetails().getBackdrop().map(imageHandleFactory::fromURI).orElse(null));
+
+    // This has an exception for Movies, as the sample images for movies are often very wide aspect which does
+    // not look that nice.  Also, recognizable images are preferred.  Perhaps introduce an alternative backdrop
+    // image so the main backdrop and the image in the preview does not necessarily need to be the same.
+    model.imageHandle.set((work.getType() == MediaType.MOVIE ? work.getDetails().getBackdrop() : work.getDetails().getSampleImage()).or(() -> work.getDetails().getBackdrop()).map(imageHandleFactory::fromURI).orElse(null));
 
     double fraction = work.getWatchedFraction();
 

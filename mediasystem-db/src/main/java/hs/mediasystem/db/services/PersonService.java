@@ -35,7 +35,7 @@ public class PersonService {
       new PersonId(pp.getPerson().getIdentifier().getDataSource(), pp.getPerson().getIdentifier().getId()),
       pp.getPerson().getName(),
       pp.getBiography(),
-      pp.getPerson().getImage(),
+      pp.getPerson().getCover(),
       pp.getGender() == null ? null : Gender.valueOf(pp.getGender().toString()),
       pp.getPopularity(),
       pp.getBirthPlace(),

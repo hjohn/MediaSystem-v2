@@ -98,7 +98,8 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
         return fraction;
       }).orElse(-1.0));
 
-      ImageHandle imageHandle = work.getDetails().getBackdrop()
+      ImageHandle imageHandle = work.getDetails().getSampleImage()
+        .or(() -> work.getDetails().getBackdrop())
         .map(imageHandleFactory::fromURI)
         .orElse(null);
 

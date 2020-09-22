@@ -6,10 +6,10 @@ import hs.mediasystem.util.ImageURI;
 public class Person implements MediaDescriptor {
   private final PersonIdentifier identifier;
   private final String name;
-  private final ImageURI image;
+  private final ImageURI cover;
   private final Details details;
 
-  public Person(PersonIdentifier identifier, String name, ImageURI image) {
+  public Person(PersonIdentifier identifier, String name, ImageURI cover) {
     if(identifier == null) {
       throw new IllegalArgumentException("identifier cannot be null");
     }
@@ -19,8 +19,8 @@ public class Person implements MediaDescriptor {
 
     this.identifier = identifier;
     this.name = name;
-    this.details = new Details(name, null, null, null, image, null);
-    this.image = image;
+    this.details = new Details(name, null, null, null, cover, null, null);
+    this.cover = cover;
   }
 
   @Override
@@ -37,7 +37,7 @@ public class Person implements MediaDescriptor {
     return name;
   }
 
-  public ImageURI getImage() {
-    return image;
+  public ImageURI getCover() {
+    return cover;
   }
 }

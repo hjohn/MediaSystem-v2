@@ -1,9 +1,6 @@
 package hs.mediasystem.plugin.library.scene;
 
-import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Binder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
@@ -16,7 +13,6 @@ import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
@@ -49,20 +45,19 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
 
   @Override
   public Function<Work, ObservableValue<? extends String>> titleBindProvider() {
-    return r -> new SimpleStringProperty(r.getDetails().getTitle());
+    return w -> new SimpleStringProperty(w.getDetails().getTitle());
   }
 
   @Override
   public Function<Work, ImageHandle> imageHandleExtractor() {
-    return r -> r.getDetails().getImage()
-      .or(() -> Optional.of(r).flatMap(Work::getPrimaryStream).map(MediaStream::getId).map(StreamID::getContentId).map(ContentID::asInt).map(id -> new ImageURI("localdb://" + id + "/1", null)))
+    return w -> (w.getType().isComponent() ? w.getDetails().getSampleImage() : w.getDetails().getCover())
       .map(imageHandleFactory::fromURI)
       .orElse(null);
   }
 
   @Override
   public Function<Work, ObservableValue<? extends String>> sideBarTopLeftBindProvider() {
-    return r -> new SimpleStringProperty(r.getDetails().getSequence().map(this::createSequenceInfo).orElseGet(() -> createYearRange(r)));
+    return w -> new SimpleStringProperty(w.getDetails().getSequence().map(this::createSequenceInfo).orElseGet(() -> createYearRange(w)));
   }
 
   private String createSequenceInfo(Sequence sequence) {
@@ -78,7 +73,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
 
   @Override
   public Function<Work, ObservableValue<? extends String>> sideBarCenterBindProvider() {
-    return r -> new SimpleStringProperty(r.getParent()
+    return w -> new SimpleStringProperty(w.getParent()
       .filter(p -> p.getType().equals(MediaType.COLLECTION))
       .map(Parent::getName)
       .orElse("")

@@ -56,7 +56,7 @@ public class GenreGrouping implements Grouping<Work> {
           }
         })
         .map(Work::getDetails)
-        .map(Details::getImage)
+        .map(Details::getSampleImage)
         .flatMap(Optional::stream)
         .filter(Objects::nonNull)
         .map(Object::toString)
@@ -68,7 +68,8 @@ public class GenreGrouping implements Grouping<Work> {
         null,
         RM.getText(entry.getKey().toLowerCase(), "description"),
         null,
-        uris.isEmpty() ? null : new ImageURI("multi::" + uris, null),
+        uris.isEmpty() ? null : new ImageURI("multi::" + uris, null),  // as cover
+        null,
         backgroundURIRef.get(),
         null,
         null,

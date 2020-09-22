@@ -97,7 +97,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       Work work = presentation.rootItem;
       AsyncImageProperty imageProperty = new AsyncImageProperty(840, 840);
 
-      imageProperty.imageHandleProperty().set(work.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
+      imageProperty.imageHandleProperty().set(work.getDetails().getCover().map(imageHandleFactory::fromURI).orElse(null));
 
       BiasedImageView poster = new BiasedImageView(2.0 / 3);
 
@@ -365,7 +365,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       Work work = presentation.episodeItem.getValue();
       AsyncImageProperty imageProperty = new AsyncImageProperty(840, 840);
 
-      imageProperty.imageHandleProperty().set(work.getDetails().getImage().map(imageHandleFactory::fromURI).orElse(null));
+      imageProperty.imageHandleProperty().set(work.getDetails().getSampleImage().map(imageHandleFactory::fromURI).orElse(null));
 
       Label label = Labels.create("ph", "?");
 

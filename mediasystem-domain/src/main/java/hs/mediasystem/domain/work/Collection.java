@@ -6,13 +6,13 @@ import java.util.Optional;
 
 public class Collection {
   private final String title;
-  private final Optional<ImageURI> image;
+  private final Optional<ImageURI> cover;
   private final Optional<ImageURI> backdrop;
   private final CollectionDefinition definition;
 
-  public Collection(String title, ImageURI image, ImageURI backdrop, CollectionDefinition definition) {
+  public Collection(String title, ImageURI cover, ImageURI backdrop, CollectionDefinition definition) {
     this.title = title;
-    this.image = Optional.ofNullable(image);
+    this.cover = Optional.ofNullable(cover);
     this.backdrop = Optional.ofNullable(backdrop);
     this.definition = definition;
   }
@@ -21,8 +21,8 @@ public class Collection {
     return title;
   }
 
-  public Optional<ImageURI> getImage() {
-    return image;
+  public Optional<ImageURI> getCover() {
+    return cover;
   }
 
   public Optional<ImageURI> getBackdrop() {
