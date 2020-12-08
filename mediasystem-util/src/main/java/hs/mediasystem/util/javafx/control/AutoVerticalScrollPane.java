@@ -37,6 +37,7 @@ public class AutoVerticalScrollPane extends ScrollPane {
 
     getStyleClass().setAll("auto-vertical-scroll-pane");
     setFitToWidth(true);
+    setMouseTransparent(true);
     setHbarPolicy(ScrollBarPolicy.NEVER);
     setVbarPolicy(ScrollBarPolicy.NEVER);
 
