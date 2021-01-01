@@ -89,7 +89,7 @@
                   <goals>
                       <goal>launch4j</goal>
                   </goals>
-                      <configuration>
+                  <configuration>
                       <headerType>console</headerType>
                       <dontWrapJar>true</dontWrapJar>
                       <jar>mediasystem.jar</jar>
@@ -143,4 +143,33 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>no-launch4j</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.akathist.maven.plugins.launch4j</groupId>
+            <artifactId>launch4j-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>l4j-clui</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>make-bundles</id>
+                <phase>none</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
