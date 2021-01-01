@@ -8,7 +8,7 @@ import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.SubtitleTrack;
 import hs.mediasystem.domain.work.VideoTrack;
-import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
@@ -213,7 +213,7 @@ public class ShowInfoEventHandler {
       listBox.getChildren().add(gridPane);
     }
 
-    Dialogs.show(event, "", vbox);
+    Presentations.showWindow(event, vbox);
   }
 
   private static String addLineFeeds(String text, int max) {

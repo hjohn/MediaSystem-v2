@@ -81,7 +81,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
       model.title.set(work.getDetails().getTitle());
       model.subtitle.set(work.getDetails().getSubtitle().orElse(null));
       model.watchedFraction.set(work.getPrimaryStream().flatMap(MediaStream::getDuration).map(d -> {
-        if(work.getState().isConsumed().getValue()) {
+        if(work.getState().isConsumed()) {
           return 1.0;
         }
 
@@ -89,7 +89,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
           return Double.NaN;
         }
 
-        double fraction = (double)work.getState().getResumePosition().getValue().toSeconds() / d.toSeconds();
+        double fraction = (double)work.getState().getResumePosition().toSeconds() / d.toSeconds();
 
         if(fraction <= 0) {
           fraction = -1;
@@ -113,7 +113,9 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
       }
     });
 
-    Nodes.visible(listView).values().map(visible -> visible ? (ObservableList<Work>)(ObservableList<?>)presentation.items : FXCollections.<Work>emptyObservableList()).feedTo(listView.itemsProperty());
+    EventStreams.valuesOf(Nodes.showing(listView))
+      .map(visible -> visible ? (ObservableList<Work>)(ObservableList<?>)presentation.items : FXCollections.<Work>emptyObservableList())
+      .feedTo(listView.itemsProperty());
 
     EventStreams.valuesOf(presentation.selectedItem)
       .withDefaultEvent(presentation.selectedItem.getValue())

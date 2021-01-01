@@ -5,6 +5,10 @@ import hs.mediasystem.runner.util.DebugFX;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -33,9 +37,27 @@ public class ParentPresentation implements Presentation, Navigable {
       return;
     }
 
+    Presentation presentation = previousPresentations.removeLast();
+
     childPresentation.removeListener(listener);
-    childPresentation.set(previousPresentations.removeLast());
+    childPresentation.set(presentation);
     childPresentation.addListener(listener);
+
+    /*
+     * Determine presentation stack for refreshing first, then refresh it.
+     *
+     * The stack should be the presentation to be shown plus any of its
+     * child presentations.
+     */
+
+    List<Presentation> presentations = Stream.iterate(
+        presentation,
+        Objects::nonNull,
+        p -> p instanceof ParentPresentation ? ((ParentPresentation)p).childPresentation.get() : null
+      )
+      .collect(Collectors.toList());
+
+    Presentations.refreshPresentations(e, presentations);
 
     e.consume();
   }

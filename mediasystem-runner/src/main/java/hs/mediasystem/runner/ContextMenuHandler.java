@@ -1,6 +1,7 @@
 package hs.mediasystem.runner;
 
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.ResourceManager;
@@ -83,7 +84,7 @@ public class ContextMenuHandler {
       gridPane.getStyleClass().add("option-menu-dialog");
       gridPane.getStylesheets().add(LESS_LOADER.compile("option-menu-dialog.less"));
 
-      Dialogs.show(event, gridPane);
+      Presentations.showDialog(event, gridPane);
 
       event.consume();
     }

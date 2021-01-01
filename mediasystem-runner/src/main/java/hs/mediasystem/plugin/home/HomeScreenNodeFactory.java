@@ -14,7 +14,6 @@ import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ResourceImageHandle;
 import hs.mediasystem.util.Tuple;
-import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -143,9 +142,8 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     });
 
     presentation.selectedItem.values()
-      .repeatOn(Nodes.visible(menuListView).values())
       .conditionOnShowing(menuListView)
-      .observe(t -> {
+      .subscribe(t -> {
         menuListView.getSelectionModel().select(t.a);
         activeListView.filter(Objects::nonNull).ifPresent(lv -> lv.getSelectionModel().select(t.b));
       });

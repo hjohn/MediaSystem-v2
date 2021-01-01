@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.jfx.eventstream.Changes;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
@@ -15,11 +16,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -42,6 +44,10 @@ public abstract class GridViewPresentationFactory {
 
   public class GridViewPresentation<T> extends AbstractPresentation implements Navigable {
 
+    // Model
+    public final ObjectProperty<Object> rootContextItem = new SimpleObjectProperty<>();
+    public final ObjectProperty<List<T>> inputItems = new SimpleObjectProperty<>(List.of());   // Items this presentation was constructed with (ungrouped, unsorted, unfiltered)
+
     /**
      * Contains the item that is relevant for the current active items in this presentation.  This
      * may be a Parent<T>, but can also be an unrelated item or null if this was supplied as root
@@ -49,7 +55,6 @@ public abstract class GridViewPresentationFactory {
      */
     public final Var<Object> contextItem = Var.newSimpleVar(null);
 
-    private final Object rootContextItem;
     private final SettingsSource settingsSource;
 
     public final Var<SortOrder<T>> sortOrder = Var.newSimpleVar(null);
@@ -66,6 +71,7 @@ public abstract class GridViewPresentationFactory {
 
     private final ObservableList<Grouping<T>> originalGroupings = FXCollections.observableArrayList();
     private final Var<Object> internalSelectedItem = Var.newSimpleVar(null);
+    private final String lastSelectedId;  // Contains the last selected id for this view, or null if there was none stored
 
     public final Val<Object> selectedItem = internalSelectedItem;
     public final ObservableList<Object> items = FXCollections.observableArrayList();
@@ -77,18 +83,22 @@ public abstract class GridViewPresentationFactory {
     public final Val<Integer> totalItemCount = totalItemCountInternal;
     public final Val<Integer> visibleUniqueItemCount = visibleUniqueItemCountInternal;
 
-    private final List<T> inputItems;   // Items this presentation was constructed with (ungrouped, unsorted, unfiltered)
-
     private List<Object> rootItems;     // Root items (with optional children) with the active grouping applied (unsorted, unfiltered)
     private List<Object> rawBaseItems;  // Currently active items, either the root items or a set of children (unsorted, unfiltered)
     private List<Object> baseItems;     // Currently active items, either the root items or a set of children (sorted, filtered)
 
-    protected GridViewPresentation(String settingName, List<T> inputItems, ViewOptions<T> viewOptions, Object rootContextItem) {
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param settingName a name under which the view settings and last selected item can be stored, cannot be null
+     * @param viewOptions a {@link ViewOptions}, cannot be null
+     */
+    protected GridViewPresentation(String settingName, ViewOptions<T> viewOptions) {
       this.settingsSource = settingsClient.of(SYSTEM_PREFIX + settingName);
 
-      this.inputItems = inputItems;
-      this.rootContextItem = rootContextItem;
-      this.contextItem.setValue(rootContextItem);
+      this.contextItem.bind(rootContextItem);  // initially bound, can be unbound when navigating to a child
+      this.lastSelectedId = settingsSource.getSetting("last-selected");
 
       this.availableSortOrders.setAll(viewOptions.sortOrders);
       this.availableFilters.setAll(viewOptions.filters);
@@ -101,14 +111,14 @@ public abstract class GridViewPresentationFactory {
       this.stateFilter.setValue(viewOptions.stateFilters.get(0));
       this.grouping.setValue(viewOptions.groupings.get(0));
 
-      setupSortingAndFiltering();  // Sets up grouping
       setupPersistence(settingsSource, binderProvider);
+      setupSortingAndFiltering();  // Sets up grouping
     }
 
     @Override
     public void navigateBack(Event e) {
-      if(!Objects.equals(this.contextItem.getValue(), rootContextItem)) {
-        this.contextItem.setValue(rootContextItem);
+      if(!this.contextItem.isBound()) {
+        this.contextItem.bind(rootContextItem);
         e.consume();
       }
     }
@@ -130,15 +140,6 @@ public abstract class GridViewPresentationFactory {
         }
       });
 
-      String selectedId = ss.getSetting("last-selected");
-
-      if(selectedId != null) {
-        this.items.stream()
-          .filter(i -> binderProvider.map(IDBinder.class, IDBinder<Object>::toId, i).equals(selectedId))
-          .findFirst()
-          .ifPresent(this::selectItem);
-      }
-
       this.selectedItem.addListener((obs, old, current) -> {
         if(current != null) {
           String id = binderProvider.map(IDBinder.class, IDBinder<Object>::toId, current);
@@ -157,7 +158,21 @@ public abstract class GridViewPresentationFactory {
     private void setRootItems(List<Object> newItems) {
       this.rootItems = newItems;
 
-      setRawBaseItems(rootItems);
+      updateRawBaseItems();
+    }
+
+    private void updateRawBaseItems() {
+      if(contextItem.isBound()) {
+        availableGroupings.setAll(originalGroupings);
+        setRawBaseItems(rootItems);
+      }
+      else {
+        @SuppressWarnings("unchecked")
+        List<Object> children = (List<Object>)((Parent<T>)contextItem.getValue()).getChildren();
+
+        availableGroupings.clear();
+        setRawBaseItems(children);
+      }
     }
 
     /**
@@ -177,6 +192,11 @@ public abstract class GridViewPresentationFactory {
      * hierarchical grouping).
      */
     private void updateFinalItemsAndGrouping() {
+
+      // Before changing the final items, first determine which item to select based on what
+      // is currently available:
+      Object itemToSelect = findBestItemToSelect();
+
       SortOrder<T> order = sortOrder.getValue();
 
       /*
@@ -227,6 +247,30 @@ public abstract class GridViewPresentationFactory {
 
       totalItemCountInternal.setValue(rawBaseItems.size());
       visibleUniqueItemCountInternal.setValue(baseItems.size());
+
+      /*
+       * Handle selection
+       */
+
+      if(itemToSelect != null) {
+        String itemToSelectId = toId(itemToSelect);
+
+        // As itemToSelect might be an older instance of the item wanted (due to refresh), find the latest instance of it:
+        itemToSelect = findById(itemToSelectId);
+      }
+
+      if(itemToSelect == null && !baseItems.isEmpty()) {
+        itemToSelect = baseItems.get(0);
+      }
+
+      selectItem(itemToSelect);
+    }
+
+    private Object findById(String id) {
+      return items.stream()
+        .filter(i -> toId(i).equals(id))
+        .findFirst()
+        .orElse(null);
     }
 
     private <E, G extends Comparable<G>> Map<Comparable<Object>, List<E>> group(List<E> elements, Function<E, List<Comparable<Object>>> grouper) {
@@ -256,53 +300,29 @@ public abstract class GridViewPresentationFactory {
     }
 
     private void setupSortingAndFiltering() {
-      setRootItems(grouping.getValue().group(inputItems));
+      Changes.of(inputItems).subscribe(list -> setRootItems(grouping.getValue().group(list)));
 
+      // Changes in sortOrder, filter or stateFilter should update final items:
       EventStreams.merge(
           EventStreams.invalidationsOf(sortOrder),
           EventStreams.invalidationsOf(filter),
           EventStreams.invalidationsOf(stateFilter)
         )
-        .withDefaultEvent(null)
-        .observe(e -> {
-          // Before setting the new filter, first determine which item to select based on what
-          // is currently available:
-          Object itemToSelect = findBestItemToSelect();
-
-          updateFinalItemsAndGrouping();
-
-          if(itemToSelect == null && !baseItems.isEmpty()) {
-            itemToSelect = baseItems.get(0);
-          }
-
-          selectItem(itemToSelect);
-        });
+        .observe(e -> updateFinalItemsAndGrouping());
 
       // Grouping changes require updating root items:
-      grouping.values().observe(g -> {
-        setRootItems(g.group(inputItems));
-
-        selectItem(baseItems.isEmpty() ? null : baseItems.get(0));
-      });
+      Changes.of(grouping).subscribe(g -> setRootItems(g.group(inputItems.get())));
 
       // Navigation to/from parent/child level:
       contextItem.observeInvalidations(oldContextItem -> {
-        if(Objects.equals(contextItem.getValue(), rootContextItem)) {
-          availableGroupings.setAll(originalGroupings);
-          setRawBaseItems(rootItems);
+        updateRawBaseItems();
 
-          selectItem(oldContextItem);
-        }
-        else {
-          @SuppressWarnings("unchecked")
-          List<Object> children = (List<Object>)((Parent<T>)contextItem.getValue()).getChildren();
-
-          availableGroupings.clear();
-          setRawBaseItems(children);
-
-          selectItem(baseItems.isEmpty() ? null : baseItems.get(0));
-        }
+        selectItem(contextItem.isBound() ? findById(toId(oldContextItem)) : baseItems.isEmpty() ? null : baseItems.get(0));
       });
+    }
+
+    private String toId(Object object) {
+      return binderProvider.map(IDBinder.class, IDBinder<Object>::toId, object);
     }
 
     /**
@@ -315,8 +335,25 @@ public abstract class GridViewPresentationFactory {
       Predicate<Object> predicate = createFilterPredicate();
       Object item = selectedItem.getValue();
 
-      // Find an item as close as possible to the current selected item (including
-      // itself) based on the current sort order:
+      if(item == null && lastSelectedId != null) {
+        item = rawBaseItems.stream()
+          .filter(i -> toId(i).equals(lastSelectedId))
+          .findFirst()
+          .orElse(null);
+      }
+
+      if(item == null) {  // if previous item isn't available, then donot search for a nearest match
+        return null;
+      }
+
+      if(baseItems == null) {  // if there weren't any previous items, then can't find a best item either
+        return item;
+      }
+
+      /*
+       * Find an item as close as possible to the current selected item (including
+       * itself) based on the current sort order:
+       */
 
       int previousIndex = baseItems.indexOf(item);
       int nextIndex = previousIndex + 1;  // Causes it to prefer selecting an item with a higher index when distance to a lower or higher matching item is equal

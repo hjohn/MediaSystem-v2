@@ -2,29 +2,34 @@ package hs.mediasystem.ui.api.domain;
 
 import java.time.Duration;
 import java.time.Instant;
-
-import org.reactfx.value.Var;
+import java.util.Optional;
 
 public class State {
-  private final Var<Instant> lastConsumptionTime;
-  private final Var<Boolean> consumed;
-  private final Var<Duration> resumePosition;
+  public static final State EMPTY = new State(null, false, Duration.ZERO);
 
-  public State(Var<Instant> lastWatchedTime, Var<Boolean> consumed, Var<Duration> resumePosition) {
-    this.lastConsumptionTime = lastWatchedTime;
+  private final Optional<Instant> lastConsumptionTime;
+  private final boolean consumed;
+  private final Duration resumePosition;
+
+  public State(Instant lastWatchedTime, boolean consumed, Duration resumePosition) {
+    if(resumePosition == null) {
+      throw new IllegalArgumentException("resumePosition cannot be null");
+    }
+
+    this.lastConsumptionTime = Optional.ofNullable(lastWatchedTime);
     this.consumed = consumed;
     this.resumePosition = resumePosition;
   }
 
-  public Var<Instant> getLastConsumptionTime() {
+  public Optional<Instant> getLastConsumptionTime() {
     return lastConsumptionTime;
   }
 
-  public Var<Boolean> isConsumed() {
+  public boolean isConsumed() {
     return consumed;
   }
 
-  public Var<Duration> getResumePosition() {
+  public Duration getResumePosition() {
     return resumePosition;
   }
 }

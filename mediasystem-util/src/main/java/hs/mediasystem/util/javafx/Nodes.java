@@ -1,24 +1,26 @@
 package hs.mediasystem.util.javafx;
 
+import hs.jfx.eventstream.Values;
+
 import java.util.Optional;
 
+import javafx.beans.binding.Binding;
 import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
-import javafx.stage.Window;
-
-import org.reactfx.value.Val;
 
 public class Nodes {
-  public static Val<Boolean> visible(Node node) {
-    return Val.flatMap(node.sceneProperty(), Scene::windowProperty)
-      .flatMap(Window::showingProperty)
-      .orElseConst(false);
+
+  public static Binding<Boolean> showing(Node node) {
+    return Values.of(node.sceneProperty())
+      .flatMap(s -> Values.of(s.windowProperty()))
+      .flatMap(w -> Values.of(w.showingProperty()))
+      .orElse(false)
+      .toBinding();
   }
 
   public static boolean isTreeVisibleAndShowing(Node node) {
@@ -30,7 +32,7 @@ public class Nodes {
   }
 
   public static <T> void listenWhenNodeVisible(Node node, ObservableValue<T> property, ChangeListener<? super T> listener) {
-    visible(node).addListener((obs, old, visible) -> {
+    showing(node).addListener((obs, old, visible) -> {
       if(visible) {
         property.addListener(listener);
       }
@@ -41,7 +43,7 @@ public class Nodes {
   }
 
   public static void bindVisibilityEvents(Node node, Runnable whenShown, Runnable whenHidden) {
-    visible(node).addListener((obs, old, visible) -> {
+    showing(node).addListener((obs, old, visible) -> {
       if(visible) {
         whenShown.run();
       }
@@ -111,7 +113,7 @@ public class Nodes {
       }
     }
 
-    if(node.isFocusTraversable() && !node.isDisabled()) {
+    if(node.isFocusTraversable() && !node.isDisabled() && node.isVisible()) {
       node.requestFocus();
       return true;
     }

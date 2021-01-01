@@ -33,13 +33,10 @@ public class ProductionCollectionFactory {
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed())
   );
 
   public GenericCollectionPresentation<Work> create(WorkId id) {
-    Work collection = workClient.find(id).orElseThrow();
-    List<Work> children = workClient.findChildren(id);
-
-    return factory.create(children, "Collections", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), collection);
+    return factory.create(() -> workClient.findChildren(id), "Collections", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), () -> workClient.find(id).orElseThrow(() -> new WorkNotFoundException(id)));
   }
 }

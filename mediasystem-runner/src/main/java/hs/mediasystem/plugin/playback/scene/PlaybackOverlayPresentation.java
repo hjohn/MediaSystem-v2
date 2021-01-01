@@ -1,8 +1,10 @@
 package hs.mediasystem.plugin.playback.scene;
 
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 
@@ -28,8 +30,6 @@ import javafx.event.Event;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.reactfx.value.Var;
-
 public class PlaybackOverlayPresentation implements Navigable, Presentation {
   private static final Logger LOGGER = Logger.getLogger(PlaybackOverlayPresentation.class.getName());
 
@@ -42,6 +42,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
   @Singleton
   public static class TaskFactory {
     @Inject private PlayerSetting playerSetting;
+    @Inject private StreamStateClient streamStateClient;
 
     public Task<PlaybackOverlayPresentation> create(Work work, URI uri, Duration startPosition) {
       return new Task<>() {
@@ -77,13 +78,13 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             throw new MissingPlayerPresentationException(playerSetting.getConfiguredName(), playerSetting.getAvailablePlayerFactories());
           }
 
-          return new PlaybackOverlayPresentation(playerPresentation, work, uri, startPosition);
+          return new PlaybackOverlayPresentation(streamStateClient, playerPresentation, work, uri, startPosition);
         }
       };
     }
   }
 
-  private PlaybackOverlayPresentation(PlayerPresentation playerPresentation, Work work, URI uri, Duration startPosition) {
+  private PlaybackOverlayPresentation(StreamStateClient streamStateClient, PlayerPresentation playerPresentation, Work work, URI uri, Duration startPosition) {
     this.work = work;
     this.uri = uri;
     this.startPosition = startPosition;
@@ -105,7 +106,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             totalTimeViewed += diff;
             timeViewedSinceLastSkip += diff;
 
-            updatePositionAndViewed();
+            updatePositionAndViewed();  // TODO this involves db communication / server communication, may not want to do that on FX thread
           }
 
           if(Math.abs(diff) >= 4000) {
@@ -120,7 +121,9 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
         if(length > 0) {
           long timeViewed = totalTimeViewed + startPosition.toMillis();
-          Var<Boolean> consumed = work.getState().isConsumed();
+          ContentID contentId = work.getPrimaryStream().orElseThrow().getId().getContentId();
+
+          BooleanProperty consumed = streamStateClient.watchedProperty(contentId);
 
           if(timeViewed >= length * 9 / 10 && !consumed.getValue()) {   // 90% viewed and not viewed yet?
             LOGGER.info("Marking as viewed: " + work);
@@ -136,13 +139,13 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
               resumePosition = (int)(position / 1000) - 10;
             }
 
-            Var<Duration> storedResumePosition = work.getState().getResumePosition();
+            ObjectProperty<Integer> storedResumePosition = streamStateClient.resumePositionProperty(contentId);
 
-            if(Math.abs(storedResumePosition.getValue().toSeconds() - resumePosition) > 10) {
+            if(Math.abs(storedResumePosition.getValue() - resumePosition) > 10) {
               Instant now = Instant.now();
 
-              storedResumePosition.setValue(Duration.ofSeconds(resumePosition));
-              work.getState().getLastConsumptionTime().setValue(now);
+              storedResumePosition.setValue(resumePosition);
+              streamStateClient.lastWatchedTimeProperty(contentId).set(now);
             }
           }
         }

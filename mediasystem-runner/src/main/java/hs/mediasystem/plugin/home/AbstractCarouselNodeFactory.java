@@ -1,12 +1,9 @@
 package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.Parent;
-import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
@@ -50,11 +47,6 @@ public abstract class AbstractCarouselNodeFactory {
   }
 
   protected ProductionPresentation getRecommendedProductionPresentation(Recommendation r) {
-    boolean hasParent = r.getWork().getType().isComponent();
-    WorkId id = hasParent ?
-        r.getWork().getParent().map(Parent::getId).orElseThrow() :
-        r.getWork().getId();
-
-    return productionPresentationFactory.create(id, hasParent ? State.EPISODE : State.OVERVIEW, hasParent ? r.getWork().getId() : null);
+    return productionPresentationFactory.create(r.getWork().getId());
   }
 }

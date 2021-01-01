@@ -37,7 +37,7 @@ public class FoldersCollectionType implements CollectionType {
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
+    new Filter<>("unwatched", r -> !r.getState().isConsumed())
   );
 
   @Inject private FolderPresentationFactory factory;

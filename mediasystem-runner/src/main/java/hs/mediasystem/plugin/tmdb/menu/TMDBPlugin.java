@@ -15,9 +15,6 @@ import hs.mediasystem.ui.api.domain.Work;
 import java.time.LocalDate;
 import java.util.List;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -36,7 +33,7 @@ public class TMDBPlugin implements Plugin {
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed())
   );
 
   @Inject private GenericCollectionPresentationFactory factory;
@@ -46,15 +43,15 @@ public class TMDBPlugin implements Plugin {
   public Menu getMenu() {
     return new Menu("TMDB", ResourceManager.getImage(getClass(), "image"), List.of(
       new MenuItem("Top 100", null, () -> factory.create(
-        createProductionItems(), "Top100", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
+        () -> createProductionItems(), "Top100", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
       )),
       new MenuItem("Recommendations", null, () -> factory.create(
-        createProductionItems(), "Recommended", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
+        () -> createProductionItems(), "Recommended", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
       ))
     ));
   }
 
-  private ObservableList<Work> createProductionItems() {
-    return FXCollections.observableArrayList(worksClient.findTop100());
+  private List<Work> createProductionItems() {
+    return worksClient.findTop100();
   }
 }

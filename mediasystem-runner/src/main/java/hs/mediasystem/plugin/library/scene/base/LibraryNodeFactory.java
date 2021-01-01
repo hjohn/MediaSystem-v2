@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.base;
 
+import hs.jfx.eventstream.Values;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ViewPort;
 import hs.mediasystem.presentation.ViewPortFactory;
@@ -99,14 +100,15 @@ public class LibraryNodeFactory implements NodeFactory<LibraryPresentation> {
       });
 
       // Make sure timeline is only active when node is visible (to prevent leaks):
-      Nodes.visible(center).values().observe(visible -> {
-        if(visible) {
-          timeline.playFromStart();
-        }
-        else {
-          timeline.stop();
-        }
-      });
+      Values.of(Nodes.showing(center))
+        .subscribe(visible -> {
+          if(visible) {
+            timeline.playFromStart();
+          }
+          else {
+            timeline.stop();
+          }
+        });
     }
 
     public void setStatusArea(Node node) {

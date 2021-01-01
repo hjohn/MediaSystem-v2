@@ -12,7 +12,8 @@ import hs.mediasystem.util.NaturalLanguage;
 import java.util.Comparator;
 import java.util.List;
 
-import javafx.collections.FXCollections;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -35,22 +36,36 @@ public class ParticipationsPresentationFactory extends GridViewPresentationFacto
   private static final List<Filter<Participation>> STATE_FILTERS = List.of(
     new Filter<>("none", p -> true),
     new Filter<>("available", p -> p.getWork().getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", p -> p.getWork().getPrimaryStream().isPresent() && !p.getWork().getState().isConsumed().getValue())
+    new Filter<>("unwatched", p -> p.getWork().getPrimaryStream().isPresent() && !p.getWork().getState().isConsumed())
   );
 
   @Inject private PersonClient personClient;
 
   public ParticipationsPresentation create(PersonId id) {
-    return new ParticipationsPresentation(personClient.findPerson(id).orElseThrow());
+    return new ParticipationsPresentation(id);
   }
 
   public class ParticipationsPresentation extends GridViewPresentation<Participation> {
-    public final Person person;
+    public final ObjectProperty<Person> person = new SimpleObjectProperty<>();
 
-    public ParticipationsPresentation(Person person) {
-      super("Roles", FXCollections.observableList(person.getParticipations()), new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
+    private final PersonId id;
 
-      this.person = person;
+    public ParticipationsPresentation(PersonId id) {
+      super("Roles", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS));
+
+      this.id = id;
+
+      createUpdateTask().run();
+    }
+
+    @Override
+    public Runnable createUpdateTask() {
+      Person person = personClient.findPerson(id).orElseThrow(() -> new PersonNotFoundException(id));
+
+      return () -> {
+        this.person.set(person);
+        this.inputItems.set(person.getParticipations());
+      };
     }
   }
 }

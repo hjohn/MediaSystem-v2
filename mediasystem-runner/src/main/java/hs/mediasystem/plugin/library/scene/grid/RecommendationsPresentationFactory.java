@@ -1,13 +1,12 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import javafx.collections.FXCollections;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -29,18 +28,35 @@ public class RecommendationsPresentationFactory extends GridViewPresentationFact
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed().getValue())
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed())
   );
 
   @Inject private WorkClient workClient;
 
-  public RecommendationsPresentation create(Work work) {
-    return new RecommendationsPresentation(work);
+  public RecommendationsPresentation create(WorkId id) {
+    return new RecommendationsPresentation(id);
   }
 
   public class RecommendationsPresentation extends GridViewPresentation<Work> {
-    public RecommendationsPresentation(Work work) {
-      super("Recommendations", FXCollections.observableList(workClient.findRecommendations(work.getId())), new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), work);
+    private final WorkId id;
+
+    public RecommendationsPresentation(WorkId id) {
+      super("Recommendations", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS));
+
+      this.id = id;
+
+      createUpdateTask().run();
+    }
+
+    @Override
+    public Runnable createUpdateTask() {
+      Work work = workClient.find(id).orElseThrow(() -> new WorkNotFoundException(id));
+      List<Work> recommendations = workClient.findRecommendations(id);
+
+      return () -> {
+        this.rootContextItem.set(work);
+        this.inputItems.set(recommendations);
+      };
     }
   }
 }

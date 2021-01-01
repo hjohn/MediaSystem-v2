@@ -17,7 +17,6 @@ import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.Optional;
 import java.util.function.Function;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -26,15 +25,13 @@ import javafx.beans.value.ObservableValue;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.reactfx.value.Var;
-
 @Singleton
 public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Comparator.comparing(Details::getTitle, NaturalLanguage.ALPHABETICAL));
   public static final Comparator<Work> BY_SUBTITLE = Comparator.comparing(Work::getDetails, Comparator.comparing(d -> d.getSubtitle().orElse(null), Comparator.nullsLast(NaturalLanguage.ALPHABETICAL)));
   public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
   public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder()))).reversed();
-  public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().getValue(), Comparator.nullsLast(Comparator.naturalOrder())));
+  public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
 
   @Inject private ImageHandleFactory imageHandleFactory;
 
@@ -81,13 +78,13 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   }
 
   @Override
-  public Var<Boolean> watchedProperty(Work work) {
+  public boolean watchedProperty(Work work) {
     return work.getState().isConsumed();
   }
 
   @Override
-  public Optional<Boolean> hasStream(Work work) {
-    return Optional.of(!work.getStreams().isEmpty());
+  public boolean hasStream(Work work) {
+    return !work.getStreams().isEmpty();
   }
 
   @Override

@@ -49,7 +49,7 @@ import org.reactfx.value.Val;
 public class ContextLayout {
   @Inject private ImageHandleFactory imageHandleFactory;
 
-  public BasePanel create(Object item) {
+  public BasePanel createGeneric(Object item) {
     if(item instanceof Work) {
       return create((Work)item);
     }

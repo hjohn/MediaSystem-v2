@@ -1,11 +1,10 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role.Type;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
+import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
@@ -13,33 +12,72 @@ import hs.mediasystem.util.javafx.control.Labels;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.VBox;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
+public class DetailAndCastPane extends HBox {
+  public final Model model = new Model();
 
-@Singleton
-public class CastPaneFactory {
-  private static final Logger LOGGER = Logger.getLogger(CastPaneFactory.class.getName());
+  public static class Model {
+    public final StringProperty tagline = new SimpleStringProperty();
+    public final StringProperty description = new SimpleStringProperty();
+    public final ObjectProperty<List<Contribution>> contributors = new SimpleObjectProperty<>();
+  }
 
-  @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private WorkClient workClient;
+  private final Label tagLineLabel = Labels.create("tag-line", model.tagline, Labels.HIDE_IF_EMPTY);
+  private final Label descriptionLabel = Labels.create("description", model.description);
+  private final AutoVerticalScrollPane pane = new AutoVerticalScrollPane(descriptionLabel, 12000, 40);
 
-  public Region create(WorkId id) {
+  {
+
+    /*
+     * Limit height of ScrollPane, but at same time give it the rest of the space in the leftBox VBox; this allows
+     * the tag-line to wrap if needed, instead of tag-line and description competing for max space
+     */
+
+    pane.setPrefHeight(100);
+
+    VBox.setVgrow(pane, Priority.ALWAYS);
+  }
+
+  private final VBox leftBox = Containers.vbox(tagLineLabel, pane);
+
+  {
+    leftBox.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
+
+    HBox.setHgrow(leftBox, Priority.ALWAYS);
+  }
+
+  private final ImageHandleFactory imageHandleFactory;
+
+  public DetailAndCastPane(ImageHandleFactory imageHandleFactory) {
+    this.imageHandleFactory = imageHandleFactory;
+
+    Region castPane = create();
+
+    castPane.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
+
+    HBox.setHgrow(castPane, Priority.ALWAYS);
+
+    getChildren().addAll(leftBox, castPane);
+  }
+
+  public Region create() {
     GridPane actorsGrid = Containers.grid("actors-panel");
 
     Stream.generate(ColumnConstraints::new)
@@ -57,18 +95,16 @@ public class CastPaneFactory {
 
     actorsGrid.getRowConstraints().addAll(rowConstraints1, rowConstraints2);
 
-    CompletableFuture.supplyAsync(() -> workClient.findContributions(id))
-      .thenAcceptAsync(contributors -> fillActorGrid(contributors, actorsGrid), Platform::runLater)
-      .whenComplete((v, e) -> {
-        if(e != null) {
-          LOGGER.log(Level.WARNING, "Unable to create cast pane", e);
-        }
-      });
+    model.contributors.addListener((obs, old, contributors) -> {
+      fillActorGrid(contributors, actorsGrid);
+    });
 
     return actorsGrid;
   }
 
   private void fillActorGrid(List<Contribution> contributors, GridPane actorsGrid) {
+    actorsGrid.getChildren().clear();
+
     List<Contribution> topContributors = contributors.stream()
       .filter(c -> c.getRole().getType() == Type.CAST)
       .sorted(Comparator.comparing(c -> c.getOrder()))

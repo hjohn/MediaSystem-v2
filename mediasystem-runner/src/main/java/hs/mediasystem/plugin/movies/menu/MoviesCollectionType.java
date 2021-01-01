@@ -47,7 +47,7 @@ public class MoviesCollectionType implements CollectionType {
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
+    new Filter<>("unwatched", r -> !r.getState().isConsumed())
   );
 
   @Inject private GenericCollectionPresentationFactory factory;
@@ -63,7 +63,7 @@ public class MoviesCollectionType implements CollectionType {
   @Override
   public Presentation createPresentation(String tag) {
     return factory.create(
-      worksClient.findAllByType(MediaType.MOVIE, tag),
+      () -> worksClient.findAllByType(MediaType.MOVIE, tag),
       "Movies" + (tag == null ? "" : ":" + tag),
       new ViewOptions<>(
         SORT_ORDERS,

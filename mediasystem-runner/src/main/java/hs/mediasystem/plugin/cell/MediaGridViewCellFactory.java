@@ -13,7 +13,6 @@ import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
 import hs.mediasystem.util.javafx.control.csslayout.StylableVBox;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 import javafx.beans.property.BooleanProperty;
@@ -31,8 +30,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.util.Callback;
 
-import org.reactfx.value.Var;
-
 public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCell<T>> {
   private static final List<String> MEDIA_STATE_STYLES = List.of("watched", "available", "unavailable");
 
@@ -43,8 +40,8 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
     default Function<T, ObservableValue<? extends String>> sideBarTopLeftBindProvider() { return null; }
     default Function<T, ObservableValue<? extends String>> sideBarCenterBindProvider() { return null; }
     default Function<T, String> detailExtractor() { return null; }
-    default Var<Boolean> watchedProperty(@SuppressWarnings("unused") T item) { return Var.newSimpleVar(false); }
-    default Optional<Boolean> hasStream(@SuppressWarnings("unused") T item) { return Optional.empty(); }
+    default boolean watchedProperty(@SuppressWarnings("unused") T item) { return false; }
+    default boolean hasStream(@SuppressWarnings("unused") T item) { return false; }
   }
 
   private final BinderProvider bindersProvider;
@@ -191,8 +188,8 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
             sideBarCenterText.unbind();
           }
 
-          hasStreamProperty.set(binders.hasStream(item).orElse(false));
-          watchedProperty.bind(binders.watchedProperty(item));
+          hasStreamProperty.set(binders.hasStream(item));
+          watchedProperty.set(binders.watchedProperty(item));
 
           indicatorPane.setManaged(sideBarVisible);
           indicatorPane.setVisible(sideBarVisible);

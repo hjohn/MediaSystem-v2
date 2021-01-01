@@ -1,163 +1,149 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.domain.work.VideoLink;
+import hs.jfx.eventstream.Transactions;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.presentation.AbstractPresentation;
-import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.Navigable;
-import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.ui.api.SettingsClient;
+import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.SettingsSource;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.javafx.action.Action;
-import hs.mediasystem.util.javafx.action.SimpleAction;
-import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.property.SimpleReadOnlyObjectProperty;
 
-import java.net.URI;
-import java.time.Duration;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.reactfx.EventSource;
-import org.reactfx.EventStreams;
-import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 @Singleton
 public class ProductionPresentationFactory {
-  @Inject private PlaybackOverlayPresentation.TaskFactory playbackOverlayPresentationFactory;
-  @Inject private Provider<EpisodesPresentation> episodesPresentationProvider;
-  @Inject private PlayAction.Factory playActionFactory;
-  @Inject private ResumeAction.Factory resumeActionFactory;
-  @Inject private WorkClient workClient;
+  private static final String SYSTEM = "MediaSystem:Episode";
 
-  public ProductionPresentation create(WorkId id, State state, WorkId childId) {
-    return create(workClient.find(id).orElseThrow(), state, childId);
-  }
+  @Inject private WorkClient workClient;
+  @Inject private SettingsClient settingsClient;
+  @Inject private StreamStateClient streamStateClient;
 
   public ProductionPresentation create(WorkId id) {
-    return create(id, State.OVERVIEW, null);
+    ProductionPresentation presentation = new ProductionPresentation();
+
+    Work work = queryWork(id);
+    WorkId rootId = work.getType().isComponent() ? work.getParent().map(Parent::getId).orElse(id) : id;
+    WorkId selectedChildId = rootId.equals(id) ? null : id;
+    State state = rootId.equals(id) ? State.OVERVIEW : State.EPISODE;
+
+    presentation.refresh(rootId, state, selectedChildId).run();
+
+    return presentation;
   }
 
-  private ProductionPresentation create(Work work, State state, WorkId childId) {
-    return new ProductionPresentation(
-      work,
-      workClient.findChildren(work.getId()),
-      state,
-      childId
-    );
+  private Work queryWork(WorkId id) {
+    return workClient.find(id).orElseThrow();
+  }
+
+  private List<Work> queryChildren(WorkId id) {
+    return workClient.findChildren(id).stream()
+      .sorted(Comparator.comparing(w -> w.getDetails().getSequence().orElseThrow(), Sequence.COMPARATOR))
+      .collect(Collectors.toList());
   }
 
   public enum State {
     OVERVIEW, LIST, EPISODE
   }
 
-  public enum ButtonState {
-    MAIN, PLAY_RESUME, RELATED
-  }
-
   public class ProductionPresentation extends AbstractPresentation implements Navigable {
-    private final ObjectProperty<VideoLink> trailerVideoLink = new SimpleObjectProperty<>();
-    private final ObjectProperty<State> internalState = new SimpleObjectProperty<>(State.OVERVIEW);
-    private final ObjectProperty<ButtonState> internalButtonState = new SimpleObjectProperty<>(ButtonState.MAIN);
+    private final SettingsSource settingsSource = settingsClient.of(SYSTEM);
 
+    // Internal properties:
+    private final ReadOnlyObjectWrapper<Work> internalRoot = new ReadOnlyObjectWrapper<>();
+    private final ReadOnlyObjectWrapper<List<Work>> internalChildren = new ReadOnlyObjectWrapper<>();
+    private final ReadOnlyDoubleWrapper internalWatchedFraction = new ReadOnlyDoubleWrapper();  // Of top level item (Movie or Serie)
+    private final ReadOnlyDoubleWrapper internalMissingFraction = new ReadOnlyDoubleWrapper();  // Of top level item (Serie only)
+    private final ObjectProperty<State> internalState = new SimpleObjectProperty<>(State.OVERVIEW);
+
+    // Public read only properties:
+    public final ReadOnlyObjectProperty<Work> root = internalRoot.getReadOnlyProperty();
+    public final ReadOnlyObjectProperty<List<Work>> children = internalChildren.getReadOnlyProperty();  // sorted
+    public final ReadOnlyDoubleProperty watchedFraction = internalWatchedFraction.getReadOnlyProperty();  // Of top level item (Movie or Serie)
+    public final ReadOnlyDoubleProperty missingFraction = internalMissingFraction.getReadOnlyProperty();  // Of top level item (Serie only)
     public final ReadOnlyObjectProperty<State> state = new SimpleReadOnlyObjectProperty<>(internalState);
 
-    public final List<Work> episodeItems;
-    public final Var<Work> episodeItem = Var.newSimpleVar(null);
+    // Public mutable properties:
+    public final ObjectProperty<Work> selectedChild = new SimpleObjectProperty<>();  // can be changed directly
 
-    public final Work rootItem;
-
-    public final PlayAction play;
-    public final ResumeAction resume;
-    public final Action playTrailer = new SimpleAction("Trailer", this::playTrailer);
+    // Events:
     public final EventSource<Event> showInfo = new EventSource<>();
 
-    private final Var<Float> seasonWatchedFraction = Var.newSimpleVar(0.0f);  // If not empty, represents fraction of season watched
-    private final Val<Boolean> episodeWatched;    // If not empty, represent if current episode is watched
+    private ProductionPresentation() {
+      selectedChild.addListener((obs, old, current) ->
+        current.getParent().ifPresent(p -> settingsSource.storeSetting("last-selected:" + p.getId(), current.getId().toString()))
+      );
+    }
 
-    public final Val<Integer> totalDuration;
-    public final Val<Double> watchedPercentage;  // Of top level item (Movie or Serie)
-    public final Val<Double> missingFraction;    // Of top level item (Serie only)
+    @Override
+    public Runnable createUpdateTask() {
+      return refresh(
+        root.get().getId(),
+        internalState.get(),
+        selectedChild.get() == null ? null : selectedChild.get().getId()
+      );
+    }
 
-    private final EpisodesPresentation episodesPresentation; // prevent gc
+    private Runnable refresh(WorkId rootId, State newState, WorkId newSelectedChild) {
+      Work newRoot = queryWork(rootId);
+      List<Work> newChildren = queryChildren(rootId);
 
-    private final Var<Boolean> rootWatched;
-    private final Var<Boolean> rootMissing;
+      return () -> update(newRoot, newState, newChildren, newSelectedChild);
+    }
 
-    public final Val<Work> episodeOrMovieItem;
+    public void update(Work root, State state, List<Work> children, WorkId selectedChildId) {
+      Transactions.doWhile(() -> {
+        this.internalRoot.set(root);
+        this.internalChildren.set(children);
 
-    private ProductionPresentation(
-      Work rootItem,
-      List<Work> children,
-      State initialState,
-      WorkId childId
-    ) {
-      this.internalState.set(initialState);
-      this.rootItem = rootItem;
+        if(!children.isEmpty()) {
+          String id = selectedChildId == null ? settingsSource.getSetting("last-selected:" + root.getId()) : selectedChildId.toString();
 
-      this.episodesPresentation = rootItem.getType().isSerie() ? episodesPresentationProvider.get().set(rootItem, children) : null;
-      this.episodeItems = episodesPresentation == null ? null : episodesPresentation.episodeItems;
+          selectChild(id);
+        }
 
-      this.episodeOrMovieItem = episodeItems == null ? Val.constant(rootItem) : Val.wrap(episodeItem);
+        this.internalState.set(state);
 
-      this.play = playActionFactory.create(episodeOrMovieItem);
-      this.resume = resumeActionFactory.create(episodeOrMovieItem);
+        internalWatchedFraction.set(getWatchedFraction(root, children));
+        internalMissingFraction.set(getMissingFraction(root, children));
+      });
+    }
 
-      if(episodesPresentation != null) {
-        this.episodeItem.bindBidirectional(episodesPresentation.episodeItem);
-        this.episodeItem.addListener(obs -> internalButtonState.set(ButtonState.MAIN));
+    private void selectChild(String id) {
+      List<Work> episodes = children.get();
 
-        if(childId != null) {
-          for(Work episode : episodeItems) {
-            if(episode.getId().equals(childId)) {
-              this.episodeItem.setValue(episode);
-              break;
-            }
+      if(id != null) {
+        for(Work work : episodes) {
+          if(id.equals(work.getId().toString())) {
+            selectedChild.setValue(work);
+            break;
           }
         }
       }
-
-      this.episodeWatched = Val.wrap(episodeItem).flatMap(r -> isWatched(r));
-      this.episodeWatched.addListener(obs -> updateSeasonWatchedFraction());
-
-      this.totalDuration = episodeOrMovieItem.map(r -> r.getPrimaryStream()
-        .flatMap(ms -> ms.getDuration().map(d -> (int)d.toSeconds()))
-        .orElse(null));
-
-      this.rootWatched = rootItem.getState().isConsumed();
-      this.rootMissing = Var.newSimpleVar(rootItem.getStreams().isEmpty());
-
-      this.watchedPercentage = Val.create(this::getWatchedPercentage, EventStreams.merge(
-        episodeWatched.changes(),
-        seasonWatchedFraction.changes(),
-        EventStreams.changesOf(rootWatched),
-        EventStreams.changesOf(rootMissing),
-        resume.resumePosition.changes(),
-        totalDuration.changes()
-      ));
-
-      this.missingFraction = Val.create(this::getMissingFraction, EventStreams.merge(
-        episodeWatched.changes(),
-        seasonWatchedFraction.changes(),
-        EventStreams.changesOf(rootWatched),
-        EventStreams.changesOf(rootMissing)
-      ));
+      else if(!episodes.isEmpty()) {
+        selectedChild.setValue(episodes.get(0));
+      }
     }
 
     @Override
@@ -181,139 +167,45 @@ public class ProductionPresentationFactory {
     }
 
     public void toEpisodeState() {
-      if(this.episodeItem.getValue() == null) {
+      if(selectedChild.getValue() == null) {
         throw new IllegalStateException("Cannot go to Episode state without an episode set");
       }
-
-      update();
 
       this.internalState.set(State.EPISODE);
     }
 
     public void toListState() {
-      if(episodeItems == null) {
+      if(children.get().isEmpty()) {
         throw new IllegalStateException("Cannot go to List state if root item is not a Serie");
       }
 
       this.internalState.set(State.LIST);
     }
 
-    public void toMainButtonState() {
-      this.internalButtonState.set(ButtonState.MAIN);
-    }
+    public BooleanProperty watchedProperty() {
+      Work rootItem = root.get();
 
-    public void toPlayResumeButtonState() {
-      this.internalButtonState.set(ButtonState.PLAY_RESUME);
-    }
-
-    public void toRelatedButtonState() {
-      this.internalButtonState.set(ButtonState.RELATED);
-    }
-
-    /**
-     * Returns a value indicating whether the item is watched, partially watched, unwatched or missing.
-     *
-     * A value of 1.0 indicates a watched item.
-     * A value between 0.0 (exclusively) and 1.0 (exclusively) indicates a partially watched item.
-     * A value of 0.0 indicates an unwatched item.
-     * A negative value indicates a missing item.
-     *
-     * @return a value indicating whether the item is watched, partially watched, unwatched or missing
-     */
-    private double getWatchedPercentage() {
-      if(rootWatched.getValue()) {
-        return 1.0;
-      }
-      if(rootMissing.getValue()) {
-        return -1.0;
-      }
-      if(rootItem.getType().isPlayable() && resume.resumePosition.isPresent() && totalDuration.isPresent()) {
-        return resume.resumePosition.getValue().toSeconds() / (double)totalDuration.getValue();
-      }
-      if(rootItem.getType().isSerie()) {
-        long totalWatched = episodeItems.stream()
-          .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
-          .filter(i -> isWatched(i).getValue())
-          .count();
-
-        long total = episodeItems.stream()
-          .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
-          .count();
-
-        return totalWatched / (double)total;
-      }
-
-      return 0.0;
-    }
-
-    private double getMissingFraction() {
-      if(rootItem.getType().isSerie() && !rootWatched.getValue() && !rootMissing.getValue()) {
-        long totalMissingUnwatched = episodeItems.stream()
-          .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
-          .filter(i -> i.getStreams().isEmpty() && !isWatched(i).getValue())
-          .count();
-
-        long total = episodeItems.stream()
-          .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
-          .count();
-
-        return totalMissingUnwatched / (double)total;
-      }
-
-      return 0.0;
-    }
-
-    public Var<Boolean> watchedProperty() {
       if(rootItem.getType().isPlayable() && !rootItem.getStreams().isEmpty()) {
-        return rootWatched;
+        return streamStateClient.watchedProperty(rootItem.getPrimaryStream().orElseThrow().getId().getContentId());
       }
 
       return null;  // Indicates no state possible as there is no stream or is a serie
     }
 
-    public Var<Boolean> episodeWatchedProperty() {
+    public BooleanProperty episodeWatchedProperty() {
       if(internalState.get() != State.OVERVIEW) {
-        Work work = episodeItem.getValue();
+        Work work = selectedChild.getValue();
 
         if(work != null && !work.getStreams().isEmpty()) {
-          return isWatched(work);
+          return streamStateClient.watchedProperty(work.getPrimaryStream().orElseThrow().getId().getContentId());
         }
       }
 
       return null;  // Indicates no state possible as there is no stream
     }
 
-    private void updateSeasonWatchedFraction() {
-      Work currentItem = episodeItem.getValue();
-
-      if(internalState.get() == State.OVERVIEW || currentItem == null || currentItem.getStreams().isEmpty()) {
-        seasonWatchedFraction.setValue(null);
-      }
-      else {
-        long total = 0;
-        long watched = 0;
-        int seasonNumber = currentItem.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0);
-
-        for(Work episode : episodeItems) {
-          if(episode.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) == seasonNumber) {
-            total++;
-
-            if(isWatched(episode).getValue()) {
-              watched++;
-            }
-          }
-        }
-
-        seasonWatchedFraction.setValue(watched / (float)total);
-      }
-    }
-
-    private Var<Boolean> isWatched(Work episode) {
-      return episode.getState().isConsumed();
-    }
-
-    public Property<Boolean> seasonWatchedProperty() {
-      Work currentItem = episodeItem.getValue();
+    public Property<Boolean> seasonWatchedProperty() {  // tri-state property
+      Work currentItem = selectedChild.getValue();
 
       if(internalState.get() == State.OVERVIEW || currentItem == null || currentItem.getStreams().isEmpty()) {
         return null;
@@ -322,12 +214,12 @@ public class ProductionPresentationFactory {
       List<Work> seasonEpisodes;
       List<Work> initialWatchedEpisodes;
 
-      seasonEpisodes = episodeItems.stream()
+      seasonEpisodes = children.get().stream()
         .filter(w -> w.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) == currentItem.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0))
         .collect(Collectors.toList());
 
       initialWatchedEpisodes = seasonEpisodes.stream()
-        .filter(w -> isWatched(w).getValue())
+        .filter(w -> w.getState().isConsumed())
         .collect(Collectors.toList());
 
       Property<Boolean> seasonWatchedProperty = new SimpleObjectProperty<>();
@@ -337,47 +229,79 @@ public class ProductionPresentationFactory {
 
       seasonWatchedProperty.addListener((obs, old, current) -> {
         for(Work episode : seasonEpisodes) {
-          Var<Boolean> watched = isWatched(episode);
+          BooleanProperty watched = streamStateClient.watchedProperty(episode.getPrimaryStream().orElseThrow().getId().getContentId());
 
-          if(current == null) {
-            watched.setValue(initialWatchedEpisodes.contains(episode));
-          }
-          else if(current == Boolean.TRUE) {
-            watched.setValue(true);
-          }
-          else {
-            watched.setValue(false);
-          }
+          watched.setValue(current == null ? initialWatchedEpisodes.contains(episode) : Boolean.TRUE.equals(current));
         }
-
-        updateSeasonWatchedFraction();
       });
 
       return seasonWatchedProperty;
     }
+  }
 
-    private void playTrailer(Event event) {
-      VideoLink videoLink = trailerVideoLink.get();
+  /**
+   * Returns a value indicating whether the item is watched, partially watched, unwatched or missing.
+   *
+   * A value of 1.0 indicates a watched item.
+   * A value between 0.0 (exclusively) and 1.0 (exclusively) indicates a partially watched item.
+   * A value of 0.0 indicates an unwatched item.
+   * A negative value indicates a missing item.
+   *
+   * @return a value indicating whether the item is watched, partially watched, unwatched or missing
+   */
+  private static double getWatchedFraction(Work rootItem, List<Work> episodeItems) {
+    boolean rootWatched = rootItem.getState().isConsumed();
+    boolean rootMissing = rootItem.getStreams().isEmpty();
 
-      if(videoLink == null) {
-        Dialogs.show(event, Labels.create("description", "No trailer available"));
-      }
-      else {
-        PresentationLoader.navigate(event, playbackOverlayPresentationFactory.create(rootItem, URI.create("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO));
-      }
+    if(rootWatched) {
+      return 1.0;
     }
 
-    public void update() {
-      trailerVideoLink.set(null);
-
-      CompletableFuture.supplyAsync(() -> workClient.findVideoLinks(rootItem.getId()))
-        .thenAccept(videoLinks -> {
-          videoLinks.stream().filter(vl -> vl.getType() == VideoLink.Type.TRAILER).findFirst().ifPresent(videoLink -> Platform.runLater(() -> trailerVideoLink.set(videoLink)));
-        });
+    if(rootMissing) {
+      return -1.0;
     }
 
-    public Map<Integer, Var<SeasonWatchState>> getSeasonWatchStates() {
-      return episodesPresentation.seasonWatchStates;
+    if(rootItem.getType().isPlayable()) {
+      Integer totalDuration = rootItem.getPrimaryStream()
+        .flatMap(ms -> ms.getDuration().map(d -> (int)d.toSeconds()))
+        .orElse(null);
+
+      return totalDuration == null ? 0.0 : rootItem.getState().getResumePosition().toSeconds() / (double)totalDuration;
     }
+
+    if(rootItem.getType().isSerie()) {
+      long totalWatched = episodeItems.stream()
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
+        .filter(i -> i.getState().isConsumed())
+        .count();
+
+      long total = episodeItems.stream()
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
+        .count();
+
+      return totalWatched / (double)total;
+    }
+
+    return 0.0;
+  }
+
+  private static double getMissingFraction(Work rootItem, List<Work> episodeItems) {
+    boolean rootWatched = rootItem.getState().isConsumed();
+    boolean rootMissing = rootItem.getStreams().isEmpty();
+
+    if(rootItem.getType().isSerie() && !rootWatched && !rootMissing) {
+      long totalMissingUnwatched = episodeItems.stream()
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
+        .filter(i -> i.getStreams().isEmpty() && !i.getState().isConsumed())
+        .count();
+
+      long total = episodeItems.stream()
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
+        .count();
+
+      return totalMissingUnwatched / (double)total;
+    }
+
+    return 0.0;
   }
 }

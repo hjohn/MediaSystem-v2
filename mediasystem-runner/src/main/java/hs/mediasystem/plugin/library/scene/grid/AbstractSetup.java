@@ -79,6 +79,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
         onItemSelected(itemSelectedEvent, presentation);
       }
       else {
+        presentation.contextItem.unbind();
         presentation.contextItem.setValue(e.getItem());
       }
     });
@@ -97,7 +98,9 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       }
     });
 
-    Nodes.visible(listView).values().map(visible -> visible ? presentation.items : FXCollections.emptyObservableList()).feedTo(listView.itemsProperty());
+    EventStreams.valuesOf(Nodes.showing(listView))
+      .map(visible -> visible ? presentation.items : FXCollections.emptyObservableList())
+      .feedTo(listView.itemsProperty());
 
     EventStreams.valuesOf(listView.itemsProperty())
       .conditionOnShowing(listView)
@@ -121,7 +124,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     return listView;
   }
 
-  private void configurePanes(AreaPane2<Area> areaPane, TransitionPane previewPanel, P presentation) {
+  private void configurePanes(AreaPane2<Area> areaPane, TransitionPane contextPanel, TransitionPane previewPanel, P presentation) {
     MediaGridView<Object> listView = createMediaGridView(presentation);
 
     // Clear preview panel immediately:
@@ -133,7 +136,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       .successionEnds(java.time.Duration.ofMillis(500))
       .observe(current -> {
         if(current != null) {
-          Node context = contextLayout.create(current);
+          Node context = contextLayout.createGeneric(current);
 
           if(context != null) {
             previewPanel.add(context);
@@ -147,12 +150,13 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       .withDefaultEvent(null)
       .conditionOnShowing(listView)
       .observe(ci -> {
-        Node contextPanel = createContextPanel(presentation);
+        Node contextItem = createContextPanel(presentation);
 
-        areaPane.clear(Area.CONTEXT_PANEL);
-
-        if(contextPanel != null) {
-          areaPane.add(Area.CONTEXT_PANEL, contextPanel);
+        if(contextItem != null) {
+          contextPanel.add(contextItem);
+        }
+        else {
+          contextPanel.clear();
         }
       });
 
@@ -190,8 +194,9 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
       new EffectList(Duration.millis(500), List.of(new Slide(Interpolator.EASE_IN, Direction.RIGHT), new Fade()))
     ));
 
+    TransitionPane leftOverlayPanel = new TransitionPane(StandardTransitions.fade());
+
     AreaPane2<Area> areaPane = new AreaPane2<>() {
-      TransitionPane leftOverlayPanel = new TransitionPane(StandardTransitions.fade());
       GridPane gp = GridPaneUtil.create(new double[] {2, 21, 2, 50, 2, 21, 2}, new double[] {15, 66, 0.5, 5, 0.5, 6, 6.5, 0.5});
       HBox navigationArea = new HBox();
 
@@ -223,7 +228,7 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
     areaPane.setMinSize(1, 1);
     areaPane.getStylesheets().add(LESS_LOADER.compile("styles.less"));
 
-    configurePanes(areaPane, rightOverlayPanel, presentation);
+    configurePanes(areaPane, leftOverlayPanel, rightOverlayPanel, presentation);
 
     return areaPane;
   }
@@ -233,6 +238,6 @@ public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implem
   protected Node createContextPanel(P presentation) {
     Object item = presentation.contextItem.getValue();
 
-    return item == null ? null : contextLayout.create(item);
+    return item == null ? null : contextLayout.createGeneric(item);
   }
 }

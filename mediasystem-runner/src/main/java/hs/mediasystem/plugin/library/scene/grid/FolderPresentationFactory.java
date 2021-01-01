@@ -18,10 +18,12 @@ public class FolderPresentationFactory extends GridViewPresentationFactory {
     public final ViewOptions<Work> viewOptions;
 
     public FolderPresentation(String settingPostfix, List<Work> items, ViewOptions<Work> viewOptions, Object contextItem) {
-      super("Folder:" + settingPostfix, items, viewOptions, contextItem);
+      super("Folder:" + settingPostfix, viewOptions);
 
       this.settingPostfix = settingPostfix;
       this.viewOptions = viewOptions;
+      this.rootContextItem.set(contextItem);
+      this.inputItems.set(items);  // TODO add refresh code
     }
   }
 }

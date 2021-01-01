@@ -8,7 +8,6 @@ import hs.mediasystem.ui.api.domain.Role;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 
-import java.util.Optional;
 import java.util.function.Function;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -16,8 +15,6 @@ import javafx.beans.value.ObservableValue;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.reactfx.value.Var;
 
 @Singleton
 public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Participation>, IDBinder<Participation> {
@@ -62,12 +59,12 @@ public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Part
   }
 
   @Override
-  public Var<Boolean> watchedProperty(Participation participation) {
+  public boolean watchedProperty(Participation participation) {
     return participation.getWork().getState().isConsumed();
   }
 
   @Override
-  public Optional<Boolean> hasStream(Participation participation) {
+  public boolean hasStream(Participation participation) {
     return workBinder.hasStream(participation.getWork());
   }
 

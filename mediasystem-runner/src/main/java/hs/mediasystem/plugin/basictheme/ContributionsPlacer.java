@@ -20,7 +20,7 @@ public class ContributionsPlacer extends AbstractPlacer<LibraryPresentation, Con
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, ContributionsPresentation presentation) {
-    Val<ImageHandle> val = Val.constant(presentation.work)
+    Val<ImageHandle> val = Val.wrap(presentation.work)
       .map(d -> d.getDetails().getBackdrop().orElse(null))
       .map(imageHandleFactory::fromURI)
 //      .orElse(Val.constant(presentation.release)

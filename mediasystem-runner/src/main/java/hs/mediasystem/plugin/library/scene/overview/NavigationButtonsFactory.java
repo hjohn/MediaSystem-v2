@@ -1,13 +1,15 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.grid.ProductionCollectionFactory;
 import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentationFactory;
 import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
+import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
 import hs.mediasystem.presentation.PresentationLoader;
+import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.control.Buttons;
@@ -15,11 +17,16 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.MultiButton;
 
+import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
@@ -29,71 +36,103 @@ import javafx.scene.layout.VBox;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.reactfx.EventStreams;
-
 @Singleton
 public class NavigationButtonsFactory {
   @Inject private ProductionCollectionFactory productionCollectionFactory;
   @Inject private RecommendationsPresentationFactory recommendationsPresentationFactory;
   @Inject private ContributionsPresentationFactory contributionsPresentationFactory;
+  @Inject private PlaybackOverlayPresentation.TaskFactory factory;
+  @Inject private WorkClient workClient;
 
-  public HBox create(ProductionPresentation presentation) {
+  public HBox create(Work work, EventHandler<ActionEvent> showEpisodes) {
     HBox hbox = Containers.hbox("navigation-area");
 
-    EventStreams.merge(EventStreams.invalidationsOf(presentation.episodeItem))
-      .conditionOnShowing(hbox)
-      .withDefaultEvent(null)
-      .subscribe(e -> updateButtons(presentation, hbox));
+    if(work.getType().isSerie()) {
+      hbox.getChildren().add(new MultiButton(List.of(
+        Buttons.create("Episodes", showEpisodes),
+        createTrailerButton(work)
+      )));
+    }
+    else if(work.getType().isPlayable()) {
+      createPlayButton(work).ifPresent(hbox.getChildren()::add);
+    }
+
+    if(work.getId().getDataSource().getName().equals("TMDB")) {
+      if(work.getType().isComponent() && work.getType().isPlayable()) {
+        hbox.getChildren().add(Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, work)));
+      }
+      else {
+        hbox.getChildren().add(createRelatedButton(work));
+      }
+    }
 
     return hbox;
   }
 
-  private void updateButtons(ProductionPresentation presentation, HBox hbox) {
-    if(presentation.state.get() != State.LIST) {
-      hbox.getChildren().clear();
-
-      if(presentation.rootItem.getType().isSerie() && presentation.state.get() == State.OVERVIEW) {
-        hbox.getChildren().add(Buttons.create("Episodes", e -> presentation.toListState()));
-      }
-      else {
-        createPlayButton(presentation).ifPresent(hbox.getChildren()::add);
-      }
-
-      if(presentation.rootItem.getId().getDataSource().getName().equals("TMDB")) {
-        hbox.getChildren().add(
-          presentation.state.get() == State.OVERVIEW ?  // Only show Related for Movie and Serie, for Episode only Cast&Crew is available
-            createRelatedButton(presentation) :
-            Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, presentation.episodeItem.getValue()))
-        );
-      }
-    }
-  }
-
-  private static Optional<MultiButton> createPlayButton(ProductionPresentation presentation) {
+  private Optional<MultiButton> createPlayButton(Work work) {
     List<Button> nodes = new ArrayList<>();
 
-    if(presentation.resume.enabledProperty().getValue()) {
-      nodes.add(create("Resume", "From " + SizeFormatter.SECONDS_AS_POSITION.format(presentation.resume.resumePosition.getValue().toSeconds()), e -> presentation.resume.trigger(e)));
-      nodes.add(create("Play", "From start", e -> presentation.play.trigger(e)));
-    }
-    else if(presentation.episodeOrMovieItem.getValue().getPrimaryStream().isPresent()) {
-      nodes.add(Buttons.create(presentation.play));
+    Duration resumePosition = work.getState().getResumePosition();
+
+    if(work.getPrimaryStream().isPresent()) {
+      if(resumePosition != null && !resumePosition.isZero()) {
+        nodes.add(create(
+          "Resume",
+          "From " + SizeFormatter.SECONDS_AS_POSITION.format(resumePosition.toSeconds()),
+          e -> PresentationLoader.navigate(e, factory.create(work, work.getPrimaryStream().orElseThrow().getAttributes().getUri(), resumePosition))
+        ));
+        nodes.add(create(
+          "Play",
+          "From start",
+          e -> PresentationLoader.navigate(e, factory.create(work, work.getPrimaryStream().orElseThrow().getAttributes().getUri(), Duration.ZERO))
+        ));
+      }
+      else {
+        nodes.add(Buttons.create(
+          "Play",
+          e -> PresentationLoader.navigate(e, factory.create(work, work.getPrimaryStream().orElseThrow().getAttributes().getUri(), Duration.ZERO))
+        ));
+      }
     }
 
-    if(presentation.state.get() == State.OVERVIEW) {
-      nodes.add(Buttons.create(presentation.playTrailer));
+    if(!work.getType().isComponent()) {
+      nodes.add(createTrailerButton(work));
     }
 
     return nodes.isEmpty() ? Optional.empty() : Optional.of(new MultiButton(nodes));
   }
 
-  private MultiButton createRelatedButton(ProductionPresentation presentation) {
+  private Button createTrailerButton(Work work) {
+    AtomicReference<VideoLink> trailerVideoLink = new AtomicReference<>();
+    CompletableFuture.supplyAsync(() -> workClient.findVideoLinks(work.getId()))
+      .thenAccept(videoLinks -> {
+        videoLinks.stream().filter(vl -> vl.getType() == VideoLink.Type.TRAILER).findFirst().ifPresent(videoLink -> trailerVideoLink.set(videoLink));
+      });
+
+    return Buttons.create(
+      "Trailer",
+      e -> playTrailer(e, work, trailerVideoLink)
+    );
+  }
+
+  private void playTrailer(Event event, Work work, AtomicReference<VideoLink> trailerVideoLink) {
+    VideoLink videoLink = trailerVideoLink.get();
+
+    if(videoLink == null) {
+      Dialogs.show(event, Labels.create("description", "No trailer available"));
+    }
+    else {
+      PresentationLoader.navigate(event, factory.create(work, URI.create("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO));
+    }
+  }
+
+  private MultiButton createRelatedButton(Work work) {
     List<Button> nodes = new ArrayList<>();
 
-    nodes.add(Buttons.create("cast", "Cast & Crew", e -> navigateToCastAndCrew(e, presentation.rootItem)));
-    nodes.add(Buttons.create("recommended", "Recommended", e -> navigateToRecommendations(e, presentation.rootItem)));
+    nodes.add(Buttons.create("cast", "Cast & Crew", e -> navigateToCastAndCrew(e, work)));
+    nodes.add(Buttons.create("recommended", "Recommended", e -> navigateToRecommendations(e, work)));
 
-    presentation.rootItem.getParent().filter(p -> p.getType().equals(MediaType.COLLECTION))
+    work.getParent().filter(p -> p.getType().equals(MediaType.COLLECTION))
       .ifPresent(p -> {
         nodes.add(Buttons.create("collection", "Collection", e -> navigateToCollection(e, p.getId())));
       });
@@ -102,7 +141,7 @@ public class NavigationButtonsFactory {
   }
 
   private void navigateToCastAndCrew(ActionEvent event, Work work) {
-    PresentationLoader.navigate(event, () -> contributionsPresentationFactory.create(work));
+    PresentationLoader.navigate(event, () -> contributionsPresentationFactory.create(work.getId()));
   }
 
   private void navigateToCollection(ActionEvent event, WorkId id) {
@@ -110,7 +149,7 @@ public class NavigationButtonsFactory {
   }
 
   private void navigateToRecommendations(ActionEvent event, Work work) {
-    PresentationLoader.navigate(event, () -> recommendationsPresentationFactory.create(work));
+    PresentationLoader.navigate(event, () -> recommendationsPresentationFactory.create(work.getId()));
   }
 
   private static Button create(String title, String subtitle, EventHandler<ActionEvent> eventHandler) {

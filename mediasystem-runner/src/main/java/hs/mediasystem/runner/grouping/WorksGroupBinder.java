@@ -8,7 +8,6 @@ import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.function.Function;
 
 import javafx.beans.property.SimpleStringProperty;
@@ -73,8 +72,8 @@ public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup
   }
 
   @Override
-  public Optional<Boolean> hasStream(WorksGroup item) {
-    return Optional.of(true);
+  public boolean hasStream(WorksGroup item) {
+    return true;
   }
 
   @Override

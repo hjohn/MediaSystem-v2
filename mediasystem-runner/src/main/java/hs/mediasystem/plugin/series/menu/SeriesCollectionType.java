@@ -36,7 +36,7 @@ public class SeriesCollectionType implements CollectionType {
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("unwatched", r -> !r.getState().isConsumed().getValue())
+    new Filter<>("unwatched", r -> !r.getState().isConsumed())
   );
 
   @Inject private GenericCollectionPresentationFactory factory;
@@ -50,7 +50,7 @@ public class SeriesCollectionType implements CollectionType {
   @Override
   public Presentation createPresentation(String tag) {
     return factory.create(
-      worksClient.findAllByType(MediaType.SERIE, tag),
+      () -> worksClient.findAllByType(MediaType.SERIE, tag),
       "Series" + (tag == null ? "" : ":" + tag),
       new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS),
       null

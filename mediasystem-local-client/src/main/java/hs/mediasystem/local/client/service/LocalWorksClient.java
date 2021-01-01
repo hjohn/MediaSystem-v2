@@ -1,9 +1,7 @@
 package hs.mediasystem.local.client.service;
 
 import hs.mediasystem.db.services.WorksService;
-import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
@@ -36,7 +34,6 @@ import javax.inject.Singleton;
 @Singleton
 public class LocalWorksClient implements WorksClient {
   @Inject private WorksService worksService;
-  @Inject private StateFactory stateFactory;
 
   @Override
   public List<Work> findNewest(int maximum, Predicate<MediaType> filter) {
@@ -64,7 +61,7 @@ public class LocalWorksClient implements WorksClient {
       work.getType(),
       work.getParent().orElse(null),
       createDetails(work.getDescriptor(), work.getParent().orElse(null), work.getPrimaryStream()),
-      toState(work.getPrimaryStream().map(MediaStream::getId).map(StreamID::getContentId).orElse(null)),
+      toState(work.getPrimaryStream().orElse(null)),
       work.getStreams()
     );
   }
@@ -127,8 +124,16 @@ public class LocalWorksClient implements WorksClient {
       .orElse(null);
   }
 
-  private State toState(ContentID contentId) {
-    return stateFactory.create(contentId);
+  private static State toState(MediaStream stream) {
+    if(stream == null) {
+      return State.EMPTY;
+    }
+
+    return new State(
+      stream.getState().getLastConsumptionTime().orElse(null),
+      stream.getState().isConsumed(),
+      stream.getState().getResumePosition()
+    );
   }
 
   private static Classification createClassification(Production production) {

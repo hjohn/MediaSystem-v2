@@ -20,7 +20,7 @@ public class ContributionsSetup extends AbstractSetup<Contribution, Contribution
 
   @Override
   protected Node createContextPanel(ContributionsPresentation presentation) {
-    return contextLayout.create(presentation.work);
+    return contextLayout.create(presentation.work.get());
   }
 
   @Override

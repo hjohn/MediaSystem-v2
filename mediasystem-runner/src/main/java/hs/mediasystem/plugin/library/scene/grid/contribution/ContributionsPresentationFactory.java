@@ -1,6 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.WorkNotFoundException;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role;
@@ -9,7 +11,8 @@ import hs.mediasystem.ui.api.domain.Work;
 import java.util.Comparator;
 import java.util.List;
 
-import javafx.collections.FXCollections;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -33,17 +36,32 @@ public class ContributionsPresentationFactory extends GridViewPresentationFactor
 
   @Inject private WorkClient workClient;
 
-  public ContributionsPresentation create(Work work) {
-    return new ContributionsPresentation(work);
+  public ContributionsPresentation create(WorkId id) {
+    return new ContributionsPresentation(id);
   }
 
   public class ContributionsPresentation extends GridViewPresentation<Contribution> {
-    public final Work work;
+    public final ObjectProperty<Work> work = new SimpleObjectProperty<>();
 
-    public ContributionsPresentation(Work work) {
-      super("CastAndCrew", FXCollections.observableList(workClient.findContributions(work.getId())), new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null);
+    private final WorkId id;
 
-      this.work = work;
+    public ContributionsPresentation(WorkId id) {
+      super("CastAndCrew", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS));
+
+      this.id = id;
+
+      createUpdateTask().run();
+    }
+
+    @Override
+    public Runnable createUpdateTask() {
+      Work work = workClient.find(id).orElseThrow(() -> new WorkNotFoundException(id));
+      List<Contribution> contributions = workClient.findContributions(id);
+
+      return () -> {
+        this.work.set(work);
+        this.inputItems.set(contributions);
+      };
     }
   }
 }

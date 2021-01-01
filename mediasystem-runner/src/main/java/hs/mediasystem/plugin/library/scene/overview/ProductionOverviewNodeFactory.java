@@ -1,164 +1,92 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.jfx.eventstream.Changes;
+import hs.jfx.eventstream.Invalidations;
+import hs.jfx.eventstream.Subscription;
+import hs.jfx.eventstream.ValueStream;
+import hs.jfx.eventstream.Values;
 import hs.mediasystem.domain.work.MediaStream;
-import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
-import hs.mediasystem.plugin.library.scene.MediaGridView;
-import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
-import hs.mediasystem.plugin.library.scene.MediaStatus;
-import hs.mediasystem.plugin.library.scene.WorkBinder;
+import hs.mediasystem.plugin.library.scene.overview.EpisodePane.Model;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
-import hs.mediasystem.plugin.library.scene.overview.SeasonBar.Entry;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Details;
-import hs.mediasystem.ui.api.domain.Sequence;
-import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
-import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.Nodes;
-import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
-import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.javafx.control.StarRating;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
-import hs.mediasystem.util.javafx.control.status.StatusIndicator;
 import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
 import hs.mediasystem.util.javafx.control.transition.TransitionPane;
 import hs.mediasystem.util.javafx.control.transition.multi.Scroll;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javafx.collections.FXCollections;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
+import javafx.application.Platform;
+import javafx.beans.binding.Binding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.reactfx.EventStreams;
-import org.reactfx.util.Interpolator;
-import org.reactfx.value.Val;
-
 @Singleton
 public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPresentation> {
-  private static final LessLoader LESS_LOADER = new LessLoader(ProductionOverviewNodeFactory.class);
+  private static final Logger LOGGER = Logger.getLogger(ProductionOverviewNodeFactory.class.getName());
 
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ShowInfoEventHandler showInfoEventHandler;
-  @Inject private CastPaneFactory castPaneFactory;
   @Inject private NavigationButtonsFactory navigationButtonsFactory;
   @Inject private BinderProvider binderProvider;
+  @Inject private WorkClient workClient;
 
   @Override
   public Node create(ProductionPresentation presentation) {
-    presentation.toMainButtonState();  // Resets presentation to normal buttons when Node is created again
+    ProductionOverviewPane pane = new ProductionOverviewPane(imageHandleFactory);
 
-    MainPanel mainPanel = new MainPanel(presentation);
+    Binding<Boolean> showing = Nodes.showing(pane);
 
-    presentation.showInfo.conditionOnShowing(mainPanel).subscribe(e -> showInfoEventHandler.handle(e, presentation.state.get() == State.OVERVIEW ? presentation.rootItem : presentation.episodeItem.getValue()));
+    Values.of(presentation.root).conditionOn(showing).subscribe(pane.model.work::set);
+    Values.of(presentation.missingFraction).conditionOn(showing).subscribe(pane.model.missingFraction::setValue);
+    Values.of(presentation.watchedFraction).conditionOn(showing).subscribe(pane.model.watchedFraction::setValue);
 
-    return mainPanel;
+    SharedModel mainPanel = new SharedModel(presentation);
+
+    Values.of(presentation.state)
+      .conditionOn(showing)
+      .subscribe(state -> pane.model.dynamicPanel.set(() -> mainPanel.createDynamicBox()));
+
+    presentation.showInfo
+      .conditionOnShowing(pane)
+      .subscribe(e -> showInfoEventHandler.handle(e, presentation.state.get() == State.OVERVIEW ? presentation.root.get() : presentation.selectedChild.getValue()));
+
+    return pane;
   }
 
-  private class MainPanel extends HBox {
+  private class SharedModel {
     private final ProductionPresentation presentation;
+    private final ObjectProperty<Work> selectedChildCopy = new SimpleObjectProperty<>();
 
-    public MainPanel(ProductionPresentation presentation) {
+    private Subscription childTransitionPanelSubscription;
+
+    public SharedModel(ProductionPresentation presentation) {
       this.presentation = presentation;
-
-      presentation.update();
-
-      Work work = presentation.rootItem;
-      AsyncImageProperty imageProperty = new AsyncImageProperty(840, 840);
-
-      imageProperty.imageHandleProperty().set(work.getDetails().getCover().map(imageHandleFactory::fromURI).orElse(null));
-
-      BiasedImageView poster = new BiasedImageView(2.0 / 3);
-
-      poster.setOrientation(Orientation.VERTICAL);
-      poster.imageProperty().bind(imageProperty);
-
-      Label titleLabel = Labels.create("title", work.getDetails().getTitle());
-
-      if(titleLabel.getText().length() > 40) {
-        titleLabel.getStyleClass().add("smaller");
-      }
-
-      VBox leftTitleBox = Containers.vbox(
-        "left-title-box",
-        titleLabel,
-        Containers.hbox(
-          "subtitle-box",
-          Labels.create("release-year", WorkBinder.createYearRange(work)),
-          Labels.create("content-rating", extractContentRating(work), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT),
-          Labels.create("adult-rating", Boolean.TRUE.equals(work.getDetails().getClassification().getPornographic()) ? "XXX" : "", Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT)
-        ),
-        Labels.create("genres", work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")))
-      );
-
-      TransitionPane dynamicBoxContainer = new TransitionPane(StandardTransitions.fade(), createDynamicBox());
-
-      HBox.setHgrow(leftTitleBox, Priority.ALWAYS);
-      VBox.setVgrow(dynamicBoxContainer, Priority.ALWAYS);
-
-      StackPane indicatorPane = createMediaStatusIndicatorPane(
-        presentation.watchedPercentage.animate(Duration.ofSeconds(2), Interpolator.LINEAR_DOUBLE),
-        presentation.missingFraction
-      );
-
-      VBox descriptionBox = new VBox(
-        Containers.hbox(
-          "title-panel",
-          leftTitleBox,
-          Containers.vbox(
-            "right-title-box",
-            createStarRating(work.getDetails().getReception().orElse(null), 20, 8),
-            indicatorPane
-          )
-        ),
-        dynamicBoxContainer
-      );
-
-      EventStreams.invalidationsOf(presentation.state)
-        .conditionOnShowing(this)
-        .subscribe(obs -> dynamicBoxContainer.add(createDynamicBox()));
-
-      getChildren().addAll(poster, descriptionBox);
-
-      HBox.setHgrow(descriptionBox, Priority.ALWAYS);
-
-      getStyleClass().add("main-panel");
-      getStylesheets().add(LESS_LOADER.compile("styles.less"));
-    }
-
-    private String extractContentRating(Work work) {
-      return work.getDetails().getClassification().getContentRatings().get("US");
     }
 
     private Pane createDynamicBox() {
@@ -173,46 +101,48 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private Pane buildOverviewUI() {
-      Work work = presentation.rootItem;
-      Details details = work.getDetails();
+      DetailAndCastPane pane = new DetailAndCastPane(imageHandleFactory);
 
-      VBox leftBox = Containers.vbox();
+      pane.getStyleClass().add("overview-panel");
 
-      details.getTagline().ifPresent(tl -> leftBox.getChildren().add(Labels.create("tag-line", "“" + tl + "”")));
+      ValueStream<Details> detailsStream = Values.of(presentation.root)
+        .conditionOn(Nodes.showing(pane))
+        .map(Work::getDetails);
 
-      AutoVerticalScrollPane pane = new AutoVerticalScrollPane(Labels.create("description", details.getDescription().orElse("")), 12000, 40);
+      detailsStream
+        .map(Details::getTagline)
+        .map(optTagline -> optTagline.map(t -> "“" + t + "”").orElse(null))
+        .subscribe(pane.model.tagline::set);
 
-      /*
-       * Limit height of ScrollPane, but at same time give it the rest of the space in the leftBox VBox; this allows
-       * the tag-line to wrap if need be, instead of tag-line and description competing for max space
-       */
-
-      pane.setPrefHeight(100);
-      VBox.setVgrow(pane, Priority.ALWAYS);
-
-      leftBox.getChildren().add(pane);
-
-      Region castPane = castPaneFactory.create(work.getId());
-
-      leftBox.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
-      castPane.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
-
-      HBox.setHgrow(leftBox, Priority.ALWAYS);
-      HBox.setHgrow(castPane, Priority.ALWAYS);
-
-      HBox outer = Containers.hbox("overview-panel", leftBox, castPane);
+      detailsStream
+        .map(Details::getDescription)
+        .map(optDesc -> optDesc.orElse(""))
+        .subscribe(pane.model.description::set);
 
       BorderPane borderPane = new BorderPane();
 
       borderPane.setMinHeight(1);
       borderPane.setPrefHeight(1);
-      borderPane.setCenter(outer);
-      borderPane.setBottom(work.getPrimaryStream()
-        .filter(ms -> ms.getAttributes().getSize().isPresent())
-        .map(ms -> Containers.stack(navigationButtonsFactory.create(presentation), buildStreamInfoPanel(ms)))
-        .orElseGet(() -> Containers.stack(navigationButtonsFactory.create(presentation)))
-      );
+      borderPane.setCenter(pane);
       borderPane.getStyleClass().add("overview-dynamic-panel");
+
+      Values.of(presentation.root)
+        .conditionOn(Nodes.showing(pane))
+        .subscribe(current -> {
+          CompletableFuture.supplyAsync(() -> workClient.findContributions(current.getId()))
+            .thenAcceptAsync(contributors -> pane.model.contributors.set(contributors), Platform::runLater)
+            .whenComplete((v, e) -> {
+              if(e != null) {
+                LOGGER.log(Level.WARNING, "Unable to fill cast pane", e);
+              }
+            });
+
+          borderPane.setBottom(current.getPrimaryStream()
+            .filter(ms -> ms.getAttributes().getSize().isPresent())
+            .map(ms -> Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState()), buildStreamInfoPanel(ms)))
+            .orElseGet(() -> Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState())))
+          );
+        });
 
       VBox.setVgrow(borderPane, Priority.ALWAYS);
 
@@ -239,115 +169,67 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private Pane buildEpisodeListUI() {
-      MediaGridView<Work> gridView = new MediaGridView<>();
       MediaGridViewCellFactory<Work> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
-
-      gridView.visibleRows.set(1);
-      gridView.visibleColumns.set(3);
-      gridView.setOrientation(Orientation.HORIZONTAL);
-      gridView.onItemSelected.set(e -> presentation.toEpisodeState());
-      gridView.pageByGroup.set(true);
-      gridView.showHeaders.set(false);
-      gridView.scrollBarVisible.set(false);
-      gridView.groupDisplayMode.set(GroupDisplayMode.FOCUSED);
-      gridView.setCellFactory(cellFactory);
-
-      Nodes.visible(gridView).values().observe(visible -> {
-        gridView.itemsProperty().set(visible ? FXCollections.observableList(presentation.episodeItems) : FXCollections.emptyObservableList());
-
-        if(visible) {
-          gridView.getSelectionModel().select(presentation.episodeItem.getValue());
-        }
-      });
 
       cellFactory.setPlaceHolderAspectRatio(16.0 / 9.0);
       cellFactory.setMinRatio(4.0 / 3.0);
 
-      VBox.setVgrow(gridView, Priority.ALWAYS);
+      EpisodeListPane pane = new EpisodeListPane(cellFactory);
 
-      Set<Integer> knownSeasons = new HashSet<>();
-      List<Group> groups = new ArrayList<>();
-      List<Entry> entries = new ArrayList<>();
-      Map<Integer, Integer> seasonNumberToIndex = new HashMap<>();
+      Invalidations.of(presentation.children, presentation.selectedChild)
+        .transactional()
+        .withDefault()  // converts to value stream, so event fires each time it becomes visible
+        .conditionOn(Nodes.showing(pane))
+        .subscribe(i -> pane.model.setEpisodesAndSelected(presentation.children.get(), presentation.selectedChild.get()));
 
-      for(int i = 0; i < presentation.episodeItems.size(); i++) {
-        Work episode = presentation.episodeItems.get(i);
-        int seasonNumber = toSeasonBarIndex(episode);
+      Values.of(pane.model.selected)
+        .conditionOn(Nodes.showing(pane))
+        .subscribe(presentation.selectedChild::set);
 
-        if(!knownSeasons.contains(seasonNumber)) {
-          knownSeasons.add(seasonNumber);
+      pane.model.onItemSelected.set(e -> presentation.toEpisodeState());
 
-          groups.add(new Group(seasonNumber == 0 ? "Specials" : seasonNumber == -1 ? "Extras" : "Season " + seasonNumber, i));
+      pane.getStyleClass().add("dynamic-panel");
 
-          Entry entry;
-
-          switch(seasonNumber) {
-          case 0:
-            seasonNumberToIndex.put(0, entries.size());
-            entry = new Entry("Specials", null, false);
-            break;
-          case -1:
-            seasonNumberToIndex.put(-1, entries.size());
-            entry = new Entry("Extras", null, false);
-            break;
-          default:
-            seasonNumberToIndex.put(seasonNumber, entries.size());
-            entry = new Entry("" + seasonNumber, null, true);
-          }
-
-          Val<SeasonWatchState> val = presentation.getSeasonWatchStates().get(seasonNumber).conditionOnShowing(gridView);
-
-          // Unsafe binding, Presentation strongly refers to UI (solved with conditionOnShowing)
-          entry.mediaStatus.bind(val.map(sws -> sws.totalEpisodes == sws.missingEpisodes ? MediaStatus.UNAVAILABLE : sws.totalEpisodes == sws.watchedEpisodes ? MediaStatus.WATCHED : MediaStatus.AVAILABLE));
-          entries.add(entry);
-        }
-      }
-
-      SeasonBar seasonsBar = new SeasonBar();
-
-      seasonsBar.getStyleClass().add("season-bar");
-      seasonsBar.setMinWidth(1);
-      seasonsBar.setPrefWidth(1);
-      seasonsBar.entries.setValue(entries);
-
-      gridView.groups.set(groups);
-      gridView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
-        if(current != null) {
-          seasonsBar.activeIndex.setValue(seasonNumberToIndex.get(toSeasonBarIndex(current)));
-          presentation.episodeItem.setValue(current);
-        }
-      });
-
-      VBox vbox = Containers.vbox("episode-list-dynamic-panel", seasonsBar, gridView);
-
-      VBox.setVgrow(vbox, Priority.ALWAYS);
-
-      return Containers.vbox("dynamic-panel", vbox);
+      return pane;
     }
 
     private Pane buildEpisodeDynamicUI() {
-      presentation.episodeItem.unbind();
+      selectedChildCopy.set(presentation.selectedChild.get());  // Copy here so that a change in selected doesn't update a pane being scrolled out
 
-      List<Work> episodes = presentation.episodeItems;
       TransitionPane transitionPane = new TransitionPane(new Scroll(), buildEpisodeUI());
       TransitionPane streamInfoPane = new TransitionPane(StandardTransitions.fade(250, 500));
       BorderPane borderPane = new BorderPane();
 
-      EventStreams.changesOf(presentation.episodeItem)
-        .conditionOnShowing(borderPane)
+      Changes.diff(presentation.selectedChild)
+        .conditionOn(Nodes.showing(borderPane))
         .subscribe(c -> {
-          transitionPane.add(episodes.indexOf(c.getOldValue()) > episodes.indexOf(c.getNewValue()), buildEpisodeUI());
+          List<Work> episodes = presentation.children.get();
 
-          updateStreamInfoPane(streamInfoPane);
+          if(c.getOldValue().getId().equals(c.getValue().getId())) {  // item was just refreshed, no need to transition
+            selectedChildCopy.set(c.getValue());
+          }
+          else {
+            int oldIndex = episodes.indexOf(c.getOldValue());
+            int newIndex = episodes.indexOf(c.getValue());
+
+            childTransitionPanelSubscription.unsubscribe();  // TODO this is somewhat confusing, as buildEpisodeUI assigns it again
+            selectedChildCopy.set(c.getValue());
+
+            transitionPane.add(oldIndex > newIndex, buildEpisodeUI());
+          }
+
+          borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(c.getValue(), null), streamInfoPane));
+          updateStreamInfoPane(streamInfoPane, c.getValue());
         });
 
-      updateStreamInfoPane(streamInfoPane);
+      // duplicated
+      borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(selectedChildCopy.get(), null), streamInfoPane));
+      updateStreamInfoPane(streamInfoPane, selectedChildCopy.get());
 
       streamInfoPane.setMouseTransparent(true);
 
       borderPane.setCenter(transitionPane);
-      borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(presentation), streamInfoPane));
-      borderPane.getProperties().put("presentation2", new EpisodePresentation(presentation));
+      borderPane.getProperties().put("presentation2", new EpisodePresentation(presentation.children, presentation.selectedChild));
       borderPane.getStyleClass().add("episode-dynamic-panel");
 
       VBox.setVgrow(borderPane, Priority.ALWAYS);
@@ -355,118 +237,38 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       return Containers.vbox("dynamic-panel", borderPane);
     }
 
-    private void updateStreamInfoPane(TransitionPane streamInfoPane) {
-      presentation.episodeItem.getValue().getPrimaryStream().filter(ms -> ms.getAttributes().getSize().isPresent()).ifPresent(ms -> {
+    private void updateStreamInfoPane(TransitionPane streamInfoPane, Work work) {
+      work.getPrimaryStream().filter(ms -> ms.getAttributes().getSize().isPresent()).ifPresent(ms -> {
         streamInfoPane.add(buildStreamInfoPanel(ms));
       });
     }
 
-    private HBox buildEpisodeUI() {
-      Work work = presentation.episodeItem.getValue();
-      AsyncImageProperty imageProperty = new AsyncImageProperty(840, 840);
+    private Pane buildEpisodeUI() {
+      EpisodePane pane = new EpisodePane();
 
-      imageProperty.imageHandleProperty().set(work.getDetails().getSampleImage().map(imageHandleFactory::fromURI).orElse(null));
+      pane.getStyleClass().add("episode-panel");
 
-      Label label = Labels.create("ph", "?");
+      childTransitionPanelSubscription = Values.of(selectedChildCopy)
+        .conditionOn(Nodes.showing(pane))
+        .subscribe(work -> {
+          Details details = work.getDetails();
 
-      label.setMaxSize(1000, 1000);
+          double percentage = work.getState().isConsumed() ? 1.0
+            : work.getStreams().isEmpty() ? -0.01
+            : work.getWatchedFraction();
 
-      BiasedImageView poster = new BiasedImageView(label);
+          Model model = pane.model;
 
-      poster.setOrientation(Orientation.VERTICAL);
-      poster.imageProperty().bind(imageProperty);
+          model.title.set(details.getTitle());
+          model.description.set(details.getDescription().orElse(null));
+          model.reception.set(details.getReception().orElse(null));
+          model.releaseDate.set(details.getReleaseDate().orElse(null));
+          model.sampleImage.set(details.getSampleImage().map(imageHandleFactory::fromURI).orElse(null));
+          model.sequence.set(details.getSequence().orElseThrow());
+          model.mediaStatus.set(percentage);
+        });
 
-      Val<Double> percentage = Val.combine(work.getState().isConsumed(), Val.constant(work.getStreams().isEmpty()), presentation.resume.resumePosition.orElseConst(Duration.ZERO), presentation.totalDuration.orElseConst(1), (w, m, rp, td) -> {
-        return w ? 1.0 :
-               m ? -0.01 :
-                   rp.toSeconds() / (double)td;
-      }).conditionOnShowing(poster);
-
-      StackPane indicatorPane = createMediaStatusIndicatorPane(percentage.animate(Duration.ofSeconds(2), Interpolator.EASE_BOTH_DOUBLE), Val.constant(0.0));
-
-      poster.getOverlayRegion().getChildren().add(indicatorPane);
-
-      String formattedDate = MediaItemFormatter.formattedLocalDate(work.getDetails().getReleaseDate().orElse(null));
-      String subtitle = createSeasonEpisodeText(work) + (formattedDate == null ? "" : " • " + formattedDate);
-
-      Label titleLabel = Labels.create("title", presentation.episodeItem.getValue().getDetails().getTitle());
-
-      titleLabel.setMinHeight(Region.USE_PREF_SIZE);  // With reflowed labels, sometimes not enough vertical space is assigned and the reflow fails to use the next line and adds an ellipsis instead...
-
-      VBox titleBox = Containers.vbox(titleLabel, Labels.create("subtitle", subtitle));
-      HBox.setHgrow(titleBox, Priority.ALWAYS);
-
-      VBox vbox = Containers.vbox(
-        Containers.hbox(
-          titleBox,
-          createStarRating(work.getDetails().getReception().orElse(null), 10, 4)
-        ),
-        new AutoVerticalScrollPane(Labels.create("description", work.getDetails().getDescription().orElse("")), 12000, 40)
-      );
-
-      HBox hbox = Containers.hbox("episode-panel", vbox, poster);
-
-      /*
-       * The following four tweaks to the layout are needed to have the description box and poster play nice.
-       *
-       * The poster should take up as much space as possible, aspect ratio allowing, without "pushing" its parent
-       * bigger (as that would resize the root of this control even).  The outer container that is returned therefore
-       * gets its min and pref sizes forced to a lower arbirtrary values; min size to prevent the entire root to
-       * become bigger; preferred size to prevent it stealing space from parent containers (like the primary left poster).
-       *
-       * Secondly, the description box gets its preferred width lowered, as Labels with long texts use a preferred
-       * width that would fit their entire text instead.  Containers with such a Label are not smart enough to use
-       * Label's content bias to find a more reasonable configuration by themselves.
-       *
-       * Finally, the description box is the only box allowed to take up left-over space.  Everything else will
-       * get the exact space required, and no more.
-       */
-
-      HBox.setHgrow(vbox, Priority.ALWAYS);  // Description box can grow, poster however should just try and attain its preferred size (which can be huge).
-      vbox.setPrefWidth(100);  // Limit pref width on the description box, so other content can be resized to their preferred sizes.
-      hbox.setMinSize(100, 100);
-      hbox.setPrefSize(100, 100);
-
-      return hbox;
+      return pane;
     }
-
-    private StatusIndicator createMediaStatusIndicatorPane(Val<Double> percentage, Val<Double> missingFraction) {
-      StatusIndicator indicator = new StatusIndicator();
-
-      indicator.setAlignment(Pos.BOTTOM_RIGHT);
-      indicator.getStyleClass().add("indicator-pane");
-      indicator.value.bind(percentage.conditionOnShowing(indicator));
-      indicator.missingFraction.bind(missingFraction.conditionOnShowing(indicator));
-
-      return indicator;
-    }
-  }
-
-  private static int toSeasonBarIndex(Work episode) {
-    Sequence sequence = episode.getDetails().getSequence().orElseThrow();
-
-    return sequence.getType() == Type.SPECIAL ? 0 : sequence.getType() == Type.EXTRA ? -1 : sequence.getSeasonNumber().orElse(-1);
-  }
-
-  private static String createSeasonEpisodeText(Work work) {
-    int seasonNumber = toSeasonBarIndex(work);
-
-    return seasonNumber == 0 ? "Special"
-        : seasonNumber == -1 ? "Extra"
-                             : "Season " + seasonNumber + ", Episode " + work.getDetails().getSequence().map(Sequence::getNumber).orElse(0);
-  }
-
-  private static StarRating createStarRating(Reception reception, double radius, double innerRadius) {
-    StarRating starRating = new StarRating(radius, innerRadius, 5);
-
-    if(reception != null) {
-      starRating.setRating(reception.getRating() / 10);
-    }
-    else {
-      starRating.setVisible(false);
-      starRating.setManaged(false);
-    }
-
-    return starRating;
   }
 }

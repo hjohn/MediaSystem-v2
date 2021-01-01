@@ -20,7 +20,7 @@ public class ParticipationsSetup extends AbstractSetup<Participation, Participat
 
   @Override
   protected Node createContextPanel(ParticipationsPresentation presentation) {
-    return contextLayout.create(presentation.person);
+    return contextLayout.create(presentation.person.get());
   }
 
   @Override

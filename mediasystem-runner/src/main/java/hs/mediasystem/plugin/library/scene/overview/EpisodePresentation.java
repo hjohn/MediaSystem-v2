@@ -1,28 +1,37 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.ui.api.domain.Work;
+
+import java.util.List;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 
 public class EpisodePresentation implements Presentation {
-  private final ProductionPresentation presentation;
+  private final ReadOnlyObjectProperty<List<Work>> episodeItems;
+  private final ObjectProperty<Work> selectedChild;
 
-  public EpisodePresentation(ProductionPresentation presentation) {
-    this.presentation = presentation;
+  public EpisodePresentation(ReadOnlyObjectProperty<List<Work>> episodeItems, ObjectProperty<Work> selectedChild) {
+    this.episodeItems = episodeItems;
+    this.selectedChild = selectedChild;
   }
 
   public void previous() {
-    int index = presentation.episodeItems.indexOf(presentation.episodeItem.getValue());
+    List<Work> episodes = episodeItems.get();
+    int index = episodes.indexOf(selectedChild.getValue());
 
     if(index > 0) {
-      presentation.episodeItem.setValue(presentation.episodeItems.get(index - 1));
+      selectedChild.setValue(episodes.get(index - 1));
     }
   }
 
   public void next() {
-    int index = presentation.episodeItems.indexOf(presentation.episodeItem.getValue());
+    List<Work> episodes = episodeItems.get();
+    int index = episodes.indexOf(selectedChild.getValue());
 
-    if(index < presentation.episodeItems.size() - 1) {
-      presentation.episodeItem.setValue(presentation.episodeItems.get(index + 1));
+    if(index < episodes.size() - 1) {
+      selectedChild.setValue(episodes.get(index + 1));
     }
   }
 }
