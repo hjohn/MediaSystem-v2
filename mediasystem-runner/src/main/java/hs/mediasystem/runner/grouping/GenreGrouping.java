@@ -56,7 +56,7 @@ public class GenreGrouping implements Grouping<Work> {
           }
         })
         .map(Work::getDetails)
-        .map(Details::getSampleImage)
+        .map(Details::getCover)
         .flatMap(Optional::stream)
         .filter(Objects::nonNull)
         .map(Object::toString)
