@@ -24,4 +24,9 @@ public class Role {
   public String getJob() {
     return job;
   }
+
+  @Override
+  public String toString() {
+    return super.toString() + "[" + type + ": character=\"" + character + "\"; job=" + (job == null ? "null" : "\"" + job + "\"") + "]";
+  }
 }

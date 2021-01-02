@@ -28,4 +28,9 @@ public class Participation {
   public double getPopularity() {
     return popularity;
   }
+
+  @Override
+  public String toString() {
+    return super.toString() + "[" + role + "]";
+  }
 }

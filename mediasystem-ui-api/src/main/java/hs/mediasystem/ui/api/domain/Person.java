@@ -85,4 +85,9 @@ public class Person {
   public List<Participation> getParticipations() {
     return participations;
   }
+
+  @Override
+  public String toString() {
+    return super.toString() + "[\"" + name + "\"]";
+  }
 }

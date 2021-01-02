@@ -29,4 +29,9 @@ public class Contribution {
   public double getOrder() {
     return order;
   }
+
+  @Override
+  public String toString() {
+    return super.toString() + "[person=" + person + "; role=" + role + "]";
+  }
 }
