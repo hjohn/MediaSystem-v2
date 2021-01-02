@@ -71,6 +71,7 @@ public class BiasedImageView extends Region {
   private double maxRatio = Double.MAX_VALUE;
   private double minRatio = 0;
   private double expectedAspectRatio;  // Used when there is no place holder and no image yet for layout size calculations
+  private boolean visibleForOneFrame;  // If true, fade-in image, if false show image immediately
 
   public void setOrientation(Orientation orientation) {
     this.orientation = orientation;
@@ -138,6 +139,16 @@ public class BiasedImageView extends Region {
   private void setupFadeIn(Node placeHolder) {
     imageView.setOpacity(0);
 
+    Nodes.showingStream(this).subscribe(v -> {
+      Platform.runLater(() -> {
+        visibleForOneFrame = v;
+      });
+
+      if(!v) {
+        visibleForOneFrame = false;
+      }
+    });
+
     Timeline timeline;
 
     if(placeHolder == null) {
@@ -157,7 +168,7 @@ public class BiasedImageView extends Region {
 
     imageProperty().addListener((obs, old, current) -> {
       if(current != null) {
-        if(Nodes.isTreeVisibleAndShowing(this) && imageView.getOpacity() == 0) {
+        if(visibleForOneFrame && imageView.getOpacity() == 0) {
           timeline.play();
         }
         else {

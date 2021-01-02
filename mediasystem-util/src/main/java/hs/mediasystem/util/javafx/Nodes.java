@@ -1,5 +1,6 @@
 package hs.mediasystem.util.javafx;
 
+import hs.jfx.eventstream.ValueStream;
 import hs.jfx.eventstream.Values;
 
 import java.util.Optional;
@@ -16,11 +17,14 @@ import javafx.scene.control.SelectionModel;
 public class Nodes {
 
   public static Binding<Boolean> showing(Node node) {
+    return showingStream(node).toBinding();
+  }
+
+  public static ValueStream<Boolean> showingStream(Node node) {
     return Values.of(node.sceneProperty())
       .flatMap(s -> Values.of(s.windowProperty()))
       .flatMap(w -> Values.of(w.showingProperty()))
-      .orElse(false)
-      .toBinding();
+      .orElse(false);
   }
 
   public static boolean isTreeVisibleAndShowing(Node node) {
