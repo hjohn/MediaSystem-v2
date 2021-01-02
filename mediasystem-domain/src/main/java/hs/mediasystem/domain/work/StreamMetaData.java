@@ -12,7 +12,7 @@ import java.util.Objects;
 public class StreamMetaData {
   private final ContentID contentId;
   private final Duration duration;
-  private final List<VideoTrack> videoTracks;
+  @JsonAlias("videoStreams") private final List<VideoTrack> videoTracks;
   private final List<AudioTrack> audioTracks;
   private final List<SubtitleTrack> subtitleTracks;
   private final List<Snapshot> snapshots;
