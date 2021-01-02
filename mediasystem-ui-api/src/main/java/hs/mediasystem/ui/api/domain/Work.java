@@ -8,6 +8,7 @@ import hs.mediasystem.domain.work.WorkId;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalDouble;
 
 public class Work {
   private final WorkId id;
@@ -63,16 +64,22 @@ public class Work {
     return state;
   }
 
-  public double getWatchedFraction() {
+  /**
+   * Returns the watched fraction, if a stream is available.  It is possible for a Work to be
+   * consumed but not fully watched.
+   *
+   * @return a watched fraction
+   */
+  public OptionalDouble getWatchedFraction() {
     MediaStream bestStream = determineBestStream();
 
     if(bestStream == null) {
-      return 0;
+      return OptionalDouble.of(0);
     }
 
     long resumePosition = bestStream.getState().getResumePosition().toSeconds();
 
-    return bestStream.getDuration().map(d -> resumePosition / (double)d.toSeconds()).orElse(0.0);
+    return bestStream.getDuration().map(d -> resumePosition / (double)d.toSeconds()).map(OptionalDouble::of).orElse(OptionalDouble.empty());
   }
 
   public boolean isWatched() {

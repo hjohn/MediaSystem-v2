@@ -35,7 +35,7 @@ public abstract class AbstractCarouselNodeFactory {
     // image so the main backdrop and the image in the preview does not necessarily need to be the same.
     model.imageHandle.set((work.getType() == MediaType.MOVIE ? work.getDetails().getBackdrop() : work.getDetails().getSampleImage()).or(() -> work.getDetails().getBackdrop()).map(imageHandleFactory::fromURI).orElse(null));
 
-    double fraction = work.getWatchedFraction();
+    double fraction = work.getWatchedFraction().orElse(-1);
 
     model.watchedFraction.set(work.isWatched() ? 1.0 : fraction > 0 ? fraction : -1);
     model.age.set(Optional.of(recommendation.getSampleTime())

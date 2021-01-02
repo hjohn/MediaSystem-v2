@@ -253,9 +253,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         .subscribe(work -> {
           Details details = work.getDetails();
 
-          double percentage = work.getState().isConsumed() ? 1.0
-            : work.getStreams().isEmpty() ? -0.01
-            : work.getWatchedFraction();
+          double percentage = work.getState().isConsumed() ? 1.0 : work.getWatchedFraction().orElse(-1);
 
           Model model = pane.model;
 
