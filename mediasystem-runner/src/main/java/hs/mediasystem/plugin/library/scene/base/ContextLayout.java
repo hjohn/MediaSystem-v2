@@ -69,7 +69,9 @@ public class ContextLayout {
   public BasePanel create(Work work) {
     BasePanel panel = create(work.getDetails());
 
-    work.getParent().map(Parent::getName).ifPresent(panel.groupTitle::set);
+    if(work.getType().isComponent()) {
+      work.getParent().map(Parent::getName).ifPresent(panel.groupTitle::set);
+    }
     panel.subtitle.set(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")));
     work.getDetails().getReception().ifPresent(reception -> setReception(panel.rating, reception));
 
