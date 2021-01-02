@@ -10,10 +10,10 @@ import hs.mediasystem.util.Throwables;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -28,7 +28,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Inject private StreamMetaDataDatabase database;
   @Inject private StreamMetaDataCodec codec;
 
-  private final Map<ContentID, StreamMetaData> cache = new HashMap<>();
+  private final Map<ContentID, StreamMetaData> cache = new ConcurrentHashMap<>();
 
   @PostConstruct
   private void postConstruct() {
