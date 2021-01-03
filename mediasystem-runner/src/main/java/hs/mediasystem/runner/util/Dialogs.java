@@ -15,6 +15,7 @@ import java.util.stream.IntStream;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
 
@@ -67,6 +68,29 @@ public class Dialogs {
   }
 
   public static <T> Optional<T> showProgressDialog(Event event, boolean closable, Task<T> task) {
+    return showProgressDialog(((Node)event.getTarget()).getScene(), closable, task);
+  }
+
+  /**
+   * Shows a dialog with a progress bar controlled by the supplied {@link Task}.  Once the
+   * task finishes the dialog closes automatically and returns the result of the task.  If
+   * the dialog is closable and it was closed before the task finishes or the task threw
+   * an exception, an empty {@link Optional} is returned.<p>
+   *
+   * If the task finished exceptionally, another dialog is shown with an error message.<p>
+   *
+   * Although the dialog is always shown and can be interacted with, it will remain
+   * hidden (100% transparent) until 1 second has elapsed.  Short running tasks therefore
+   * can remain hidden, while longer running tasks (or tasks that occasionally take longer)
+   * will become visible to inform the user.
+   *
+   * @param <T> the result type of the {@link Task}
+   * @param scene a {@link Scene} to show this dialog on
+   * @param closable whether or not the dialog is allowed to be closed
+   * @param task a {@link Task} to execute
+   * @return an Optional with the result of the {@link Task} or empty if the dialog was closed or the task exiting with an exception
+   */
+  public static <T> Optional<T> showProgressDialog(Scene scene, boolean closable, Task<T> task) {
     DialogPane<T> dialogPane = new DialogPane<>("dialog", 1000);
     ProgressBar pb = new ProgressBar();
 
@@ -111,11 +135,15 @@ public class Dialogs {
     thread.setDaemon(true);
     thread.start();  // If the task is really quick, it may close the dialog without ever showing it... Dialog allows this, and will just return whatever was provided when close methods are called
 
-    return Optional.ofNullable(dialogPane.showDialog(((Node)event.getTarget()).getScene(), true, closable));
+    return Optional.ofNullable(dialogPane.showDialog(scene, true, closable));
   }
 
   public static <T> Optional<T> showProgressDialog(Event event, Task<T> task) {
     return showProgressDialog(event, true, task);
+  }
+
+  public static <T> Optional<T> showProgressDialog(Scene scene, Task<T> task) {
+    return showProgressDialog(scene, true, task);
   }
 
   public static String translateException(Throwable t) {
