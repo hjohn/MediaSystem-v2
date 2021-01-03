@@ -23,6 +23,9 @@ public class ContentPrintRecord extends DatabaseObject {
   @Column
   private Long lastSeenTime;  // in milliseconds since epoch
 
+  @Column(name = "creation_ms")
+  private long creationMillis;  // signature creation millis
+
   public Integer getId() {
     return id;
   }
@@ -61,5 +64,13 @@ public class ContentPrintRecord extends DatabaseObject {
 
   public void setLastSeenTime(Long lastSeenTime) {
     this.lastSeenTime = lastSeenTime;
+  }
+
+  public long getCreationMillis() {
+    return creationMillis;
+  }
+
+  public void setCreationMillis(long creationMillis) {
+    this.creationMillis = creationMillis;
   }
 }

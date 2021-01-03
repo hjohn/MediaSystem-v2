@@ -45,12 +45,12 @@ public class ContentPrintDatabase {
     }
   }
 
-  public int findOrAdd(Long size, long lastModificationTime, byte[] hash) {
+  public ContentPrintRecord findOrAdd(Long size, long lastModificationTime, byte[] hash) {
     try(Transaction tx = database.beginTransaction()) {
       ContentPrintRecord record = findStreamDataByHash(hash, size, lastModificationTime);
 
       if(record != null) {
-        return record.getId();
+        return record;
       }
 
       record = new ContentPrintRecord();
@@ -58,25 +58,27 @@ public class ContentPrintDatabase {
       record.setSize(size);
       record.setLastModificationTime(lastModificationTime);
       record.setHash(hash);
+      record.setCreationMillis(Instant.now().toEpochMilli());
 
       tx.insert(record);
       tx.commit();
 
-      return record.getId();
+      return record;
     }
   }
 
-  public void update(ContentID contentId, Long size, long lastModificationTime, byte[] hash) {  // used to update directories with latest signature
+  public ContentPrintRecord update(ContentID contentId, Long size, long lastModificationTime, byte[] hash) {  // used to update directories with latest signature
     try(Transaction tx = database.beginTransaction()) {
-      ContentPrintRecord record = new ContentPrintRecord();
+      ContentPrintRecord record = tx.selectUnique(ContentPrintRecord.class, "id = ?", contentId.asInt());
 
-      record.setId(contentId.asInt());
       record.setSize(size);
       record.setLastModificationTime(lastModificationTime);
       record.setHash(hash);
 
       tx.update(record);
       tx.commit();
+
+      return record;
     }
   }
 

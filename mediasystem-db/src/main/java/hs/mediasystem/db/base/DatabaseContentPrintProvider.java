@@ -1,6 +1,7 @@
 package hs.mediasystem.db.base;
 
 import hs.mediasystem.db.contentprints.ContentPrintDatabase;
+import hs.mediasystem.db.contentprints.ContentPrintRecord;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.db.uris.UriRecord;
 import hs.mediasystem.domain.stream.ContentID;
@@ -16,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -48,12 +50,12 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     contentIds = uriDatabase.findAll(UriRecord::getUri, r -> new ContentID(r.getContentId()));
 
     contentPrintDatabase.forEach(r -> {
-      ContentID contentId = new ContentID(r.getId());
+      ContentPrint contentPrint = fromRecord(r);
 
-      contentPrints.put(contentId, new ContentPrint(new ContentID(r.getId()), r.getSize(), r.getLastModificationTime(), r.getHash()));
+      contentPrints.put(contentPrint.getId(), contentPrint);
 
       if(r.getLastSeenTime() != null) {
-        markedIds.add(contentId);
+        markedIds.add(contentPrint.getId());
       }
     });
 
@@ -209,9 +211,9 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     byte[] hash = createHash(uri);
 
     try(Key key = lock.lock()) {
-      contentPrintDatabase.update(contentId, null, lastModificationTime, hash);
+      ContentPrintRecord record = contentPrintDatabase.update(contentId, null, lastModificationTime, hash);
 
-      ContentPrint contentPrint = new ContentPrint(contentId, null, lastModificationTime, hash);
+      ContentPrint contentPrint = fromRecord(record);
 
       // No need to update contentIds or the uriStore as the name and id remains unchanged.
       contentPrints.put(contentId, contentPrint);
@@ -224,17 +226,20 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     byte[] hash = createHash(uri);
 
     try(Key key = lock.lock()) {
-      int id = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
-      uriDatabase.store(uri.toString(), id);
+      ContentPrintRecord record = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
+      uriDatabase.store(uri.toString(), record.getId());
 
-      ContentID contentId = new ContentID(id);
-      ContentPrint contentPrint = new ContentPrint(contentId, size, lastModificationTime, hash);
+      ContentPrint contentPrint = fromRecord(record);
 
-      contentIds.put(uri.toString(), contentId);
-      contentPrints.put(contentId, contentPrint);
+      contentIds.put(uri.toString(), contentPrint.getId());
+      contentPrints.put(contentPrint.getId(), contentPrint);
 
       return contentPrint;
     }
+  }
+
+  private static ContentPrint fromRecord(ContentPrintRecord record) {
+    return new ContentPrint(new ContentID(record.getId()), record.getSize(), record.getLastModificationTime(), record.getHash(), Instant.ofEpochMilli(record.getCreationMillis()));
   }
 
   private byte[] createHash(URI uri) throws IOException {

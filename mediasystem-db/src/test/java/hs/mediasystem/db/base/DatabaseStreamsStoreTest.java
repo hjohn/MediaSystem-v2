@@ -59,9 +59,9 @@ class DatabaseStreamsStoreTest {
     @BeforeEach
     void beforeEach() {
       when(codec.toRecord(any(CachedStream.class))).thenReturn(new StreamRecord());
-      when(contentPrintProvider.get(new ContentID(1))).thenReturn(new ContentPrint(new ContentID(1), 100L, 12345L, new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
-      when(contentPrintProvider.get(new ContentID(2))).thenReturn(new ContentPrint(new ContentID(2), 200L, 22345L, new byte[] {1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
-      when(contentPrintProvider.get(new ContentID(3))).thenReturn(new ContentPrint(new ContentID(3), 300L, 32345L, new byte[] {2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}));
+      when(contentPrintProvider.get(new ContentID(1))).thenReturn(new ContentPrint(new ContentID(1), 100L, 12345L, new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, Instant.now()));
+      when(contentPrintProvider.get(new ContentID(2))).thenReturn(new ContentPrint(new ContentID(2), 200L, 22345L, new byte[] {1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, Instant.now()));
+      when(contentPrintProvider.get(new ContentID(3))).thenReturn(new ContentPrint(new ContentID(3), 300L, 32345L, new byte[] {2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, Instant.now()));
 
       store.put(sa1, now);
       store.put(sa2, now);
