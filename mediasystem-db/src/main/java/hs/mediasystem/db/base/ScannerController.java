@@ -4,7 +4,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +39,6 @@ public class ScannerController {
    */
   private synchronized void scanAll() {
     List<ImportSource> sources = importSourceProvider.getImportSources();
-    Instant time = Instant.now();
 
     LOGGER.info("Initiating scan with " + sources.size() + " scanners...");
 
@@ -52,7 +50,7 @@ public class ScannerController {
 
         LOGGER.fine(scannerName + " returned " + results.size() + " items while scanning: " + source);
 
-        updateService.update(source.getId(), results, time);
+        updateService.update(source.getId(), results);
       }
       catch(Throwable t) {
         LOGGER.warning("Failed scanning: " + source + "; exception: " + Throwables.formatAsOneLine(t));

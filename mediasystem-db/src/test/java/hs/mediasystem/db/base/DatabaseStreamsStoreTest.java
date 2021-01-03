@@ -48,13 +48,12 @@ class DatabaseStreamsStoreTest {
 
   @Nested
   class AfterAddingElements {
-    StreamID streamId1 = new StreamID(1, new ContentID(1), "SerieTitle1");
-    StreamID streamId2 = new StreamID(2, new ContentID(2), "SerieTitle2");
-    StreamID streamId3 = new StreamID(1, new ContentID(3), "SerieTitle3");
-    Streamable sa1 = new Streamable(MediaType.SERIE, URI.create("file://dir1"), streamId1, null, Attributes.of(Attribute.TITLE, "SerieTitle1"));
-    Streamable sa2 = new Streamable(MediaType.SERIE, URI.create("file://dir2"), streamId2, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
-    Streamable sa3 = new Streamable(MediaType.SERIE, URI.create("file://dir2"), streamId3, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
-    Instant now = Instant.now();
+    private StreamID streamId1 = new StreamID(1, new ContentID(1), "SerieTitle1");
+    private StreamID streamId2 = new StreamID(2, new ContentID(2), "SerieTitle2");
+    private StreamID streamId3 = new StreamID(1, new ContentID(3), "SerieTitle3");
+    private Streamable sa1 = new Streamable(MediaType.SERIE, URI.create("file://dir1"), streamId1, null, Attributes.of(Attribute.TITLE, "SerieTitle1"));
+    private Streamable sa2 = new Streamable(MediaType.SERIE, URI.create("file://dir2"), streamId2, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
+    private Streamable sa3 = new Streamable(MediaType.SERIE, URI.create("file://dir2"), streamId3, null, Attributes.of(Attribute.TITLE, "SerieTitle2"));
 
     @BeforeEach
     void beforeEach() {
@@ -63,9 +62,9 @@ class DatabaseStreamsStoreTest {
       when(contentPrintProvider.get(new ContentID(2))).thenReturn(new ContentPrint(new ContentID(2), 200L, 22345L, new byte[] {1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, Instant.now()));
       when(contentPrintProvider.get(new ContentID(3))).thenReturn(new ContentPrint(new ContentID(3), 300L, 32345L, new byte[] {2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, Instant.now()));
 
-      store.put(sa1, now);
-      store.put(sa2, now);
-      store.put(sa3, now);
+      store.put(sa1);
+      store.put(sa2);
+      store.put(sa3);
 
       verify(database, times(3)).store(any(StreamRecord.class));
     }
@@ -98,7 +97,7 @@ class DatabaseStreamsStoreTest {
       class AfterReaddingRemovedElement {
         @BeforeEach
         void beforeEach() {
-          store.put(sa3, now);
+          store.put(sa3);
         }
 
         @Test

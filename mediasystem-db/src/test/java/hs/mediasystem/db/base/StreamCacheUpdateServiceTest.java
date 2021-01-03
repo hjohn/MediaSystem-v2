@@ -36,7 +36,6 @@ import org.mockito.MockitoAnnotations;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,7 +51,6 @@ public class StreamCacheUpdateServiceTest {
   private static final DataSource MOVIE_DATASOURCE = DataSource.instance(MediaType.MOVIE, "TMDB");
   private static final Match MATCH = new Match(Type.NAME, 1.0f, Instant.now());
   private static final Movie MOVIE = Movies.create();
-  private static final Instant NOW = Instant.now();
 
   @BeforeEach
   public void before() {
@@ -73,11 +71,11 @@ public class StreamCacheUpdateServiceTest {
       MOVIE
     ));
 
-    updater.update(7, List.of(stream1), NOW);
+    updater.update(7, List.of(stream1));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(streamStore).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")), eq(NOW));
+    verify(streamStore).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
     verify(streamStore).putIdentification(streamId1, new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
@@ -99,11 +97,11 @@ public class StreamCacheUpdateServiceTest {
 
     when(streamStore.findStream(streamable2.getId())).thenReturn(Optional.of(streamable2));
 
-    updater.update(7, List.of(streamable2), NOW);
+    updater.update(7, List.of(streamable2));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(streamStore).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")), eq(NOW));
+    verify(streamStore).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
     verify(streamStore).remove(streamable1.getId());
     verify(streamStore).putIdentification(streamable2.getId(), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
@@ -123,11 +121,11 @@ public class StreamCacheUpdateServiceTest {
       MOVIE
     ));
 
-    updater.update(7, List.of(streamable2), NOW);
+    updater.update(7, List.of(streamable2));
 
     Thread.sleep(100);  // Part of calls is async
 
-    verify(streamStore).put(argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")), eq(NOW));
+    verify(streamStore).put(argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
     verify(streamStore).putIdentification(streamable2.getId(), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }

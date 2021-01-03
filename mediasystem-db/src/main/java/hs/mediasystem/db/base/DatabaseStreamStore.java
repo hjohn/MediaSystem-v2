@@ -53,7 +53,7 @@ public class DatabaseStreamStore implements StreamableStore {
 
   private final Comparator<CachedStream> reversedCreationOrder = Comparator
       .comparing(CachedStream::getDiscoveryTime)
-      .thenComparing(Comparator.comparingLong(cs -> contentPrintProvider.get(cs.getStreamable().getId().getContentId()).getLastModificationTime()))
+      .thenComparingLong(cs -> contentPrintProvider.get(cs.getStreamable().getId().getContentId()).getLastModificationTime())
       .reversed();
 
   @PostConstruct
@@ -252,8 +252,8 @@ public class DatabaseStreamStore implements StreamableStore {
     removeFromCache(streamId);
   }
 
-  synchronized void put(Streamable streamable, Instant time) {
-    CachedStream updatedCachedStream = toUpdatedCachedStream(streamable, time);
+  synchronized void put(Streamable streamable) {
+    CachedStream updatedCachedStream = toUpdatedCachedStream(streamable);
 
     database.store(codec.toRecord(updatedCachedStream));
 
@@ -270,11 +270,11 @@ public class DatabaseStreamStore implements StreamableStore {
     });
   }
 
-  private CachedStream toUpdatedCachedStream(Streamable streamable, Instant time) {
+  private CachedStream toUpdatedCachedStream(Streamable streamable) {
     CachedStream existingCS = cache.get(streamable.getId());
 
     if(existingCS == null) {
-      return new CachedStream(streamable, null, time, null, null);
+      return new CachedStream(streamable, null, contentPrintProvider.get(streamable.getId().getContentId()).getSignatureCreationTime(), null, null);
     }
 
     return new CachedStream(streamable, existingCS.getIdentification().orElse(null), existingCS.getDiscoveryTime(), null, null);  // enrich times cleared, as new stream attributes means enrichment must be done again
