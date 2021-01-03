@@ -12,6 +12,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.ObjectProperty;
@@ -61,9 +63,10 @@ public class NewItemsPresentation {
         groupedMap.put(work.getId().toString(), new ConsolidatedNewItem(recommendation, 0));
       }
       else {
-        ConsolidatedNewItem item = groupedMap.computeIfAbsent(parent.getId() + ":" + sequence.getSeasonNumber().orElse(0), k -> new ConsolidatedNewItem(recommendation, -1));
+        ConsolidatedNewItem item = groupedMap.computeIfAbsent(parent.getId().toString(), k -> new ConsolidatedNewItem(recommendation, -1));
 
         item.similarCount++;
+        item.seasonCounts.merge(sequence.getSeasonNumber().orElse(0), 1, (a, b) -> a + b);
 
         if(Sequence.COMPARATOR.compare(sequence, item.recommendation.getWork().getDetails().getSequence().orElseThrow()) < 0) {
           item.recommendation = recommendation;
@@ -90,8 +93,16 @@ public class NewItemsPresentation {
       recommendation,
       null,
       work.getParent().orElseThrow().getName(),
-      "Season " + work.getDetails().getSequence().orElseThrow().getSeasonNumber().orElseThrow() + ": " + (item.similarCount + 1) + " new episodes"
+      createSubtitle(item)
     );
+  }
+
+  private static String createSubtitle(ConsolidatedNewItem item) {
+    if(item.seasonCounts.size() == 1) {
+      return "Season " + item.seasonCounts.firstKey() + ": " + (item.similarCount + 1) + " new episode" + (item.similarCount > 0 ? "s" : "");
+    }
+
+    return (item.similarCount + 1) + " new episodes in " + item.seasonCounts.size() + " seasons";
   }
 
   private static Item toItem(Recommendation recommendation) {
@@ -120,6 +131,8 @@ public class NewItemsPresentation {
   }
 
   private static class ConsolidatedNewItem {
+    public final SortedMap<Integer, Integer> seasonCounts = new TreeMap<>();
+
     public Recommendation recommendation;
     public int similarCount;
 
