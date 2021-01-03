@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -117,7 +118,7 @@ public class ObjectFactory {
     ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier.toString());
 
     return new Details(
-      node.get("title") == null ? node.get("name").textValue() : node.get("title").textValue(),
+      Optional.ofNullable(node.get("title")).or(() -> Optional.ofNullable(node.get("name"))).map(JsonNode::textValue).orElse("(untitled)"),
       null,
       node.path("overview").textValue(),
       parseDate(releaseDate),

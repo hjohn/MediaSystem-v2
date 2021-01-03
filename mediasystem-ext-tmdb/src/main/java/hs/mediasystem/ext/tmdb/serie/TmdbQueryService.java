@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -67,9 +68,9 @@ public class TmdbQueryService extends AbstractQueryService {
     return new Season(
       identifier,
       new Details(
-        node.get("name").asText(),
+        Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),
         null,
-        node.get("overview").asText(),
+        node.path("overview").textValue(),
         releaseDate == null || releaseDate.isEmpty() ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
         tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier),  // as cover
         null,
@@ -91,9 +92,9 @@ public class TmdbQueryService extends AbstractQueryService {
     return new Episode(
       identifier,
       new Details(
-        node.get("name").asText(),
+        Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),
         null,
-        node.get("overview").asText(),
+        node.path("overview").textValue(),
         releaseDate == null ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
         null,
         tmdb.createImageURI(node.path("still_path").textValue(), "original", "image:cover:" + identifier),  // as sample image
