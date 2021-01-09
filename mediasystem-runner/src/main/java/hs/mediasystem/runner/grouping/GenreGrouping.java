@@ -10,6 +10,7 @@ import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageURI;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ import javax.inject.Singleton;
 public class GenreGrouping implements Grouping<Work> {
   private static final ResourceManager RM = new ResourceManager(GenreGrouping.class);
   private static final DataSource DATA_SOURCE = DataSource.instance(MediaType.GROUPING, "GENRE");
-  private static final Comparator<Work> RATING_COMPARATOR = Comparator.comparing((Work w) -> w.getDetails().getReception().map(Reception::getRating).orElse(0.0)).reversed();
+  private static final Comparator<Work> WEIGHTED_RATING_COMPARATOR = Comparator.comparing(GenreGrouping::score).reversed();
 
   @Override
   public List<Object> group(List<Work> items) {
@@ -47,9 +48,15 @@ public class GenreGrouping implements Grouping<Work> {
         return index == -1 ? Integer.MAX_VALUE : index;
       });
 
+      /*
+       * This pics 4 covers that best represent this genre.  It does this by first
+       * picking works which have this genre as their major genre (their first genre)
+       * and then by favoring the highest rated and most recent ones (weighted).
+       */
+
       AtomicReference<ImageURI> backgroundURIRef = new AtomicReference<>();
       String uris = entry.getValue().stream()
-        .sorted(majorGenreComparator.thenComparing(RATING_COMPARATOR))
+        .sorted(majorGenreComparator.thenComparing(WEIGHTED_RATING_COMPARATOR))
         .peek(mi -> {  // This is dirty
           if(backgroundURIRef.get() == null) {
             mi.getDetails().getBackdrop().ifPresent(backgroundURIRef::set);
@@ -91,5 +98,16 @@ public class GenreGrouping implements Grouping<Work> {
     }
 
     return topLevelItems;
+  }
+
+  private static double score(Work work) {
+    Reception reception = work.getDetails().getReception().orElse(null);
+    LocalDate date = work.getDetails().getReleaseDate().orElse(null);
+
+    if(reception != null && date != null && !Boolean.TRUE.equals(work.getDetails().getClassification().getPornographic())) {
+      return reception.getRating() + date.getYear() * 0.05;
+    }
+
+    return Double.NEGATIVE_INFINITY;
   }
 }
