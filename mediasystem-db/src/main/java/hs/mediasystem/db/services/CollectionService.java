@@ -69,7 +69,6 @@ public class CollectionService {
       Production production = (Production)work.getDescriptor();
       Reception reception = production.getReception();
       LocalDate date = production.getDetails().getDate().orElse(null);
-      production.getClassification().getPornographic();
 
       if(reception != null && date != null && !Boolean.TRUE.equals(production.getClassification().getPornographic())) {
         return reception.getRating() + date.getYear() * 0.05;
