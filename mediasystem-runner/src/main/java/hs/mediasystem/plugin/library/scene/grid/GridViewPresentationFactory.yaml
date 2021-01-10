@@ -1,8 +1,6 @@
 sort-order:
   alpha: Alphabetically
   best: Most Relevant
-  season-number: Season Number
-  episode-number: Episode Number
   release-date: Release Date
   popularity: Popularity
   watched-date: Most Recently Watched
