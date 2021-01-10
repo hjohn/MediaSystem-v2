@@ -30,8 +30,7 @@ public class MoviesCollectionType implements CollectionType {
 
   private static final List<SortOrder<Object>> SORT_ORDERS = List.of(
     new SortOrder<>("alpha", BY_NAME),
-    new SortOrder<>("release-date", BY_RELEASE_DATE_REVERSED, w -> List.of(extractDetails(w).getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse("Unknown")), true),
-    new SortOrder<>("genre", BY_NAME, r -> extractDetails(r).getClassification().getGenres(), false)
+    new SortOrder<>("release-date", BY_RELEASE_DATE_REVERSED, w -> List.of(extractDetails(w).getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse("Unknown")), true)
   );
 
   private static final List<Filter<Object>> FILTERS = List.of(
