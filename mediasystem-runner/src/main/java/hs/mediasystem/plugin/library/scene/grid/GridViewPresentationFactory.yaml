@@ -1,9 +1,9 @@
 sort-order:
-  alpha: Alphabetically
+  alpha: Alphabetical
   best: Most Relevant
+  popularity: Most Popular
   rating: Highest Rated
-  release-date: Release Date
-  popularity: Popularity
+  release-date: Most Recently Released
   watched-date: Most Recently Watched
 filter:
   none: "-"
