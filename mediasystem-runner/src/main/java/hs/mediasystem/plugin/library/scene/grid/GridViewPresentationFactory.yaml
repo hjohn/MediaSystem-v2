@@ -1,6 +1,7 @@
 sort-order:
   alpha: Alphabetically
   best: Most Relevant
+  rating: Highest Rated
   release-date: Release Date
   popularity: Popularity
   watched-date: Most Recently Watched

@@ -1,6 +1,11 @@
 package hs.mediasystem.domain.work;
 
+import java.util.Comparator;
+
 public class Reception {
+  public static final Comparator<Reception> RATING_REVERSED = Comparator.comparingDouble(Reception::getRating).reversed();
+  public static final Reception EMPTY = new Reception(0, 0);
+
   private final double rating;
   private final long voteCount;
 

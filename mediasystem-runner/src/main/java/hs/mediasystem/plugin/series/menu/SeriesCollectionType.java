@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.series.menu;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
@@ -27,13 +28,15 @@ import javax.inject.Singleton;
 @Singleton
 public class SeriesCollectionType implements CollectionType {
   private static final Comparator<Object> BY_NAME = Comparator.comparing(SeriesCollectionType::extractDetails, Details.ALPHABETICAL);
-  private static final Comparator<Object> BY_RELEASE_DATE_REVERSED = Comparator.comparing(SeriesCollectionType::extractDetails, Details.RELEASE_DATE_REVERSED);
-  private static final Comparator<Object> BY_LAST_WATCHED_REVERSED = Comparator.comparing(SeriesCollectionType::extractState, State.WATCHED_DATE_REVERSED);
+  private static final Comparator<Object> BY_RELEASE_DATE_REVERSED = Comparator.comparing(SeriesCollectionType::extractDetails, Details.RELEASE_DATE_REVERSED).thenComparing(BY_NAME);
+  private static final Comparator<Object> BY_LAST_WATCHED_REVERSED = Comparator.comparing(SeriesCollectionType::extractState, State.WATCHED_DATE_REVERSED).thenComparing(BY_NAME);
+  private static final Comparator<Object> BY_RATING_REVERSED = Comparator.comparing(SeriesCollectionType::extractReception, Reception.RATING_REVERSED).thenComparing(BY_NAME);
 
   private static final List<SortOrder<Object>> SORT_ORDERS = List.of(
     new SortOrder<>("alpha", BY_NAME),
     new SortOrder<>("release-date", BY_RELEASE_DATE_REVERSED),
-    new SortOrder<>("watched-date", BY_LAST_WATCHED_REVERSED)
+    new SortOrder<>("watched-date", BY_LAST_WATCHED_REVERSED),
+    new SortOrder<>("rating", BY_RATING_REVERSED)
   );
 
   private static final List<Filter<Object>> FILTERS = List.of(
@@ -81,6 +84,10 @@ public class SeriesCollectionType implements CollectionType {
     WorksGroup wg = (WorksGroup)obj;
 
     return wg.getDetails();
+  }
+
+  private static Reception extractReception(Object obj) {
+    return extractDetails(obj).getReception().orElse(Reception.EMPTY);
   }
 
   private static State extractState(Object obj) {

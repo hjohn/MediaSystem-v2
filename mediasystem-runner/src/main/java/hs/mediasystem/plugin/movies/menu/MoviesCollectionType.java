@@ -1,6 +1,7 @@
 package hs.mediasystem.plugin.movies.menu;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
@@ -26,11 +27,13 @@ import javax.inject.Singleton;
 @Singleton
 public class MoviesCollectionType implements CollectionType {
   private static final Comparator<Object> BY_NAME = Comparator.comparing(MoviesCollectionType::extractDetails, Details.ALPHABETICAL);
-  private static final Comparator<Object> BY_RELEASE_DATE_REVERSED = Comparator.comparing(MoviesCollectionType::extractDetails, Details.RELEASE_DATE_REVERSED);
+  private static final Comparator<Object> BY_RELEASE_DATE_REVERSED = Comparator.comparing(MoviesCollectionType::extractDetails, Details.RELEASE_DATE_REVERSED).thenComparing(BY_NAME);
+  private static final Comparator<Object> BY_RATING_REVERSED = Comparator.comparing(MoviesCollectionType::extractReception, Reception.RATING_REVERSED).thenComparing(BY_NAME);
 
   private static final List<SortOrder<Object>> SORT_ORDERS = List.of(
     new SortOrder<>("alpha", BY_NAME),
-    new SortOrder<>("release-date", BY_RELEASE_DATE_REVERSED, w -> List.of(extractDetails(w).getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse("Unknown")), true)
+    new SortOrder<>("release-date", BY_RELEASE_DATE_REVERSED, w -> List.of(extractDetails(w).getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse("Unknown")), true),
+    new SortOrder<>("rating", BY_RATING_REVERSED)
   );
 
   private static final List<Filter<Object>> FILTERS = List.of(
@@ -78,6 +81,10 @@ public class MoviesCollectionType implements CollectionType {
     WorksGroup wg = (WorksGroup)obj;
 
     return wg.getDetails();
+  }
+
+  private static Reception extractReception(Object obj) {
+    return extractDetails(obj).getReception().orElse(Reception.EMPTY);
   }
 
   private static State extractState(Object obj) {
