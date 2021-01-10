@@ -3,21 +3,29 @@ package hs.mediasystem.db.base;
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class StreamDatabase {
+  private static final List<String> EMPTY_LIST = List.of();
+
   @Inject private Database database;
 
   public void forEach(Consumer<StreamRecord> consumer) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
+      Map<Integer, List<String>> identifiersByStreamId = new HashMap<>();
+
+      tx.select(r -> identifiersByStreamId.computeIfAbsent(r.getStreamId(), k -> new ArrayList<>()).add(r.getIdentifier()), StreamIdentifierRecord.class);
       tx.select(r -> {
-        r.setIdentifiers(tx.select(StreamIdentifierRecord.class, "stream_id = ?", r.getId()).stream().map(StreamIdentifierRecord::getIdentifier).collect(Collectors.toList()));
+        r.setIdentifiers(identifiersByStreamId.getOrDefault(r.getId(), EMPTY_LIST));
         consumer.accept(r);
       }, StreamRecord.class);
     }
