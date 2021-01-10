@@ -34,13 +34,13 @@ public class MoviesCollectionType implements CollectionType {
   );
 
   private static final List<Filter<Object>> FILTERS = List.of(
-    new Filter<>("none", r -> true),
-    new Filter<>("released-recently", r -> extractDetails(r).getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
+    new Filter<>("none", w -> true),
+    new Filter<>("released-recently", w -> extractDetails(w).getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent())
   );
 
   private static final List<Filter<Object>> STATE_FILTERS = List.of(
-    new Filter<>("none", r -> true),
-    new Filter<>("unwatched", r -> !extractState(r).isConsumed())
+    new Filter<>("none", w -> true),
+    new Filter<>("unwatched", w -> !extractState(w).isConsumed())
   );
 
   @Inject private GenericCollectionPresentationFactory factory;
@@ -79,7 +79,6 @@ public class MoviesCollectionType implements CollectionType {
 
     return wg.getDetails();
   }
-
 
   private static State extractState(Object obj) {
     if(obj instanceof Work) {
