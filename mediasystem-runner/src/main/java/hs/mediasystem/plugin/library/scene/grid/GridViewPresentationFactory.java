@@ -42,11 +42,18 @@ public abstract class GridViewPresentationFactory {
     List<T> getChildren();
   }
 
-  public class GridViewPresentation<T> extends AbstractPresentation implements Navigable {
+  /**
+   * A presentation of a list of items, with support for sorting, filtering and
+   * grouping.  Keeps track of last selection.
+   *
+   * @param <T> the type supplied to the presentation
+   * @param <U> the type resulting from grouping
+   */
+  public class GridViewPresentation<T, U> extends AbstractPresentation implements Navigable {
 
     // Model
     public final ObjectProperty<Object> rootContextItem = new SimpleObjectProperty<>();
-    public final ObjectProperty<List<T>> inputItems = new SimpleObjectProperty<>(List.of());   // Items this presentation was constructed with (ungrouped, unsorted, unfiltered)
+    public final ObjectProperty<List<? extends T>> inputItems = new SimpleObjectProperty<>(List.of());   // Items this presentation was constructed with (ungrouped, unsorted, unfiltered)
 
     /**
      * Contains the item that is relevant for the current active items in this presentation.  This
@@ -57,19 +64,19 @@ public abstract class GridViewPresentationFactory {
 
     private final SettingsSource settingsSource;
 
-    public final Var<SortOrder<T>> sortOrder = Var.newSimpleVar(null);
-    public final ObservableList<SortOrder<T>> availableSortOrders = FXCollections.observableArrayList();
+    public final Var<SortOrder<U>> sortOrder = Var.newSimpleVar(null);
+    public final ObservableList<SortOrder<U>> availableSortOrders = FXCollections.observableArrayList();
 
-    public final Var<Filter<T>> filter = Var.newSimpleVar(null);
-    public final ObservableList<Filter<T>> availableFilters = FXCollections.observableArrayList();
+    public final Var<Filter<U>> filter = Var.newSimpleVar(null);
+    public final ObservableList<Filter<U>> availableFilters = FXCollections.observableArrayList();
 
-    public final Var<Filter<T>> stateFilter = Var.newSimpleVar(null);
-    public final ObservableList<Filter<T>> availableStateFilters = FXCollections.observableArrayList();
+    public final Var<Filter<U>> stateFilter = Var.newSimpleVar(null);
+    public final ObservableList<Filter<U>> availableStateFilters = FXCollections.observableArrayList();
 
-    public final Var<Grouping<T>> grouping = Var.newSimpleVar(null);
-    public final ObservableList<Grouping<T>> availableGroupings = FXCollections.observableArrayList();
+    public final Var<Grouping<T, U>> grouping = Var.newSimpleVar(null);
+    public final ObservableList<Grouping<T, U>> availableGroupings = FXCollections.observableArrayList();
 
-    private final ObservableList<Grouping<T>> originalGroupings = FXCollections.observableArrayList();
+    private final ObservableList<Grouping<T, U>> originalGroupings = FXCollections.observableArrayList();
     private final Var<Object> internalSelectedItem = Var.newSimpleVar(null);
     private final String lastSelectedId;  // Contains the last selected id for this view, or null if there was none stored
 
@@ -83,9 +90,9 @@ public abstract class GridViewPresentationFactory {
     public final Val<Integer> totalItemCount = totalItemCountInternal;
     public final Val<Integer> visibleUniqueItemCount = visibleUniqueItemCountInternal;
 
-    private List<Object> rootItems;     // Root items (with optional children) with the active grouping applied (unsorted, unfiltered)
-    private List<Object> rawBaseItems;  // Currently active items, either the root items or a set of children (unsorted, unfiltered)
-    private List<Object> baseItems;     // Currently active items, either the root items or a set of children (sorted, filtered)
+    private List<U> rootItems;     // Root items (with optional children) with the active grouping applied (unsorted, unfiltered)
+    private List<U> rawBaseItems;  // Currently active items, either the root items or a set of children (unsorted, unfiltered)
+    private List<U> baseItems;     // Currently active items, either the root items or a set of children (sorted, filtered)
 
 
     /**
@@ -94,7 +101,7 @@ public abstract class GridViewPresentationFactory {
      * @param settingName a name under which the view settings and last selected item can be stored, cannot be null
      * @param viewOptions a {@link ViewOptions}, cannot be null
      */
-    protected GridViewPresentation(String settingName, ViewOptions<T> viewOptions) {
+    protected GridViewPresentation(String settingName, ViewOptions<T, U> viewOptions) {
       this.settingsSource = settingsClient.of(SYSTEM_PREFIX + settingName);
 
       this.contextItem.bind(rootContextItem);  // initially bound, can be unbound when navigating to a child
@@ -155,7 +162,7 @@ public abstract class GridViewPresentationFactory {
      *
      * @param newItems the new root items
      */
-    private void setRootItems(List<Object> newItems) {
+    private void setRootItems(List<U> newItems) {
       this.rootItems = newItems;
 
       updateRawBaseItems();
@@ -168,7 +175,7 @@ public abstract class GridViewPresentationFactory {
       }
       else {
         @SuppressWarnings("unchecked")
-        List<Object> children = (List<Object>)((Parent<T>)contextItem.getValue()).getChildren();
+        List<U> children = (List<U>)((Parent<T>)contextItem.getValue()).getChildren();
 
         availableGroupings.clear();
         setRawBaseItems(children);
@@ -181,7 +188,7 @@ public abstract class GridViewPresentationFactory {
      *
      * @param newRawBaseItems the new base items
      */
-    private void setRawBaseItems(List<Object> newRawBaseItems) {
+    private void setRawBaseItems(List<U> newRawBaseItems) {
       this.rawBaseItems = newRawBaseItems;
 
       updateFinalItemsAndGrouping();
@@ -197,20 +204,11 @@ public abstract class GridViewPresentationFactory {
       // is currently available:
       Object itemToSelect = findBestItemToSelect();
 
-      SortOrder<T> order = sortOrder.getValue();
-
-      /*
-       * Note, the SortOrder here is only intended for items of type T, not special
-       * items created for hierarchical grouping.  Therefore it is wrapped in a
-       * comparator that uses the first child of an item if available as that should
-       * be of type T.
-       */
-
-      HierachicalComparator hierarchicalComparator = new HierachicalComparator(order.comparator);
+      SortOrder<U> order = sortOrder.getValue();
 
       this.baseItems = rawBaseItems.stream()
         .filter(createFilterPredicate())
-        .sorted(hierarchicalComparator)
+        .sorted(order.comparator)
         .collect(Collectors.toList());
 
       groups.clear();
@@ -221,21 +219,21 @@ public abstract class GridViewPresentationFactory {
       else {
         items.clear();
 
-        Map<Comparable<Object>, List<Object>> groupedElements = group(baseItems, order.grouper);
-        Comparator<Entry<Comparable<Object>, List<Object>>> comparator = Comparator.comparing(Map.Entry::getKey);
+        Map<Comparable<Object>, List<U>> groupedElements = group(baseItems, order.grouper);
+        Comparator<Entry<Comparable<Object>, List<U>>> comparator = Comparator.comparing(Map.Entry::getKey);
 
         if(order.reverseGroupOrder) {
           comparator = comparator.reversed();
         }
 
-        List<Entry<Comparable<Object>, List<Object>>> list = groupedElements.entrySet().stream()
+        List<Entry<Comparable<Object>, List<U>>> list = groupedElements.entrySet().stream()
           .sorted(comparator)
           .collect(Collectors.toList());
 
         List<Group> newGroups = new ArrayList<>();
         int position = 0;
 
-        for(Entry<Comparable<Object>, List<Object>> e : list) {
+        for(Entry<Comparable<Object>, List<U>> e : list) {
           newGroups.add(new Group(e.getKey().toString().toUpperCase(), position));
 
           items.addAll(e.getValue());
@@ -273,10 +271,10 @@ public abstract class GridViewPresentationFactory {
         .orElse(null);
     }
 
-    private <E, G extends Comparable<G>> Map<Comparable<Object>, List<E>> group(List<E> elements, Function<E, List<Comparable<Object>>> grouper) {
-      Map<Comparable<Object>, List<E>> groupedElements = new HashMap<>();
+    private <G extends Comparable<G>> Map<Comparable<Object>, List<U>> group(List<U> elements, Function<U, List<Comparable<Object>>> grouper) {
+      Map<Comparable<Object>, List<U>> groupedElements = new HashMap<>();
 
-      for(E e : elements) {
+      for(U e : elements) {
         for(Comparable<Object> group : grouper.apply(e)) {
           groupedElements.computeIfAbsent(group, k -> new ArrayList<>()).add(e);
         }
@@ -289,14 +287,14 @@ public abstract class GridViewPresentationFactory {
       internalSelectedItem.setValue(item);
     }
 
-    private Predicate<Object> createFilterPredicate() {
-      Predicate<T> predicate = filter.getValue().predicate;
+    private Predicate<U> createFilterPredicate() {
+      Predicate<U> predicate = filter.getValue().predicate;
 
       if(stateFilter.getValue() != null) {
         predicate = predicate.and(stateFilter.getValue().predicate);
       }
 
-      return new HierarchicalPredicate(predicate);
+      return predicate;
     }
 
     private void setupSortingAndFiltering() {
@@ -332,7 +330,7 @@ public abstract class GridViewPresentationFactory {
      * @return the best item to select, or <code>null</code> if no current item is part of the new filter
      */
     private Object findBestItemToSelect() {
-      Predicate<Object> predicate = createFilterPredicate();
+      Predicate<U> predicate = createFilterPredicate();
       Object item = selectedItem.getValue();
 
       if(item == null && lastSelectedId != null) {
@@ -360,7 +358,7 @@ public abstract class GridViewPresentationFactory {
 
       while(previousIndex >= 0 || nextIndex < baseItems.size()) {
         if(previousIndex >= 0) {
-          Object candidate = baseItems.get(previousIndex);
+          U candidate = baseItems.get(previousIndex);
 
           if(predicate.test(candidate)) {
             return candidate;
@@ -368,7 +366,7 @@ public abstract class GridViewPresentationFactory {
         }
 
         if(nextIndex < baseItems.size()) {
-          Object candidate = baseItems.get(nextIndex);
+          U candidate = baseItems.get(nextIndex);
 
           if(predicate.test(candidate)) {
             return candidate;
@@ -383,71 +381,23 @@ public abstract class GridViewPresentationFactory {
       // null to signal to caller it should select item 0.
       return null;
     }
-
-    class HierarchicalPredicate implements Predicate<Object> {
-      private final Predicate<T> predicate;
-
-      HierarchicalPredicate(Predicate<T> predicate) {
-        this.predicate = predicate;
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      public boolean test(Object item) {
-        if(item instanceof Parent) {
-          List<T> children = ((Parent<T>)item).getChildren();
-
-          if(!children.isEmpty()) {  // usually all items implement Parent, so also check if there are children
-            for(T child : children) {
-              if(predicate.test(child)) {
-                return true;
-              }
-            }
-
-            return false;
-          }
-        }
-
-        return predicate.test((T)item);
-      }
-    }
-
-    class HierachicalComparator implements Comparator<Object> {
-      private final Comparator<T> comparator;
-
-      public HierachicalComparator(Comparator<T> comparator) {
-        this.comparator = comparator;
-      }
-
-      @Override
-      @SuppressWarnings("unchecked")
-      public int compare(Object a, Object b) {
-        if(a instanceof Parent) {  // usually all items implement Parent, so also check if there are children
-          List<T> children = ((Parent<T>)a).getChildren();
-
-          if(!children.isEmpty()) {
-            a = children.get(0);
-          }
-        }
-        if(b instanceof Parent) {
-          List<T> children = ((Parent<T>)b).getChildren();
-
-          if(!children.isEmpty()) {
-            b = children.get(0);
-          }
-        }
-
-        return comparator.compare((T)a, (T)b);
-      }
-    }
   }
 
   public static class SortOrder<T> {
     public final String resourceKey;
     public final Comparator<T> comparator;
-    public final Function<Object, List<Comparable<Object>>> grouper;
+    public final Function<T, List<Comparable<Object>>> grouper;
     public final boolean reverseGroupOrder;
 
+    /**
+     * Constructs a new instance.
+     *
+     * @param <G> the type of instance resulting from groupings (only need to be Comparable)
+     * @param resourceKey a resource key for localization
+     * @param comparator a comparator for sorting
+     * @param grouper a function which takes an item and returns a list of groups it belongs (can be more than one)
+     * @param reverseGroupOrder whether the order of the groups created should be reversed
+     */
     @SuppressWarnings("unchecked")
     public <G extends Comparable<G>> SortOrder(String resourceKey, Comparator<T> comparator, Function<T, List<G>> grouper, boolean reverseGroupOrder) {
       if(comparator == null) {
@@ -456,7 +406,7 @@ public abstract class GridViewPresentationFactory {
 
       this.resourceKey = resourceKey;
       this.comparator = comparator;
-      this.grouper = (Function<Object, List<Comparable<Object>>>)(Function<?, ?>)grouper;
+      this.grouper = (Function<T, List<Comparable<Object>>>)(Function<?, ?>)grouper;
       this.reverseGroupOrder = reverseGroupOrder;
     }
 
@@ -479,21 +429,31 @@ public abstract class GridViewPresentationFactory {
     }
   }
 
-  public static class ViewOptions<T> {
-    final List<SortOrder<T>> sortOrders;
-    final List<Filter<T>> filters;
-    final List<Filter<T>> stateFilters;
-    final List<Grouping<T>> groupings;
+  /**
+   * Defines how the presentation can be sorted, filtered and grouped.<p>
+   *
+   * Sorting and filtering must be able to handle the return types of groupings.<p>
+   *
+   * Groupings only ever act on the types supplied to the presentation.
+   *
+   * @param <T> the type supplied to the presentation
+   * @param <U> the type resulting from grouping
+   */
+  public static class ViewOptions<T, U> {
+    final List<SortOrder<U>> sortOrders;
+    final List<Filter<U>> filters;
+    final List<Filter<U>> stateFilters;
+    final List<Grouping<T, U>> groupings;
 
-    public ViewOptions(List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<Filter<T>> stateFilters, List<Grouping<T>> groupings) {
+    public ViewOptions(List<SortOrder<U>> sortOrders, List<Filter<U>> filters, List<Filter<U>> stateFilters, List<Grouping<T, U>> groupings) {
       this.sortOrders = sortOrders;
       this.filters = filters;
       this.stateFilters = stateFilters;
       this.groupings = groupings;
     }
 
-    public ViewOptions(List<SortOrder<T>> sortOrders, List<Filter<T>> filters, List<Filter<T>> stateFilters) {
-      this(sortOrders, filters, stateFilters, List.of(new NoGrouping<T>()));
+    public ViewOptions(List<SortOrder<U>> sortOrders, List<Filter<U>> filters, List<Filter<U>> stateFilters) {
+      this(sortOrders, filters, stateFilters, List.of(new NoGrouping<T, U>()));
     }
   }
 }

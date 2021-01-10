@@ -24,13 +24,13 @@ import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 @Singleton
-public class GenreGrouping implements Grouping<Work> {
+public class GenreGrouping implements Grouping<Work, Object> {
   private static final ResourceManager RM = new ResourceManager(GenreGrouping.class);
   private static final DataSource DATA_SOURCE = DataSource.instance(MediaType.GROUPING, "GENRE");
   private static final Comparator<Work> WEIGHTED_RATING_COMPARATOR = Comparator.comparing(GenreGrouping::score).reversed();
 
   @Override
-  public List<Object> group(List<Work> items) {
+  public List<Object> group(List<? extends Work> items) {
     Map<String, List<Work>> map = new HashMap<>();
 
     for(Work item : items) {

@@ -2,11 +2,17 @@ package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Optional;
 
 public class Details {
+  public static final Comparator<Details> ALPHABETICAL = Comparator.comparing(Details::getTitle, NaturalLanguage.ALPHABETICAL);
+  public static final Comparator<Details> RELEASE_DATE = Comparator.comparing(d -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder()));
+  public static final Comparator<Details> RELEASE_DATE_REVERSED = Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder())).reversed();
+
   private final String title;
   private final Optional<String> subtitle;
   private final Optional<String> description;

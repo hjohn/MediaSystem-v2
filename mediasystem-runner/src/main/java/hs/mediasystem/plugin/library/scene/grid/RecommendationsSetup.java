@@ -10,7 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class RecommendationsSetup extends AbstractSetup<Work, RecommendationsPresentation> {
+public class RecommendationsSetup extends AbstractSetup<Work, Work, RecommendationsPresentation> {
   @Inject private ProductionPresentationFactory productionPresentationFactory;
 
   @Override

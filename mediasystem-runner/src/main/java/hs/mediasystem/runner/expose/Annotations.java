@@ -108,25 +108,25 @@ public class Annotations {
       .format(StatOverlay::getDescription)
       .as("statOverlay");
 
-    Expose.listProperty((GridViewPresentation<Object> p) -> p.sortOrder)
+    Expose.listProperty((GridViewPresentation<Object, Object> p) -> p.sortOrder)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableSortOrders)
       .format(f -> ResourceManager.getText(GridViewPresentationFactory.class, "sort-order", f.resourceKey))
       .as("sortOrder");
 
-    Expose.listProperty((GridViewPresentation<Object> p) -> p.filter)
+    Expose.listProperty((GridViewPresentation<Object, Object> p) -> p.filter)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableFilters)
       .format(f -> ResourceManager.getText(GridViewPresentationFactory.class, "filter", f.resourceKey))
       .as("filter");
 
-    Expose.listProperty((GridViewPresentation<Object> p) -> p.stateFilter)
+    Expose.listProperty((GridViewPresentation<Object, Object> p) -> p.stateFilter)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableStateFilters)
       .format(f -> ResourceManager.getText(GridViewPresentationFactory.class, "stateFilter", f.resourceKey))
       .as("stateFilter");
 
-    Expose.listProperty((GridViewPresentation<Object> p) -> p.grouping)
+    Expose.listProperty((GridViewPresentation<Object, Object> p) -> p.grouping)
       .of(GridViewPresentation.class)
       .allowedValues(p -> p.availableGroupings)
       .format(f -> ResourceManager.getText(GridViewPresentationFactory.class, "grouping", f.getClass().getSimpleName()))

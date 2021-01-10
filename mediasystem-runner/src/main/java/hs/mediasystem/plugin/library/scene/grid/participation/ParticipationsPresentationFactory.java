@@ -45,7 +45,7 @@ public class ParticipationsPresentationFactory extends GridViewPresentationFacto
     return new ParticipationsPresentation(id);
   }
 
-  public class ParticipationsPresentation extends GridViewPresentation<Participation> {
+  public class ParticipationsPresentation extends GridViewPresentation<Participation, Participation> {
     public final ObjectProperty<Person> person = new SimpleObjectProperty<>();
 
     private final PersonId id;

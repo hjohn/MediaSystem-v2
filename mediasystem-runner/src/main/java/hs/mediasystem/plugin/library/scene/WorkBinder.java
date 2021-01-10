@@ -27,10 +27,10 @@ import javax.inject.Singleton;
 
 @Singleton
 public class WorkBinder implements Binder<Work>, IDBinder<Work> {
-  public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Comparator.comparing(Details::getTitle, NaturalLanguage.ALPHABETICAL));
+  public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Details.ALPHABETICAL);
   public static final Comparator<Work> BY_SUBTITLE = Comparator.comparing(Work::getDetails, Comparator.comparing(d -> d.getSubtitle().orElse(null), Comparator.nullsLast(NaturalLanguage.ALPHABETICAL)));
-  public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
-  public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Comparator.comparing((Details d) -> d.getReleaseDate().orElse(null), Comparator.nullsFirst(Comparator.naturalOrder()))).reversed();
+  public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE);
+  public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE_REVERSED);
   public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
 
   @Inject private ImageHandleFactory imageHandleFactory;

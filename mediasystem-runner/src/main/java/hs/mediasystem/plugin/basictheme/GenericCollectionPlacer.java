@@ -17,11 +17,11 @@ import org.reactfx.value.Val;
 
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = GenericCollectionSetup.class)
-public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation<Work>, GenericCollectionSetup> {
+public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation<Work, Object>, GenericCollectionSetup> {
   @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
-  protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<Work> presentation) {
+  protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<Work, Object> presentation) {
     parentPresentation.backdrop.bind(
       Val.wrap(presentation.selectedItem)
         .filter(Work.class::isInstance)

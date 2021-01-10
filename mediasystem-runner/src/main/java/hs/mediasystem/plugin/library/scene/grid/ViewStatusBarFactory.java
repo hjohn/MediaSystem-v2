@@ -21,7 +21,7 @@ public class ViewStatusBarFactory {
   private static final LessLoader LESS_LOADER = new LessLoader(ViewStatusBarFactory.class);
   private static final ResourceManager RESOURCES = new ResourceManager(GridViewPresentationFactory.class);
 
-  public VBox create(GridViewPresentation<?> presentation) {
+  public VBox create(GridViewPresentation<?, ?> presentation) {
     Val<Integer> totalItemCount = presentation.totalItemCount;
     Val<Integer> visibleUniqueItemCount = presentation.visibleUniqueItemCount;
 

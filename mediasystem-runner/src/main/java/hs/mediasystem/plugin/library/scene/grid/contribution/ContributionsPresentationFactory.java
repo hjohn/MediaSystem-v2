@@ -40,7 +40,7 @@ public class ContributionsPresentationFactory extends GridViewPresentationFactor
     return new ContributionsPresentation(id);
   }
 
-  public class ContributionsPresentation extends GridViewPresentation<Contribution> {
+  public class ContributionsPresentation extends GridViewPresentation<Contribution, Contribution> {
     public final ObjectProperty<Work> work = new SimpleObjectProperty<>();
 
     private final WorkId id;

@@ -37,7 +37,7 @@ public class RecommendationsPresentationFactory extends GridViewPresentationFact
     return new RecommendationsPresentation(id);
   }
 
-  public class RecommendationsPresentation extends GridViewPresentation<Work> {
+  public class RecommendationsPresentation extends GridViewPresentation<Work, Work> {
     private final WorkId id;
 
     public RecommendationsPresentation(WorkId id) {

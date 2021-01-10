@@ -10,11 +10,11 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class GenericCollectionSetup extends AbstractSetup<Work, GenericCollectionPresentation<Work>> {
+public class GenericCollectionSetup extends AbstractSetup<Work, Object, GenericCollectionPresentation<Work, Object>> {
   @Inject private ProductionPresentationFactory productionPresentationFactory;
 
   @Override
-  protected void onItemSelected(ItemSelectedEvent<Work> event, GenericCollectionPresentation<Work> presentation) {
+  protected void onItemSelected(ItemSelectedEvent<Work> event, GenericCollectionPresentation<Work, Object> presentation) {
     PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem().getId()));
   }
 }

@@ -14,11 +14,11 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class CollectionGrouping implements Grouping<Work> {
+public class CollectionGrouping implements Grouping<Work, Object> {
   @Inject private WorkClient workClient;
 
   @Override
-  public List<Object> group(List<Work> items) {
+  public List<Object> group(List<? extends Work> items) {
     Map<WorkId, List<Work>> childWorks = new HashMap<>();
     List<Object> topLevelItems = new ArrayList<>();
 

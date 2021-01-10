@@ -36,7 +36,7 @@ public class ProductionCollectionFactory {
     new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed())
   );
 
-  public GenericCollectionPresentation<Work> create(WorkId id) {
+  public GenericCollectionPresentation<Work, Work> create(WorkId id) {
     return factory.create(() -> workClient.findChildren(id), "Collections", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), () -> workClient.find(id).orElseThrow(() -> new WorkNotFoundException(id)));
   }
 }

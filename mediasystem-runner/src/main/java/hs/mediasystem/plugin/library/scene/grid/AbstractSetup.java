@@ -42,7 +42,7 @@ import org.reactfx.EventStreams;
 import org.reactfx.Subscription;
 import org.reactfx.value.Val;
 
-public abstract class AbstractSetup<T, P extends GridViewPresentation<T>> implements NodeFactory<P> {
+public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> implements NodeFactory<P> {
   protected static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
 
   private static final LessLoader LESS_LOADER = new LessLoader(AbstractSetup.class);

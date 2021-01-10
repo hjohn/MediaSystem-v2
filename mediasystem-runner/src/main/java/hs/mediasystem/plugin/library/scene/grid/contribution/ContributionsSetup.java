@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class ContributionsSetup extends AbstractSetup<Contribution, ContributionsPresentation> {
+public class ContributionsSetup extends AbstractSetup<Contribution, Contribution, ContributionsPresentation> {
   @Inject private ContextLayout contextLayout;
   @Inject private ParticipationsPresentationFactory personParticipationsPresentationFactory;
 
