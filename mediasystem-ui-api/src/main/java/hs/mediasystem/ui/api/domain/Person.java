@@ -1,7 +1,7 @@
 package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.work.PersonId;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.ImageHandle;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,7 +15,7 @@ public class Person {
   private final PersonId id;
   private final String name;
   private final Optional<String> biography;
-  private final Optional<ImageURI> cover;
+  private final Optional<ImageHandle> cover;
   private final double popularity;
   private final Optional<Gender> gender;
   private final Optional<String> birthPlace;
@@ -23,7 +23,7 @@ public class Person {
   private final Optional<LocalDate> deathDate;
   private final List<Participation> participations;
 
-  public Person(PersonId id, String name, String biography, ImageURI cover, Gender gender, double popularity, String birthPlace, LocalDate birthDate, LocalDate deathDate, List<Participation> participations) {
+  public Person(PersonId id, String name, String biography, ImageHandle cover, Gender gender, double popularity, String birthPlace, LocalDate birthDate, LocalDate deathDate, List<Participation> participations) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -58,7 +58,7 @@ public class Person {
     return biography;
   }
 
-  public Optional<ImageURI> getCover() {
+  public Optional<ImageHandle> getCover() {
     return cover;
   }
 

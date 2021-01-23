@@ -2,7 +2,6 @@ package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role.Type;
-import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
@@ -63,11 +62,7 @@ public class DetailAndCastPane extends HBox {
     HBox.setHgrow(leftBox, Priority.ALWAYS);
   }
 
-  private final ImageHandleFactory imageHandleFactory;
-
-  public DetailAndCastPane(ImageHandleFactory imageHandleFactory) {
-    this.imageHandleFactory = imageHandleFactory;
-
+  public DetailAndCastPane() {
     Region castPane = create();
 
     castPane.setPrefWidth(100);  // Limit pref width, so free space can be assigned according to Grow / Percentage settings
@@ -102,7 +97,7 @@ public class DetailAndCastPane extends HBox {
     return actorsGrid;
   }
 
-  private void fillActorGrid(List<Contribution> contributors, GridPane actorsGrid) {
+  private static void fillActorGrid(List<Contribution> contributors, GridPane actorsGrid) {
     actorsGrid.getChildren().clear();
 
     List<Contribution> topContributors = contributors.stream()
@@ -115,7 +110,7 @@ public class DetailAndCastPane extends HBox {
       Contribution contributor = topContributors.get(i);
       AsyncImageProperty imageProperty = new AsyncImageProperty(400, 600);
 
-      imageProperty.imageHandleProperty().set(contributor.getPerson().getCover().map(imageHandleFactory::fromURI).orElse(null));
+      imageProperty.imageHandleProperty().set(contributor.getPerson().getCover().orElse(null));
 
       Label ph = Labels.create("ph", "?");
 

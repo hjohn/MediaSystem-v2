@@ -8,9 +8,7 @@ import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.reactfx.value.Val;
@@ -18,7 +16,6 @@ import org.reactfx.value.Val;
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = GenericCollectionSetup.class)
 public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation<Work, Object>, GenericCollectionSetup> {
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<Work, Object> presentation) {
@@ -30,7 +27,6 @@ public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation,
         .map(Details::getBackdrop)
         .orElse(Val.wrap(presentation.selectedItem).filter(WorksGroup.class::isInstance).map(WorksGroup.class::cast).map(WorksGroup::getDetails).map(Details::getBackdrop))
         .map(o -> o.orElse(null))
-        .map(imageHandleFactory::fromURI)
     );
   }
 }

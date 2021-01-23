@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.ui.api.RecommendationClient;
+import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Work;

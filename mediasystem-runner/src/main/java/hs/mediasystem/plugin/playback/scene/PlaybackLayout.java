@@ -3,23 +3,20 @@ package hs.mediasystem.plugin.playback.scene;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.ui.api.player.PlayerEvent;
-import hs.mediasystem.util.ImageHandleFactory;
 
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class PlaybackLayout implements NodeFactory<PlaybackOverlayPresentation> {
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   public Node create(PlaybackOverlayPresentation presentation) {
-    PlaybackOverlayPane view = new PlaybackOverlayPane(presentation, imageHandleFactory);
+    PlaybackOverlayPane view = new PlaybackOverlayPane(presentation);
 
     view.getProperties().put("background", presentation.playerPresentation.get().getDisplayComponent());
 

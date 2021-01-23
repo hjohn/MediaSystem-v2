@@ -6,7 +6,6 @@ import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Role;
 import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
 
 import java.util.function.Function;
 
@@ -18,7 +17,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Participation>, IDBinder<Participation> {
-  @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private WorkBinder workBinder;
 
   @Override
@@ -33,7 +31,7 @@ public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Part
 
   @Override
   public Function<Participation, ImageHandle> imageHandleExtractor() {
-    return c -> c.getWork().getDetails().getCover().map(imageHandleFactory::fromURI).orElse(null);
+    return c -> c.getWork().getDetails().getCover().orElse(null);
   }
 
   @Override

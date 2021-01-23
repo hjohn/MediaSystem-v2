@@ -6,9 +6,7 @@ import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory.Folder
 import hs.mediasystem.plugin.library.scene.grid.FolderSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.reactfx.value.Val;
@@ -16,7 +14,6 @@ import org.reactfx.value.Val;
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = FolderSetup.class)
 public class FolderViewPlacer extends AbstractPlacer<LibraryPresentation, FolderPresentation, FolderSetup> {
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, FolderPresentation presentation) {
@@ -32,7 +29,6 @@ public class FolderViewPlacer extends AbstractPlacer<LibraryPresentation, Folder
           .map(Work::getDetails)
           .map(d -> d.getBackdrop().orElse(null))
         )
-        .map(imageHandleFactory::fromURI)
     );
   }
 }

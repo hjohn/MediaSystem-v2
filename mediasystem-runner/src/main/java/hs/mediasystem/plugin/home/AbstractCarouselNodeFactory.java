@@ -6,7 +6,6 @@ import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactor
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
 
 import java.time.ZoneId;
@@ -16,7 +15,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 public abstract class AbstractCarouselNodeFactory {
-  @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ProductionPresentationFactory productionPresentationFactory;
 
   protected void fillRecommendationModel(Recommendation recommendation, String parentTitle, String title, String subtitle, AnnotatedImageCellFactory.Model model) {
@@ -33,7 +31,7 @@ public abstract class AbstractCarouselNodeFactory {
     // This has an exception for Movies, as the sample images for movies are often very wide aspect which does
     // not look that nice.  Also, recognizable images are preferred.  Perhaps introduce an alternative backdrop
     // image so the main backdrop and the image in the preview does not necessarily need to be the same.
-    model.imageHandle.set((work.getType() == MediaType.MOVIE ? work.getDetails().getBackdrop() : work.getDetails().getSampleImage()).or(() -> work.getDetails().getBackdrop()).map(imageHandleFactory::fromURI).orElse(null));
+    model.imageHandle.set((work.getType() == MediaType.MOVIE ? work.getDetails().getBackdrop() : work.getDetails().getSampleImage()).or(() -> work.getDetails().getBackdrop()).orElse(null));
 
     double fraction = work.getWatchedFraction().orElse(-1);
 

@@ -6,6 +6,7 @@ import hs.mediasystem.ui.api.PersonClient;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
 import hs.mediasystem.ui.api.domain.Role;
+import hs.mediasystem.util.ImageHandleFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import javax.inject.Singleton;
 public class LocalPersonClient implements PersonClient {
   @Inject private PersonService personService;
   @Inject private LocalWorksClient worksClient;
+  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   public Optional<Person> findPerson(PersonId id) {
@@ -29,7 +31,7 @@ public class LocalPersonClient implements PersonClient {
       p.getId(),
       p.getName(),
       p.getBiography().orElse(null),
-      p.getCover().orElse(null),
+      p.getCover().map(imageHandleFactory::fromURI).orElse(null),
       p.getGender().map(Object::toString).map(Person.Gender::valueOf).orElse(null),
       p.getPopularity(),
       p.getBirthPlace().orElse(null),
@@ -48,12 +50,12 @@ public class LocalPersonClient implements PersonClient {
     );
   }
 
-  static Person toPerson(hs.mediasystem.ext.basicmediatypes.domain.Person p) {
+  Person toPerson(hs.mediasystem.ext.basicmediatypes.domain.Person p) {
     return new Person(
       new PersonId(p.getIdentifier().getDataSource(), p.getIdentifier().getId()),
       p.getName(),
       null,
-      p.getCover(),
+      p.getCover() == null ? null : imageHandleFactory.fromURI(p.getCover()),
       null,
       0,
       null,

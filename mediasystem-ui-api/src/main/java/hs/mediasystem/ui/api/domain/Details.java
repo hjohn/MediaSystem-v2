@@ -1,7 +1,7 @@
 package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
@@ -17,9 +17,9 @@ public class Details {
   private final Optional<String> subtitle;
   private final Optional<String> description;
   private final Optional<LocalDate> releaseDate;
-  private final Optional<ImageURI> cover;
-  private final Optional<ImageURI> sampleImage;
-  private final Optional<ImageURI> backdrop;
+  private final Optional<ImageHandle> cover;
+  private final Optional<ImageHandle> sampleImage;
+  private final Optional<ImageHandle> backdrop;
   private final Optional<String> tagline;
   private final Optional<Serie> serie;
   private final Optional<Sequence> sequence;
@@ -27,7 +27,7 @@ public class Details {
   private final Optional<Double> popularity;
   private final Classification classification;
 
-  public Details(String title, String subtitle, String description, LocalDate releaseDate, ImageURI cover, ImageURI sampleImage, ImageURI backdrop, String tagline, Serie serie, Sequence sequence, Reception reception, Double popularity, Classification classification) {
+  public Details(String title, String subtitle, String description, LocalDate releaseDate, ImageHandle cover, ImageHandle sampleImage, ImageHandle backdrop, String tagline, Serie serie, Sequence sequence, Reception reception, Double popularity, Classification classification) {
     if(title == null || title.isBlank()) {
       throw new IllegalArgumentException("title cannot be null or blank: " + title);
     }
@@ -73,7 +73,7 @@ public class Details {
    *
    * @return a cover image
    */
-  public Optional<ImageURI> getCover() {
+  public Optional<ImageHandle> getCover() {
     return cover;
   }
 
@@ -85,7 +85,7 @@ public class Details {
    *
    * @return a sample image
    */
-  public Optional<ImageURI> getSampleImage() {
+  public Optional<ImageHandle> getSampleImage() {
     return sampleImage;
   }
 
@@ -96,7 +96,7 @@ public class Details {
    *
    * @return a backdrop image
    */
-  public Optional<ImageURI> getBackdrop() {
+  public Optional<ImageHandle> getBackdrop() {
     return backdrop;
   }
 

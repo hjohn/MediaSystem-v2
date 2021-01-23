@@ -12,7 +12,6 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
@@ -40,7 +39,6 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
   @Inject private WorkClient workClient;
   @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
   @Inject private ViewStatusBarFactory viewStatusBarFactory;
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   public Node create(FolderPresentation presentation) {
@@ -100,7 +98,6 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
 
       ImageHandle imageHandle = work.getDetails().getSampleImage()
         .or(() -> work.getDetails().getBackdrop())
-        .map(imageHandleFactory::fromURI)
         .orElse(null);
 
       model.imageHandle.set(imageHandle);

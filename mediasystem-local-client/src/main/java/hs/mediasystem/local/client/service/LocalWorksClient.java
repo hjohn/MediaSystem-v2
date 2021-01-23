@@ -3,7 +3,6 @@ package hs.mediasystem.local.client.service;
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.MediaStream;
-import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
@@ -15,11 +14,13 @@ import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ui.api.WorksClient;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Stage;
 import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
 
 import java.util.Collection;
@@ -34,6 +35,7 @@ import javax.inject.Singleton;
 @Singleton
 public class LocalWorksClient implements WorksClient {
   @Inject private WorksService worksService;
+  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   public List<Work> findNewest(int maximum, Predicate<MediaType> filter) {
@@ -59,10 +61,18 @@ public class LocalWorksClient implements WorksClient {
     return new Work(
       work.getId(),
       work.getType(),
-      work.getParent().orElse(null),
+      createParent(work.getParent().orElse(null)),
       createDetails(work.getDescriptor(), work.getParent().orElse(null), work.getPrimaryStream()),
       toState(work.getPrimaryStream().orElse(null)),
       work.getStreams()
+    );
+  }
+
+  private Parent createParent(hs.mediasystem.domain.work.Parent parent) {
+    return parent == null ? null : new Parent(
+      parent.getId(),
+      parent.getName(),
+      parent.getBackdrop().map(imageHandleFactory::fromURI).orElse(null)
     );
   }
 
@@ -72,7 +82,7 @@ public class LocalWorksClient implements WorksClient {
    * - sample image is taken first snapshot if missing (don't use backdrop, it is not a sample!)
    * - backdrop is taken from parent or from the second snapshot if missing
    */
-  private static Details createDetails(MediaDescriptor descriptor, Parent parent, Optional<MediaStream> mediaStream) {
+  private Details createDetails(MediaDescriptor descriptor, hs.mediasystem.domain.work.Parent parent, Optional<MediaStream> mediaStream) {
     return new Details(
       descriptor.getDetails().getTitle(),
       descriptor.getDetails().getSubtitle().orElse(null),
@@ -80,13 +90,16 @@ public class LocalWorksClient implements WorksClient {
       descriptor.getDetails().getDate().orElse(null),
       descriptor.getDetails().getCover()
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToCover))
+        .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor.getDetails().getSampleImage()
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToSampleImage))
+        .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor.getDetails().getBackdrop()
         .or(() -> parent == null ? Optional.empty() : parent.getBackdrop())
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
+        .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
       descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,

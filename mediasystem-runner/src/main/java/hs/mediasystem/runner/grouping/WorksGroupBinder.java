@@ -5,7 +5,6 @@ import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Binder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
 
 import java.time.LocalDate;
 import java.util.function.Function;
@@ -13,12 +12,10 @@ import java.util.function.Function;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup> {
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   public Class<WorksGroup> getType() {
@@ -32,7 +29,7 @@ public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup
 
   @Override
   public Function<WorksGroup, ImageHandle> imageHandleExtractor() {
-    return wg -> wg.getDetails().getCover().map(imageHandleFactory::fromURI).orElse(null);
+    return wg -> wg.getDetails().getCover().orElse(null);
   }
 
   @Override

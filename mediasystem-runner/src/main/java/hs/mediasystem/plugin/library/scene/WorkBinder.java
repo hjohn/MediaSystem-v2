@@ -1,10 +1,10 @@
 package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Binder;
 import hs.mediasystem.plugin.library.scene.grid.IDBinder;
 import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Serie;
@@ -12,7 +12,6 @@ import hs.mediasystem.ui.api.domain.Stage;
 import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.LocalDate;
@@ -22,7 +21,6 @@ import java.util.function.Function;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
@@ -32,8 +30,6 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
   public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE);
   public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE_REVERSED);
   public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
-
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   public Class<Work> getType() {
@@ -47,9 +43,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
 
   @Override
   public Function<Work, ImageHandle> imageHandleExtractor() {
-    return w -> (w.getType().isComponent() ? w.getDetails().getSampleImage() : w.getDetails().getCover())
-      .map(imageHandleFactory::fromURI)
-      .orElse(null);
+    return w -> (w.getType().isComponent() ? w.getDetails().getSampleImage() : w.getDetails().getCover()).orElse(null);
   }
 
   @Override

@@ -7,9 +7,7 @@ import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsSetu
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.reactfx.value.Val;
@@ -17,7 +15,6 @@ import org.reactfx.value.Val;
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = ParticipationsSetup.class)
 public class ParticipationsPlacer extends AbstractPlacer<LibraryPresentation, ParticipationsPresentation, ParticipationsSetup> {
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, ParticipationsPresentation presentation) {
@@ -28,7 +25,6 @@ public class ParticipationsPlacer extends AbstractPlacer<LibraryPresentation, Pa
         .map(Participation::getWork)
         .map(Work::getDetails)
         .map(d -> d.getBackdrop().orElse(null))
-        .map(imageHandleFactory::fromURI)
     );
   }
 }

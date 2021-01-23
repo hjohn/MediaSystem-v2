@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.work.Collection;
-import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
 import hs.mediasystem.plugin.home.OptionsNodeFactory.Option;
 import hs.mediasystem.plugin.library.scene.base.BackgroundPane;
@@ -9,6 +8,7 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.CollectionClient;
+import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
@@ -172,7 +172,6 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     backdrop.bind(Val.wrap(presentation.selectedItem)
       .map(r -> r.getWork().getParent().filter(p -> p.getType().isSerie()).flatMap(Parent::getBackdrop).or(() -> r.getWork().getDetails().getBackdrop()).orElse(null))
-      .map(imageHandleFactory::fromURI)
     );
 
     return mediaGridView;
@@ -199,7 +198,6 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     backdrop.bind(Val.wrap(presentation.selectedItem)
       .map(item -> item.recommendation.getWork().getParent().filter(p -> p.getType().isSerie()).flatMap(Parent::getBackdrop).or(() -> item.recommendation.getWork().getDetails().getBackdrop()).orElse(null))
-      .map(imageHandleFactory::fromURI)
     );
 
     return mediaGridView;

@@ -1,7 +1,6 @@
 package hs.mediasystem.util;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -18,22 +17,22 @@ public class HttpImageURIHandler implements ImageURIHandler {
       return new HttpImageHandle(uri);
     }
     else if(uri.getUri().startsWith("file:")) {
-      return new FileImageHandle(uri.toURI());
+      return new FileImageHandle(uri);
     }
 
     return null;
   }
 
   private class FileImageHandle implements ImageHandle {
-    private final URI uri;
+    private final ImageURI uri;
 
-    public FileImageHandle(URI uri) {
+    public FileImageHandle(ImageURI uri) {
       this.uri = uri;
     }
 
     @Override
     public byte[] getImageData() throws IOException {
-      return Files.readAllBytes(Paths.get(uri));
+      return Files.readAllBytes(Paths.get(uri.toURI()));
     }
 
     @Override

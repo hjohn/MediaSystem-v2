@@ -8,6 +8,8 @@ import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
@@ -28,6 +31,8 @@ public class GenreGrouping implements Grouping<Work, Object> {
   private static final ResourceManager RM = new ResourceManager(GenreGrouping.class);
   private static final DataSource DATA_SOURCE = DataSource.instance(MediaType.GROUPING, "GENRE");
   private static final Comparator<Work> WEIGHTED_RATING_COMPARATOR = Comparator.comparing(GenreGrouping::score).reversed();
+
+  @Inject private ImageHandleFactory imageHandleFactory;
 
   @Override
   public List<Object> group(List<? extends Work> items) {
@@ -54,19 +59,19 @@ public class GenreGrouping implements Grouping<Work, Object> {
        * and then by favoring the highest rated and most recent ones (weighted).
        */
 
-      AtomicReference<ImageURI> backgroundURIRef = new AtomicReference<>();
+      AtomicReference<ImageHandle> backgroundImageHandleRef = new AtomicReference<>();
       String uris = entry.getValue().stream()
         .sorted(majorGenreComparator.thenComparing(WEIGHTED_RATING_COMPARATOR))
         .peek(mi -> {  // This is dirty
-          if(backgroundURIRef.get() == null) {
-            mi.getDetails().getBackdrop().ifPresent(backgroundURIRef::set);
+          if(backgroundImageHandleRef.get() == null) {
+            mi.getDetails().getBackdrop().ifPresent(backgroundImageHandleRef::set);
           }
         })
         .map(Work::getDetails)
         .map(Details::getCover)
         .flatMap(Optional::stream)
         .filter(Objects::nonNull)
-        .map(Object::toString)
+        .map(ImageHandle::getKey)
         .limit(4)
         .collect(Collectors.joining("|"));
 
@@ -75,9 +80,9 @@ public class GenreGrouping implements Grouping<Work, Object> {
         null,
         RM.getText(entry.getKey().toLowerCase(), "description"),
         null,
-        uris.isEmpty() ? null : new ImageURI("multi::" + uris, null),  // as cover
+        uris.isEmpty() ? null : imageHandleFactory.fromURI(new ImageURI("multi::" + uris, null)),  // as cover
         null,
-        backgroundURIRef.get(),
+        backgroundImageHandleRef.get(),
         null,
         null,
         null,

@@ -6,7 +6,6 @@ import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -133,8 +132,8 @@ public class ProductionOverviewPane extends HBox {
     HBox.setHgrow(descriptionBox, Priority.ALWAYS);
   }
 
-  public ProductionOverviewPane(ImageHandleFactory imageHandleFactory) {
-    imageProperty.imageHandleProperty().bind(Values.of(model.work).map(w -> w.getDetails().getCover().map(imageHandleFactory::fromURI).orElse(null)).toBinding());
+  public ProductionOverviewPane() {
+    imageProperty.imageHandleProperty().bind(Values.of(model.work).map(w -> w.getDetails().getCover().orElse(null)).toBinding());
 
     getChildren().addAll(poster, descriptionBox);
 

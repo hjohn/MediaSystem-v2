@@ -1,13 +1,13 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.jfx.eventstream.Transactions;
-import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.SettingsSource;
 import hs.mediasystem.ui.api.domain.Work;

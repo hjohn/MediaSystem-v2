@@ -1,21 +1,20 @@
 package hs.mediasystem.plugin.library.scene.base;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Serie;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -40,14 +39,10 @@ import javafx.scene.Node;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.reactfx.value.Val;
 
 @Singleton
 public class ContextLayout {
-  @Inject private ImageHandleFactory imageHandleFactory;
 
   public BasePanel createGeneric(Object item) {
     if(item instanceof Work) {
@@ -126,7 +121,7 @@ public class ContextLayout {
     panel.title.set(details.getTitle());
     panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getReleaseDate().orElse(null)));
     panel.overview.set(details.getDescription().orElse(null));
-    panel.imageURI.set(details.getCover().orElse(null));
+    panel.imageHandle.set(details.getCover().orElse(null));
 
     return panel;
   }
@@ -136,7 +131,7 @@ public class ContextLayout {
 
     panel.title.set(person.getName());
 
-    person.getCover().ifPresent(panel.imageURI::set);
+    person.getCover().ifPresent(panel.imageHandle::set);
     person.getBiography().ifPresent(panel.biography::set);
     person.getBirthPlace().ifPresent(panel.birthPlace::set);
     person.getBirthDate().ifPresent(bd -> panel.birthDate.set(MediaItemFormatter.formattedLocalDate(bd) + person.getDeathDate().map(MediaItemFormatter::formattedLocalDate).map(x -> " - " + x).orElse("")));
@@ -164,14 +159,14 @@ public class ContextLayout {
     public final StringProperty totalEpisodes = new SimpleStringProperty();
     public final StringProperty rating = new SimpleStringProperty();
     public final StringProperty overview = new SimpleStringProperty();
-    public final ObjectProperty<ImageURI> imageURI = new SimpleObjectProperty<>();
+    public final ObjectProperty<ImageHandle> imageHandle = new SimpleObjectProperty<>();
 
     {
       AsyncImageProperty poster = new AsyncImageProperty(400, 600);
 
       getStyleClass().add("side-panel");
 
-      poster.imageHandleProperty().bind(Val.wrap(imageURI).map(imageHandleFactory::fromURI));
+      poster.imageHandleProperty().bind(imageHandle);
 
       ScaledImageView imageView = new ScaledImageView() {{
         getStyleClass().add("poster-image");

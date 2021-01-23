@@ -15,7 +15,6 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -50,7 +49,6 @@ import javax.inject.Singleton;
 public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPresentation> {
   private static final Logger LOGGER = Logger.getLogger(ProductionOverviewNodeFactory.class.getName());
 
-  @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private ShowInfoEventHandler showInfoEventHandler;
   @Inject private NavigationButtonsFactory navigationButtonsFactory;
   @Inject private BinderProvider binderProvider;
@@ -58,7 +56,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
   @Override
   public Node create(ProductionPresentation presentation) {
-    ProductionOverviewPane pane = new ProductionOverviewPane(imageHandleFactory);
+    ProductionOverviewPane pane = new ProductionOverviewPane();
 
     Binding<Boolean> showing = Nodes.showing(pane);
 
@@ -101,7 +99,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private Pane buildOverviewUI() {
-      DetailAndCastPane pane = new DetailAndCastPane(imageHandleFactory);
+      DetailAndCastPane pane = new DetailAndCastPane();
 
       pane.getStyleClass().add("overview-panel");
 
@@ -261,7 +259,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           model.description.set(details.getDescription().orElse(null));
           model.reception.set(details.getReception().orElse(null));
           model.releaseDate.set(details.getReleaseDate().orElse(null));
-          model.sampleImage.set(details.getSampleImage().map(imageHandleFactory::fromURI).orElse(null));
+          model.sampleImage.set(details.getSampleImage().orElse(null));
           model.sequence.set(details.getSequence().orElseThrow());
           model.mediaStatus.set(percentage);
         });

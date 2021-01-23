@@ -1,12 +1,11 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.SpecialEffects;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
@@ -76,9 +75,9 @@ public class PlaybackOverlayPane extends StackPane {
     new KeyFrame(Duration.seconds(9), new KeyValue(detailsOverlay.opacityProperty(), 0.0))
   );
 
-  public PlaybackOverlayPane(PlaybackOverlayPresentation presentation, ImageHandleFactory imageHandleFactory) {
+  public PlaybackOverlayPane(PlaybackOverlayPresentation presentation) {
     this.presentation.set(presentation);
-    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work).map(Work::getDetails).map(d -> d.getSampleImage().orElse(null)).map(imageHandleFactory::fromURI);
+    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work).map(Work::getDetails).map(d -> d.getSampleImage().orElse(null));
     this.player.set(presentation.playerPresentation.get());
     this.overlayVisible.bind(presentation.overlayVisible);
 

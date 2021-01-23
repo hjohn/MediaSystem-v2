@@ -18,6 +18,7 @@ import javax.inject.Singleton;
 public class LocalWorkClient implements WorkClient {
   @Inject private WorkService workService;
   @Inject private LocalWorksClient worksClient;
+  @Inject private LocalPersonClient personClient;
 
   @Override
   public List<Work> findChildren(WorkId workId) {
@@ -36,7 +37,7 @@ public class LocalWorkClient implements WorkClient {
 
   @Override
   public List<Contribution> findContributions(WorkId id) {
-    return workService.findContributions(id).stream().map(LocalWorkClient::toContribution).collect(Collectors.toList());
+    return workService.findContributions(id).stream().map(this::toContribution).collect(Collectors.toList());
   }
 
   @Override
@@ -49,9 +50,9 @@ public class LocalWorkClient implements WorkClient {
     workService.reidentify(id);
   }
 
-  private static Contribution toContribution(hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution c) {
+  private Contribution toContribution(hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution c) {
     return new Contribution(
-      LocalPersonClient.toPerson(c.getPerson()),
+      personClient.toPerson(c.getPerson()),
       LocalPersonClient.toRole(c.getRole()),
       c.getOrder()
     );
