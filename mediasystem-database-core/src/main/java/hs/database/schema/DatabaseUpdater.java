@@ -163,7 +163,7 @@ public class DatabaseUpdater {
                 line = line.substring(0, hash);
               }
 
-              sqlStatement += line.trim();
+              sqlStatement += line;
             }
 
             sqlStatement = translator.translate(sqlStatement.substring(0, sqlStatement.length() - 1));  // strip off semi-colon
