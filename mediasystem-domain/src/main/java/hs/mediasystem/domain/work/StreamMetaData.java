@@ -8,10 +8,11 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 public class StreamMetaData {
   private final ContentID contentId;
-  private final Duration duration;
+  private final Optional<Duration> duration;
   @JsonAlias("videoStreams") private final List<VideoTrack> videoTracks;
   private final List<AudioTrack> audioTracks;
   private final List<SubtitleTrack> subtitleTracks;
@@ -31,9 +32,6 @@ public class StreamMetaData {
     if(subtitleTracks == null) {
       throw new IllegalArgumentException("subtitleTracks cannot be null");
     }
-    if(duration == null) {
-      throw new IllegalArgumentException("duration cannot be null");
-    }
     if(snapshots == null) {
       throw new IllegalArgumentException("snapshots cannot be null");
     }
@@ -42,7 +40,7 @@ public class StreamMetaData {
     }
 
     this.contentId = contentId;
-    this.duration = duration;
+    this.duration = Optional.ofNullable(duration);
     this.videoTracks = Collections.unmodifiableList(videoTracks);
     this.audioTracks = Collections.unmodifiableList(audioTracks);
     this.subtitleTracks = Collections.unmodifiableList(subtitleTracks);
@@ -53,7 +51,13 @@ public class StreamMetaData {
     return contentId;
   }
 
-  public Duration getLength() {
+  /**
+   * Returns the duration discovered as part of this metadata.  This
+   * is optional as not all streams have a duration (a directory for a example).
+   *
+   * @return the duration, optional
+   */
+  public Optional<Duration> getLength() {
     return duration;
   }
 

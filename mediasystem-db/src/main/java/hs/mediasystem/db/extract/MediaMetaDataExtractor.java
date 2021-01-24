@@ -15,7 +15,6 @@ import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -96,7 +95,7 @@ public class MediaMetaDataExtractor {
     LOGGER.fine("Extracting metadata from: " + file);
 
     if(file.isDirectory()) {
-      StreamMetaData metaData = new StreamMetaData(contentId, Duration.ZERO, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+      StreamMetaData metaData = new StreamMetaData(contentId, null, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
       metaDataStore.store(metaData);
     }

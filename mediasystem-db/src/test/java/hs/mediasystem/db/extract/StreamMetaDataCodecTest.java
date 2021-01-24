@@ -14,16 +14,14 @@ import hs.mediasystem.util.ImageURI;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@ExtendWith(MockitoExtension.class)
-class StreamMetaDataCodecTest {
+public class StreamMetaDataCodecTest {
   private StreamMetaDataCodec codec;
 
   @BeforeEach
@@ -55,7 +53,7 @@ class StreamMetaDataCodecTest {
     StreamMetaData metaData = codec.decode(data);
 
     assertEquals(new ContentID(120), metaData.getContentId());
-    assertEquals(Duration.ofSeconds(999), metaData.getLength());
+    assertEquals(Optional.of(Duration.ofSeconds(999)), metaData.getLength());
     assertEquals("title", metaData.getVideoTracks().get(0).getTitle());
     assertEquals("mp3", metaData.getAudioTracks().get(0).getCodec());
     assertEquals("srt", metaData.getSubtitleTracks().get(0).getCodec());
