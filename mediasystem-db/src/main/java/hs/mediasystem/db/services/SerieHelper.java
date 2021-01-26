@@ -76,9 +76,21 @@ public class SerieHelper {
       backdrop = metaData.map(StreamMetaData::getSnapshots).filter(list -> list.size() > 2).map(list -> list.get(2)).map(Snapshot::getImageUri).orElse(null);
     }
 
+    String title = streamable.getAttributes().get(Attribute.TITLE);
+    String subtitle = streamable.getAttributes().get(Attribute.SUBTITLE);
+
+    if(title == null || title.isBlank()) {
+      title = subtitle;
+      subtitle = null;
+    }
+
+    if(title == null || title.isBlank()) {
+      title = "(Untitled)";
+    }
+
     return new Details(
-      streamable.getAttributes().get(Attribute.TITLE),
-      streamable.getAttributes().get(Attribute.SUBTITLE),
+      title,
+      subtitle,
       streamable.getAttributes().get(Attribute.DESCRIPTION),
       null,
       cover,
