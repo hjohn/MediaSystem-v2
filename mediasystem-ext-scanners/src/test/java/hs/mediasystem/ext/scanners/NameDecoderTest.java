@@ -89,8 +89,12 @@ public class NameDecoderTest {
       Arguments.of(Mode.EPISODE, "Star Trek Voyager - 501 - Night [Absolon].mkv", "Star Trek Voyager", null, "Night [Absolon]", "5,01", null, null, "mkv"),
       Arguments.of(Mode.EPISODE, "The.Expanse.S01E09.E10.Critical.Mass.Leviathan.Wakes.720p.BluRay.DTS.x264-VietHD.mkv", "The Expanse", null, "Critical Mass Leviathan Wakes 720p BluRay DTS x264-VietHD", "01,09-10", null, null, "mkv"),
       Arguments.of(Mode.EPISODE, "Star.Trek.Enterprise.S03E21.E2.720p.BluRay.x264-Green.mkv", "Star Trek Enterprise", null, "E2 720p BluRay x264-Green", "03,21", null, null, "mkv"),
+
       // Years as season numbers:
       Arguments.of(Mode.EPISODE, "Horizon.S2016E12.Sports.Doping.Winning.At.Any.Cost.1080i.HDTV.DD2.0.H.264-NTb.mkv", "Horizon", null, "Sports Doping Winning At Any Cost 1080i HDTV DD2 0 H 264-NTb", "2016,12", null, null, "mkv"),
+
+      // No serie name (as title):
+      Arguments.of(Mode.EPISODE, "S01E01 The Man Trap.avi", "", null, "The Man Trap", "01,01", null, null, "avi"),
 
       // Special numbers:
       Arguments.of(Mode.EPISODE, "Heroes.S04.Bonus.Genetics.of.a.Scene.720p.BluRay.x264-EbP.mkv", "Heroes S04 Bonus Genetics of a Scene 720p BluRay x264-EbP", null, null, null, null, null, "mkv"),
