@@ -6,14 +6,17 @@ import hs.jfx.eventstream.Subscription;
 import hs.jfx.eventstream.ValueStream;
 import hs.jfx.eventstream.Values;
 import hs.mediasystem.domain.work.MediaStream;
-import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
+import hs.mediasystem.plugin.cell.ModelMediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
+import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.overview.EpisodePane.Model;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.Nodes;
@@ -167,7 +170,12 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private Pane buildEpisodeListUI() {
-      MediaGridViewCellFactory<Work> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
+      ModelMediaGridViewCellFactory<Work> cellFactory = new ModelMediaGridViewCellFactory<>((item, model) -> {
+        model.title.set(item.getDetails().getTitle());
+        model.annotation1.set(item.getDetails().getSequence().map(this::createSequenceInfo).orElse(null));
+        model.imageHandle.set(item.getDetails().getSampleImage().orElse(null));
+        model.status.set(item.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : item.getState().isConsumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
+      });
 
       cellFactory.setPlaceHolderAspectRatio(16.0 / 9.0);
       cellFactory.setMinRatio(4.0 / 3.0);
@@ -239,6 +247,17 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       work.getPrimaryStream().filter(ms -> ms.getAttributes().getSize().isPresent()).ifPresent(ms -> {
         streamInfoPane.add(buildStreamInfoPanel(ms));
       });
+    }
+
+    private String createSequenceInfo(Sequence sequence) {
+      if(sequence.getType() == Type.SPECIAL) {
+        return "Special " + sequence.getNumber();
+      }
+      if(sequence.getType() == Type.EXTRA) {
+        return "Extra " + sequence.getNumber();
+      }
+
+      return "Ep. " + sequence.getNumber();
     }
 
     private Pane buildEpisodeUI() {
