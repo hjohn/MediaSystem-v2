@@ -48,7 +48,14 @@ import javax.inject.Singleton;
 // TODO document why the public methods are synchronized
 @Singleton
 public class WorkService {
-  private static final String DEFAULT_DATA_SOURCE_NAME = "DEFAULT";
+
+  /**
+   * DataSource which uses as key a StreamID.<p>
+   *
+   * This internal data source is used for items that are part of a serie but have
+   * not been matched up to a known episode or special.
+   */
+  static final String DEFAULT_DATA_SOURCE_NAME = "@INTERNAL";
 
   @Inject private DatabaseStreamStore streamStore;
   @Inject private DescriptorStore descriptorStore;

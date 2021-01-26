@@ -14,7 +14,6 @@ public enum MediaType {
   FILE(Trait.PLAYABLE),
 
   GROUPING(),
-  RELEASE(),
 
   PERSON(),
   COLLECTION(),
