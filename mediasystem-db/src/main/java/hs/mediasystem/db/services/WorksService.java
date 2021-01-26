@@ -2,11 +2,14 @@ package hs.mediasystem.db.services;
 
 import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
 import hs.mediasystem.util.Throwables;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -26,8 +29,11 @@ public class WorksService {
   }
 
   public synchronized List<Work> findAllByType(MediaType type, String tag) {
-    return streamStore.findStreams(type, tag).stream()
-      .map(workService::toWork)
+    Set<WorkId> deduplicationSet = new HashSet<>();
+
+    return streamStore.findStreams(type, tag).stream()  // returns streams, which could be duplicate logical items
+      .map(workService::toWork)  // converts to logical items, may contain duplicates
+      .filter(w -> deduplicationSet.add(w.getId()))  // deduplicates logical items
       .collect(Collectors.toList());
   }
 
