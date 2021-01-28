@@ -19,8 +19,6 @@ import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.util.checked.Flow;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -71,7 +69,7 @@ public class TmdbQueryService extends AbstractQueryService {
         Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),
         null,
         node.path("overview").textValue(),
-        releaseDate == null || releaseDate.isEmpty() ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
+        TheMovieDatabase.parseDateOrNull(releaseDate),
         tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier),  // as cover
         null,
         null
@@ -95,7 +93,7 @@ public class TmdbQueryService extends AbstractQueryService {
         Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),
         null,
         node.path("overview").textValue(),
-        releaseDate == null ? null : LocalDate.parse(releaseDate, DateTimeFormatter.ISO_DATE),
+        TheMovieDatabase.parseDateOrNull(releaseDate),
         null,
         tmdb.createImageURI(node.path("still_path").textValue(), "original", "image:cover:" + identifier),  // as sample image
         null

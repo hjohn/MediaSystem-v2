@@ -21,8 +21,6 @@ import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
 import hs.mediasystem.util.ImageURI;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,8 +56,8 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
       gender == 1 ? Gender.FEMALE : gender == 2 ? Gender.MALE : null,
       node.path("popularity").doubleValue(),
       node.path("place_of_birth").textValue(),
-      birthDay == null ? null : LocalDate.parse(birthDay, DateTimeFormatter.ISO_DATE),
-      deathDay == null ? null : LocalDate.parse(deathDay, DateTimeFormatter.ISO_DATE),
+      TheMovieDatabase.parseDateOrNull(birthDay),
+      TheMovieDatabase.parseDateOrNull(deathDay),
       node.path("biography").textValue(),
       roles
     );
