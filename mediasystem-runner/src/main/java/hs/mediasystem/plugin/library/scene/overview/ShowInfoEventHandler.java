@@ -11,6 +11,7 @@ import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
@@ -19,17 +20,19 @@ import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.Labels;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import javax.inject.Inject;
@@ -61,7 +64,11 @@ public class ShowInfoEventHandler {
 
     for(MediaStream stream : work.getStreams()) {
       GridPane gridPane = Containers.grid("item");
-      String path = stream.getAttributes().getUri().toString().trim();
+      String path = URLDecoder.decode(stream.getAttributes().getUri().toString().trim(), StandardCharsets.UTF_8);
+
+      if(path.startsWith("file://")) {
+        path = path.substring(5);
+      }
 
       // path often contains too few spaces for decent wrapping... add LF's every 80 chars:
       path = addLineFeeds(path, 100);
@@ -119,7 +126,7 @@ public class ShowInfoEventHandler {
           Labels.create("value", SizeFormatter.DURATION.format(d.toSeconds())),
           GridPane.FILL,
           GridPane.FILL
-            );
+        );
       });
 
       stream.getMediaStructure().ifPresent(ms -> {
@@ -169,44 +176,33 @@ public class ShowInfoEventHandler {
 
         List<SubtitleTrack> subtitleTracks = ms.getSubtitleTracks();
 
-        for(int i = 0; i < subtitleTracks.size(); i++) {
-          SubtitleTrack subtitleTrack = subtitleTracks.get(i);
-
-          gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Subtitle Streams"));
-          gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
-
-          if(subtitleTrack.getTitle() != null) {
-            gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
-            gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleTrack.getTitle(), 80)));
-            gridPane.nextRow();
-          }
-
-          gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
-          gridPane.at(3).add(Labels.create("value", addLineFeeds(subtitleTrack.getCodec(), 80)));
-          gridPane.nextRow();
-
-          if(subtitleTrack.getLanguage() != null) {
-            gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Language"));
-            gridPane.at(3).add(Labels.create("value", subtitleTrack.getLanguage()));
-            gridPane.nextRow();
-          }
-        }
+        gridPane.at(0).align(VPos.TOP).add(Labels.create("title", "Subtitle Streams"));
+        gridPane.at(1).spanning(3, 1).add(Labels.create("value", addLineFeeds(
+          subtitleTracks.stream()
+            .map(s -> s.getTitle() == null ? s.getLanguage() : s.getTitle() + " [" + s.getLanguage() + "]")
+            .collect(Collectors.joining(", ")),
+          100
+        )));
+        gridPane.nextRow();
       });
 
-      HBox snapshotsBox = Containers.hbox("snapshots-box");
+      GridPane snapshotsBox = Containers.grid("snapshots-box");
+      List<ImageHandle> handles = stream.getSnapshots().stream()
+        .map(Snapshot::getImageUri)
+        .map(imageHandleFactory::fromURI)
+        .collect(Collectors.toList());
 
-      stream.getSnapshots().stream().map(Snapshot::getImageUri).map(imageHandleFactory::fromURI).forEach(handle -> {
+      for(int i = 0; i < handles.size(); i++) {
+        ImageHandle handle = handles.get(i);
         BiasedImageView imageView = new BiasedImageView();
         AsyncImageProperty property = new AsyncImageProperty(600, 400);
 
         imageView.setOrientation(Orientation.HORIZONTAL);
         imageView.imageProperty().bind(property);
-//          imageView.setPrefWidth(20);
-//          imageView.setPrefHeight(20);
         property.imageHandleProperty().set(handle);
 
-        snapshotsBox.getChildren().add(imageView);
-      });
+        snapshotsBox.at(i % 4, i / 4).add(imageView);
+      }
 
       gridPane.addRow(Labels.create("title", "Snapshots"), snapshotsBox, GridPane.FILL, GridPane.FILL);
 
