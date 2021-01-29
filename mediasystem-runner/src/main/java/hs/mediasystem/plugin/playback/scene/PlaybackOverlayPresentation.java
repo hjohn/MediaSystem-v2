@@ -93,6 +93,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
     this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
       private long totalTimeViewed;
       private long timeViewedSinceLastSkip;
+      private long lastSaveTime = Long.MIN_VALUE;
 
       @Override
       public void changed(ObservableValue<? extends Number> observableValue, Number oldValue, Number value) {
@@ -139,13 +140,11 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
               resumePosition = (int)(position / 1000) - 10;
             }
 
-            ObjectProperty<Integer> storedResumePosition = streamStateClient.resumePositionProperty(contentId);
+            if(lastSaveTime < System.currentTimeMillis() - 10 * 1000) {
+              streamStateClient.resumePositionProperty(contentId).setValue(resumePosition);
+              streamStateClient.lastWatchedTimeProperty(contentId).set(Instant.now());
 
-            if(Math.abs(storedResumePosition.getValue() - resumePosition) > 10) {
-              Instant now = Instant.now();
-
-              storedResumePosition.setValue(resumePosition);
-              streamStateClient.lastWatchedTimeProperty(contentId).set(now);
+              lastSaveTime = System.currentTimeMillis();
             }
           }
         }
