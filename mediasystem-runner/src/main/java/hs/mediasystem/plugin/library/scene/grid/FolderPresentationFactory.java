@@ -22,8 +22,8 @@ public class FolderPresentationFactory extends GridViewPresentationFactory {
 
       this.settingPostfix = settingPostfix;
       this.viewOptions = viewOptions;
-      this.rootContextItem.set(contextItem);
       this.inputItems.set(items);  // TODO add refresh code
+      this.rootContextItem.set(contextItem);
     }
   }
 }

@@ -313,9 +313,18 @@ public abstract class GridViewPresentationFactory {
 
       // Navigation to/from parent/child level:
       contextItem.observeInvalidations(oldContextItem -> {
-        updateRawBaseItems();
+        updateRawBaseItems();  // this already handles selection
 
-        selectItem(contextItem.isBound() ? findById(toId(oldContextItem)) : baseItems.isEmpty() ? null : baseItems.get(0));
+        // we override selection here when navigating back from child to parent;
+        // the old context item is actually the parent that was shown as context with the child,
+        // so this is the one we want to try and select:
+        if(contextItem.isBound() && oldContextItem != null) {
+          Object obj = findById(toId(oldContextItem));
+
+          if(obj != null) {
+            selectItem(obj);
+          }
+        }
       });
     }
 
