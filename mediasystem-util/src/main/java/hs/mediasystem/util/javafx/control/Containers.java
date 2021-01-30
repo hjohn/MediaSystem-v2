@@ -16,6 +16,14 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
+/**
+ * Provides convience methods for creating standard JavaFX node containers.<p>
+ *
+ * All the methods that accept a list of {@link Node}s will ignore <code>null</code>s
+ * for convenience when programmaticaly constructing elements.<p>
+ *
+ * Multiple style classes can be assigned by providing a comma separated string.
+ */
 public class Containers {
   public static final Option HIDE_IF_EMPTY = pane -> hide(Bindings.isEmpty(pane.getChildren().filtered(Node::isVisible)));
   public static final Option MOUSE_TRANSPARENT = pane -> pane.setMouseTransparent(true);
