@@ -65,7 +65,8 @@ public class Work {
 
   /**
    * Returns the watched fraction, if a stream is available.  It is possible for a Work to be
-   * consumed but not fully watched.
+   * consumed but not fully watched.  If the stream has no known duration (yet), it is assumed
+   * to be unwatched and zero is returned.
    *
    * @return a watched fraction
    */
@@ -73,12 +74,12 @@ public class Work {
     MediaStream bestStream = determineBestStream();
 
     if(bestStream == null) {
-      return OptionalDouble.of(0);
+      return OptionalDouble.empty();
     }
 
     long resumePosition = bestStream.getState().getResumePosition().toSeconds();
 
-    return bestStream.getDuration().map(d -> resumePosition / (double)d.toSeconds()).map(OptionalDouble::of).orElse(OptionalDouble.empty());
+    return OptionalDouble.of(bestStream.getDuration().map(d -> resumePosition / (double)d.toSeconds()).orElse(0.0));
   }
 
   public boolean isWatched() {
