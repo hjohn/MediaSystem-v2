@@ -37,4 +37,17 @@ public class NavigateEvent extends Event {
   public Presentation getPresentation() {
     return presentation;
   }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder("NavigateEvent [");
+
+    sb.append("source = ").append(getSource());
+    sb.append(", target = ").append(getTarget());
+    sb.append(", eventType = ").append(getEventType());
+    sb.append(", consumed = ").append(isConsumed());
+    sb.append(", to = ").append(presentation);
+
+    return sb.toString();
+  }
 }
