@@ -144,7 +144,7 @@ public class ModelMediaGridViewCellFactory<T> implements Callback<ListView<T>, L
         setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);  // Indicate to cell that it can become as big as possible
 
         name.textProperty().addListener((obs, old, current) -> {
-          if(current.length() >= 30) {
+          if(current != null && current.length() >= 30) {
             name.getStyleClass().add("smaller");
           }
           else {
