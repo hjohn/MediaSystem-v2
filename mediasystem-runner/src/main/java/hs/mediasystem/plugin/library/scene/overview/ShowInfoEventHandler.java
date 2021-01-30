@@ -33,6 +33,8 @@ import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.VBox;
 
 import javax.inject.Inject;
@@ -56,14 +58,24 @@ public class ShowInfoEventHandler {
       Labels.create("serie-title", work.getParent().map(Parent::getName).orElse(""), Labels.HIDE_IF_EMPTY),
       titleLabel
     );
-    VBox listBox = Containers.vbox("list-panel");
+
+    TabPane tabPane = new TabPane();
     VBox vbox = Containers.vbox("main-panel");
 
     vbox.getStylesheets().add(LESS_LOADER.compile("show-info-styles.less"));
-    vbox.getChildren().addAll(titleBox, listBox);
+    vbox.getChildren().addAll(titleBox, tabPane);
 
-    for(MediaStream stream : work.getStreams()) {
+    List<MediaStream> streams = work.getStreams();
+
+    for(int streamIndex = 0; streamIndex < streams.size(); streamIndex++) {
+      MediaStream stream = streams.get(streamIndex);
       GridPane gridPane = Containers.grid("item");
+      Tab tab = new Tab("Stream " + (streamIndex + 1), gridPane);
+
+      tab.setClosable(false);
+
+      tabPane.getTabs().add(tab);
+
       String path = URLDecoder.decode(stream.getAttributes().getUri().toString().trim(), StandardCharsets.UTF_8);
 
       if(path.startsWith("file://")) {
@@ -179,7 +191,7 @@ public class ShowInfoEventHandler {
         gridPane.at(0).align(VPos.TOP).add(Labels.create("title", "Subtitle Streams"));
         gridPane.at(1).spanning(3, 1).add(Labels.create("value", addLineFeeds(
           subtitleTracks.stream()
-            .map(s -> s.getTitle() == null ? s.getLanguage() : s.getTitle() + " [" + s.getLanguage() + "]")
+            .map(s -> s.getTitle() == null ? s.getLanguage() : s.getLanguage() + " (" + s.getTitle() + ")")
             .collect(Collectors.joining(", ")),
           100
         )));
@@ -205,8 +217,6 @@ public class ShowInfoEventHandler {
       }
 
       gridPane.addRow(Labels.create("title", "Snapshots"), snapshotsBox, GridPane.FILL, GridPane.FILL);
-
-      listBox.getChildren().add(gridPane);
     }
 
     Presentations.showWindow(event, vbox);
