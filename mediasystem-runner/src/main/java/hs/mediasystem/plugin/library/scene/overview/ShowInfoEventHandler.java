@@ -55,7 +55,7 @@ public class ShowInfoEventHandler {
     }
 
     VBox titleBox = Containers.vbox("title-panel",
-      Labels.create("serie-title", work.getParent().map(Parent::getName).orElse(""), Labels.HIDE_IF_EMPTY),
+      Labels.create("serie-title", work.getType().isComponent() ? work.getParent().map(Parent::getName).orElse("") : "", Labels.HIDE_IF_EMPTY),
       titleLabel
     );
 
