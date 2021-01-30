@@ -2,12 +2,12 @@ package hs.mediasystem.runner.util;
 
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.util.javafx.SceneUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javafx.animation.Transition;
-import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
@@ -69,7 +69,7 @@ public class DialogPane<R> extends StackPane {
     requestFocus();
 
     if(synchronous) {
-      return (R)Platform.enterNestedEventLoop(this);
+      return (R)SceneUtil.enterNestedEventLoop(this);
     }
 
     return null;
@@ -91,7 +91,7 @@ public class DialogPane<R> extends StackPane {
       }
 
       if(synchronous) {
-        Platform.exitNestedEventLoop(this, result);
+        SceneUtil.exitNestedEventLoop(this, result);
       }
       else {
         this.result = result;

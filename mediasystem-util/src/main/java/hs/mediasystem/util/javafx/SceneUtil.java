@@ -24,6 +24,7 @@ import javafx.scene.input.KeyEvent;
 public class SceneUtil {
   private static final Logger LOGGER = Logger.getLogger(SceneUtil.class.getName());
   private static final ScheduledExecutorService EVENT_TIMEOUT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("SceneUtil"));
+  private static final NestedTimeTracker TIME_TRACKER = new NestedTimeTracker();
 
   public static Scene createScene(Parent root) {
     Scene scene = new Scene(root);
@@ -75,6 +76,27 @@ public class SceneUtil {
     });
   }
 
+  public static Object enterNestedEventLoop(Object key) {
+    TIME_TRACKER.enterNested();
+
+    return Platform.enterNestedEventLoop(key);
+  }
+
+  public static void exitNestedEventLoop(Object key, Object rval) {
+    Platform.exitNestedEventLoop(key, rval);
+
+    TIME_TRACKER.exitNested();
+  }
+
+  /**
+   * Adds a slow event warning whenever an event takes more than 10 ms to process.  Note
+   * that time spent in nested event loops cannot be properly taken into account as time
+   * spent in nested event loops will be part of the event that triggered it giving false
+   * positives.  In order for this time to be accurately reflected, the methods to enter
+   * a nested event loop in this class should be used instead of the ones in {@link Platform}.
+   *
+   * @param scene a Scene to which to add the slow event warning detection, cannot be null
+   */
   public static void addSlowEventWarning(Scene scene) {
     final EventDispatcher eventDispatcher = scene.getEventDispatcher();
 
@@ -98,12 +120,17 @@ public class SceneUtil {
 
         long startTime = System.currentTimeMillis();
 
+        TIME_TRACKER.enterNested(startTime);  // nesting can happen in two ways, an event triggering another event, or when a nested event loop is entered
+
         Event returnedEvent = eventDispatcher.dispatchEvent(event, tail);
 
-        long duration = System.currentTimeMillis() - startTime;
+        long endTime = System.currentTimeMillis();
+        long timeSpentInNested = TIME_TRACKER.exitNested(endTime);
 
-        if(duration > 10) {
-          LOGGER.warning("Slow Event (" + duration + " ms): " + event);
+        if(timeSpentInNested > 10) {
+          long total = endTime - startTime;
+
+          LOGGER.warning("Slow Event (self/total: " + timeSpentInNested + "/" + total + " ms @ level " + TIME_TRACKER.getCurrentLevel() + "): " + event);
         }
 
 //        future.cancel(false);
