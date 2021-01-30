@@ -28,12 +28,12 @@ import hs.mediasystem.util.javafx.control.transition.multi.Scroll;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Binding;
@@ -138,10 +138,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
               }
             });
 
-          borderPane.setBottom(current.getPrimaryStream()
-            .filter(ms -> ms.getAttributes().getSize().isPresent())
-            .map(ms -> Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState()), buildStreamInfoPanel(ms)))
-            .orElseGet(() -> Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState())))
+          borderPane.setBottom(
+            Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState()), buildStreamInfoPanel(current))
           );
         });
 
@@ -150,21 +148,33 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       return Containers.vbox("dynamic-panel", borderPane);
     }
 
-    private Pane buildStreamInfoPanel(MediaStream stream) {
+    private Pane buildStreamInfoPanel(Work current) {
+      MediaStream stream = current.getPrimaryStream().orElse(null);
+      int streamCount = current.getStreams().size();
+
+      if(stream == null) {
+        return null;
+      }
+
       return Containers.vbox(
         "stream-info-panel",
-        Stream.concat(
+        Arrays.asList(
           stream.getDuration().map(d -> Containers.hbox(
             "duration-box",
             Labels.create("duration-icon", "🕑"),
             Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
-          )).stream(),
+          )).orElse(null),
           stream.getState().getLastConsumptionTime().map(time -> Containers.hbox(
             "last-watched-box",
             Labels.create("last-watched-icon", "📷"),
             Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
-          )).stream()
-        ).collect(Collectors.toList()),
+          )).orElse(null),
+          Optional.ofNullable(streamCount > 1 ? streamCount : null).map(count -> Containers.hbox(
+            "stream-count-box",
+            Labels.create("stream-count-icon", "📁"),
+            Labels.create("stream-count-text", streamCount + " copies")
+          )).orElse(null)
+        ),
         Containers.MOUSE_TRANSPARENT
       );
     }
@@ -244,9 +254,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     private void updateStreamInfoPane(TransitionPane streamInfoPane, Work work) {
-      work.getPrimaryStream().filter(ms -> ms.getAttributes().getSize().isPresent()).ifPresent(ms -> {
-        streamInfoPane.add(buildStreamInfoPanel(ms));
-      });
+      Pane panel = buildStreamInfoPanel(work);
+
+      if(panel != null) {
+        streamInfoPane.add(panel);
+      }
     }
 
     private String createSequenceInfo(Sequence sequence) {
