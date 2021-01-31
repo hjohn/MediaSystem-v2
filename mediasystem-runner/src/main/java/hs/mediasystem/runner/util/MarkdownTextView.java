@@ -29,7 +29,7 @@ import org.fxmisc.richtext.Caret.CaretVisibility;
 import org.fxmisc.richtext.StyleClassedTextArea;
 
 public class MarkdownTextView extends VirtualizedScrollPane<StyleClassedTextArea> {
-  private static final LessLoader LESS_LOADER = new LessLoader(MarkdownTextView.class);
+  private static final String STYLES_URL = LessLoader.compile(MarkdownTextView.class, "markdown-styles.less");
 
   public final StringProperty markdownText = new SimpleStringProperty();
 
@@ -44,7 +44,7 @@ public class MarkdownTextView extends VirtualizedScrollPane<StyleClassedTextArea
     this.textArea.setEditable(false);
     this.textArea.setShowCaret(CaretVisibility.OFF);
 
-    getStylesheets().add(LESS_LOADER.compile("markdown-styles.less"));
+    getStylesheets().add(STYLES_URL);
 
     setFocusTraversable(true);
 

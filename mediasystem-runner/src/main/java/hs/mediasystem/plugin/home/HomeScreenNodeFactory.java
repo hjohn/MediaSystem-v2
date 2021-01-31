@@ -62,7 +62,7 @@ import org.reactfx.value.Var;
 
 @Singleton
 public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
-  private static final LessLoader LESS_LOADER = new LessLoader(HomeScreenNodeFactory.class);
+  private static final String STYLES_URL = LessLoader.compile(HomeScreenNodeFactory.class, "styles.less");
 
   @Inject private ImageHandleFactory imageHandleFactory;
   @Inject private CollectionPresentationProvider collectionPresentationProvider;
@@ -161,7 +161,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     grid.at(0, 5).spanning(11, 5).add(optionContainer);
     grid.at(0, 1).spanning(2, 5).add(Containers.stack("main-menu-container", menuBackgroundLabel, menuListView));
 
-    grid.getStylesheets().add(LESS_LOADER.compile("styles.less"));
+    grid.getStylesheets().add(STYLES_URL);
 
     return grid;
   }

@@ -27,7 +27,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class OptionsNodeFactory {
-  private static final LessLoader LESS_LOADER = new LessLoader(OptionsNodeFactory.class);
+  private static final String STYLES_URL = LessLoader.compile(OptionsNodeFactory.class, "exit-styles.less");
 
   public ActionListView<Option> create() {
     ActionListView<Option> mediaGridView = new HorizontalCarousel<>(
@@ -53,7 +53,7 @@ public class OptionsNodeFactory {
       )
     );
 
-    content.getStylesheets().add(LESS_LOADER.compile("exit-styles.less"));
+    content.getStylesheets().add(STYLES_URL);
 
     Dialogs.show(event, content);
   }

@@ -23,7 +23,7 @@ import javafx.stage.StageStyle;
  * use.
  */
 public class FXSceneManager implements SceneManager {
-  private static final LessLoader LESS_LOADER = new LessLoader(FXSceneManager.class);
+  private static final String STYLES_URL = LessLoader.compile(FXSceneManager.class, "global.less");
 
   private final Stage mainStage;
   private final StackPane playerPane = new StackPane();
@@ -62,7 +62,7 @@ public class FXSceneManager implements SceneManager {
     uiPane.setBackground(Background.EMPTY);
 
     scene.setFill(Color.BLACK);
-    scene.getStylesheets().add(LESS_LOADER.compile("global.less"));
+    scene.getStylesheets().add(STYLES_URL);
 
     setSceneLayout(SceneLayout.CHILD);
   }

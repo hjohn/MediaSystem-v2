@@ -20,7 +20,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.VBox;
 
 public class Dialogs {
-  private static final LessLoader LESS_LOADER = new LessLoader(Dialogs.class);
+  private static final String STYLES_URL = LessLoader.compile(Dialogs.class, "dialogs.less");
 
   public static void show(Event event, String dialogStyleClass, Node content) {
     DialogPane<Void> dialogPane = new DialogPane<>(dialogStyleClass);
@@ -94,7 +94,7 @@ public class Dialogs {
     DialogPane<T> dialogPane = new DialogPane<>("dialog", 1000);
     ProgressBar pb = new ProgressBar();
 
-    dialogPane.getStylesheets().add(LESS_LOADER.compile("dialogs.less"));
+    dialogPane.getStylesheets().add(STYLES_URL);
 
     pb.progressProperty().bind(task.progressProperty());
 

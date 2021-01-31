@@ -43,7 +43,7 @@ import javax.inject.Singleton;
 @Singleton
 public class ShowInfoEventHandler {
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.UK).withZone(ZoneOffset.systemDefault());
-  private static final LessLoader LESS_LOADER = new LessLoader(ShowInfoEventHandler.class);
+  private static final String STYLES_URL = LessLoader.compile(ShowInfoEventHandler.class, "show-info-styles.less");
 
   @Inject private ImageHandleFactory imageHandleFactory;
 
@@ -62,7 +62,7 @@ public class ShowInfoEventHandler {
     TabPane tabPane = new TabPane();
     VBox vbox = Containers.vbox("main-panel");
 
-    vbox.getStylesheets().add(LESS_LOADER.compile("show-info-styles.less"));
+    vbox.getStylesheets().add(STYLES_URL);
     vbox.getChildren().addAll(titleBox, tabPane);
 
     List<MediaStream> streams = work.getStreams();

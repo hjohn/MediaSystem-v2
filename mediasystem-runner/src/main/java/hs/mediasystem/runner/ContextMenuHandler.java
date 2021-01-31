@@ -49,7 +49,7 @@ import org.reactfx.value.Var;
 
 @Singleton
 public class ContextMenuHandler {
-  private static final LessLoader LESS_LOADER = new LessLoader(ContextMenuHandler.class);
+  private static final String STYLES_URL = LessLoader.compile(ContextMenuHandler.class, "option-menu-dialog.less");
 
   @Inject private ActionTargetProvider actionTargetProvider;
 
@@ -82,7 +82,7 @@ public class ContextMenuHandler {
 
     if(row > 0) {
       gridPane.getStyleClass().add("option-menu-dialog");
-      gridPane.getStylesheets().add(LESS_LOADER.compile("option-menu-dialog.less"));
+      gridPane.getStylesheets().add(STYLES_URL);
 
       Presentations.showDialog(event, gridPane);
 

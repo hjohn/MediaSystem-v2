@@ -23,6 +23,10 @@ public class LessLoader {
   private final String root;
   private final Class<?> cls;
 
+  public static String compile(Class<?> cls, String name) {
+    return new LessLoader(cls).compile(name);
+  }
+
   public LessLoader(Class<?> cls) {
     this.cls = cls;
 

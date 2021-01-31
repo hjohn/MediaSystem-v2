@@ -55,7 +55,9 @@ import javax.inject.Singleton;
 public class RootNodeFactory implements NodeFactory<RootPresentation> {
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG);
-  private static final LessLoader LESS_LOADER = new LessLoader(RootNodeFactory.class);
+  private static final String PROGRESS_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "progress-pane.less");
+  private static final String CLOCK_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "clock-pane.less");
+  private static final String LOGO_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "logo-pane.less");
 
   @Inject private SceneManager sceneManager;
   @Inject private ViewPortFactory viewPortFactory;
@@ -88,13 +90,13 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
 
     clockPane.visibleProperty().bind(presentation.clockVisible);
     clockPane.getStyleClass().add("clock-pane");
-    clockPane.getStylesheets().add(LESS_LOADER.compile("clock-pane.less"));
+    clockPane.getStylesheets().add(CLOCK_STYLES_URL);
 
     StackPane logoPane = new StackPane(createLogo());
 
     logoPane.visibleProperty().bind(presentation.clockVisible);
     logoPane.getStyleClass().add("logo-pane");
-    logoPane.getStylesheets().add(LESS_LOADER.compile("logo-pane.less"));
+    logoPane.getStylesheets().add(LOGO_STYLES_URL);
 
 /*
     Label fpsLabel = new Label();
@@ -299,7 +301,7 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
 
     pane.visibleProperty().bind(presentation.clockVisible.and(busy));
     pane.getStyleClass().add("progress-pane");
-    pane.getStylesheets().add(LESS_LOADER.compile("progress-pane.less"));
+    pane.getStylesheets().add(PROGRESS_STYLES_URL);
 
     return pane;
   }

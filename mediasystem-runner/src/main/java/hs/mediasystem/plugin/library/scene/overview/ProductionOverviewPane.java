@@ -32,7 +32,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class ProductionOverviewPane extends HBox {
-  private static final LessLoader LESS_LOADER = new LessLoader(ProductionOverviewPane.class);
+  private static final String STYLES_URL = LessLoader.compile(ProductionOverviewPane.class, "styles.less");
 
   public final Model model = new Model();
 
@@ -138,7 +138,7 @@ public class ProductionOverviewPane extends HBox {
     getChildren().addAll(poster, descriptionBox);
 
     getStyleClass().add("main-panel");
-    getStylesheets().add(LESS_LOADER.compile("styles.less"));
+    getStylesheets().add(STYLES_URL);
   }
 
   private String extractContentRating(Work work) {
