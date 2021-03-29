@@ -141,8 +141,8 @@ public class SeriesScanner implements Scanner {
   }
 
   private static boolean hasPathPart(Path input, String part) {
-    Pattern prefixPattern = Pattern.compile(part + "\\b");
-    Pattern postfixPattern = Pattern.compile("\\b" + part);
+    Pattern prefixPattern = Pattern.compile("\\b" + part + "\\b.*");
+    Pattern postfixPattern = Pattern.compile(".*\\b" + part + "\\b");
 
     for(Path path : input) {
       String name = path.toString().toLowerCase();
