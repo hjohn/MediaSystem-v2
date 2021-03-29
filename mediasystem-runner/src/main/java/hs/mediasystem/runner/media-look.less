@@ -217,45 +217,45 @@
       -fx-background-color: transparent;
     }
   }
-}
 
-.tab-pane {
-  @control-border: darken(@theme-primary, 50%, relative);
-  @control-bg: fade(darken(@theme-primary, 75%, relative), 40%);
+  .tab-pane {
+    @control-border: darken(@theme-primary, 50%, relative);
+    @control-bg: fade(darken(@theme-primary, 75%, relative), 40%);
 
-  // kill focus-indicator border
-  & > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
-    -fx-border-width: 0;
-  }
-
-  .tab-header-area .tab-header-background {
-     -fx-background-color: transparent;
-  }
-
-  .tab-content-area {
-    -fx-border-color: @control-border;
-    -fx-border-width: 1 1 1 1;
-    -fx-background-color: transparent;
-    -fx-padding: 10 10 10 10;
-  }
-
-  .tab {
-    -fx-border-color: derive(@control-border, -66%);
-    -fx-border-width: 1 1 0 1;
-    -fx-border-radius: 5 5 0 0;
-    -fx-background-color: derive(@control-bg, -66%);
-
-    .tab-label {
-      -fx-text-fill: @text-primary;
+    // kill focus-indicator border
+    & > .tab-header-area > .headers-region > .tab:selected .focus-indicator {
+      -fx-border-width: 0;
     }
-  }
 
-  .tab:selected {
-    -fx-border-color: @control-border;
-    -fx-background-color: @control-bg;
+    .tab-header-area .tab-header-background {
+       -fx-background-color: transparent;
+    }
 
-    .tab-label {
-      -fx-text-fill: @text-primary-highlight;
+    .tab-content-area {
+      -fx-border-color: @control-border;
+      -fx-border-width: 1 1 1 1;
+      -fx-background-color: transparent;
+      -fx-padding: 10 10 10 10;
+    }
+
+    .tab {
+      -fx-border-color: derive(@control-border, -66%);
+      -fx-border-width: 1 1 0 1;
+      -fx-border-radius: 5 5 0 0;
+      -fx-background-color: derive(@control-bg, -66%);
+
+      .tab-label {
+        -fx-text-fill: @text-primary;
+      }
+    }
+
+    .tab:selected {
+      -fx-border-color: @control-border;
+      -fx-background-color: @control-bg;
+
+      .tab-label {
+        -fx-text-fill: @text-primary-highlight;
+      }
     }
   }
 }
