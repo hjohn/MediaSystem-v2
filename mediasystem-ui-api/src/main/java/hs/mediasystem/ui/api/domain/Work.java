@@ -1,7 +1,6 @@
 package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.WorkId;
 
 import java.time.Instant;

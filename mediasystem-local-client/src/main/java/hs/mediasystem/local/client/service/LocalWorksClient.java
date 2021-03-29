@@ -2,7 +2,6 @@ package hs.mediasystem.local.client.service;
 
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
@@ -14,6 +13,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ui.api.WorksClient;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
@@ -58,13 +58,16 @@ public class LocalWorksClient implements WorksClient {
   }
 
   Work toWork(hs.mediasystem.ext.basicmediatypes.domain.stream.Work work) {
+    List<MediaStream> streams = work.getStreams().stream().map(LocalWorksClient::toStream).collect(Collectors.toList());
+    MediaStream primary = streams.isEmpty() ? null : streams.get(0);
+
     return new Work(
       work.getId(),
       work.getType(),
       createParent(work.getParent().orElse(null)),
-      createDetails(work.getDescriptor(), work.getParent().orElse(null), work.getPrimaryStream()),
-      toState(work.getPrimaryStream().orElse(null)),
-      work.getStreams()
+      createDetails(work.getDescriptor(), work.getParent().orElse(null), primary),
+      primary == null ? State.EMPTY : primary.getState(),
+      streams
     );
   }
 
@@ -82,7 +85,9 @@ public class LocalWorksClient implements WorksClient {
    * - sample image is taken first snapshot if missing (don't use backdrop, it is not a sample!)
    * - backdrop is taken from parent or from the second snapshot if missing
    */
-  private Details createDetails(MediaDescriptor descriptor, hs.mediasystem.domain.work.Parent parent, Optional<MediaStream> mediaStream) {
+  private Details createDetails(MediaDescriptor descriptor, hs.mediasystem.domain.work.Parent parent, MediaStream stream) {
+    Optional<MediaStream> mediaStream = Optional.ofNullable(stream);
+
     return new Details(
       descriptor.getDetails().getTitle(),
       descriptor.getDetails().getSubtitle().orElse(null),
@@ -137,15 +142,11 @@ public class LocalWorksClient implements WorksClient {
       .orElse(null);
   }
 
-  private static State toState(MediaStream stream) {
-    if(stream == null) {
-      return State.EMPTY;
-    }
-
+  private static State toState(hs.mediasystem.domain.work.State state) {
     return new State(
-      stream.getState().getLastConsumptionTime().orElse(null),
-      stream.getState().isConsumed(),
-      stream.getState().getResumePosition()
+      state.getLastConsumptionTime().orElse(null),
+      state.isConsumed(),
+      state.getResumePosition()
     );
   }
 
@@ -190,6 +191,19 @@ public class LocalWorksClient implements WorksClient {
       episode.getSeasonNumber() == 0 ? Type.SPECIAL : episode.getSeasonNumber() < 0 ? Type.EXTRA : Type.EPISODE,
       episode.getNumber(),
       episode.getSeasonNumber() <= 0 ? null : episode.getSeasonNumber()
+    );
+  }
+
+  private static MediaStream toStream(hs.mediasystem.domain.work.MediaStream stream) {
+    return new MediaStream(
+      stream.getId(),
+      stream.getParentId().orElse(null),
+      stream.getAttributes(),
+      toState(stream.getState()),
+      stream.getDuration().orElse(null),
+      stream.getMediaStructure().orElse(null),
+      stream.getSnapshots(),
+      stream.getMatch().orElse(null)
     );
   }
 }

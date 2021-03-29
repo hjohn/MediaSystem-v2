@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory.FolderPresentation;
@@ -10,6 +9,7 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.WorkClient;
+import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;

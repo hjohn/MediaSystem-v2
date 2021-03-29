@@ -5,7 +5,6 @@ import hs.jfx.eventstream.Invalidations;
 import hs.jfx.eventstream.Subscription;
 import hs.jfx.eventstream.ValueStream;
 import hs.jfx.eventstream.Values;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.plugin.cell.ModelMediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.MediaStatus;
@@ -15,6 +14,7 @@ import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactor
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Details;
+import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
