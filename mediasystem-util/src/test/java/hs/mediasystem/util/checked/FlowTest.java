@@ -1,6 +1,8 @@
 package hs.mediasystem.util.checked;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
-class FlowTest {
+public class FlowTest {
 
   /**
    * This test just checks that the correct part of the chain to build a
@@ -24,7 +26,7 @@ class FlowTest {
   @Test
   void onlyTerminalOperationsShouldThrowExceptions() {
     // Does not throw an exception:
-    Flow<String, IOException> s1 = Flow.forIOException(List.of("a", "b", "c").stream())
+    Flow<String, IOException, IOException> s1 = Flow.forIOException(List.of("a", "b", "c"))
       .map(this::toLowerCase)  // accepts function without a throws clause
       .map(this::toUpperCase); // accepts function with a throws clause
 
@@ -37,22 +39,53 @@ class FlowTest {
     }
 
     // Does not throw an exception:
-    Flow<String, IOException> s2 = Flow.forIOException(List.of("aa", "b", "c").stream()).map(this::toUpperCase);
+    Flow<String, IOException, IOException> s2 = Flow.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
 
     // Exception is thrown here:
     assertThrows(IOException.class, () -> s2.collect(Collectors.toList()));
 
     // Does not throw an exception:
-    Flow<String, IOException> s3 = Flow.forIOException(List.of("aa", "b", "c").stream()).map(this::toUpperCase);
+    Flow<String, IOException, IOException> s3 = Flow.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
 
     // Exception is thrown here:
     assertThrows(IOException.class, () -> s3.min(Comparator.naturalOrder()));
 
     // Does not throw an exception:
-    Flow<String, IOException> s4 = Flow.forIOException(List.of("aa", "b", "c").stream()).map(this::toUpperCase);
+    Flow<String, IOException, IOException> s4 = Flow.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
 
     // Exception is thrown here:
     assertThrows(IOException.class, () -> s4.max(Comparator.naturalOrder()));
+  }
+
+  @Test
+  void handleTwoExceptionTypes() throws IOException, URISyntaxException {
+    List<URI> list = Flow.of(List.of("a", "b", "c"), IOException.class, URISyntaxException.class)
+      .map(this::toUpperCase)
+      .map(this::toUri)
+      .collect(Collectors.toList());
+
+    assertEquals(List.of(toUri("A"), toUri("B"), toUri("C")), list);
+
+    assertThrows(IOException.class, () -> Flow.of(List.of("a", "bb", "c"), IOException.class, URISyntaxException.class)
+      .map(this::toUpperCase)
+      .map(this::toUri)
+      .collect(Collectors.toList())
+    );
+
+    assertThrows(URISyntaxException.class, () -> Flow.of(List.of(":", "b", "c"), IOException.class, URISyntaxException.class)
+      .map(this::toUpperCase)
+      .map(this::toUri)
+      .collect(Collectors.toList())
+    );
+
+    assertThrows(IllegalStateException.class, () -> Flow.of(List.of("a", "b", "c"), IOException.class, URISyntaxException.class)
+      .map(this::toUpperCase)
+      .map(this::toUri)
+      .map(x -> {
+        throw new IllegalStateException();
+      })
+      .collect(Collectors.toList())
+    );
   }
 
   /**
@@ -69,6 +102,10 @@ class FlowTest {
     }
 
     return input.toUpperCase();
+  }
+
+  public URI toUri(String input) throws URISyntaxException {
+    return new URI(input);
   }
 
   public String toLowerCase(String input) {

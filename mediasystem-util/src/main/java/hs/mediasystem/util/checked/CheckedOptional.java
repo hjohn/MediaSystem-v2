@@ -26,7 +26,7 @@ public class CheckedOptional<T> {
     this.value = value;
   }
 
-  public <U, E extends Exception> CheckedOptional<U> map(ThrowingFunction<? super T, ? extends U, E> mapper) throws E {
+  public <U, E extends Exception, F extends Exception> CheckedOptional<U> map(ThrowingFunction<? super T, ? extends U, E, F> mapper) throws E, F {
     Objects.requireNonNull(mapper);
 
     if(!isPresent()) {
@@ -37,7 +37,7 @@ public class CheckedOptional<T> {
   }
 
   @SuppressWarnings("unchecked")
-  public <U, E extends Exception> CheckedOptional<U> flatMap(ThrowingFunction<? super T, ? extends CheckedOptional<? extends U>, E> mapper) throws E {
+  public <U, E extends Exception, F extends Exception> CheckedOptional<U> flatMap(ThrowingFunction<? super T, ? extends CheckedOptional<? extends U>, E, F> mapper) throws E, F {
     Objects.requireNonNull(mapper);
 
     if(!isPresent()) {
@@ -48,7 +48,7 @@ public class CheckedOptional<T> {
   }
 
   @SuppressWarnings("unchecked")
-  public <E extends Exception> CheckedOptional<T> or(ThrowingSupplier<? extends CheckedOptional<? extends T>, E> supplier) throws E {
+  public <E extends Exception, F extends Exception> CheckedOptional<T> or(ThrowingSupplier<? extends CheckedOptional<? extends T>, E, F> supplier) throws E, F {
     Objects.requireNonNull(supplier);
 
     if(isPresent()) {
