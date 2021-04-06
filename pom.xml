@@ -5,10 +5,11 @@
 
   <groupId>hs.mediasystem</groupId>
   <artifactId>mediasystem-parent</artifactId>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>${revision}</version>
   <packaging>pom</packaging>
 
   <properties>
+    <revision>2.0.0-SNAPSHOT</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.jackson>2.9.9</version.jackson>
     <version.javafx>14.0.1</version.javafx>
