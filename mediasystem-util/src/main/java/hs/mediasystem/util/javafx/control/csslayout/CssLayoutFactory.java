@@ -86,6 +86,10 @@ public class CssLayoutFactory {
     }
   }
 
+  public static void setPotentials(Pane parent, List<Node> potentials) {
+    parent.getProperties().put(POTENTIALS, potentials);
+  }
+
   public static List<Node> createNewChildren(String v, Pane parent) {
     List<Node> newChildren = new ArrayList<>();
     List<Node> children = new ArrayList<>(parent.getChildren());

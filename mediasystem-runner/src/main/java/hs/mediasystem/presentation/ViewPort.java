@@ -1,7 +1,8 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.util.javafx.control.transition.TransitionPane;
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
+import hs.mediasystem.util.javafx.control.transition.TransitionPane;
 
 import java.util.function.Consumer;
 
@@ -20,7 +21,7 @@ public class ViewPort extends TransitionPane {
 
     ChangeListener<? super Presentation> listener = (obs, old, current) -> updateChildNode(theme, current);
 
-    parentPresentation.childPresentation.addListener(listener);
+    parentPresentation.childPresentation.conditionOn(Nodes.showing(this)).addListener(listener);
 
     updateChildNode(theme, parentPresentation.childPresentation.get());
   }

@@ -1,5 +1,6 @@
 package hs.mediasystem.util.javafx.control.csslayout;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javafx.css.CssMetaData;
@@ -22,7 +23,7 @@ public class StylableStackPane extends StackPane {
   private boolean resolved;
 
   public StylableStackPane(Node... nodes) {
-    super(nodes);
+    CssLayoutFactory.setPotentials(this, Arrays.asList(nodes));
   }
 
   public StylableStackPane() {

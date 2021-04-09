@@ -1,5 +1,6 @@
 package hs.mediasystem.util.javafx.control.csslayout;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javafx.css.CssMetaData;
@@ -17,7 +18,7 @@ public class StylableHBox extends HBox {
   private boolean resolved;
 
   public StylableHBox(Node... nodes) {
-    super(nodes);
+    CssLayoutFactory.setPotentials(this, Arrays.asList(nodes));
   }
 
   public StylableHBox() {
