@@ -2,13 +2,12 @@ package hs.mediasystem.util.javafx.action;
 
 import java.util.function.Consumer;
 
+import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
-
-import org.reactfx.value.Val;
 
 public class SimpleAction implements Action {
   private final ReadOnlyStringWrapper titleProperty = new ReadOnlyStringWrapper("(Untitled)");
@@ -41,8 +40,8 @@ public class SimpleAction implements Action {
   }
 
   @Override
-  public Val<Boolean> enabledProperty() {
-    return Val.wrap(enabledProperty.getReadOnlyProperty());
+  public ReadOnlyBooleanProperty enabledProperty() {
+    return enabledProperty.getReadOnlyProperty();
   }
 
   @Override

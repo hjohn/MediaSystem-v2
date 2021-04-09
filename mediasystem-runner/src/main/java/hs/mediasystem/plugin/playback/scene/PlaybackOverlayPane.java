@@ -103,8 +103,6 @@ public class PlaybackOverlayPane extends StackPane {
 
     setFocusTraversable(true);
 
-    borders.workProperty().bind(Val.wrap(this.presentation).map(p -> p.work));
-
     detailsOverlay.setId("video-overlay");
     detailsOverlay.add(new ScaledImageView() {{
       imageProperty().bind(poster);

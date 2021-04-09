@@ -1,29 +1,23 @@
 package hs.mediasystem.util.javafx;
 
-import hs.jfx.eventstream.ValueStream;
-import hs.jfx.eventstream.Values;
-
 import java.util.Optional;
 
-import javafx.beans.binding.Binding;
 import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionModel;
+import javafx.stage.Window;
 
 public class Nodes {
 
-  public static Binding<Boolean> showing(Node node) {
-    return showingStream(node).toBinding();
-  }
-
-  public static ValueStream<Boolean> showingStream(Node node) {
-    return Values.of(node.sceneProperty())
-      .flatMap(s -> Values.of(s.windowProperty()))
-      .flatMap(w -> Values.of(w.showingProperty()))
+  public static ObservableValue<Boolean> showing(Node node) {
+    return node.sceneProperty()
+      .flatMap(Scene::windowProperty)
+      .flatMap(Window::showingProperty)
       .orElse(false);
   }
 

@@ -1,6 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.jfx.eventstream.Changes;
+import hs.jfx.eventstream.core.Events;
+import hs.jfx.eventstream.core.Invalidations;
+import hs.jfx.eventstream.core.Values;
 import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
@@ -20,17 +22,17 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 
 import javax.inject.Inject;
-
-import org.reactfx.EventStreams;
-import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 public abstract class GridViewPresentationFactory {
   private static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
@@ -60,40 +62,39 @@ public abstract class GridViewPresentationFactory {
      * may be a Parent<T>, but can also be an unrelated item or null if this was supplied as root
      * context.
      */
-    public final Var<Object> contextItem = Var.newSimpleVar(null);
+    public final ObjectProperty<Object> contextItem = new SimpleObjectProperty<>(null);
 
     private final SettingsSource settingsSource;
 
-    public final Var<SortOrder<U>> sortOrder = Var.newSimpleVar(null);
+    public final ObjectProperty<SortOrder<U>> sortOrder = new SimpleObjectProperty<>(null);
     public final ObservableList<SortOrder<U>> availableSortOrders = FXCollections.observableArrayList();
 
-    public final Var<Filter<U>> filter = Var.newSimpleVar(null);
+    public final ObjectProperty<Filter<U>> filter = new SimpleObjectProperty<>(null);
     public final ObservableList<Filter<U>> availableFilters = FXCollections.observableArrayList();
 
-    public final Var<Filter<U>> stateFilter = Var.newSimpleVar(null);
+    public final ObjectProperty<Filter<U>> stateFilter = new SimpleObjectProperty<>(null);
     public final ObservableList<Filter<U>> availableStateFilters = FXCollections.observableArrayList();
 
-    public final Var<Grouping<T, U>> grouping = Var.newSimpleVar(null);
+    public final ObjectProperty<Grouping<T, U>> grouping = new SimpleObjectProperty<>(null);
     public final ObservableList<Grouping<T, U>> availableGroupings = FXCollections.observableArrayList();
 
     private final ObservableList<Grouping<T, U>> originalGroupings = FXCollections.observableArrayList();
-    private final Var<Object> internalSelectedItem = Var.newSimpleVar(null);
+    private final ObjectProperty<Object> internalSelectedItem = new SimpleObjectProperty<>(null);
     private final String lastSelectedId;  // Contains the last selected id for this view, or null if there was none stored
 
-    public final Val<Object> selectedItem = internalSelectedItem;
+    public final ReadOnlyObjectProperty<Object> selectedItem = internalSelectedItem;  // TODO this could be cast back, not as safe as wrapper
     public final ObservableList<Object> items = FXCollections.observableArrayList();
     public final ObservableList<Group> groups = FXCollections.observableArrayList();
 
-    private final Var<Integer> totalItemCountInternal = Var.newSimpleVar(0);
-    private final Var<Integer> visibleUniqueItemCountInternal = Var.newSimpleVar(0);
+    private final IntegerProperty totalItemCountInternal = new SimpleIntegerProperty(0);
+    private final IntegerProperty visibleUniqueItemCountInternal = new SimpleIntegerProperty(0);
 
-    public final Val<Integer> totalItemCount = totalItemCountInternal;
-    public final Val<Integer> visibleUniqueItemCount = visibleUniqueItemCountInternal;
+    public final ReadOnlyIntegerProperty totalItemCount = totalItemCountInternal;   // TODO this could be cast back, not as safe as wrapper
+    public final ReadOnlyIntegerProperty visibleUniqueItemCount = visibleUniqueItemCountInternal;   // TODO this could be cast back, not as safe as wrapper
 
     private List<U> rootItems;     // Root items (with optional children) with the active grouping applied (unsorted, unfiltered)
     private List<U> rawBaseItems;  // Currently active items, either the root items or a set of children (unsorted, unfiltered)
     private List<U> baseItems;     // Currently active items, either the root items or a set of children (sorted, filtered)
-
 
     /**
      * Constructs a new instance.
@@ -298,34 +299,32 @@ public abstract class GridViewPresentationFactory {
     }
 
     private void setupSortingAndFiltering() {
-      Changes.of(inputItems).subscribe(list -> setRootItems(grouping.getValue().group(list)));
+      Values.of(inputItems).subscribe(list -> setRootItems(grouping.getValue().group(list)));
 
       // Changes in sortOrder, filter or stateFilter should update final items:
-      EventStreams.merge(
-          EventStreams.invalidationsOf(sortOrder),
-          EventStreams.invalidationsOf(filter),
-          EventStreams.invalidationsOf(stateFilter)
-        )
-        .observe(e -> updateFinalItemsAndGrouping());
+      Invalidations.of(sortOrder, filter, stateFilter)
+        .subscribe(obs -> updateFinalItemsAndGrouping());
 
       // Grouping changes require updating root items:
-      Changes.of(grouping).subscribe(g -> setRootItems(g.group(inputItems.get())));
+      Values.of(grouping).subscribe(g -> setRootItems(g.group(inputItems.get())));
 
       // Navigation to/from parent/child level:
-      contextItem.observeInvalidations(oldContextItem -> {
-        updateRawBaseItems();  // this already handles selection
 
-        // we override selection here when navigating back from child to parent;
-        // the old context item is actually the parent that was shown as context with the child,
-        // so this is the one we want to try and select:
-        if(contextItem.isBound() && oldContextItem != null) {
-          Object obj = findById(toId(oldContextItem));
+      Events.of(contextItem)
+        .subscribe(c -> {
+          updateRawBaseItems();  // this already handles selection
 
-          if(obj != null) {
-            selectItem(obj);
+          // we override selection here when navigating back from child to parent;
+          // the old context item is actually the parent that was shown as context with the child,
+          // so this is the one we want to try and select:
+          if(contextItem.isBound() && c.getOldValue() != null) {
+            Object obj = findById(toId(c.getOldValue()));
+
+            if(obj != null) {
+              selectItem(obj);
+            }
           }
-        }
-      });
+        });
     }
 
     private String toId(Object object) {

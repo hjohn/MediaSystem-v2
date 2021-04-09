@@ -5,11 +5,8 @@ import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
 import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory.ContributionsPresentation;
 import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
-import hs.mediasystem.util.ImageHandle;
 
 import javax.inject.Singleton;
-
-import org.reactfx.value.Val;
 
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = ContributionsSetup.class)
@@ -17,16 +14,9 @@ public class ContributionsPlacer extends AbstractPlacer<LibraryPresentation, Con
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, ContributionsPresentation presentation) {
-    Val<ImageHandle> val = Val.wrap(presentation.work)
-      .map(d -> d.getDetails().getBackdrop().orElse(null))
-//      .orElse(Val.constant(presentation.release)
-//        .map(MediaItem::getParent)
-//        .map(MediaItem::getDetails)
-//        .map(d -> d.getBackdrop().orElse(null))
-//        .map(imageHandleFactory::fromURI)
-//      );
-      ;
-
-    parentPresentation.backdrop.bind(val);
+    parentPresentation.backdrop.bind(
+      presentation.work
+        .map(d -> d.getDetails().getBackdrop().orElse(null))
+    );
   }
 }

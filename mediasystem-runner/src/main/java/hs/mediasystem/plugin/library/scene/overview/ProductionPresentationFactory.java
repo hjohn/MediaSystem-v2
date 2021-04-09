@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.jfx.eventstream.Transactions;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
@@ -113,21 +112,19 @@ public class ProductionPresentationFactory {
     }
 
     public void update(Work root, State state, List<Work> children, WorkId selectedChildId) {
-      Transactions.doWhile(() -> {
-        this.internalRoot.set(root);
-        this.internalChildren.set(children);
+      this.internalRoot.set(root);
+      this.internalChildren.set(children);
 
-        if(!children.isEmpty()) {
-          String id = selectedChildId == null ? settingsSource.getSetting("last-selected:" + root.getId()) : selectedChildId.toString();
+      if(!children.isEmpty()) {
+        String id = selectedChildId == null ? settingsSource.getSetting("last-selected:" + root.getId()) : selectedChildId.toString();
 
-          selectChild(id);
-        }
+        selectChild(id);
+      }
 
-        this.internalState.set(state);
+      this.internalState.set(state);
 
-        internalWatchedFraction.set(getWatchedFraction(root, children));
-        internalMissingFraction.set(getMissingFraction(root, children));
-      });
+      internalWatchedFraction.set(getWatchedFraction(root, children));
+      internalMissingFraction.set(getMissingFraction(root, children));
     }
 
     private void selectChild(String id) {

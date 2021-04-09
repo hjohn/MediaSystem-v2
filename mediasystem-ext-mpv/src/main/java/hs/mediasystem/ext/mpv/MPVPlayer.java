@@ -3,6 +3,9 @@ package hs.mediasystem.ext.mpv;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.LongByReference;
 
+import hs.jfx.eventstream.api.EventStream;
+import hs.jfx.eventstream.core.Change;
+import hs.jfx.eventstream.core.Changes;
 import hs.mediasystem.ext.mpv.MPV.mpv_event;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerEvent;
@@ -21,9 +24,13 @@ import java.util.logging.Logger;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -31,12 +38,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-
-import org.reactfx.Change;
-import org.reactfx.EventStreams;
-import org.reactfx.SuspendableEventStream;
-import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 public class MPVPlayer implements PlayerPresentation {
   private static final Logger LOGGER = Logger.getLogger(MPVPlayer.class.getName());
@@ -49,16 +50,16 @@ public class MPVPlayer implements PlayerPresentation {
   private final long handle;
   private final long wid;
 
-  private final Var<Long> position = Var.newSimpleVar(0L);
-  private final Var<Long> duration = Var.newSimpleVar(0L);
-  private final Var<Double> rate = Var.newSimpleVar(1.0);
-  private final Var<Long> subtitleDelay = Var.newSimpleVar(0L);
-  private final Var<Long> audioDelay = Var.newSimpleVar(0L);
-  private final Var<Long> volume = Var.newSimpleVar(100L);
-  private final Var<Double> brightness = Var.newSimpleVar(1.0);
-  private final Var<AudioTrack> audioTrack = Var.newSimpleVar(null);
-  private final Var<Subtitle> subtitle = Var.newSimpleVar(null);
-  private final Var<StatOverlay> statOverlay = Var.newSimpleVar(StatOverlay.DISABLED);
+  private final LongProperty position = new SimpleLongProperty();
+  private final LongProperty duration = new SimpleLongProperty();
+  private final DoubleProperty rate = new SimpleDoubleProperty(1.0);
+  private final LongProperty subtitleDelay = new SimpleLongProperty();
+  private final LongProperty audioDelay = new SimpleLongProperty();
+  private final LongProperty volume = new SimpleLongProperty(100);
+  private final DoubleProperty brightness = new SimpleDoubleProperty(1.0);
+  private final Property<AudioTrack> audioTrack = new SimpleObjectProperty<>(null);
+  private final Property<Subtitle> subtitle = new SimpleObjectProperty<>(null);
+  private final Property<StatOverlay> statOverlay = new SimpleObjectProperty<>(StatOverlay.DISABLED);
   private final BooleanProperty paused = new SimpleBooleanProperty(false);
   private final BooleanProperty muted = new SimpleBooleanProperty(false);
 
@@ -66,7 +67,8 @@ public class MPVPlayer implements PlayerPresentation {
   private final ObservableList<Subtitle> subtitles = FXCollections.observableArrayList(Subtitle.DISABLED);
   private final ObservableList<AudioTrack> audioTracks = FXCollections.observableArrayList(AudioTrack.NO_AUDIO_TRACK);
 
-  private final SuspendableEventStream<Change<Long>> positionChanges = EventStreams.changesOf(position).suppressible();
+  private final BooleanProperty updatingPosition = new SimpleBooleanProperty();
+  private final EventStream<Long> positionChanges = Changes.of(position).map(Change::getValue).conditionOn(updatingPosition.not());
 
   private final AtomicBoolean isPlaying = new AtomicBoolean(false);
 
@@ -120,13 +122,13 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   private void initListeners() {
-    positionChanges.observe(c -> setProperty("time-pos", "" + ((double)c.getNewValue()) / 1000));
+    positionChanges.subscribe(pos -> setProperty("time-pos", "" + pos.doubleValue() / 1000.0));
 
     rate.addListener((obs, p, v) -> setProperty("speed", "" + v));
-    subtitleDelay.addListener((obs, p, v) -> setProperty("sub-delay", "" + v / 1000.0));
+    subtitleDelay.addListener((obs, p, v) -> setProperty("sub-delay", "" + v.doubleValue() / 1000.0));
     volume.addListener((obs, p, v) -> setProperty("volume", "" + v));
-    audioDelay.addListener((obs, p, v) -> setProperty("audio-delay", "" + v / 1000.0));
-    brightness.addListener((obs, p, v) -> setProperty("brightness", "" + (int)((v - 1) * 100)));
+    audioDelay.addListener((obs, p, v) -> setProperty("audio-delay", "" + v.doubleValue() / 1000.0));
+    brightness.addListener((obs, p, v) -> setProperty("brightness", "" + (int)((v.doubleValue() - 1) * 100)));
 
     paused.addListener((obs, old, current) -> setProperty("pause", current ? "yes" : "no"));
     muted.addListener((obs, old, current) -> setProperty("mute", current ? "yes" : "no"));
@@ -218,17 +220,17 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   @Override
-  public Val<Long> lengthProperty() {
+  public LongProperty lengthProperty() {
     return duration;
   }
 
   @Override
-  public Property<Long> positionProperty() {
+  public LongProperty positionProperty() {
     return position;
   }
 
   @Override
-  public Property<Long> volumeProperty() {
+  public LongProperty volumeProperty() {
     return volume;
   }
 
@@ -243,7 +245,7 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   @Override
-  public Property<Long> subtitleDelayProperty() {
+  public LongProperty subtitleDelayProperty() {
     return subtitleDelay;
   }
 
@@ -258,12 +260,12 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   @Override
-  public Property<Double> rateProperty() {
+  public DoubleProperty rateProperty() {
     return rate;
   }
 
   @Override
-  public Property<Long> audioDelayProperty() {
+  public LongProperty audioDelayProperty() {
     return audioDelay;
   }
 
@@ -288,7 +290,7 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   @Override
-  public Property<Double> brightnessProperty() {
+  public DoubleProperty brightnessProperty() {
     return brightness;
   }
 
@@ -318,7 +320,15 @@ public class MPVPlayer implements PlayerPresentation {
         String timePos = getProperty("time-pos");
 
         if(timePos != null) {
-          Platform.runLater(() -> positionChanges.suspendWhile(() -> position.setValue((long)(Double.valueOf(timePos) * 1000))));
+          Platform.runLater(() -> {
+            try {
+              updatingPosition.set(true);
+              position.setValue((long)(Double.valueOf(timePos) * 1000));
+            }
+            finally {
+              updatingPosition.set(false);
+            }
+          });
         }
       }
       else if(event.event_id == MPV.MPV_EVENT_START_FILE) {

@@ -9,11 +9,10 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
-
-import org.reactfx.value.Val;
+import javafx.beans.value.ObservableValue;
 
 public class PlayerBindings {
-  public final StringBinding formattedVolume;
+  public final ObservableValue<String> formattedVolume;
   public final StringBinding formattedRate;
   public final StringBinding formattedAudioDelay;
   public final StringBinding formattedSubtitleDelay;
@@ -23,37 +22,32 @@ public class PlayerBindings {
   public final StringBinding formattedPosition;
   public final StringBinding formattedLength;
 
-  public final Val<Double> rate;
-  public final Val<Long> position;
-  public final Val<Long> length;
-  public final Val<Long> volume;
-  public final Val<Long> audioDelay;
-  public final Val<Long> subtitleDelay;
-  public final Val<Double> brightness;
-  public final Val<AudioTrack> audioTrack;
-  public final Val<Subtitle> subtitle;
+  public final ObservableValue<Double> rate;
+  public final ObservableValue<Long> position;
+  public final ObservableValue<Long> length;
+  public final ObservableValue<Long> volume;
+  public final ObservableValue<Long> audioDelay;
+  public final ObservableValue<Long> subtitleDelay;
+  public final ObservableValue<Double> brightness;
+  public final ObservableValue<AudioTrack> audioTrack;
+  public final ObservableValue<Subtitle> subtitle;
   public final BooleanBinding muted;
   public final BooleanBinding paused;
 
   public PlayerBindings(final ObjectProperty<PlayerPresentation> player) {
-    position = Val.flatMap(player, PlayerPresentation::positionProperty).orElseConst(0L);
-    length = Val.flatMap(player, PlayerPresentation::lengthProperty).orElseConst(1000L);
-    volume = Val.flatMap(player, PlayerPresentation::volumeProperty).orElseConst(100L);
-    rate = Val.flatMap(player, PlayerPresentation::rateProperty).orElseConst(1.0);
-    audioDelay = Val.flatMap(player, PlayerPresentation::audioDelayProperty).orElseConst(0L);
-    subtitleDelay = Val.flatMap(player, PlayerPresentation::subtitleDelayProperty).orElseConst(0L);
-    brightness = Val.flatMap(player, PlayerPresentation::brightnessProperty).orElseConst(1.0);
-    audioTrack = Val.flatMap(player, PlayerPresentation::audioTrackProperty);
-    subtitle = Val.flatMap(player, PlayerPresentation::subtitleProperty);
+    position = player.flatMap(PlayerPresentation::positionProperty).map(Number::longValue).orElse(0L);
+    length = player.flatMap(PlayerPresentation::lengthProperty).map(Number::longValue).orElse(1000L);
+    volume = player.flatMap(PlayerPresentation::volumeProperty).map(Number::longValue).orElse(100L);
+    audioDelay = player.flatMap(PlayerPresentation::audioDelayProperty).map(Number::longValue).orElse(0L);
+    subtitleDelay = player.flatMap(PlayerPresentation::subtitleDelayProperty).map(Number::longValue).orElse(0L);
+    rate = player.flatMap(PlayerPresentation::rateProperty).map(Number::doubleValue).orElse(1.0);
+    brightness = player.flatMap(PlayerPresentation::brightnessProperty).map(Number::doubleValue).orElse(1.0);
+    audioTrack = player.flatMap(PlayerPresentation::audioTrackProperty);
+    subtitle = player.flatMap(PlayerPresentation::subtitleProperty);
     muted = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "muted"));
     paused = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "paused"));
 
-    formattedVolume = new StringBinding(volume) {
-      @Override
-      protected String computeValue() {
-        return String.format("%3d%%", volume.getValue());
-      }
-    };
+    formattedVolume = volume.map(v -> String.format("%3d%%", v));
 
     formattedRate = new StringBinding(rate) {
       @Override

@@ -14,7 +14,7 @@ import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.expose.Expose;
 
-import org.reactfx.value.Val;
+import javafx.beans.property.SimpleLongProperty;
 
 public class Annotations {
 
@@ -55,7 +55,7 @@ public class Annotations {
 
     Expose.longProperty(PlayerPresentation::positionProperty)
       .of(PlayerPresentation.class)
-      .range((PlayerPresentation p) -> Val.constant(Long.valueOf(0)), (PlayerPresentation p) -> p.lengthProperty(), 3)
+      .range((PlayerPresentation p) -> new SimpleLongProperty(0), (PlayerPresentation p) -> p.lengthProperty(), 3)
       .as("position");
 
     Expose.longProperty(PlayerPresentation::volumeProperty)

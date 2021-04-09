@@ -27,6 +27,10 @@
       <version>2.0-M5</version>
     </dependency>
     <dependency>
+      <groupId>hs.mediasystem</groupId>
+      <artifactId>mediasystem-jfx</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
     </dependency>

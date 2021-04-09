@@ -1,5 +1,8 @@
 package hs.mediasystem.ext.vlc;
 
+import hs.jfx.eventstream.api.EventStream;
+import hs.jfx.eventstream.core.Change;
+import hs.jfx.eventstream.core.Changes;
 import hs.mediasystem.ext.vlc.util.Accessor;
 import hs.mediasystem.ext.vlc.util.BeanBooleanProperty;
 import hs.mediasystem.ui.api.player.AudioTrack;
@@ -22,8 +25,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,12 +39,6 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-
-import org.reactfx.Change;
-import org.reactfx.EventStreams;
-import org.reactfx.SuspendableEventStream;
-import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.javafx.videosurface.ImageViewVideoSurfaceFactory;
@@ -100,16 +102,25 @@ public class VLCPlayer implements PlayerPresentation {
       this.mediaPlayer.videoSurface().set(ImageViewVideoSurfaceFactory.videoSurfaceForImageView(canvas));
     }
 
-    SuspendableEventStream<Change<Long>> positionChanges = EventStreams.changesOf(position).suppressible();
+    BooleanProperty updatingPosition = new SimpleBooleanProperty();
+    EventStream<Long> positionChanges = Changes.of(position).map(Change::getValue).conditionOn(updatingPosition.not());
 
-    positionChanges.observe(c -> mediaPlayer.controls().setTime(c.getNewValue().longValue()));  // Basically, only called when updated externally, not by player
+    positionChanges.subscribe(pos -> mediaPlayer.controls().setTime(pos));  // Basically, only called when updated externally, not by player
 
     mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
       private boolean videoAdjusted;
 
       @Override
       public void timeChanged(final MediaPlayer mediaPlayer, final long newTime) {
-        Platform.runLater(() -> positionChanges.suspendWhile(() -> position.setValue(newTime)));
+        Platform.runLater(() -> {
+          try {
+            updatingPosition.set(true);
+            position.setValue(newTime);
+          }
+          finally {
+            updatingPosition.set(false);
+          }
+        });
 
         final int currentSubtitleId = mediaPlayer.subpictures().track();
 
@@ -186,8 +197,8 @@ public class VLCPlayer implements PlayerPresentation {
     });
 
     volume.addListener((obs, old, value) -> mediaPlayer.audio().setVolume(value.intValue()));
-    audioDelay.addListener((obs, old, value) -> mediaPlayer.audio().setDelay(value * 1000));
-    subtitleDelay.addListener((obs, old, value) -> mediaPlayer.subpictures().setDelay(-value * 1000));
+    audioDelay.addListener((obs, old, value) -> mediaPlayer.audio().setDelay(value.longValue() * 1000));
+    subtitleDelay.addListener((obs, old, value) -> mediaPlayer.subpictures().setDelay(-value.longValue() * 1000));
     rate.addListener((obs, old, value) -> mediaPlayer.controls().setRate(value.floatValue()));
     brightness.addListener((obs, old, value) -> mediaPlayer.video().setBrightness(value.floatValue()));
 
@@ -361,34 +372,34 @@ public class VLCPlayer implements PlayerPresentation {
     System.out.println("[FINE] VLCPlayer.updateAudioTracks(), now available: " + audioTracks);
   }
 
-  private final Var<Long> length = Var.newSimpleVar(null);
-  @Override public Val<Long> lengthProperty() { return length.orElseConst(0L); }
+  private final LongProperty length = new SimpleLongProperty();
+  @Override public LongProperty lengthProperty() { return length; }
 
-  private final Property<Long> position = Var.newSimpleVar(0L);
-  @Override public Property<Long> positionProperty() { return position; }
+  private final LongProperty position = new SimpleLongProperty();
+  @Override public LongProperty positionProperty() { return position; }
 
-  private final Property<Long> volume = Var.newSimpleVar(100L);
-  @Override public Property<Long> volumeProperty() { return volume; }
+  private final LongProperty volume = new SimpleLongProperty(100);
+  @Override public LongProperty volumeProperty() { return volume; }
 
-  private final Property<Long> audioDelay = Var.newSimpleVar(0L);
-  @Override public Property<Long> audioDelayProperty() { return audioDelay; }
+  private final LongProperty audioDelay = new SimpleLongProperty();
+  @Override public LongProperty audioDelayProperty() { return audioDelay; }
 
-  private final Property<Double> rate = Var.newSimpleVar(1.0);
-  @Override public Property<Double> rateProperty() { return rate; }
+  private final DoubleProperty rate = new SimpleDoubleProperty(1.0);
+  @Override public DoubleProperty rateProperty() { return rate; }
 
-  private final Property<Double> brightness = Var.newSimpleVar(1.0);
-  @Override public Property<Double> brightnessProperty() { return brightness; }
+  private final DoubleProperty brightness = new SimpleDoubleProperty(1.0);
+  @Override public DoubleProperty brightnessProperty() { return brightness; }
 
-  private final Var<Subtitle> subtitle = Var.newSimpleVar(Subtitle.DISABLED);
+  private final ObjectProperty<Subtitle> subtitle = new SimpleObjectProperty<>(Subtitle.DISABLED);
   @Override public Property<Subtitle> subtitleProperty() { return subtitle; }
   @Override public ObservableList<Subtitle> subtitles() { return FXCollections.unmodifiableObservableList(subtitles); }
 
-  private final Var<AudioTrack> audioTrack = Var.newSimpleVar(AudioTrack.NO_AUDIO_TRACK);
+  private final ObjectProperty<AudioTrack> audioTrack = new SimpleObjectProperty<>(AudioTrack.NO_AUDIO_TRACK);
   @Override public Property<AudioTrack> audioTrackProperty() { return audioTrack; }
   @Override public ObservableList<AudioTrack> audioTracks() { return FXCollections.unmodifiableObservableList(audioTracks); }
 
-  private final Property<Long> subtitleDelay = Var.newSimpleVar(0L);
-  @Override public Property<Long> subtitleDelayProperty() { return subtitleDelay; }
+  private final LongProperty subtitleDelay = new SimpleLongProperty();
+  @Override public LongProperty subtitleDelayProperty() { return subtitleDelay; }
 
   private final BooleanProperty mutedProperty;
   @Override public BooleanProperty mutedProperty() { return mutedProperty; }

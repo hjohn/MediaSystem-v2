@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.base;
 
-import hs.jfx.eventstream.Values;
+import hs.jfx.eventstream.core.Values;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ViewPort;
 import hs.mediasystem.presentation.ViewPortFactory;

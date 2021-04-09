@@ -1,12 +1,7 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.jfx.eventstream.Changes;
-import hs.jfx.eventstream.Invalidations;
-import hs.jfx.eventstream.Subscription;
-import hs.jfx.eventstream.ValueStream;
-import hs.jfx.eventstream.Values;
+import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.plugin.cell.ModelMediaGridViewCellFactory;
-import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.overview.EpisodePane.Model;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
@@ -36,9 +31,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javafx.application.Platform;
-import javafx.beans.binding.Binding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.beans.value.Subscription;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -54,22 +50,21 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
   @Inject private ShowInfoEventHandler showInfoEventHandler;
   @Inject private NavigationButtonsFactory navigationButtonsFactory;
-  @Inject private BinderProvider binderProvider;
   @Inject private WorkClient workClient;
 
   @Override
   public Node create(ProductionPresentation presentation) {
     ProductionOverviewPane pane = new ProductionOverviewPane();
 
-    Binding<Boolean> showing = Nodes.showing(pane);
+    ObservableValue<Boolean> showing = Nodes.showing(pane);
 
-    Values.of(presentation.root).conditionOn(showing).subscribe(pane.model.work::set);
-    Values.of(presentation.missingFraction).conditionOn(showing).subscribe(pane.model.missingFraction::setValue);
-    Values.of(presentation.watchedFraction).conditionOn(showing).subscribe(pane.model.watchedFraction::setValue);
+    pane.model.work.bind(presentation.root.conditionOn(showing));
+    pane.model.missingFraction.bind(presentation.missingFraction.conditionOn(showing));
+    pane.model.watchedFraction.bind(presentation.watchedFraction.conditionOn(showing));
 
     SharedModel mainPanel = new SharedModel(presentation);
 
-    Values.of(presentation.state)
+    presentation.state
       .conditionOn(showing)
       .subscribe(state -> pane.model.dynamicPanel.set(() -> mainPanel.createDynamicBox()));
 
@@ -106,19 +101,21 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       pane.getStyleClass().add("overview-panel");
 
-      ValueStream<Details> detailsStream = Values.of(presentation.root)
+      ObservableValue<Details> details = presentation.root
         .conditionOn(Nodes.showing(pane))
         .map(Work::getDetails);
 
-      detailsStream
-        .map(Details::getTagline)
-        .map(optTagline -> optTagline.map(t -> "“" + t + "”").orElse(null))
-        .subscribe(pane.model.tagline::set);
+      pane.model.tagline.bind(
+        details
+          .map(Details::getTagline)
+          .map(optTagline -> optTagline.map(t -> "“" + t + "”").orElse(null))
+      );
 
-      detailsStream
-        .map(Details::getDescription)
-        .map(optDesc -> optDesc.orElse(""))
-        .subscribe(pane.model.description::set);
+      pane.model.description.bind(
+        details
+          .map(Details::getDescription)
+          .map(optDesc -> optDesc.orElse(""))
+      );
 
       BorderPane borderPane = new BorderPane();
 
@@ -127,7 +124,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       borderPane.setCenter(pane);
       borderPane.getStyleClass().add("overview-dynamic-panel");
 
-      Values.of(presentation.root)
+      presentation.root
         .conditionOn(Nodes.showing(pane))
         .subscribe(current -> {
           CompletableFuture.supplyAsync(() -> workClient.findContributions(current.getId()))
@@ -193,14 +190,11 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       EpisodeListPane pane = new EpisodeListPane(cellFactory);
 
       Invalidations.of(presentation.children, presentation.selectedChild)
-        .transactional()
-        .withDefault()  // converts to value stream, so event fires each time it becomes visible
+        .withDefault(null)  // converts to value stream, so event fires each time it becomes visible
         .conditionOn(Nodes.showing(pane))
         .subscribe(i -> pane.model.setEpisodesAndSelected(presentation.children.get(), presentation.selectedChild.get()));
 
-      Values.of(pane.model.selected)
-        .conditionOn(Nodes.showing(pane))
-        .subscribe(presentation.selectedChild::set);
+      pane.model.selected.conditionOn(Nodes.showing(pane)).subscribe(presentation.selectedChild::set);
 
       pane.model.onItemSelected.set(e -> presentation.toEpisodeState());
 
@@ -216,26 +210,26 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       TransitionPane streamInfoPane = new TransitionPane(StandardTransitions.fade(250, 500));
       BorderPane borderPane = new BorderPane();
 
-      Changes.diff(presentation.selectedChild)
+      presentation.selectedChild
         .conditionOn(Nodes.showing(borderPane))
-        .subscribe(c -> {
+        .addListener((obs, old, current) -> {
           List<Work> episodes = presentation.children.get();
 
-          if(c.getOldValue().getId().equals(c.getValue().getId())) {  // item was just refreshed, no need to transition
-            selectedChildCopy.set(c.getValue());
+          if(old.getId().equals(current.getId())) {  // item was just refreshed, no need to transition
+            selectedChildCopy.set(current);
           }
           else {
-            int oldIndex = episodes.indexOf(c.getOldValue());
-            int newIndex = episodes.indexOf(c.getValue());
+            int oldIndex = episodes.indexOf(old);
+            int newIndex = episodes.indexOf(current);
 
             childTransitionPanelSubscription.unsubscribe();  // TODO this is somewhat confusing, as buildEpisodeUI assigns it again
-            selectedChildCopy.set(c.getValue());
+            selectedChildCopy.set(current);
 
             transitionPane.add(oldIndex > newIndex, buildEpisodeUI());
           }
 
-          borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(c.getValue(), null), streamInfoPane));
-          updateStreamInfoPane(streamInfoPane, c.getValue());
+          borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(current, null), streamInfoPane));
+          updateStreamInfoPane(streamInfoPane, current);
         });
 
       // duplicated
@@ -277,7 +271,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       pane.getStyleClass().add("episode-panel");
 
-      childTransitionPanelSubscription = Values.of(selectedChildCopy)
+      childTransitionPanelSubscription = selectedChildCopy
         .conditionOn(Nodes.showing(pane))
         .subscribe(work -> {
           Details details = work.getDetails();

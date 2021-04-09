@@ -1,5 +1,6 @@
 package hs.mediasystem.runner;
 
+import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.runner.util.Dialogs;
@@ -42,10 +43,6 @@ import javafx.util.StringConverter;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.reactfx.EventStreams;
-import org.reactfx.value.Val;
-import org.reactfx.value.Var;
 
 @Singleton
 public class ContextMenuHandler {
@@ -220,12 +217,13 @@ public class ContextMenuHandler {
     slider.minProperty().bind(min);
     slider.maxProperty().bind(max);
 
-    Var<Number> asNumberProperty = Var.mapBidirectional(exposedProperty.getProperty(parent), toNumber, fromNumber);
+    Property<T> value = exposedProperty.getProperty(parent);  // model
 
-    slider.valueProperty().bindBidirectional(asNumberProperty);
-    slider.getProperties().put("slider-value-reference", asNumberProperty);  // Otherwise property gets GC'd
+    // Bidirectional mapping binding:
+    value.map(toNumber).subscribe(slider.valueProperty()::setValue);
+    slider.valueProperty().map(fromNumber).subscribe(value::setValue);
+
     slider.setBlockIncrement(step);
-
     slider.setShowTickMarks(true);
     slider.setShowTickLabels(true);
 
@@ -243,13 +241,14 @@ public class ContextMenuHandler {
       }
     });
 
-    EventStreams.merge(Val.wrap(min).invalidations(), Val.wrap(max).invalidations())
-      .withDefaultEvent(0)
-      .subscribe(t -> configureSlider(slider));
+    configureSlider(slider);  // TODO duplication
+
+    Invalidations.of(min, max)
+      .subscribe(obs -> configureSlider(slider));
 
     HBox hbox = Containers.hbox(
       slider,
-      Labels.create("slider-value", Val.map(slider.valueProperty(), v -> formatter.format(fromNumber.apply(v))))
+      Labels.create("slider-value", slider.valueProperty().map(v -> formatter.format(fromNumber.apply(v))))
     );
 
     hbox.getStyleClass().add("slider-container");

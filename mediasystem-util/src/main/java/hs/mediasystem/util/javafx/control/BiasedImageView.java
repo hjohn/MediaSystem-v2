@@ -139,7 +139,7 @@ public class BiasedImageView extends Region {
   private void setupFadeIn(Node placeHolder) {
     imageView.setOpacity(0);
 
-    Nodes.showingStream(this).subscribe(v -> {
+    Nodes.showing(this).subscribe(v -> {
       Platform.runLater(() -> {
         visibleForOneFrame = v;
       });

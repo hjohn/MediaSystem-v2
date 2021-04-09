@@ -4,6 +4,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.Property;
 import javafx.event.Event;
 
@@ -29,11 +31,11 @@ public class Expose {
     return new ExposedBooleanProperty<>(function).new ParentBuilder();
   }
 
-  public static <P> ExposedLongProperty<P>.ParentBuilder longProperty(Function<P, Property<Long>> function) {
+  public static <P> ExposedLongProperty<P>.ParentBuilder longProperty(Function<P, LongProperty> function) {
     return new ExposedLongProperty<>(function).new ParentBuilder();
   }
 
-  public static <P> ExposedDoubleProperty<P>.ParentBuilder doubleProperty(Function<P, Property<Double>> function) {
+  public static <P> ExposedDoubleProperty<P>.ParentBuilder doubleProperty(Function<P, DoubleProperty> function) {
     return new ExposedDoubleProperty<>(function).new ParentBuilder();
   }
 

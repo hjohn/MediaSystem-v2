@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.jfx.eventstream.Values;
+import hs.jfx.eventstream.core.Values;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.runner.util.LessLoader;
@@ -51,7 +51,7 @@ public class ProductionOverviewPane extends HBox {
     poster.imageProperty().bind(imageProperty);
   }
 
-  private final Label titleLabel = Labels.create("title", Values.of(model.work).map(Work::getDetails).map(Details::getTitle).toBinding());
+  private final Label titleLabel = Labels.create("title", model.work.map(Work::getDetails).map(Details::getTitle));
 
   {
     Values.of(titleLabel.textProperty()).subscribe(text -> {
@@ -68,11 +68,11 @@ public class ProductionOverviewPane extends HBox {
     titleLabel,
     Containers.hbox(
       "subtitle-box",
-      Labels.create("release-year", Values.of(model.work).map(WorkBinder::createYearRange).toBinding()),
-      Labels.create("content-rating", Values.of(model.work).map(this::extractContentRating).toBinding(), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT),
-      Labels.create("adult-rating", Values.of(model.work).map(w -> Boolean.TRUE.equals(w.getDetails().getClassification().getPornographic()) ? "XXX" : "").toBinding(), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT)
+      Labels.create("release-year", model.work.map(WorkBinder::createYearRange)),
+      Labels.create("content-rating", model.work.map(this::extractContentRating), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT),
+      Labels.create("adult-rating", model.work.map(w -> Boolean.TRUE.equals(w.getDetails().getClassification().getPornographic()) ? "XXX" : ""), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT)
     ),
-    Labels.create("genres", Values.of(model.work).map(w -> w.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / "))).toBinding())
+    Labels.create("genres", model.work.map(w -> w.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / "))))
   );
 
   {
@@ -133,7 +133,7 @@ public class ProductionOverviewPane extends HBox {
   }
 
   public ProductionOverviewPane() {
-    imageProperty.imageHandleProperty().bind(Values.of(model.work).map(w -> w.getDetails().getCover().orElse(null)).toBinding());
+    imageProperty.imageHandleProperty().bind(model.work.map(w -> w.getDetails().getCover().orElse(null)));
 
     getChildren().addAll(poster, descriptionBox);
 

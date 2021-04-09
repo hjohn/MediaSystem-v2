@@ -3,15 +3,15 @@ package hs.mediasystem.util.expose;
 import java.util.ArrayList;
 import java.util.function.Function;
 
-import javafx.beans.property.Property;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableLongValue;
 import javafx.beans.value.ObservableValue;
-
-import org.reactfx.value.Val;
 
 public class ExposedLongProperty<P> extends AbstractExposedNumericProperty<P, Long> {
 
-  ExposedLongProperty(Function<P, Property<Long>> function) {
-    super(function);
+  ExposedLongProperty(Function<P, LongProperty> function) {
+    super(cast(function));
   }
 
   public class ParentBuilder {
@@ -24,16 +24,17 @@ public class ExposedLongProperty<P> extends AbstractExposedNumericProperty<P, Lo
 
   public class RangeBuilder {
     public RangeBuilder range(long min, long max, long step) {
-      ExposedLongProperty.this.min = p -> Val.constant(min);
-      ExposedLongProperty.this.max = p -> Val.constant(max);
+      ExposedLongProperty.this.min = p -> new SimpleObjectProperty<>(min);
+      ExposedLongProperty.this.max = p -> new SimpleObjectProperty<>(max);
       ExposedLongProperty.this.step = Long.valueOf(step);
 
       return this;
     }
 
-    public RangeBuilder range(Function<P, ObservableValue<Long>> min, Function<P, ObservableValue<Long>> max, long step) {
-      ExposedLongProperty.this.min = min;
-      ExposedLongProperty.this.max = max;
+    @SuppressWarnings("unchecked")
+    public RangeBuilder range(Function<P, ObservableLongValue> min, Function<P, ObservableLongValue> max, long step) {
+      ExposedLongProperty.this.min = (Function<P, ObservableValue<Long>>)(Function<?, ?>)min;
+      ExposedLongProperty.this.max = (Function<P, ObservableValue<Long>>)(Function<?, ?>)max;
       ExposedLongProperty.this.step = Long.valueOf(step);
 
       return this;

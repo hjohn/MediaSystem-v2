@@ -14,6 +14,11 @@ public abstract class AbstractExposedNumericProperty<P, T extends Number> extend
     super(function);
   }
 
+  @SuppressWarnings("unchecked")
+  protected static <P, T> Function<P, Property<T>> cast(Function<P, ? extends Property<?>> function) {
+    return (Function<P, Property<T>>)(Function<?, ?>)function;
+  }
+
   public ObservableValue<T> getMin(P parent) {
     return min.apply(parent);
   }

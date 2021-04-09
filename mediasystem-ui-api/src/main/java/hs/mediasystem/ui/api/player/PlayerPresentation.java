@@ -3,13 +3,13 @@ package hs.mediasystem.ui.api.player;
 import java.nio.file.Path;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
-
-import org.reactfx.value.Val;
 
 public interface PlayerPresentation {
   void play(String uri, long positionInMillis);
@@ -25,21 +25,21 @@ public interface PlayerPresentation {
    *
    * @return the length of the stream in milliseconds
    */
-  Val<Long> lengthProperty();
+  LongProperty lengthProperty();
 
   /**
    * Returns the position of the stream in milliseconds.
    *
    * @return the position of the stream in milliseconds
    */
-  Property<Long> positionProperty();
+  LongProperty positionProperty();
 
   /**
    * Returns the current volume in percent.
    *
    * @return the current volume in percent
    */
-  Property<Long> volumeProperty();
+  LongProperty volumeProperty();
 
   BooleanProperty mutedProperty();
 
@@ -50,7 +50,7 @@ public interface PlayerPresentation {
    *
    * @return the current subtitle delay in milliseconds
    */
-  Property<Long> subtitleDelayProperty();
+  LongProperty subtitleDelayProperty();
 
   /**
    * Returns the current subtitle.  Will return a Subtitle.DISABLED when not showing any
@@ -66,14 +66,14 @@ public interface PlayerPresentation {
    *
    * @return the current rate of playback
    */
-  Property<Double> rateProperty();
+  DoubleProperty rateProperty();
 
   /**
    * Returns the audio delay, in milliseconds.
    *
    * @return the audio delay, in milliseconds
    */
-  Property<Long> audioDelayProperty();
+  LongProperty audioDelayProperty();
 
   Property<AudioTrack> audioTrackProperty();
   ObservableList<AudioTrack> audioTracks();
@@ -83,7 +83,7 @@ public interface PlayerPresentation {
    *
    * @return the brightness
    */
-  Property<Double> brightnessProperty();
+  DoubleProperty brightnessProperty();
 
   Node getDisplayComponent();
 

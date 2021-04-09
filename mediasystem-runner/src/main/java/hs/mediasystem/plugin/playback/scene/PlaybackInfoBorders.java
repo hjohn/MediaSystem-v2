@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
@@ -12,9 +11,6 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.binding.StringExpression;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -37,9 +33,6 @@ import org.reactfx.value.Val;
 import org.reactfx.value.Var;
 
 public class PlaybackInfoBorders extends StackPane {
-  private final ObjectProperty<Work> work = new SimpleObjectProperty<>();
-  public ObjectProperty<Work> workProperty() { return work; }
-
   public final Var<Boolean> clockAndPositionVisible = Var.newSimpleVar(true);
 
   private final StringProperty formattedTime = new SimpleStringProperty();
@@ -198,7 +191,7 @@ public class PlaybackInfoBorders extends StackPane {
     private final Node node;
     private final StackPane location;
 
-    public OSD(String title, ObservableValue<? extends Number> observableValue, StringExpression valueText, double min, double max, double origin, StackPane location) {
+    public OSD(String title, ObservableValue<? extends Number> observableValue, ObservableValue<String> valueText, double min, double max, double origin, StackPane location) {
       this.title = title;
       this.location = location;
       this.node = createOSDItem(title, min, max, origin, observableValue, valueText);
@@ -211,7 +204,7 @@ public class PlaybackInfoBorders extends StackPane {
     }
   }
 
-  private static Node createOSDItem(final String title, final double min, final double max, final double origin, final ObservableValue<? extends Number> value, final StringExpression valueText) {
+  private static Node createOSDItem(final String title, final double min, final double max, final double origin, final ObservableValue<? extends Number> value, final ObservableValue<String> valueText) {
     return new HBox() {{
       setId(title);
       setFillHeight(false);

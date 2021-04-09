@@ -7,15 +7,16 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.LongProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.reactfx.value.Var;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -165,7 +166,7 @@ public class ActionTargetProviderTest {
   }
 
   private static class TestRoot {
-    private Var<Long> volumeProperty = Var.newSimpleVar(100L);
+    private LongProperty volumeProperty = new SimpleLongProperty(100L);
     private ObjectProperty<TestPlayer> playerProperty = new SimpleObjectProperty<>(new TestPlayer());
     private DoubleProperty brightnessProperty = new SimpleDoubleProperty(0.5);
 
@@ -180,7 +181,7 @@ public class ActionTargetProviderTest {
       stop2Called.set(true);
     }
 
-    public Var<Long> volume() {
+    public LongProperty volume() {
       return volumeProperty;
     }
 
@@ -194,9 +195,9 @@ public class ActionTargetProviderTest {
   }
 
   private static class TestPlayer {
-    private Var<Long> positionProperty = Var.newSimpleVar(1L);
+    private LongProperty positionProperty = new SimpleLongProperty(1L);
 
-    public Var<Long> position() {
+    public LongProperty position() {
       return positionProperty;
     }
   }
