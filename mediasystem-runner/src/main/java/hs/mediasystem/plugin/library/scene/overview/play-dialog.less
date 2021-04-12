@@ -1,0 +1,51 @@
+@import "${root}/hs/mediasystem/runner/properties.less";
+
+.dialog {
+  .button-box {
+    -fx-spacing: 0.4em;
+
+    .button {
+      -fx-skin: 'hs.mediasystem.plugin.library.scene.overview.NavigationDialogButtonSkin';
+      .button-3d();
+
+      .label {
+        -fx-text-fill: #eeeeee;
+        .bold;
+      }
+    }
+  }
+  .stream-button {
+    -fx-max-width: infinity;  // make all buttons equal width
+
+    .button-content-box {
+      -fx-spacing: 0.6em;
+
+      .description-box {
+        -fx-max-width: 45em;
+
+        .group-title {
+          .style-p3;
+        }
+
+        .title {
+          .style-p1;
+        }
+
+        .info {
+          .style-p3;
+        }
+      }
+
+      .snapshots-box {
+        -fx-pref-height: 5em;
+        -fx-max-height: 5em;
+
+        .image-view-effect {
+          -fx-background-color: black;  // hides a bug where border does not align on high DPI displays set at 150% (3 pixel border would be 4.5 pixels, and something goes wrong)
+          -fx-border-width: @unit * 3;
+          -fx-border-color: black;
+        }
+      }
+    }
+  }
+}

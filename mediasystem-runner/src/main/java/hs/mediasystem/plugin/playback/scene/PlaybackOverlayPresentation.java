@@ -5,6 +5,7 @@ import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.ui.api.StreamStateClient;
+import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 
@@ -44,7 +45,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
     @Inject private PlayerSetting playerSetting;
     @Inject private StreamStateClient streamStateClient;
 
-    public Task<PlaybackOverlayPresentation> create(Work work, URI uri, Duration startPosition) {
+    private Task<PlaybackOverlayPresentation> create(Work work, MediaStream stream, URI uri, Duration startPosition) {
       return new Task<>() {
         @Override
         protected PlaybackOverlayPresentation call() {
@@ -78,17 +79,37 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             throw new MissingPlayerPresentationException(playerSetting.getConfiguredName(), playerSetting.getAvailablePlayerFactories());
           }
 
-          return new PlaybackOverlayPresentation(streamStateClient, playerPresentation, work, uri, startPosition);
+          return new PlaybackOverlayPresentation(streamStateClient, playerPresentation, work, stream, uri, startPosition);
         }
       };
     }
+
+    public Task<PlaybackOverlayPresentation> create(Work work, MediaStream stream, Duration startPosition) {
+      return create(work, stream, stream.getAttributes().getUri(), startPosition);
+    }
+
+    public Task<PlaybackOverlayPresentation> create(Work work, URI uri, Duration startPosition) {
+      return create(work, null, uri, startPosition);
+    }
   }
 
-  private PlaybackOverlayPresentation(StreamStateClient streamStateClient, PlayerPresentation playerPresentation, Work work, URI uri, Duration startPosition) {
+  /**
+   * Constructs a new instance.
+   *
+   * @param streamStateClient a {@link StreamStateClient}, cannot be null
+   * @param playerPresentation a {@link PlayerPresentation}, cannot be null
+   * @param work a {@link Work} with which the {@link URI} is associated (not necessarily one of its streams), cannot be null
+   * @param stream a {@link MediaStream} which is part of the given {@link Work}, can be null in case a stream not part of the work is played
+   * @param uri a {@link URI} to play, cannot be null
+   * @param startPosition the position to start playback at, cannot be null
+   */
+  private PlaybackOverlayPresentation(StreamStateClient streamStateClient, PlayerPresentation playerPresentation, Work work, MediaStream stream, URI uri, Duration startPosition) {
     this.work = work;
     this.uri = uri;
     this.startPosition = startPosition;
     this.playerPresentation.set(playerPresentation);
+
+    ContentID contentId = stream == null ? null : stream.getId().getContentId();
 
     this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
       private long totalTimeViewed;
@@ -107,7 +128,9 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             totalTimeViewed += diff;
             timeViewedSinceLastSkip += diff;
 
-            updatePositionAndViewed();  // TODO this involves db communication / server communication, may not want to do that on FX thread
+            if(contentId != null) {
+              updatePositionAndViewed(contentId);  // TODO this involves db communication / server communication, may not want to do that on FX thread
+            }
           }
 
           if(Math.abs(diff) >= 4000) {
@@ -116,13 +139,12 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
         }
       }
 
-      private void updatePositionAndViewed() {
+      private void updatePositionAndViewed(ContentID contentId) {
         PlayerPresentation player = PlaybackOverlayPresentation.this.playerPresentation.get();
         long length = player.lengthProperty().getValue();
 
         if(length > 0) {
           long timeViewed = totalTimeViewed + startPosition.toMillis();
-          ContentID contentId = work.getPrimaryStream().orElseThrow().getId().getContentId();
 
           BooleanProperty consumed = streamStateClient.watchedProperty(contentId);
 
