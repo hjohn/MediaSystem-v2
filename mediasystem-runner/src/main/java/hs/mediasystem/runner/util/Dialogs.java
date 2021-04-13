@@ -6,6 +6,7 @@ import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -59,7 +60,9 @@ public class Dialogs {
     return show(
       event,
       content,
-      IntStream.range(0, options.length).boxed().collect(Collectors.toMap(Function.identity(), i -> options[i]))
+      IntStream.range(0, options.length)
+        .boxed()
+        .collect(Collectors.toMap(Function.identity(), i -> options[i], (a, b) -> a, LinkedHashMap::new))
     );
   }
 
