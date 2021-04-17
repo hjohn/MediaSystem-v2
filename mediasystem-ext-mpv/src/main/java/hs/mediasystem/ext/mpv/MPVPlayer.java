@@ -4,8 +4,6 @@ import com.sun.jna.Pointer;
 import com.sun.jna.ptr.LongByReference;
 
 import hs.jfx.eventstream.api.EventStream;
-import hs.jfx.eventstream.core.Change;
-import hs.jfx.eventstream.core.Changes;
 import hs.mediasystem.ext.mpv.MPV.mpv_event;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerEvent;
@@ -68,7 +66,7 @@ public class MPVPlayer implements PlayerPresentation {
   private final ObservableList<AudioTrack> audioTracks = FXCollections.observableArrayList(AudioTrack.NO_AUDIO_TRACK);
 
   private final BooleanProperty updatingPosition = new SimpleBooleanProperty();
-  private final EventStream<Long> positionChanges = Changes.of(position).map(Change::getValue).conditionOn(updatingPosition.not());
+  private final EventStream<Long> positionChanges = hs.jfx.eventstream.core.Events.of(position).conditionOn(updatingPosition.not());
 
   private final AtomicBoolean isPlaying = new AtomicBoolean(false);
 

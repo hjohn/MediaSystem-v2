@@ -1,8 +1,6 @@
 package hs.mediasystem.ext.vlc;
 
 import hs.jfx.eventstream.api.EventStream;
-import hs.jfx.eventstream.core.Change;
-import hs.jfx.eventstream.core.Changes;
 import hs.mediasystem.ext.vlc.util.Accessor;
 import hs.mediasystem.ext.vlc.util.BeanBooleanProperty;
 import hs.mediasystem.ui.api.player.AudioTrack;
@@ -103,7 +101,7 @@ public class VLCPlayer implements PlayerPresentation {
     }
 
     BooleanProperty updatingPosition = new SimpleBooleanProperty();
-    EventStream<Long> positionChanges = Changes.of(position).map(Change::getValue).conditionOn(updatingPosition.not());
+    EventStream<Long> positionChanges = hs.jfx.eventstream.core.Events.of(position).conditionOn(updatingPosition.not());
 
     positionChanges.subscribe(pos -> mediaPlayer.controls().setTime(pos));  // Basically, only called when updated externally, not by player
 

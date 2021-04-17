@@ -14,7 +14,7 @@
     <version.jackson>2.9.9</version.jackson>
     <version.javafx>16</version.javafx>
     <version.ddif>2.1.0</version.ddif>
-    <version.eventstream>0.2.0</version.eventstream>
+    <version.eventstream>0.3.0</version.eventstream>
     <version.junit5>5.6.0</version.junit5>
     <version.mockito>2.23.4</version.mockito>
   </properties>

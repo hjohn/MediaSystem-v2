@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.jfx.eventstream.core.Change;
 import hs.jfx.eventstream.core.Changes;
 import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
@@ -300,18 +299,18 @@ public abstract class GridViewPresentationFactory {
     }
 
     private void setupSortingAndFiltering() {
-      Changes.of(inputItems).map(Change::getValue).subscribe(list -> setRootItems(grouping.getValue().group(list)));
+      Events.of(inputItems).subscribe(list -> setRootItems(grouping.getValue().group(list)));
 
       // Changes in sortOrder, filter or stateFilter should update final items:
       Invalidations.of(sortOrder, filter, stateFilter)
         .subscribe(obs -> updateFinalItemsAndGrouping());
 
       // Grouping changes require updating root items:
-      Changes.of(grouping).map(Change::getValue).subscribe(g -> setRootItems(g.group(inputItems.get())));
+      Events.of(grouping).subscribe(g -> setRootItems(g.group(inputItems.get())));
 
       // Navigation to/from parent/child level:
 
-      Events.of(contextItem)
+      Changes.of(contextItem)
         .subscribe(c -> {
           updateRawBaseItems();  // this already handles selection
 
