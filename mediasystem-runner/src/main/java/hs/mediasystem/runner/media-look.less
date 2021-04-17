@@ -63,30 +63,14 @@
   -fx-background-insets: 1, 1;
 }
 
-.media-look,
-.dialog {
+.media-look {
   @control-focus: rgb(255, 255, 0);
   @control-border: darken(@theme-primary, 50%, relative);
   @control-bg: fade(darken(@theme-primary, 75%, relative), 40%);
 
   .button,
-  .toggle-button {
-    -fx-background-color: @control-bg;
-    -fx-background-insets: 0;
-    -fx-background-radius: 0;
-
-    -fx-text-fill: @text-primary-highlight;
-
-    -fx-border-color: transparent, @control-border;
-    -fx-border-width: 3, 2;
-    -fx-border-insets: 0, 5.4;
-    -fx-border-radius: 5.4, 0;
-  }
-
-  .check-box {
-    -fx-text-fill: @text-primary-highlight;
-  }
-
+  .toggle-button,
+  .spinner,
   .check-box > .box {
     -fx-background-color: @control-bg;
     -fx-background-insets: 0;
@@ -98,27 +82,25 @@
     -fx-border-radius: 5.4, 0;
   }
 
-  .check-box:selected > .box > .mark,
-  .check-box:indeterminate > .box > .mark {
-    -fx-background-color: @text-primary-highlight;
+  .button,
+  .toggle-button,
+  .spinner,
+  .check-box {
+    -fx-text-fill: @text-primary-highlight;
   }
 
-  .check-box:indeterminate > .box {
-    -fx-padding: 0em 0em 0.083333em 0.083333em;
+  .check-box {
+    &:selected > .box > .mark,
+    &:indeterminate > .box > .mark {
+      -fx-background-color: @text-primary-highlight;
+    }
+
+    &:indeterminate > .box {
+      -fx-padding: 0em 0em 0.083333em 0.083333em;
+    }
   }
 
   .spinner {
-    -fx-background-color: @control-bg;
-    -fx-background-insets: 0;
-    -fx-background-radius: 0;
-
-    -fx-text-fill: @text-primary-highlight;
-
-    -fx-border-color: transparent, @control-border;
-    -fx-border-width: 3, 2;
-    -fx-border-insets: 0, 5.4;
-    -fx-border-radius: 5.4, 0;
-
     .text-field, .increment-arrow-button, .decrement-arrow-button {
       -fx-background-color: @control-bg;
       -fx-text-fill: @text-primary-highlight;
@@ -138,9 +120,6 @@
   .list-view:focused:external-focus   /* with mouse focus */
   {
     -fx-border-color: @control-focus, @control-border;
-    -fx-border-width: 3, 2;
-    -fx-border-insets: 0, 5.4;
-    -fx-border-radius: 5.4, 0;
   }
 
   .slider .track
