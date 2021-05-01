@@ -24,6 +24,7 @@ import hs.mediasystem.util.javafx.control.transition.multi.Scroll;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -37,6 +38,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.beans.value.Subscription;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -153,6 +155,18 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         return null;
       }
 
+      HBox timeBox = current.getStreams().stream()
+        .map(MediaStream::getState)
+        .map(hs.mediasystem.ui.api.domain.State::getLastConsumptionTime)
+        .flatMap(Optional::stream)
+        .max(Comparator.naturalOrder())
+        .map(time -> Containers.hbox(
+          "last-watched-box",
+          Labels.create("last-watched-icon", "📷"),
+          Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
+        ))
+        .orElse(null);
+
       return Containers.vbox(
         "stream-info-panel",
         Arrays.asList(
@@ -161,11 +175,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
             Labels.create("duration-icon", "🕑"),
             Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
           )).orElse(null),
-          stream.getState().getLastConsumptionTime().map(time -> Containers.hbox(
-            "last-watched-box",
-            Labels.create("last-watched-icon", "📷"),
-            Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
-          )).orElse(null),
+          timeBox,
           Optional.ofNullable(streamCount > 1 ? streamCount : null).map(count -> Containers.hbox(
             "stream-count-box",
             Labels.create("stream-count-icon", "📁"),
