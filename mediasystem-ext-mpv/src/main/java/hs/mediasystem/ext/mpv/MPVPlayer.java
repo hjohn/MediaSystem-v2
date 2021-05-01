@@ -90,7 +90,8 @@ public class MPVPlayer implements PlayerPresentation {
         throw new IllegalStateException("Error setting window id: " + errorCode);
       }
 
-      setProperty("video-sync", "display-resample");  // default uses audio for video-sync, this is a newer better option that is vsync aware
+      // Disabled this option as it can get quite jittery with DTS tracks for some reason:
+      // setProperty("video-sync", "display-resample");  // default uses audio for video-sync, this is a newer better option that is vsync aware
       setProperty("load-stats-overlay", "yes");
 
       errorCode = mpv.mpv_initialize(handle);
