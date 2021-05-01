@@ -80,20 +80,26 @@ public class Nodes {
    * Determines if the given {@link Node} or any child node has focus.
    *
    * @param node a {@link Node} under which to check for a focused node
-   * @return <code>true</code> if this part of the tree has the focus, otherwise <code>false</code>
+   * @return the {@link Node} which has focus, or empty otherwise
    */
   public static Optional<Node> findFocusedNodeInTree(Node node) {
-    if(node instanceof Parent) {
-      for(Node child : ((Parent)node).getChildrenUnmodifiable()) {
-        Optional<Node> focusedNode = findFocusedNodeInTree(child);
+    Scene scene = node.getScene();
 
-        if(focusedNode.isPresent()) {
-          return focusedNode;
-        }
-      }
+    if(scene == null) {
+      return Optional.empty();
     }
 
-    return node.isFocusTraversable() && !node.isDisabled() && node.isFocused() ? Optional.of(node) : Optional.empty();
+    Node focusOwner = node.getScene().getFocusOwner();
+
+    while(focusOwner != null) {
+      if(focusOwner.equals(node)) {
+        return Optional.of(node.getScene().getFocusOwner());
+      }
+
+      focusOwner = focusOwner.getParent();
+    }
+
+    return Optional.empty();
   }
 
   /**
