@@ -29,18 +29,7 @@ public class Nodes {
     return node.isVisible() && (node.getParent() == null || isTreeVisible(node.getParent()));
   }
 
-  public static <T> void listenWhenNodeVisible(Node node, ObservableValue<T> property, ChangeListener<? super T> listener) {
-    showing(node).addListener((obs, old, visible) -> {
-      if(visible) {
-        property.addListener(listener);
-      }
-      else {
-        property.removeListener(listener);
-      }
-    });
-  }
-
-  public static void bindVisibilityEvents(Node node, Runnable whenShown, Runnable whenHidden) {
+  private static void bindVisibilityEvents(Node node, Runnable whenShown, Runnable whenHidden) {
     showing(node).addListener((obs, old, visible) -> {
       if(visible) {
         whenShown.run();
