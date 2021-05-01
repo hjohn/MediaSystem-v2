@@ -6,7 +6,7 @@ import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Grid
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.ui.api.SettingsClient;
-import hs.mediasystem.ui.api.domain.SettingsSource;
+import hs.mediasystem.ui.api.SettingsSource;
 
 import java.util.List;
 

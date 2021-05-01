@@ -1,4 +1,4 @@
-package hs.mediasystem.ui.api.domain;
+package hs.mediasystem.ui.api;
 
 public interface SettingsSource {
   String getSetting(String name);

@@ -2,7 +2,7 @@ package hs.mediasystem.local.client.service;
 
 import hs.mediasystem.db.base.SettingsSourceFactory;
 import hs.mediasystem.ui.api.SettingsClient;
-import hs.mediasystem.ui.api.domain.SettingsSource;
+import hs.mediasystem.ui.api.SettingsSource;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
