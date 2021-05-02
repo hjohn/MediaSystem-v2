@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.plugin.cell.ModelMediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaStatus;
@@ -204,7 +205,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         .conditionOn(Nodes.showing(pane))
         .subscribe(i -> pane.model.setEpisodesAndSelected(presentation.children.get(), presentation.selectedChild.get()));
 
-      pane.model.selected.conditionOn(Nodes.showing(pane)).subscribe(presentation.selectedChild::set);
+      Events.of(pane.model.selected).conditionOn(Nodes.showing(pane)).subscribe(presentation.selectedChild::set);
 
       pane.model.onItemSelected.set(e -> presentation.toEpisodeState());
 
