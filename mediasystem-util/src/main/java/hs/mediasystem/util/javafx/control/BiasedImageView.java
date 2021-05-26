@@ -118,10 +118,15 @@ public class BiasedImageView extends Region {
       getChildren().add(placeHolder);
 
       placeHolder.getStyleClass().add("place-holder");
+      placeHolder.setManaged(false);
     }
 
     getChildren().add(imageView);
     getChildren().add(overlayRegion);
+
+    effectRegion.setManaged(false);
+    imageView.setManaged(false);
+    overlayRegion.setManaged(false);
   }
 
   public BiasedImageView(Node placeHolder) {
@@ -216,12 +221,6 @@ public class BiasedImageView extends Region {
 
     Image image = imageView.getImage();
 
-//    imageView.setVisible(image != null);
-//    effectRegion.setVisible(image != null);
-//    if(placeHolder != null) {
-//      placeHolder.setVisible(image == null);
-//    }
-
     if(image != null && isPreserveRatio()) {
       double imageWidth = image.getWidth();
       double imageHeight = image.getHeight();
@@ -276,30 +275,10 @@ public class BiasedImageView extends Region {
 
     layoutInArea(imageView, insets.getLeft(), insets.getTop(), getWidth() - insetsWidth, getHeight() - insetsHeight, 0, alignment.get().getHpos(), alignment.get().getVpos());
 
-    /*
-     * Get actual bounds of ImageView, and force this size on the effect and overlay regions by setting
-     * their min and max sizes.  Since these regions share the same alignment, it should match with the
-     * actual image position, allowing accurate borders and overlays over the image.
-     */
-
-    double actualWidth = imageView.getFitWidth();
-    double actualHeight = imageView.getFitHeight();
-
-    effectRegion.setMinWidth(actualWidth + insetsWidth);
-    effectRegion.setMinHeight(actualHeight + insetsHeight);
-    effectRegion.setMaxWidth(effectRegion.getMinWidth());
-    effectRegion.setMaxHeight(effectRegion.getMinHeight());
-
     if(placeHolder != null) {
       layoutInArea(placeHolder, insets.getLeft(), insets.getTop(), getWidth() - insetsWidth, getHeight() - insetsHeight, 0, alignment.get().getHpos(), alignment.get().getVpos());
     }
     layoutInArea(effectRegion, 0, 0, getWidth(), getHeight(), 0, alignment.get().getHpos(), alignment.get().getVpos());
-
-    overlayRegion.setMinWidth(actualWidth + insetsWidth);
-    overlayRegion.setMinHeight(actualHeight + insetsHeight);
-    overlayRegion.setMaxWidth(overlayRegion.getMinWidth());
-    overlayRegion.setMaxHeight(overlayRegion.getMinHeight());
-
     layoutInArea(overlayRegion, 0, 0, getWidth(), getHeight(), 0, alignment.get().getHpos(), alignment.get().getVpos());
   }
 
