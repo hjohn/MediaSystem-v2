@@ -200,10 +200,15 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
       EpisodeListPane pane = new EpisodeListPane(cellFactory);
 
-      Invalidations.of(presentation.children, presentation.selectedChild)
+      Invalidations.of(presentation.children)
         .withDefault(null)  // converts to value stream, so event fires each time it becomes visible
         .conditionOn(Nodes.showing(pane))
-        .subscribe(i -> pane.model.setEpisodesAndSelected(presentation.children.get(), presentation.selectedChild.get()));
+        .subscribe(i -> pane.model.setEpisodes(presentation.children.get()));
+
+      Invalidations.of(presentation.selectedChild)
+        .withDefault(null)  // converts to value stream, so event fires each time it becomes visible
+        .conditionOn(Nodes.showing(pane))
+        .subscribe(i -> pane.model.setSelected(presentation.selectedChild.get()));
 
       Events.of(pane.model.selected).conditionOn(Nodes.showing(pane)).subscribe(presentation.selectedChild::set);
 

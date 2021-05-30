@@ -53,16 +53,13 @@ public class EpisodeListPane extends VBox {
      */
     public final ObjectProperty<EventHandler<ItemSelectedEvent<Work>>> onItemSelected = new SimpleObjectProperty<>();
 
-    public void setEpisodesAndSelected(List<Work> episodes, Work selected) {
+    public void setEpisodes(List<Work> episodes) {
       if(episodes == null) {
         throw new IllegalArgumentException("episodes cannot be null");
       }
-      if(selected != null && !episodes.contains(selected)) {
-        throw new IllegalArgumentException("selected must be null or be part of episodes: " + selected + " not in " + episodes);
-      }
 
+      internalSelected.set(null);  // ensure that the complete state is valid (otherwise something might be temporarily selected that is not part of the list)
       internalEpisodes.set(episodes);
-      internalSelected.set(selected);
     }
 
     public void setSelected(Work selected) {
