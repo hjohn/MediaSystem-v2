@@ -65,11 +65,9 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     pane.model.missingFraction.bind(presentation.missingFraction.conditionOn(showing));
     pane.model.watchedFraction.bind(presentation.watchedFraction.conditionOn(showing));
 
-    SharedModel mainPanel = new SharedModel(presentation);
-
     presentation.state
       .conditionOn(showing)
-      .subscribe(state -> pane.model.dynamicPanel.set(() -> mainPanel.createDynamicBox()));
+      .subscribe(state -> pane.model.dynamicPanel.set(() -> createDynamicBox(presentation)));
 
     presentation.showInfo
       .conditionOnShowing(pane)
@@ -78,234 +76,235 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     return pane;
   }
 
-  private class SharedModel {
-    private final ProductionPresentation presentation;
-    private final ObjectProperty<Work> selectedChildCopy = new SimpleObjectProperty<>();
-
-    private Subscription childTransitionPanelSubscription;
-
-    public SharedModel(ProductionPresentation presentation) {
-      this.presentation = presentation;
+  private Pane createDynamicBox(ProductionPresentation presentation) {
+    switch(presentation.state.get()) {
+    case LIST:
+      return buildEpisodeListUI(presentation);
+    case EPISODE:
+      return buildEpisodeDynamicUI(presentation);
+    default:
+      return buildOverviewUI(presentation);
     }
+  }
 
-    private Pane createDynamicBox() {
-      switch(presentation.state.get()) {
-      case LIST:
-        return buildEpisodeListUI();
-      case EPISODE:
-        return buildEpisodeDynamicUI();
-      default:
-        return buildOverviewUI();
-      }
-    }
+  private Pane buildOverviewUI(ProductionPresentation presentation) {
+    DetailAndCastPane pane = new DetailAndCastPane();
 
-    private Pane buildOverviewUI() {
-      DetailAndCastPane pane = new DetailAndCastPane();
+    pane.getStyleClass().add("overview-panel");
 
-      pane.getStyleClass().add("overview-panel");
+    ObservableValue<Details> details = presentation.root
+      .conditionOn(Nodes.showing(pane))
+      .map(Work::getDetails);
 
-      ObservableValue<Details> details = presentation.root
-        .conditionOn(Nodes.showing(pane))
-        .map(Work::getDetails);
+    pane.model.tagline.bind(
+      details
+        .map(Details::getTagline)
+        .map(optTagline -> optTagline.map(t -> "“" + t + "”").orElse(null))
+    );
 
-      pane.model.tagline.bind(
-        details
-          .map(Details::getTagline)
-          .map(optTagline -> optTagline.map(t -> "“" + t + "”").orElse(null))
-      );
+    pane.model.description.bind(
+      details
+        .map(Details::getDescription)
+        .map(optDesc -> optDesc.orElse(""))
+    );
 
-      pane.model.description.bind(
-        details
-          .map(Details::getDescription)
-          .map(optDesc -> optDesc.orElse(""))
-      );
+    BorderPane borderPane = new BorderPane();
 
-      BorderPane borderPane = new BorderPane();
+    borderPane.setMinHeight(1);
+    borderPane.setPrefHeight(1);
+    borderPane.setCenter(pane);
+    borderPane.getStyleClass().add("overview-dynamic-panel");
 
-      borderPane.setMinHeight(1);
-      borderPane.setPrefHeight(1);
-      borderPane.setCenter(pane);
-      borderPane.getStyleClass().add("overview-dynamic-panel");
+    presentation.root
+      .conditionOn(Nodes.showing(pane))
+      .subscribe(current -> {
+        CompletableFuture.supplyAsync(() -> workClient.findContributions(current.getId()))
+          .thenAcceptAsync(contributors -> pane.model.contributors.set(contributors), Platform::runLater)
+          .whenComplete((v, e) -> {
+            if(e != null) {
+              LOGGER.log(Level.WARNING, "Unable to fill cast pane", e);
+            }
+          });
 
-      presentation.root
-        .conditionOn(Nodes.showing(pane))
-        .subscribe(current -> {
-          CompletableFuture.supplyAsync(() -> workClient.findContributions(current.getId()))
-            .thenAcceptAsync(contributors -> pane.model.contributors.set(contributors), Platform::runLater)
-            .whenComplete((v, e) -> {
-              if(e != null) {
-                LOGGER.log(Level.WARNING, "Unable to fill cast pane", e);
-              }
-            });
-
-          borderPane.setBottom(
-            Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState()), buildStreamInfoPanel(current))
-          );
-        });
-
-      VBox.setVgrow(borderPane, Priority.ALWAYS);
-
-      return Containers.vbox("dynamic-panel", borderPane);
-    }
-
-    private Pane buildStreamInfoPanel(Work current) {
-      MediaStream stream = current.getPrimaryStream().orElse(null);
-      int streamCount = current.getStreams().size();
-
-      if(stream == null) {
-        return null;
-      }
-
-      HBox timeBox = current.getStreams().stream()
-        .map(MediaStream::getState)
-        .map(hs.mediasystem.ui.api.domain.State::getLastConsumptionTime)
-        .flatMap(Optional::stream)
-        .max(Comparator.naturalOrder())
-        .map(time -> Containers.hbox(
-          "last-watched-box",
-          Labels.create("last-watched-icon", "📷"),
-          Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
-        ))
-        .orElse(null);
-
-      return Containers.vbox(
-        "stream-info-panel",
-        Arrays.asList(
-          stream.getDuration().map(d -> Containers.hbox(
-            "duration-box",
-            Labels.create("duration-icon", "🕑"),
-            Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
-          )).orElse(null),
-          timeBox,
-          Optional.ofNullable(streamCount > 1 ? streamCount : null).map(count -> Containers.hbox(
-            "stream-count-box",
-            Labels.create("stream-count-icon", "📁"),
-            Labels.create("stream-count-text", streamCount + " copies")
-          )).orElse(null)
-        ),
-        Containers.MOUSE_TRANSPARENT
-      );
-    }
-
-    private Pane buildEpisodeListUI() {
-      ModelMediaGridViewCellFactory<Work> cellFactory = new ModelMediaGridViewCellFactory<>((item, model) -> {
-        model.title.set(item.getDetails().getTitle());
-        model.annotation1.set(item.getDetails().getSequence().map(this::createSequenceInfo).orElse(null));
-        model.imageHandle.set(item.getDetails().getSampleImage().orElse(null));
-        model.status.set(item.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : item.getState().isConsumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
+        borderPane.setBottom(
+          Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState()), buildStreamInfoPanel(current))
+        );
       });
 
-      cellFactory.setPlaceHolderAspectRatio(16.0 / 9.0);
-      cellFactory.setMinRatio(4.0 / 3.0);
+    VBox.setVgrow(borderPane, Priority.ALWAYS);
 
-      EpisodeListPane pane = new EpisodeListPane(cellFactory);
+    return Containers.vbox("dynamic-panel", borderPane);
+  }
 
-      Invalidations.of(presentation.children)
-        .withDefault(null)  // converts to value stream, so event fires each time it becomes visible
-        .conditionOn(Nodes.showing(pane))
-        .subscribe(i -> pane.model.setEpisodes(presentation.children.get()));
+  private static Pane buildStreamInfoPanel(Work current) {
+    MediaStream stream = current.getPrimaryStream().orElse(null);
+    int streamCount = current.getStreams().size();
 
-      Invalidations.of(presentation.selectedChild)
-        .withDefault(null)  // converts to value stream, so event fires each time it becomes visible
-        .conditionOn(Nodes.showing(pane))
-        .subscribe(i -> pane.model.setSelected(presentation.selectedChild.get()));
-
-      Events.of(pane.model.selected).conditionOn(Nodes.showing(pane)).subscribe(presentation.selectedChild::set);
-
-      pane.model.onItemSelected.set(e -> presentation.toEpisodeState());
-
-      pane.getStyleClass().add("dynamic-panel");
-
-      return pane;
+    if(stream == null) {
+      return null;
     }
 
-    private Pane buildEpisodeDynamicUI() {
-      selectedChildCopy.set(presentation.selectedChild.get());  // Copy here so that a change in selected doesn't update a pane being scrolled out
+    HBox timeBox = current.getStreams().stream()
+      .map(MediaStream::getState)
+      .map(hs.mediasystem.ui.api.domain.State::getLastConsumptionTime)
+      .flatMap(Optional::stream)
+      .max(Comparator.naturalOrder())
+      .map(time -> Containers.hbox(
+        "last-watched-box",
+        Labels.create("last-watched-icon", "📷"),
+        Labels.create("last-watched-text", SizeFormatter.formatTimeAgo(LocalDateTime.ofInstant(time, ZoneId.systemDefault())))
+      ))
+      .orElse(null);
 
-      TransitionPane transitionPane = new TransitionPane(new Scroll(), buildEpisodeUI());
-      TransitionPane streamInfoPane = new TransitionPane(StandardTransitions.fade(250, 500));
-      BorderPane borderPane = new BorderPane();
+    return Containers.vbox(
+      "stream-info-panel",
+      Arrays.asList(
+        stream.getDuration().map(d -> Containers.hbox(
+          "duration-box",
+          Labels.create("duration-icon", "🕑"),
+          Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
+        )).orElse(null),
+        timeBox,
+        Optional.ofNullable(streamCount > 1 ? streamCount : null).map(count -> Containers.hbox(
+          "stream-count-box",
+          Labels.create("stream-count-icon", "📁"),
+          Labels.create("stream-count-text", streamCount + " copies")
+        )).orElse(null)
+      ),
+      Containers.MOUSE_TRANSPARENT
+    );
+  }
 
-      presentation.selectedChild
-        .conditionOn(Nodes.showing(borderPane))
-        .addListener((obs, old, current) -> {
-          List<Work> episodes = presentation.children.get();
+  private Pane buildEpisodeListUI(ProductionPresentation presentation) {
+    ModelMediaGridViewCellFactory<Work> cellFactory = new ModelMediaGridViewCellFactory<>((item, model) -> {
+      model.title.set(item.getDetails().getTitle());
+      model.annotation1.set(item.getDetails().getSequence().map(this::createSequenceInfo).orElse(null));
+      model.imageHandle.set(item.getDetails().getSampleImage().orElse(null));
+      model.status.set(item.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : item.getState().isConsumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
+    });
 
-          if(old.getId().equals(current.getId())) {  // item was just refreshed, no need to transition
-            selectedChildCopy.set(current);
-          }
-          else {
-            int oldIndex = episodes.indexOf(old);
-            int newIndex = episodes.indexOf(current);
+    cellFactory.setPlaceHolderAspectRatio(16.0 / 9.0);
+    cellFactory.setMinRatio(4.0 / 3.0);
 
-            childTransitionPanelSubscription.unsubscribe();  // TODO this is somewhat confusing, as buildEpisodeUI assigns it again
-            selectedChildCopy.set(current);
+    EpisodeListPane pane = new EpisodeListPane(cellFactory);
 
-            transitionPane.add(oldIndex > newIndex, buildEpisodeUI());
-          }
+    Invalidations.of(presentation.children)
+      .withDefault(null)  // converts to value stream, so event fires each time it becomes visible
+      .conditionOn(Nodes.showing(pane))
+      .subscribe(i -> pane.model.setEpisodes(presentation.children.get()));
 
-          borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(current, null), streamInfoPane));
-          updateStreamInfoPane(streamInfoPane, current);
-        });
+    Invalidations.of(presentation.selectedChild)
+      .withDefault(null)  // converts to value stream, so event fires each time it becomes visible
+      .conditionOn(Nodes.showing(pane))
+      .subscribe(i -> pane.model.setSelected(presentation.selectedChild.get()));
 
-      // duplicated
-      borderPane.setBottom(Containers.stack(navigationButtonsFactory.create(selectedChildCopy.get(), null), streamInfoPane));
-      updateStreamInfoPane(streamInfoPane, selectedChildCopy.get());
+    Events.of(pane.model.selected).conditionOn(Nodes.showing(pane)).subscribe(presentation.selectedChild::set);
 
-      streamInfoPane.setMouseTransparent(true);
+    pane.model.onItemSelected.set(e -> presentation.toEpisodeState());
 
-      borderPane.setCenter(transitionPane);
-      borderPane.getProperties().put("presentation2", new EpisodePresentation(presentation.children, presentation.selectedChild));
-      borderPane.getStyleClass().add("episode-dynamic-panel");
+    pane.getStyleClass().add("dynamic-panel");
 
-      VBox.setVgrow(borderPane, Priority.ALWAYS);
+    return pane;
+  }
 
-      return Containers.vbox("dynamic-panel", borderPane);
-    }
+  private Pane buildEpisodeDynamicUI(ProductionPresentation presentation) {
+    BorderPane borderPane = new BorderPane() {
+      Subscription childTransitionPanelSubscription;
 
-    private void updateStreamInfoPane(TransitionPane streamInfoPane, Work work) {
-      Pane panel = buildStreamInfoPanel(work);
+      {
+        ObjectProperty<Work> selectedChildCopy = new SimpleObjectProperty<>(presentation.selectedChild.get());  // Copy here so that a change in selected doesn't update a pane being scrolled out
 
-      if(panel != null) {
-        streamInfoPane.add(panel);
+        TransitionPane transitionPane = new TransitionPane(new Scroll(), buildEpisodeUI(selectedChildCopy));
+        TransitionPane streamInfoPane = new TransitionPane(StandardTransitions.fade(250, 500));
+
+        presentation.selectedChild
+          .conditionOn(Nodes.showing(this))
+          .addListener((obs, old, current) -> {
+            List<Work> episodes = presentation.children.get();
+
+            if(old.getId().equals(current.getId())) {  // item was just refreshed, no need to transition
+              selectedChildCopy.set(current);
+            }
+            else {
+              int oldIndex = episodes.indexOf(old);
+              int newIndex = episodes.indexOf(current);
+
+              /*
+               * Each EpisodePane listens on selectedChildCopy in order to do a refresh if needed (when in a dialog Viewed
+               * status is changed for example). As here we're switching to another episode (by scrolling the entire pane)
+               * updating the selectedChildCopy would change the content of both the pane being scrolled out as well as
+               * the one being scrolled in. This is why we unsubscribe the old pane's refresh subscription here.
+               */
+
+              childTransitionPanelSubscription.unsubscribe();
+              selectedChildCopy.set(current);
+
+              transitionPane.add(oldIndex > newIndex, buildEpisodeUI(selectedChildCopy));
+            }
+
+            setBottom(Containers.stack(navigationButtonsFactory.create(current, null), streamInfoPane));
+            updateStreamInfoPane(streamInfoPane, current);
+          });
+
+        // duplicated
+        setBottom(Containers.stack(navigationButtonsFactory.create(selectedChildCopy.get(), null), streamInfoPane));
+        updateStreamInfoPane(streamInfoPane, selectedChildCopy.get());
+
+        streamInfoPane.setMouseTransparent(true);
+
+        setCenter(transitionPane);
+        getProperties().put("presentation2", new EpisodePresentation(presentation.children, presentation.selectedChild));
+        getStyleClass().add("episode-dynamic-panel");
+
+        VBox.setVgrow(this, Priority.ALWAYS);
       }
-    }
 
-    private String createSequenceInfo(Sequence sequence) {
-      if(sequence.getType() == Type.SPECIAL) {
-        return "Special " + sequence.getNumber();
+      Pane buildEpisodeUI(ObjectProperty<Work> selectedChild) {
+        EpisodePane pane = new EpisodePane();
+
+        pane.getStyleClass().add("episode-panel");
+
+        childTransitionPanelSubscription = selectedChild
+          .conditionOn(Nodes.showing(pane))
+          .subscribe(work -> {
+            Details details = work.getDetails();
+
+            double percentage = work.getState().isConsumed() ? 1.0 : work.getWatchedFraction().orElse(-1);
+
+            Model model = pane.model;
+
+            model.title.set(details.getTitle());
+            model.description.set(details.getDescription().orElse(null));
+            model.reception.set(details.getReception().orElse(null));
+            model.releaseDate.set(details.getReleaseDate().orElse(null));
+            model.sampleImage.set(details.getSampleImage().orElse(null));
+            model.sequence.set(details.getSequence().orElseThrow());
+            model.mediaStatus.set(percentage);
+          });
+
+        return pane;
       }
-      if(sequence.getType() == Type.EXTRA) {
-        return "Extra " + sequence.getNumber();
+
+      void updateStreamInfoPane(TransitionPane streamInfoPane, Work work) {
+        Pane panel = buildStreamInfoPanel(work);
+
+        if(panel != null) {
+          streamInfoPane.add(panel);
+        }
       }
+    };
 
-      return "Ep. " + sequence.getNumber();
+    return Containers.vbox("dynamic-panel", borderPane);
+  }
+
+  private String createSequenceInfo(Sequence sequence) {
+    if(sequence.getType() == Type.SPECIAL) {
+      return "Special " + sequence.getNumber();
+    }
+    if(sequence.getType() == Type.EXTRA) {
+      return "Extra " + sequence.getNumber();
     }
 
-    private Pane buildEpisodeUI() {
-      EpisodePane pane = new EpisodePane();
-
-      pane.getStyleClass().add("episode-panel");
-
-      childTransitionPanelSubscription = selectedChildCopy
-        .conditionOn(Nodes.showing(pane))
-        .subscribe(work -> {
-          Details details = work.getDetails();
-
-          double percentage = work.getState().isConsumed() ? 1.0 : work.getWatchedFraction().orElse(-1);
-
-          Model model = pane.model;
-
-          model.title.set(details.getTitle());
-          model.description.set(details.getDescription().orElse(null));
-          model.reception.set(details.getReception().orElse(null));
-          model.releaseDate.set(details.getReleaseDate().orElse(null));
-          model.sampleImage.set(details.getSampleImage().orElse(null));
-          model.sequence.set(details.getSequence().orElseThrow());
-          model.mediaStatus.set(percentage);
-        });
-
-      return pane;
-    }
+    return "Ep. " + sequence.getNumber();
   }
 }
