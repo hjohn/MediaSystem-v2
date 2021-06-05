@@ -16,6 +16,7 @@ import hs.mediasystem.util.expose.ExposedLongProperty;
 import hs.mediasystem.util.expose.ExposedMethod;
 import hs.mediasystem.util.expose.Formatter;
 import hs.mediasystem.util.expose.Trigger;
+import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
@@ -220,7 +221,7 @@ public class ContextMenuHandler {
     Property<T> value = exposedProperty.getProperty(parent);  // model
 
     // Bidirectional mapping binding:
-    value.map(toNumber).subscribe(slider.valueProperty()::setValue);
+    value.conditionOn(Nodes.showing(slider)).map(toNumber).subscribe(slider.valueProperty()::setValue);
     slider.valueProperty().map(fromNumber).subscribe(value::setValue);
 
     slider.setBlockIncrement(step);
