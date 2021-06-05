@@ -1,7 +1,5 @@
 package hs.mediasystem.plugin.playback.scene;
 
-import hs.mediasystem.ui.api.player.AudioTrack;
-import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.RangeBar;
 
@@ -10,17 +8,15 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.StringBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.HPos;
 import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -77,12 +73,7 @@ public class PlaybackInfoBorders extends StackPane {
     grid.add(rightOSDPane, 6, 1);
 
     Timeline updater = new Timeline(
-      new KeyFrame(Duration.seconds(1), new EventHandler<ActionEvent>() {
-        @Override
-        public void handle(ActionEvent event) {
-          formattedTime.set(String.format("%1$tR", System.currentTimeMillis()));
-        }
-      })
+      new KeyFrame(Duration.seconds(1), event -> formattedTime.set(String.format("%1$tR", System.currentTimeMillis())))
     );
 
     updater.setCycleCount(Animation.INDEFINITE);
@@ -102,72 +93,36 @@ public class PlaybackInfoBorders extends StackPane {
     centerOSDPane.setUserData(createOSDTimeLine(centerOSDPane));
     rightOSDPane.setUserData(createOSDTimeLine(rightOSDPane));
 
-    final OSD volume = new OSD("Volume", playerBindings.volume, playerBindings.formattedVolume, 0.0, 100.0, 0.0, leftOSDPane);
-    final OSD position = new OSD("Position", playerBindings.position.map(v -> playerBindings.length.getValue() == 0 ? 0 : v * 100 / playerBindings.length.getValue()), playerBindings.formattedPosition, 0.0, 100.0, 0.0, rightOSDPane);
-    final OSD rate = new OSD("Playback Speed", playerBindings.rate, playerBindings.formattedRate, 0.0, 4.0, 0.0, centerOSDPane);
-    final OSD audioDelay = new OSD("Audio Delay", playerBindings.audioDelay.map(v -> v / 1000.0), playerBindings.formattedAudioDelay, -120.0, 120.0, 0.0, centerOSDPane);
-    final OSD subtitleDelay = new OSD("Subtitle Delay", playerBindings.subtitleDelay.map(v -> v / 1000.0), playerBindings.formattedSubtitleDelay, -120.0, 120.0, 0.0, centerOSDPane);
-    final OSD brightness = new OSD("Brightness Adjustment", playerBindings.brightness.map(v -> (v - 1.0) * 100), playerBindings.formattedBrightness, -100.0, 100.0, 0.0, centerOSDPane);
-    final OSD audioTrack = new OSD("Audio Track", playerBindings.formattedAudioTrack, centerOSDPane);
-    final OSD subtitle = new OSD("Subtitle", playerBindings.formattedSubtitle, centerOSDPane);
+    final Node volume = createOSDItem("Volume", playerBindings.volume, playerBindings.formattedVolume, 0.0, 100.0, 0.0);
+    final Node position = createOSDItem("Position", playerBindings.position.map(v -> playerBindings.length.getValue() == 0 ? 0 : v * 100 / playerBindings.length.getValue()), playerBindings.formattedPosition, 0.0, 100.0, 0.0);
+    final Node rate = createOSDItem("Playback Speed", playerBindings.rate, playerBindings.formattedRate, 0.0, 4.0, 0.0);
+    final Node audioDelay = createOSDItem("Audio Delay", playerBindings.audioDelay.map(v -> v / 1000.0), playerBindings.formattedAudioDelay, -120.0, 120.0, 0.0);
+    final Node subtitleDelay = createOSDItem("Subtitle Delay", playerBindings.subtitleDelay.map(v -> v / 1000.0), playerBindings.formattedSubtitleDelay, -120.0, 120.0, 0.0);
+    final Node brightness = createOSDItem("Brightness Adjustment", playerBindings.brightness.map(v -> (v - 1.0) * 100), playerBindings.formattedBrightness, -100.0, 100.0, 0.0);
+    final Node audioTrack = createOSDItem("Audio Track", playerBindings.formattedAudioTrack);
+    final Node subtitle = createOSDItem("Subtitle", playerBindings.formattedSubtitle);
 
-    playerBindings.position.addListener(new ChangeListener<Number>() {
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        if(Math.abs(oldValue.longValue() - newValue.longValue()) > 2500) {
-          showOSD(position);
-        }
+    leftOSDPane.getChildren().add(volume);
+    centerOSDPane.getChildren().addAll(rate, audioDelay, subtitleDelay, brightness, audioTrack, subtitle);
+    rightOSDPane.getChildren().add(position);
+
+    show(leftOSDPane, null);
+    show(centerOSDPane, null);
+    show(rightOSDPane, null);
+
+    playerBindings.position.addListener((observable, oldValue, newValue) -> {
+      if(Math.abs(oldValue.longValue() - newValue.longValue()) > 2500) {
+        showOSD(position);
       }
     });
 
-    playerBindings.volume.addListener(new ChangeListener<Number>() {
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        showOSD(volume);
-      }
-    });
-
-    playerBindings.rate.addListener(new ChangeListener<Number>() {
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        showOSD(rate);
-      }
-    });
-
-    playerBindings.audioDelay.addListener(new ChangeListener<Number>() {
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        showOSD(audioDelay);
-      }
-    });
-
-    playerBindings.subtitleDelay.addListener(new ChangeListener<Number>() {
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        showOSD(subtitleDelay);
-      }
-    });
-
-    playerBindings.brightness.addListener(new ChangeListener<Number>() {
-      @Override
-      public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-        showOSD(brightness);
-      }
-    });
-
-    playerBindings.audioTrack.addListener(new FirstChangeFilter<>(new ChangeListener<AudioTrack>() {
-      @Override
-      public void changed(ObservableValue<? extends AudioTrack> observable, AudioTrack oldValue, AudioTrack value) {
-        showOSD(audioTrack);
-      }
-    }));
-
-    playerBindings.subtitle.addListener(new FirstChangeFilter<>(new ChangeListener<Subtitle>() {
-      @Override
-      public void changed(ObservableValue<? extends Subtitle> observable, Subtitle oldValue, Subtitle value) {
-        showOSD(subtitle);
-      }
-    }));
+    playerBindings.volume.addListener((observable, oldValue, newValue) -> showOSD(volume));
+    playerBindings.rate.addListener((observable, oldValue, newValue) -> showOSD(rate));
+    playerBindings.audioDelay.addListener((observable, oldValue, newValue) -> showOSD(audioDelay));
+    playerBindings.subtitleDelay.addListener((observable, oldValue, newValue) -> showOSD(subtitleDelay));
+    playerBindings.brightness.addListener((observable, oldValue, newValue) -> showOSD(brightness));
+    playerBindings.audioTrack.addListener(new FirstChangeFilter<>((observable, oldValue, value) -> showOSD(audioTrack)));
+    playerBindings.subtitle.addListener(new FirstChangeFilter<>((observable, oldValue, value) -> showOSD(subtitle)));
   }
 
   private static Timeline createOSDTimeLine(Node node) {
@@ -178,35 +133,16 @@ public class PlaybackInfoBorders extends StackPane {
     );
   }
 
-  private static void showOSD(OSD osd) {
-    ((Timeline)osd.location.getUserData()).playFromStart();
+  private static void showOSD(Node node) {
+    Parent parent = node.getParent();
 
-    if(osd.location.getChildren().isEmpty() || !osd.location.getChildren().get(0).getId().equals(osd.title)) {
-      osd.location.getChildren().setAll(osd.node);
-    }
+    ((Timeline)parent.getUserData()).playFromStart();
+
+    show(parent, node);
   }
 
-  private static class OSD {
-    private final String title;
-    private final Node node;
-    private final StackPane location;
-
-    public OSD(String title, ObservableValue<? extends Number> observableValue, ObservableValue<String> valueText, double min, double max, double origin, StackPane location) {
-      this.title = title;
-      this.location = location;
-      this.node = createOSDItem(title, min, max, origin, observableValue, valueText);
-    }
-
-    public OSD(String title, StringBinding valueText, StackPane location) {
-      this.title = title;
-      this.location = location;
-      this.node = createOSDItem(title, 0.0, 0.0, 0.0, null, valueText);
-    }
-  }
-
-  private static Node createOSDItem(final String title, final double min, final double max, final double origin, final ObservableValue<? extends Number> value, final ObservableValue<String> valueText) {
+  private static Node createOSDItem(final String title, final ObservableValue<? extends Number> value, final ObservableValue<String> valueText, final double min, final double max, final double origin) {
     return new HBox() {{
-      setId(title);
       setFillHeight(false);
       setAlignment(Pos.BOTTOM_CENTER);
       getChildren().add(new VBox() {{
@@ -235,6 +171,19 @@ public class PlaybackInfoBorders extends StackPane {
         }
       }});
     }};
+  }
+
+  private static Node createOSDItem(final String title, final ObservableValue<String> valueText) {
+    return createOSDItem(title, null, valueText, 0.0, 0.0, 0.0);
+  }
+
+  private static void show(Parent pane, Node node) {
+    for(Node child : pane.getChildrenUnmodifiable()) {
+      boolean show = child.equals(node);
+
+      child.setManaged(show);
+      child.setVisible(show);
+    }
   }
 
   public static class FirstChangeFilter<T> implements ChangeListener<T> {
