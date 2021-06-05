@@ -91,7 +91,6 @@ public class RootPresentationHandler {
     if(event.getCode().isFunctionKey()) {
       // Special handling of Context Menu key
       if(event.getCode() == KeyCode.F10) {
-        System.out.println(">>> Menu pressed, target = " + event.getTarget() + "; stack = " + createPresentationStack(event));
         contextMenuHandler.handle(event, createPresentationStack(event));
 
         return;
