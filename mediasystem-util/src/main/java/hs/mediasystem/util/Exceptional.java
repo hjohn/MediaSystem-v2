@@ -50,6 +50,7 @@ public final class Exceptional<T> {
    * Creates an {@link Exceptional} containing the given value, or an empty one if supplied value was null.
    *
    * @param <T> the type of the contained value
+   * @param value the value this Exceptional will contain, can be null
    * @return an {@link Exceptional}, never null
    */
   public static <T> Exceptional<T> ofNullable(T value) {
@@ -60,6 +61,7 @@ public final class Exceptional<T> {
    * Creates an {@link Exceptional} containing the given value, or throws an exception if supplied value was null.
    *
    * @param <T> the type of the contained value
+   * @param value the value this Exceptional will contain, cannot be null
    * @return an {@link Exceptional}, never null
    * @throws NullPointerException if supplied value was null
    */
@@ -75,6 +77,7 @@ public final class Exceptional<T> {
    * Creates an {@link Exceptional} containing the given exception, or an empty one if supplied exception was null.
    *
    * @param <T> the type of the contained value
+   * @param exception the exception this Exceptional will contain, canot be null
    * @return an {@link Exceptional}, never null
    */
   public static <T> Exceptional<T> ofNullableException(Throwable exception) {
@@ -85,6 +88,7 @@ public final class Exceptional<T> {
    * Creates an {@link Exceptional} containing the given exception, or throws an exception if supplied exception was null.
    *
    * @param <T> the type of the contained value
+   * @param exception the exception this Exceptional will contain, canot be null
    * @return an {@link Exceptional}, never null
    * @throws NullPointerException if supplied exception was null
    */
@@ -97,6 +101,7 @@ public final class Exceptional<T> {
    * exception occurs in the supplier, it is caught and stored.  If the resulting
    * value is null, an empty Exceptional is returned.
    *
+   * @param <T> the type of the contained value
    * @param supplier a supplier for the value of this Exceptional
    * @return a new Exceptional with the supplied value or a caught exception, never null
    */
@@ -374,7 +379,7 @@ public final class Exceptional<T> {
    * Ignores matching exception types by converting them into an empty {@link Exceptional},
    * otherwise returns this {@link Exceptional}.
    *
-   * @param <X>
+   * @param <X> the Throwable type
    * @param type the type of exception to ignore, cannot be null
    * @return an empty exceptional if it contained an exception matching the given type, otherwise this {@link Exceptional}
    */
@@ -390,7 +395,6 @@ public final class Exceptional<T> {
    *
    * If the mapping function throws an exception, it is caught and an {@link Exceptional} is returned containing it.
    *
-   * @param <X>
    * @param mapper a mapper to supply a value for this {@link Exceptional}
    * @return a new {@link Exceptional} containing the value of the supplied mapper if it contained an exception, otherwise returns this {@link Exceptional}
    */
@@ -406,7 +410,7 @@ public final class Exceptional<T> {
    *
    * If the mapping function throws an exception, it is caught and an {@link Exceptional} is returned containing it.
    *
-   * @param <X>
+   * @param <X> the Throwable type
    * @param type the type of exception to recover from, cannot be null
    * @param mapper a mapper to supply a value for this {@link Exceptional}
    * @return a new {@link Exceptional} containing the value of the supplied mapper if it contained a matching exception, otherwise returns this {@link Exceptional}
@@ -424,7 +428,7 @@ public final class Exceptional<T> {
    *
    * If the mapping function throws an exception, it is caught and an {@link Exceptional} is returned containing it.
    *
-   * @param <X>
+   * @param <X> the Throwable type
    * @param types the types of exception to recover from
    * @param mapper a mapper to supply a value for this {@link Exceptional}
    * @return a new {@link Exceptional} containing the value of the supplied mapper if it contained a matching exception, otherwise returns this {@link Exceptional}
@@ -502,8 +506,6 @@ public final class Exceptional<T> {
    *
    * If the action throws an exception, it is caught and an {@link Exceptional} is returned containing it.
    *
-   * @param <X>
-   * @param type the type of exception to handle, cannot be null
    * @param action an action to execute, cannot be null
    * @return a new empty {@link Exceptional} if an exception was present, otherwise returns this {@link Exceptional} or an {@link Exceptional} containing the exception thrown by action
    */
@@ -523,7 +525,7 @@ public final class Exceptional<T> {
    *
    * If the action throws an exception, it is caught and an {@link Exceptional} is returned containing it.
    *
-   * @param <X>
+   * @param <E> the Throwable type
    * @param type the type of exception to handle, cannot be null
    * @param action an action to execute, cannot be null
    * @return a new empty {@link Exceptional} if an exception was handled, otherwise returns this {@link Exceptional} or an {@link Exceptional} containing the exception thrown by action
@@ -545,7 +547,7 @@ public final class Exceptional<T> {
    *
    * If the action throws an exception, it is caught and an {@link Exceptional} is returned containing it.
    *
-   * @param <X>
+   * @param <E> the Throwable type
    * @param types the types of exception to handle, cannot be null
    * @param action an action to execute, cannot be null
    * @return a new empty {@link Exceptional} if an exception was handled, otherwise returns this {@link Exceptional} or an {@link Exceptional} containing the exception thrown by action

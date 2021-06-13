@@ -15,6 +15,7 @@ public class URLs {
    * Reads all bytes supplied by the given URL.
    *
    * @param url a URL
+   * @param requestProperties a {@link Map} of general request properties, see {@link HttpURLConnection#addRequestProperty(String, String)}, cannot be null
    * @return a byte array
    * @throws HttpException when the URL uses the HTTP protocol and a response code other than 200 was received
    * @throws IOException when an {@link IOException} occurs

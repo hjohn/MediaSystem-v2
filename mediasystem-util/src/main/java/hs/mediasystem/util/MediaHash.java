@@ -56,7 +56,7 @@ public class MediaHash {
    *
    * 0, 64, 192, 448, 896, 1600, 2624, 4032, 5888, 8256, 11200, etc.
    *
-   * @param uri a file to hash
+   * @param path a file to hash
    * @return a byte array containing the hash
    * @throws IOException if a read error occurs
    */

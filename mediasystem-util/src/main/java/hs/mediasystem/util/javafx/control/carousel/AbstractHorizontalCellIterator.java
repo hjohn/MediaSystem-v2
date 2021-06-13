@@ -25,7 +25,6 @@ public abstract class AbstractHorizontalCellIterator extends AbstractCellIterato
    * the MaxCellWidth and MaxCellHeight restrictions while preserving the aspect
    * ratio.
    *
-   * @param cell a cell to calculate the dimensions for
    * @return the normalized dimensions
    */
   protected Dimension2D getNormalizedCellSize() {

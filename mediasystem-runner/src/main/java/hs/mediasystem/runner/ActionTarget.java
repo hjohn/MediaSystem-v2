@@ -221,6 +221,7 @@ public class ActionTarget {
    * Returns a {@link Trigger} which can be used to run the action.  If <code>null</code>
    * the action is unavailable.
    *
+   * @param <V> the type of value the trigger can return
    * @param root the object that supplies the trigger
    * @return a {@link Trigger} which can be used to run the action, or <code>null</code> if action is currently unavailable
    */

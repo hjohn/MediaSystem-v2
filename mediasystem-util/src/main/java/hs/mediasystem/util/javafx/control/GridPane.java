@@ -25,7 +25,7 @@ public class GridPane extends javafx.scene.layout.GridPane {
   /**
    * Adds a Node at the given column, in the current row.
    *
-   * @param col a column
+   * @param column a column
    * @return fluent {@link Adder}
    */
   public Adder at(int column) {

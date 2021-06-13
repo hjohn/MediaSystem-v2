@@ -12,6 +12,7 @@ public interface Trigger<V> {
    * Runs the action associated with the trigger either directly or via the supplied taskRunner,
    * depending on whether the trigger action runs synchronous or asynchronous.
    *
+   * @param event an {@link Event}, cannot be null
    * @param taskRunner a function that can run a {@link Task}
    * @return the resulting value if any
    */

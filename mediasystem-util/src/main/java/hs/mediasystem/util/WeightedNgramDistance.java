@@ -11,6 +11,10 @@ public class WeightedNgramDistance {
    * Splits each string into all possible subsequences of 1..len characters, prunes
    * the one with spaces in them, and then compares these.  Longer subsequences are
    * given a higher weight.
+   *
+   * @param s1 string 1
+   * @param s2 string 2
+   * @return a weight
    */
   public static double calculate(String s1, String s2) {
     List<Set<String>> list1 = ngramList(clean(s1));

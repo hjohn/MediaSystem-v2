@@ -15,7 +15,7 @@ import javafx.geometry.Orientation;
 public abstract class Layout {
 
   /**
-   * The vertical alignment of cells which donot utilize all of the maximum available height.
+   * @return the vertical alignment of cells which donot utilize all of the maximum available height.
    */
   public final DoubleProperty cellAlignmentProperty() { return cellAlignment; }
   public final double getCellAlignment() { return cellAlignment.get(); }
@@ -38,21 +38,21 @@ public abstract class Layout {
   private final DoubleProperty reflectionHorizonDistance = new SimpleDoubleProperty(5);
 
   /**
-   * The number of cells to fit in a single pixel.
+   * @return the number of cells to fit in a single pixel.
    */
   public final DoubleProperty densityProperty() { return density; }
   public final double getDensity() { return density.get(); }
   private final DoubleProperty density = new SimpleDoubleProperty(0.02);
 
   /**
-   * The maximum width a cell is allowed to become.
+   * @return the maximum width a cell is allowed to become.
    */
   public final DoubleProperty maxCellWidthProperty() { return maxCellWidth; }
   public final double getMaxCellWidth() { return maxCellWidth.get(); }
   private final DoubleProperty maxCellWidth = new SimpleDoubleProperty(300);
 
   /**
-   * The maximum height a cell is allowed to become.
+   * @return the maximum height a cell is allowed to become.
    */
   public final DoubleProperty maxCellHeightProperty() { return maxCellHeight; }
   public final double getMaxCellHeight() { return maxCellHeight.get(); }
