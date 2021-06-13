@@ -215,9 +215,6 @@ public class ContextMenuHandler {
 
     Slider slider = new Slider();
 
-    slider.minProperty().bind(min);
-    slider.maxProperty().bind(max);
-
     Property<T> value = exposedProperty.getProperty(parent);  // model
 
     // Bidirectional mapping binding:
@@ -242,17 +239,18 @@ public class ContextMenuHandler {
       }
     });
 
-    configureSlider(slider);  // TODO duplication
-
-    Invalidations.of(min, max)
+    Invalidations.of(slider.minProperty(), slider.maxProperty())
       .subscribe(obs -> configureSlider(slider));
 
+    slider.minProperty().bind(min);
+    slider.maxProperty().bind(max);
+
     HBox hbox = Containers.hbox(
+      "slider-container",
       slider,
       Labels.create("slider-value", slider.valueProperty().map(v -> formatter.format(fromNumber.apply(v))))
     );
 
-    hbox.getStyleClass().add("slider-container");
     hbox.getProperties().put("label", actionTarget.getLabel());
 
     return hbox;
