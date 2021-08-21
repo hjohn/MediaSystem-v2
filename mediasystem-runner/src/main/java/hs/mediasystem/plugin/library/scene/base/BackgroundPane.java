@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.library.scene.base;
 
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
-import hs.mediasystem.util.javafx.control.ScaledImageView;
+import hs.mediasystem.util.javafx.control.ZoomImageView;
 
 import java.io.ByteArrayInputStream;
 import java.util.Base64;
@@ -38,20 +38,16 @@ public class BackgroundPane extends StackPane {
   private final ObjectProperty<Image> background = new SimpleObjectProperty<>(EMPTY_IMAGE);
   private final ObjectProperty<Image> newBackground = new SimpleObjectProperty<>(EMPTY_IMAGE);
 
-  private final ScaledImageView backgroundImageView = new ScaledImageView() {{
+  private final ZoomImageView backgroundImageView = new ZoomImageView() {{
     imageProperty().bind(background);
-    setPreserveRatio(true);
     setSmooth(true);
     setAlignment(Pos.TOP_CENTER);
-    setZoom(true);
   }};
 
-  private final ScaledImageView newBackgroundImageView = new ScaledImageView() {{
+  private final ZoomImageView newBackgroundImageView = new ZoomImageView() {{
     imageProperty().bind(newBackground);
-    setPreserveRatio(true);
     setSmooth(true);
     setAlignment(Pos.TOP_CENTER);
-    setZoom(true);
   }};
 
   private final EventHandler<ActionEvent> beforeBackgroundChange = new EventHandler<>() {
