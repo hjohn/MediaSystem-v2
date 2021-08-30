@@ -17,9 +17,9 @@ import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
+import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -168,7 +168,8 @@ public class ContextLayout {
 
       poster.imageHandleProperty().bind(imageHandle);
 
-      ScaledImageView imageView = new ScaledImageView() {{
+      BiasedImageView imageView = new BiasedImageView() {{
+        setMinRatio(0.9);
         getStyleClass().add("poster-image");
         imageProperty().bind(poster);
         setPreserveRatio(true);
@@ -247,8 +248,6 @@ public class ContextLayout {
         )),
         imageView
       );
-
-      VBox.setVgrow(imageView, Priority.ALWAYS);
     }
   }
 
