@@ -66,7 +66,9 @@ public class ContextLayout {
 
     if(work.getType().isComponent()) {
       work.getParent().map(Parent::getName).ifPresent(panel.groupTitle::set);
+      work.getDetails().getSampleImage().ifPresent(panel.imageHandle::set);
     }
+
     panel.subtitle.set(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")));
     work.getDetails().getReception().ifPresent(reception -> setReception(panel.rating, reception));
 
@@ -190,7 +192,7 @@ public class ContextLayout {
           ),
           Containers.vbox(
             episodeNumber.isEmpty().not(),
-            Labels.create("header", "EPISODE NUMBER"),
+            Labels.create("header", "EPISODE"),
             Labels.create("episode-number", episodeNumber)
           )
         ),
