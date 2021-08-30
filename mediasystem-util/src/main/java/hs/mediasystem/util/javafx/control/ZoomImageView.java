@@ -89,7 +89,7 @@ public class ZoomImageView extends AbstractImageView {
       imageView.setViewport(null);
     }
 
-    layoutInternalNodes();
+    layoutInternalNodes(getWidth(), getHeight());
   }
 
   @Override

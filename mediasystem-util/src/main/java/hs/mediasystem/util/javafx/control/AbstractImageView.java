@@ -165,11 +165,16 @@ public abstract class AbstractImageView extends Region {
     return "ScaledImageView";  // To prevent anonymous inner classes messing this up
   }
 
-  protected void layoutInternalNodes() {
+  protected void layoutInternalNodes(double imageWidth, double imageHeight) {
     Insets insets = effectRegion.getInsets();
 
     double insetsWidth = insets.getLeft() + insets.getRight();
     double insetsHeight = insets.getTop() + insets.getBottom();
+
+    effectRegion.setMaxWidth(imageWidth + insetsWidth);
+    effectRegion.setMaxHeight(imageHeight + insetsHeight);
+    overlayRegion.setMaxWidth(imageWidth + insetsWidth);
+    overlayRegion.setMaxHeight(imageHeight + insetsHeight);
 
     layoutInArea(imageView, insets.getLeft(), insets.getTop(), getWidth() - insetsWidth, getHeight() - insetsHeight, 0, getAlignment().getHpos(), getAlignment().getVpos());
 
