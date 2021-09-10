@@ -24,7 +24,6 @@ import hs.mediasystem.util.javafx.control.transition.multi.Scroll;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -156,22 +155,18 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       ))
       .orElse(null);
 
-    return Containers.vbox(
-      "stream-info-panel",
-      Arrays.asList(
-        stream.getDuration().map(d -> Containers.hbox(
-          "duration-box",
-          Labels.create("duration-icon", "🕑"),
-          Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
-        )).orElse(null),
-        timeBox,
-        Optional.ofNullable(streamCount > 1 ? streamCount : null).map(count -> Containers.hbox(
-          "stream-count-box",
-          Labels.create("stream-count-icon", "📁"),
-          Labels.create("stream-count-text", streamCount + " copies")
-        )).orElse(null)
-      ),
-      Containers.MOUSE_TRANSPARENT
+    return Containers.vbox().style("stream-info-panel").mouseTransparent().nodes(
+      stream.getDuration().map(d -> Containers.hbox(
+        "duration-box",
+        Labels.create("duration-icon", "🕑"),
+        Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
+      )).orElse(null),
+      timeBox,
+      Optional.ofNullable(streamCount > 1 ? streamCount : null).map(count -> Containers.hbox(
+        "stream-count-box",
+        Labels.create("stream-count-icon", "📁"),
+        Labels.create("stream-count-text", streamCount + " copies")
+      )).orElse(null)
     );
   }
 

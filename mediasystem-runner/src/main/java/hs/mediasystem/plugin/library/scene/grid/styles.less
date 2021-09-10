@@ -57,7 +57,7 @@
   -fx-border-width: 2;
 }
 
-.side-panel .hbox
+.side-panel, .side-panel .hbox
 {
   -fx-spacing: 20;
 }
@@ -85,11 +85,6 @@
   .style-p2;
 }
 
-.overlay-panel .header
-{
-  -fx-padding: 20 0 0 0;
-}
-
 .label.header
 {
   .black;
@@ -99,13 +94,8 @@
 
 .overlay-panel .image-view-effect
 {
-  -fx-border-color: transparent, -c-dark-glass-highlight;
-  -fx-border-width: 20 0 0 0, 2;
-  -fx-border-insets: 0, 20 0 0 0;
-}
-
-.overlay-panel .poster-image
-{
+  -fx-border-color: -c-dark-glass-highlight;
+  -fx-border-width: 2;
 }
 
 .slide-in-right-panel > *

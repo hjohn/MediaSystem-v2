@@ -180,68 +180,57 @@ public class ContextLayout {
       }};
 
       getChildren().addAll(
-        Labels.create("groupTitle", groupTitle, Labels.HIDE_IF_EMPTY),
-        Labels.create("title", title),
-        Labels.create("subtitle", subtitle, Labels.HIDE_IF_EMPTY),
-        Containers.hbox(
-          "hbox",
-          Containers.vbox(
-            season.isEmpty().not(),
+        Containers.vbox().nodes(
+          Labels.create("groupTitle", groupTitle, Labels.HIDE_IF_EMPTY),
+          Labels.create("title", title),
+          Labels.create("subtitle", subtitle, Labels.HIDE_IF_EMPTY)
+        ),
+        Containers.hbox().style("hbox").ignoreWhenEmpty().nodes(
+          Containers.vbox().ignoreWhen(season.isEmpty()).nodes(
             Labels.create("header", "SEASON"),
             Labels.create("season", season)
           ),
-          Containers.vbox(
-            episodeNumber.isEmpty().not(),
+          Containers.vbox().ignoreWhen(episodeNumber.isEmpty()).nodes(
             Labels.create("header", "EPISODE"),
             Labels.create("episode-number", episodeNumber)
           )
         ),
-        Containers.vbox(
-          birthPlace.isEmpty().not(),
+        Containers.vbox().ignoreWhen(birthPlace.isEmpty()).nodes(
           Labels.create("header", "BIRTH PLACE"),
           Labels.create("birth-place", birthPlace)
         ),
-        Containers.vbox(
-          birthDate.isEmpty().not(),
+        Containers.vbox().ignoreWhen(birthDate.isEmpty()).nodes(
           Labels.create("header", "BIRTH DATE"),
           Labels.create("birth-date", birthDate)
         ),
-        Containers.hbox(
-          "hbox",
-          Containers.vbox(
-            totalEntries.isEmpty().not(),
+        Containers.hbox().style("hbox").ignoreWhenEmpty().nodes(
+          Containers.vbox().ignoreWhen(totalEntries.isEmpty()).nodes(
             Labels.create("header", "TOTAL"),
             Labels.create("total-entries", totalEntries)
           ),
-          Containers.vbox(
-            releaseDate.isEmpty().not(),
+          Containers.vbox().ignoreWhen(releaseDate.isEmpty()).nodes(
             Labels.create("header", "RELEASE DATE"),
             Labels.create("release-date", releaseDate)
           ),
-          Containers.vbox(
-            rating.isEmpty().not(),
+          Containers.vbox().ignoreWhen(rating.isEmpty()).nodes(
             Labels.create("header", "RATING"),
             Labels.create("rating", rating)
           )
         ),
-        Containers.hbox(
-          "hbox",
+        Containers.hbox().style("hbox").ignoreWhen(totalEpisodes.isEmpty()).nodes(
           Containers.vbox(
-            totalEpisodes.isEmpty().not(),
             Labels.create("header", "EPISODES"),
             Labels.create("total-episodes", totalEpisodes)
           )
         ),
-        vgrow(Priority.ALWAYS, Containers.vbox(
-          overview.isEmpty().not(),
+        vgrow(Priority.ALWAYS, Containers.vbox().ignoreWhen(overview.isEmpty()).nodes(
           Labels.create("header", "OVERVIEW"),
           vgrow(Priority.ALWAYS, new AutoVerticalScrollPane(Labels.create("overview", overview), 8000, 40) {{
             setMinSize(1, 1);
             setPrefSize(10, 10);
           }})
         )),
-        vgrow(Priority.ALWAYS, Containers.vbox(
-          biography.isEmpty().not(),
+        vgrow(Priority.ALWAYS, Containers.vbox().ignoreWhen(biography.isEmpty()).nodes(
           Labels.create("header", "BIOGRAPHY"),
           vgrow(Priority.ALWAYS, new AutoVerticalScrollPane(Labels.create("overview", biography), 8000, 40) {{
             setMinSize(1, 1);

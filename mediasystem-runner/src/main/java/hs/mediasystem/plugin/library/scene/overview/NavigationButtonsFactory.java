@@ -163,7 +163,7 @@ public class NavigationButtonsFactory {
   }
 
   private VBox createStreamButtons(List<MediaStream> streams, DialogPane<MediaStream> dialogPane) {
-    VBox vbox = Containers.vbox("button-box", streams.stream()
+    VBox vbox = Containers.vbox().style("button-box").nodes(streams.stream()
       .map(s -> streamToTitleButton(s, e -> dialogPane.close(s)))
       .collect(Collectors.toList())
     );

@@ -111,17 +111,17 @@ public class CssLayoutFactory {
         if(childDef.getType().equals("HBox")) {
           node = new StylableHBox();
 
-          Containers.HIDE_IF_EMPTY.accept((Pane)node);
+          Containers.IGNORE_IF_EMPTY.accept((Pane)node);
         }
         else if(childDef.getType().equals("VBox")) {
           node = new StylableVBox();
 
-          Containers.HIDE_IF_EMPTY.accept((Pane)node);
+          Containers.IGNORE_IF_EMPTY.accept((Pane)node);
         }
         else if(childDef.getType().equals("Stack")) {
           node = new StylableStackPane();
 
-          Containers.HIDE_IF_EMPTY.accept((Pane)node);
+          Containers.IGNORE_IF_EMPTY.accept((Pane)node);
         }
         else {
           node = Labels.create("", "Unknown container type: " + childDef.getType());
