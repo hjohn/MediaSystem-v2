@@ -23,15 +23,23 @@ import javafx.util.Duration;
  * Abstract base class for {@link ImageView} containers containing basic functionality
  * applying to all image view containers.<p>
  *
- * Always contains four children, stacked on top of each other:
+ * Structure (in back to front order)<p>
+ * <li>image-view-effect: a {@link StackPane} which is layered below the actual image and
+ * which content area takes on the exact same size as the image. The insets set on this layer
+ * therefore are not covered by the image to make it possible to add borders.</li>
+ * <li>place-holder: a user supplied {@link Node} which will be shown when no image is
+ * currently set.</li>
+ * <li>image-view: an {@link ImageView} containing the actual image. As {@link ImageView}s
+ * are simple nodes, they can't have insets but can have an effect applied. The
+ * size of the {@link ImageView} is determined by the contained image, minus any insets of
+ * the effect layer.</li>
+ * <li>image-view-overlay: a {@link StackPane} which is overlayed on top of the image of the
+ * exact same size as the image-view-effect pane. This layer can be used to overlay nodes on
+ * top of the image.</li><p>
  *
- *  "image-view" - The effect region
- *  "place-holder" - Optional place holder, which will be sized just like the image would
- *  "scaled-image-view" - The actual image
- *  "image-view-overlay" - A region that is placed on top of the image
- *
- * The effect and overlay regions always exactly match the size of the image (excluding
- * borders).<p>
+ * This class extends {@link Region} and can have its own styles applied. However, styles
+ * applied to this region will not follow the image dimensions as this region can be larger
+ * when the image has its aspect ratio preserved.<p>
  *
  * The place holder should be around the same size as the expected image to prevent "jumps",
  * if possible.<p>
