@@ -17,6 +17,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -104,81 +106,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     skinnable.getSelectionModel().selectedItemProperty().addListener(obs -> skin.requestLayout());   // Calls layout when focused cell changes (to make sure it is at the top)
 
     this.content = new Region() {
-      private final Region groupHeaderPane = new Region() {
-
-        @Override
-        public void layoutChildren() {
-          getChildren().clear();
-
-          if(showHeaders.get() && groups.get() != null) {
-            int lines = vertical ? visibleColumns.get() : visibleRows.get();
-            int firstIndex = (int)(scrollPosition.get()) * lines;
-
-            Insets insets = getSkinnable().getInsets();
-
-            double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
-            double h = getSkinnable().getHeight() - insets.getTop() - insets.getBottom();
-
-            int cellWidth = (int)(w / visibleColumns.get());
-            int cellHeight = (int)(h / visibleRows.get());
-
-            List<Group> list = groups.get();
-
-            for(int i = 0; i < list.size(); i++) {
-              int groupStartIndex = list.get(i).getPosition();
-
-              if(i + 1 >= list.size() || gm.viewIndexOfGroup(i + 1) > firstIndex) {
-                int viewIndex = gm.toViewIndex(groupStartIndex);
-
-                if(vertical) {
-                  int row = viewIndex / visibleColumns.get();
-                  double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
-
-                  if(y < insets.getTop()) {  // Stick header to top if in the middle of a group
-                    y = insets.getTop();
-                  }
-
-                  if(y >= getSkinnable().getHeight()) {
-                    break;
-                  }
-
-                  Label section = new Label(groups.get().get(i).getTitle());
-                  StackPane stackPane = new StackPane(section);
-
-                  stackPane.getStyleClass().addAll("group-heading", "horizontal");
-
-                  getChildren().add(stackPane);
-                  stackPane.setVisible(true);
-                  stackPane.setManaged(true);
-
-                  layoutInArea(stackPane, insets.getLeft(), y, w, cellHeight, 0, section.getInsets(), true, false, HPos.CENTER, VPos.TOP);
-                }
-                else {
-                  int column = viewIndex / visibleRows.get();
-                  double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
-
-                  if(x < insets.getLeft()) {  // Stick header to left if in the middle of a group
-                    x = insets.getLeft();
-                  }
-
-                  if(x >= w) {
-                    break;
-                  }
-
-                  VerticalLabel section = new VerticalLabel(VerticalDirection.UP, groups.get().get(i).getTitle());
-                  StackPane stackPane = new StackPane(section);
-
-                  stackPane.getStyleClass().addAll("group-heading", "vertical");
-
-                  getChildren().add(stackPane);
-
-                  layoutInArea(stackPane, x, insets.getTop(), cellWidth, h, 0, section.getInsets(), false, true, HPos.LEFT, VPos.CENTER);
-                }
-              }
-            }
-          }
-        }
-      };
+      private final HeaderRegion groupHeaderPane = new HeaderRegion();
 
       private Rectangle clip = null;
 
@@ -243,7 +171,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
           layoutInArea(groupHeaderPane, 0, 0, getSkinnable().getWidth(), getSkinnable().getHeight(), 0, Insets.EMPTY, true, true, cellAlignment.get().getHpos(), cellAlignment.get().getVpos());
         }
 
-        groupHeaderPane.requestLayout();
+        groupHeaderPane.layoutChildren();
 
         for(ListCell<?> cell : cells) {
           int viewIndex = gm.toViewIndex(index++);
@@ -628,5 +556,129 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   @Override
   public ListView<?> getSkinnable() {
     return skinnable;
+  }
+
+  private class HeaderRegion extends Region {
+
+    @Override
+    public void layoutChildren() {
+      if(!showHeaders.get() || groups.get() == null) {
+        getChildren().clear();
+
+        return;
+      }
+
+      int lines = vertical ? visibleColumns.get() : visibleRows.get();
+      int firstIndex = (int)(scrollPosition.get()) * lines;
+
+      Insets insets = getSkinnable().getInsets();
+
+      double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
+      double h = getSkinnable().getHeight() - insets.getTop() - insets.getBottom();
+
+      int cellWidth = (int)(w / visibleColumns.get());
+      int cellHeight = (int)(h / visibleRows.get());
+
+      List<Group> groupsList = groups.get();
+      List<Node> children = new ArrayList<>(getChildren());  // copy of existing children
+
+      for(int i = 0; i < groupsList.size(); i++) {
+        int groupStartIndex = groupsList.get(i).getPosition();
+
+        if(i + 1 >= groupsList.size() || gm.viewIndexOfGroup(i + 1) > firstIndex) {
+          int viewIndex = gm.toViewIndex(groupStartIndex);
+
+          if(vertical) {
+            int row = viewIndex / visibleColumns.get();
+            double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
+
+            if(y < insets.getTop()) {  // Stick header to top if in the middle of a group
+              y = insets.getTop();
+            }
+
+            if(y >= getSkinnable().getHeight()) {
+              break;
+            }
+
+            Separator separator = children.isEmpty() ? new Separator() : (Separator)children.remove(0);
+
+            if(separator.getParent() == null) {
+              getChildren().add(separator);
+            }
+
+            separator.horizontal.set(true);
+            separator.title.set(groupsList.get(i).getTitle());
+
+            layoutInArea(separator, insets.getLeft(), y, w, cellHeight, 0, separator.getInsets(), true, false, HPos.CENTER, VPos.TOP);
+          }
+          else {
+            int column = viewIndex / visibleRows.get();
+            double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
+
+            if(x < insets.getLeft()) {  // Stick header to left if in the middle of a group
+              x = insets.getLeft();
+            }
+
+            if(x >= w) {
+              break;
+            }
+
+            Separator separator = children.isEmpty() ? new Separator() : (Separator)children.remove(0);
+
+            if(separator.getParent() == null) {
+              getChildren().add(separator);
+            }
+
+            separator.horizontal.set(false);
+            separator.title.set(groupsList.get(i).getTitle());
+
+            layoutInArea(separator, x, insets.getTop(), cellWidth, h, 0, separator.getInsets(), false, true, HPos.LEFT, VPos.CENTER);
+          }
+        }
+      }
+
+      getChildren().removeAll(children);  // remove children that weren't needed
+    }
+  }
+
+  public static class Separator extends StackPane {
+    public final StringProperty title = new SimpleStringProperty();
+    public final BooleanProperty horizontal = new SimpleBooleanProperty();
+
+    public Separator() {
+      horizontal.addListener(obs -> updateStructure());
+
+      updateStructure();
+    }
+
+    private void updateStructure() {
+      getStyleClass().setAll("group-heading", horizontal.get() ? "horizontal" : "vertical");
+
+      getChildren().removeIf(node -> {
+        if(node instanceof Label label) {
+          label.textProperty().unbind();
+        }
+        else if(node instanceof VerticalLabel label) {
+          label.textProperty().unbind();
+        }
+
+        return true;
+      });
+
+      if(horizontal.get()) {
+        Label label = new Label();
+
+        label.textProperty().bind(title);
+
+        getChildren().add(label);
+      }
+      else {
+        VerticalLabel label = new VerticalLabel(VerticalDirection.UP);
+
+        label.textProperty().bind(title);
+
+        getChildren().add(label);
+      }
+    }
   }
 }
