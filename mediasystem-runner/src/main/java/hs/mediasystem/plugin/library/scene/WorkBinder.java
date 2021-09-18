@@ -43,7 +43,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
 
   @Override
   public Function<Work, ImageHandle> imageHandleExtractor() {
-    return w -> (w.getType().isComponent() ? w.getDetails().getSampleImage() : w.getDetails().getCover()).orElse(null);
+    return w -> w.getDetails().getCover().or(w.getDetails()::getSampleImage).orElse(null);
   }
 
   @Override

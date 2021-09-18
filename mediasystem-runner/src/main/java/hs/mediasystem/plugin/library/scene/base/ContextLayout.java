@@ -66,7 +66,6 @@ public class ContextLayout {
 
     if(work.getType().isComponent()) {
       work.getParent().map(Parent::getName).ifPresent(panel.groupTitle::set);
-      work.getDetails().getSampleImage().ifPresent(panel.imageHandle::set);
     }
 
     panel.subtitle.set(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")));
@@ -123,7 +122,7 @@ public class ContextLayout {
     panel.title.set(details.getTitle());
     panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getReleaseDate().orElse(null)));
     panel.overview.set(details.getDescription().orElse(null));
-    panel.imageHandle.set(details.getCover().orElse(null));
+    panel.imageHandle.set(details.getCover().or(details::getSampleImage).orElse(null));
 
     return panel;
   }

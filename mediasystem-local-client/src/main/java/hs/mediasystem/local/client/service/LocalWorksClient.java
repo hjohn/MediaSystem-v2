@@ -81,7 +81,7 @@ public class LocalWorksClient implements WorksClient {
 
   /*
    * Note:
-   * - cover image is created from multiple snapshots if missing
+   * - auto cover image is created from multiple snapshots
    * - sample image is taken first snapshot if missing (don't use backdrop, it is not a sample!)
    * - backdrop is taken from parent or from the second snapshot if missing
    */
@@ -94,7 +94,9 @@ public class LocalWorksClient implements WorksClient {
       descriptor.getDetails().getDescription().orElse(null),
       descriptor.getDetails().getDate().orElse(null),
       descriptor.getDetails().getCover()
-        .or(() -> mediaStream.map(LocalWorksClient::snapshotsToCover))
+        .map(imageHandleFactory::fromURI)
+        .orElse(null),
+      mediaStream.map(LocalWorksClient::snapshotsToCover)
         .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor.getDetails().getSampleImage()

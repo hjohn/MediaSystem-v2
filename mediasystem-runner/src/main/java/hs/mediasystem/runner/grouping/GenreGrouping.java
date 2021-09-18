@@ -82,6 +82,7 @@ public class GenreGrouping implements Grouping<Work, Object> {
         null,
         uris.isEmpty() ? null : imageHandleFactory.fromURI(new ImageURI("multi::" + uris, null)),  // as cover
         null,
+        null,
         backgroundImageHandleRef.get(),
         null,
         null,

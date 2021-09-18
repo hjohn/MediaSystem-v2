@@ -18,6 +18,7 @@ public class Details {
   private final Optional<String> description;
   private final Optional<LocalDate> releaseDate;
   private final Optional<ImageHandle> cover;
+  private final Optional<ImageHandle> autoCover;
   private final Optional<ImageHandle> sampleImage;
   private final Optional<ImageHandle> backdrop;
   private final Optional<String> tagline;
@@ -27,7 +28,7 @@ public class Details {
   private final Optional<Double> popularity;
   private final Classification classification;
 
-  public Details(String title, String subtitle, String description, LocalDate releaseDate, ImageHandle cover, ImageHandle sampleImage, ImageHandle backdrop, String tagline, Serie serie, Sequence sequence, Reception reception, Double popularity, Classification classification) {
+  public Details(String title, String subtitle, String description, LocalDate releaseDate, ImageHandle cover, ImageHandle autoCover, ImageHandle sampleImage, ImageHandle backdrop, String tagline, Serie serie, Sequence sequence, Reception reception, Double popularity, Classification classification) {
     if(title == null || title.isBlank()) {
       throw new IllegalArgumentException("title cannot be null or blank: " + title);
     }
@@ -40,6 +41,7 @@ public class Details {
     this.description = Optional.ofNullable(description);
     this.releaseDate = Optional.ofNullable(releaseDate);
     this.cover = Optional.ofNullable(cover);
+    this.autoCover = Optional.ofNullable(autoCover);
     this.sampleImage = Optional.ofNullable(sampleImage);
     this.backdrop = Optional.ofNullable(backdrop);
     this.tagline = Optional.ofNullable(tagline);
@@ -75,6 +77,26 @@ public class Details {
    */
   public Optional<ImageHandle> getCover() {
     return cover;
+  }
+
+  /**
+   * Returns a cover image, always with aspect ratio 3:2.  If present,
+   * this image is generated from several snapshots of the media.
+   *
+   * @return a cover image
+   */
+  public Optional<ImageHandle> getAutoCover() {
+    return autoCover;
+  }
+
+  /**
+   * Returns the cover if present otherwise the automatically generated
+   * cover if present.
+   *
+   * @return a cover image
+   */
+  public Optional<ImageHandle> getAnyCover() {
+    return getCover().or(this::getAutoCover);
   }
 
   /**

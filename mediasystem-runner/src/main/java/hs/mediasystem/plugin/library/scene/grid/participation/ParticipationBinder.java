@@ -31,7 +31,7 @@ public class ParticipationBinder implements MediaGridViewCellFactory.Binder<Part
 
   @Override
   public Function<Participation, ImageHandle> imageHandleExtractor() {
-    return c -> c.getWork().getDetails().getCover().orElse(null);
+    return c -> c.getWork().getDetails().getAnyCover().orElse(null);
   }
 
   @Override

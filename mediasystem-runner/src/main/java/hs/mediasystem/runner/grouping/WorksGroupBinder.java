@@ -29,7 +29,7 @@ public class WorksGroupBinder implements Binder<WorksGroup>, IDBinder<WorksGroup
 
   @Override
   public Function<WorksGroup, ImageHandle> imageHandleExtractor() {
-    return wg -> wg.getDetails().getCover().orElse(null);
+    return wg -> wg.getDetails().getAnyCover().orElse(null);
   }
 
   @Override

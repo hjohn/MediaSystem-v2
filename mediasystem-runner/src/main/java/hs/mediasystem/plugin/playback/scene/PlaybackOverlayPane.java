@@ -2,7 +2,6 @@ package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Details;
-import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.util.ImageHandle;
@@ -39,8 +38,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
-import org.reactfx.value.Val;
-
 public class PlaybackOverlayPane extends StackPane {
   private static final String STYLES_URL = LessLoader.compile(PlaybackOverlayPane.class, "styles.less");
 
@@ -52,7 +49,7 @@ public class PlaybackOverlayPane extends StackPane {
 
   private final GridPane detailsOverlay = GridPaneUtil.create(new double[] {5, 20, 5, 65, 5}, new double[] {45, 50, 5});
 
-  private final Val<ImageHandle> posterHandle;
+  private final ObservableValue<ImageHandle> posterHandle;
   private final AsyncImageProperty poster = new AsyncImageProperty();
 
   private final PlaybackInfoBorders borders = new PlaybackInfoBorders(playerBindings);
@@ -77,7 +74,7 @@ public class PlaybackOverlayPane extends StackPane {
 
   public PlaybackOverlayPane(PlaybackOverlayPresentation presentation) {
     this.presentation.set(presentation);
-    this.posterHandle = Val.wrap(this.presentation).map(p -> p.work).map(Work::getDetails).map(d -> d.getSampleImage().orElse(null));
+    this.posterHandle = this.presentation.map(p -> p.work).map(Work::getDetails).map(d -> d.getCover().or(d::getSampleImage).orElse(null));
     this.player.set(presentation.playerPresentation.get());
     this.overlayVisible.bind(presentation.overlayVisible);
 
@@ -120,12 +117,12 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          Val<String> serieName = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).filter(p -> p.getType().isSerie()).map(Parent::getName);
-          Val<String> title = Val.wrap(PlaybackOverlayPane.this.presentation).map(pop -> pop.work).map(Work::getDetails).map(Details::getTitle);
+          ObservableValue<String> serieName = PlaybackOverlayPane.this.presentation.map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).map(p -> p.getType().isSerie() ? p.getName() : null);
+          ObservableValue<String> title = PlaybackOverlayPane.this.presentation.map(pop -> pop.work).map(Work::getDetails).map(Details::getTitle);
 
           HBox.setHgrow(this, Priority.ALWAYS);
           getChildren().addAll(
-            Labels.create("video-subtitle", serieName.orElseConst(""), Labels.HIDE_IF_EMPTY),
+            Labels.create("video-subtitle", serieName.orElse(""), Labels.HIDE_IF_EMPTY),
             Labels.create("video-title", title, Labels.apply(label -> label.setEffect(SpecialEffects.createNeonEffect(64))))
           );
         }});
