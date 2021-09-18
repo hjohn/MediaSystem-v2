@@ -16,7 +16,7 @@
     <version.ddif>2.1.0</version.ddif>
     <version.eventstream>0.3.0</version.eventstream>
     <version.junit5>5.6.0</version.junit5>
-    <version.mockito>2.23.4</version.mockito>
+    <version.mockito>3.12.4</version.mockito>
   </properties>
 
   <modules>
@@ -227,8 +227,8 @@
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.0</version>
           <configuration>
-            <source>15</source>
-            <target>15</target>
+            <source>16</source>
+            <target>16</target>
             <compilerArgument>-parameters</compilerArgument>
           </configuration>
         </plugin>
