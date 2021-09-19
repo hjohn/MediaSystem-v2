@@ -106,7 +106,7 @@ public class GroupManager {
   }
 
   /**
-   * Convers a view index to a model index.  If the view index refers to a gap, then there
+   * Converts a view index to a model index.  If the view index refers to a gap, then there
    * is no corresponding model index and -1 is returned.
    *
    * @param viewIndex a view index

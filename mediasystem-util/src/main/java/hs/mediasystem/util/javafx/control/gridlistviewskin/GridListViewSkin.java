@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.animation.AnimationTimer;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
@@ -318,6 +319,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       groups.get() == null ? new int[] {} : groups.get().stream().mapToInt(Group::getPosition).toArray(),
       vertical ? visibleColumns.get() : visibleRows.get()
     );
+    animateWhenSelectedChanges(null);
   }
 
   private void relayout() {
@@ -464,8 +466,9 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     }
 
     if(firstTime) {
-      scrollPosition.set(firstVisibleIndex / gm.getWidth());
-      firstTime = false;
+      scrollPosition.set(gm.getViewRowNumber(firstVisibleIndex));
+
+      Platform.runLater(() -> firstTime = false);
     }
   }
 
