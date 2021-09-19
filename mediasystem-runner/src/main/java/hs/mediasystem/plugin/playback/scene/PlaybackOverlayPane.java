@@ -7,9 +7,9 @@ import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.SpecialEffects;
+import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.javafx.control.ScaledImageView;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -22,7 +22,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.HPos;
 import javafx.geometry.Pos;
+import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.effect.Blend;
 import javafx.scene.effect.DropShadow;
@@ -101,11 +103,12 @@ public class PlaybackOverlayPane extends StackPane {
     setFocusTraversable(true);
 
     detailsOverlay.setId("video-overlay");
-    detailsOverlay.add(new ScaledImageView() {{
+    detailsOverlay.add(new BiasedImageView() {{
+      GridPane.setValignment(this, VPos.BOTTOM);
+      GridPane.setHalignment(this, HPos.RIGHT);
       imageProperty().bind(poster);
       setPreserveRatio(true);
       setAlignment(Pos.BOTTOM_RIGHT);
-      getStyleClass().add("poster");
       setEffect(new Blend() {{
         setBottomInput(new DropShadow());
         setTopInput(new Reflection() {{
