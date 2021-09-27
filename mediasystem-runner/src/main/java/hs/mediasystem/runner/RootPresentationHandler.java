@@ -147,7 +147,7 @@ public class RootPresentationHandler {
   }
 
   private static List<Presentation> createPresentationStack(Event event) {
-    Node target = event.getTarget() instanceof Scene ? ((Scene)event.getTarget()).getRoot() : (Node)event.getTarget();
+    Node target = event.getTarget() instanceof Scene s ? s.getRoot() : (Node)event.getTarget();
 
     return Stream.iterate(target, Objects::nonNull, Node::getParent)
       .map(s -> s.getProperties().get("presentation2"))

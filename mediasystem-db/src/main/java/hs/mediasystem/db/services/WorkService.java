@@ -237,9 +237,7 @@ public class WorkService {
   private Optional<ProductionCollection> queryProductionCollection(Identifier identifier) {
     MediaDescriptor mediaDescriptor = descriptorStore.find(identifier).orElse(null);
 
-    if(mediaDescriptor instanceof IdentifierCollection) {  // If cached, get it from cache instead
-      IdentifierCollection identifierCollection = (IdentifierCollection)mediaDescriptor;
-
+    if(mediaDescriptor instanceof IdentifierCollection identifierCollection) {  // If cached, get it from cache instead
       return Optional.of(new ProductionCollection(
         identifierCollection.getCollectionDetails(),
         identifierCollection.getItems().stream()
@@ -274,9 +272,7 @@ public class WorkService {
   }
 
   private Optional<Parent> createParentForMovieOrEpisode(MediaDescriptor descriptor) {
-    if(descriptor instanceof Movie) {
-      Movie movie = (Movie)descriptor;
-
+    if(descriptor instanceof Movie movie) {
       return movie.getCollectionIdentifier()
         .flatMap(ci -> find(toWorkId(ci)))   // TODO this can trigger a remote look-up
         .map(w -> new Parent(w.getId(), w.getDetails().getTitle(), w.getDetails().getBackdrop().orElse(null)));

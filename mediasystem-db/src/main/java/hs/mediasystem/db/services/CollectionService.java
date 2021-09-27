@@ -65,8 +65,7 @@ public class CollectionService {
   }
 
   private static double score(Work work) {
-    if(work.getDescriptor() instanceof Production) {
-      Production production = (Production)work.getDescriptor();
+    if(work.getDescriptor() instanceof Production production) {
       Reception reception = production.getReception();
       LocalDate date = production.getDetails().getDate().orElse(null);
 

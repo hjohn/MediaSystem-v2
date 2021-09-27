@@ -108,12 +108,12 @@ public class LocalWorksClient implements WorksClient {
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
         .map(imageHandleFactory::fromURI)
         .orElse(null),
-      descriptor instanceof Movie ? ((Movie)descriptor).getTagLine() : null,
-      descriptor instanceof Serie ? createSerie((Serie)descriptor) : null,
-      descriptor instanceof Episode ? createSequence((Episode)descriptor) : null,
-      descriptor instanceof Release ? ((Release)descriptor).getReception() : null,
-      descriptor instanceof Production ? ((Production)descriptor).getPopularity() : null,
-      descriptor instanceof Production ? createClassification((Production)descriptor) : Classification.DEFAULT
+      descriptor instanceof Movie m ? m.getTagLine() : null,
+      descriptor instanceof Serie s ? createSerie(s) : null,
+      descriptor instanceof Episode e ? createSequence(e) : null,
+      descriptor instanceof Release r ? r.getReception() : null,
+      descriptor instanceof Production p ? p.getPopularity() : null,
+      descriptor instanceof Production p ? createClassification(p) : Classification.DEFAULT
     );
   }
 
@@ -161,7 +161,7 @@ public class LocalWorksClient implements WorksClient {
       c.getLanguages(),
       c.getContentRatings(),
       c.getPornographic(),
-      production instanceof Movie ? toStage(((Movie)production).getState()) : production instanceof Serie ? toStage(((Serie)production).getState()) : null
+      production instanceof Movie m ? toStage(m.getState()) : production instanceof Serie s ? toStage(s.getState()) : null
     );
   }
 

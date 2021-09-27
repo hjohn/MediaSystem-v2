@@ -119,7 +119,7 @@ public class DatabaseResponseCache extends ResponseCache {
 
       byte[] buf = baos.toByteArray();
 
-      if(!(conn instanceof HttpURLConnection) || ((HttpURLConnection)conn).getResponseCode() == 200) {
+      if(!(conn instanceof HttpURLConnection huc) || huc.getResponseCode() == 200) {
         // Store the result, if it was succesful:
         store.store(uri.toURL(), key, buf);
       }
