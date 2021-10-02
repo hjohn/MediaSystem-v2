@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.animation.Transition;
@@ -35,19 +36,24 @@ import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -55,13 +61,16 @@ import javax.inject.Singleton;
 public class RootNodeFactory implements NodeFactory<RootPresentation> {
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG);
+  private static final String ROOT_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "root.less");
   private static final String PROGRESS_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "progress-pane.less");
   private static final String CLOCK_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "clock-pane.less");
   private static final String LOGO_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "logo-pane.less");
+  private static final String FPS_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "fps-pane.less");
 
   @Inject private SceneManager sceneManager;
   @Inject private ViewPortFactory viewPortFactory;
   @Inject private Provider<ParentalControls> parentalControlsProvider;
+  @Inject @Nullable @Named("general.debug.showFPS") public Boolean showFPS = false;
 
   @Override
   public Node create(RootPresentation presentation) {
@@ -98,65 +107,87 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
     logoPane.getStyleClass().add("logo-pane");
     logoPane.getStylesheets().add(LOGO_STYLES_URL);
 
-/*
-    Label fpsLabel = new Label();
+    StackPane fpsLayer = showFPS ? Containers.stack("fps-layer", createFrameRateMeter()) : null;
 
-    StackPane fpsPane = new StackPane(fpsLabel);
-
-    fpsPane.getStylesheets().add(LessLoader.compile(getClass().getResource("fps-pane.less")).toExternalForm());
-    fpsPane.getStyleClass().add("fps-pane");
-
-    AnimationTimer frameRateMeter = new AnimationTimer() {
-      private final long[] frameTimes = new long[100];
-      private int frameTimeIndex = 0;
-      private boolean arrayFilled = false;
-
-      @Override
-      public void handle(long now) {
-        long oldFrameTime = frameTimes[frameTimeIndex];
-
-        frameTimes[frameTimeIndex] = now;
-        frameTimeIndex = (frameTimeIndex + 1) % frameTimes.length;
-
-        if(frameTimeIndex == 0) {
-          arrayFilled = true;
-        }
-
-        if(arrayFilled) {
-          long elapsedNanos = now - oldFrameTime;
-          long elapsedNanosPerFrame = elapsedNanos / frameTimes.length;
-          double frameRate = 1_000_000_000.0 / elapsedNanosPerFrame;
-          double min = Double.MAX_VALUE;
-          double max = 0;
-
-          for(int i = 0; i < frameTimes.length - 1; i++) {
-            long d = frameTimes[(i + frameTimeIndex + 1) % frameTimes.length] - frameTimes[(i + frameTimeIndex) % frameTimes.length];
-
-            min = Math.min(min, d);
-            max = Math.max(max, d);
-          }
-
-          fpsLabel.setText(String.format(" %.1f/%.1f ms - %.1f ", min / 1000000.0, max / 1000000.0, frameRate));
-        }
-      }
-    };
-
-    frameRateMeter.start();
-*/
     StackPane progressPane = createProgressPane(presentation);
 
     logoPane.setMouseTransparent(true);
     progressPane.setMouseTransparent(true);
     clockPane.setMouseTransparent(true);
 
-    StackPane stackPane = new StackPane(viewPort, logoPane, progressPane, clockPane); //, fpsPane);
+    StackPane stackPane = Containers.stack(viewPort, logoPane, progressPane, clockPane, fpsLayer);
     ParentalControls parentalControls = parentalControlsProvider.get();
+
+    stackPane.getStylesheets().add(ROOT_STYLES_URL);
 
     if(parentalControls.passcode != null && !parentalControls.passcode.isEmpty()) {
       stackPane.addEventHandler(KeyEvent.KEY_TYPED, new PinCodeEventHandler(presentation, parentalControls.passcode));
     }
 
     return stackPane;
+  }
+
+  private static final int FPS_SIZE = 300;
+
+  private static Pane createFrameRateMeter() {
+    Label fpsLabel = new Label();
+    Canvas canvas = new Canvas(FPS_SIZE, 100);
+    GraphicsContext g2d = canvas.getGraphicsContext2D();
+
+    g2d.setStroke(new Color(1.0, 1.0, 1.0, 0.5));
+
+    Pane fpsPane = Containers.stack("fps-pane", fpsLabel, canvas);
+
+    fpsPane.setMaxWidth(Region.USE_PREF_SIZE);
+    fpsPane.setMaxHeight(Region.USE_PREF_SIZE);
+
+    fpsPane.getStylesheets().add(FPS_STYLES_URL);
+
+    AnimationTimer frameRateMeter = new AnimationTimer() {
+      private final long[] frameDeltas = new long[FPS_SIZE];
+
+      private int frameTimeIndex = 0;
+      private long lastNanos = 0;
+      private long then = System.nanoTime();
+      private int elementsFilled = 0;
+
+      @Override
+      public void handle(long now) {
+        frameDeltas[frameTimeIndex] = now - then;
+        frameTimeIndex = (frameTimeIndex + 1) % frameDeltas.length;
+
+        if(elementsFilled < frameDeltas.length) {
+          elementsFilled++;
+        }
+
+        long elapsedNanos = 0;
+        double min = Double.MAX_VALUE;
+        double max = 0;
+
+        for(int i = 0; i < elementsFilled; i++) {
+          min = Math.min(min, frameDeltas[i]);
+          max = Math.max(max, frameDeltas[i]);
+          elapsedNanos += frameDeltas[i];
+        }
+
+        long elapsedNanosPerFrame = elapsedNanos / elementsFilled;
+        double frameRate = 1_000_000_000.0 / elapsedNanosPerFrame;
+
+        g2d.clearRect(frameTimeIndex, 0, 1, 100);
+        g2d.strokeLine(frameTimeIndex, 100, frameTimeIndex, 100 - (now - then) / 1000000.0);
+
+        if(now - lastNanos > 100 * 1000 * 1000) {
+          fpsLabel.setText(String.format(" %.1f/%.1f ms - %.0f fps", min / 1000000.0, max / 1000000.0, frameRate));
+          lastNanos = now;
+        }
+
+        then = now;
+      }
+    };
+
+    frameRateMeter.start();
+
+    return fpsPane;
   }
 
   private static class PinCodeEventHandler implements EventHandler<KeyEvent> {
