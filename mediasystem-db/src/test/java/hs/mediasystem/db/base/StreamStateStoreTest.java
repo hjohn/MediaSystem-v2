@@ -9,9 +9,10 @@ import java.util.function.Consumer;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,7 +20,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
-class StreamStateStoreTest {
+@ExtendWith(MockitoExtension.class)
+public class StreamStateStoreTest {
   @Mock private Transaction tx;
   @Mock private Database database;
   @InjectMocks private StreamStateStore store;
@@ -27,8 +29,6 @@ class StreamStateStoreTest {
   @SuppressWarnings("resource")
   @BeforeEach
   public void before() {
-    MockitoAnnotations.initMocks(this);
-
     when(database.beginReadOnlyTransaction()).thenReturn(tx);
   }
 

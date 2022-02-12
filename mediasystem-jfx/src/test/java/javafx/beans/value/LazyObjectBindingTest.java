@@ -1,5 +1,7 @@
 package javafx.beans.value;
 
+import com.sun.javafx.binding.Subscription;
+
 import javafx.beans.InvalidationListener;
 
 import org.junit.jupiter.api.Nested;

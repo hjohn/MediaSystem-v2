@@ -10,6 +10,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+@Singleton
 public class Configuration {
   @Inject @Nullable @Named("general.screen") public Long screenNumber = 0L;
   @Inject @Nullable @Named("general.alwaysOnTop") public Boolean alwaysOnTop = false;

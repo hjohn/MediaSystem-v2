@@ -22,16 +22,18 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class LocalMediaIdentificationServiceTest {
   private static final StreamID STREAM_ID = new StreamID(1, new ContentID(999), "Stuff");
 
@@ -55,10 +57,8 @@ public class LocalMediaIdentificationServiceTest {
 
   private LocalMediaIdentificationService db;
 
-  @Before
+  @BeforeEach
   public void before() throws Exception {
-    MockitoAnnotations.initMocks(this);
-
     when(idServiceForDS1.getDataSource()).thenReturn(DATA_SOURCE_1);
     when(idServiceForDS2.getDataSource()).thenReturn(DATA_SOURCE_2);
     when(idServiceForDS3.getDataSource()).thenReturn(DATA_SOURCE_3);

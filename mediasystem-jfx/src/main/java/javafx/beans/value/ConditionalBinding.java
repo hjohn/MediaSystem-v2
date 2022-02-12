@@ -1,5 +1,7 @@
 package javafx.beans.value;
 
+import com.sun.javafx.binding.Subscription;
+
 import java.util.Objects;
 
 public class ConditionalBinding<T> extends LazyObjectBinding<T> {

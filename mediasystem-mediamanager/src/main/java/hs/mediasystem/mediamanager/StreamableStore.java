@@ -64,7 +64,7 @@ public interface StreamableStore {
   /**
    * Finds the parent {@link StreamID} given a child {@link StreamID}.
    *
-   * @param contentId a {@link StreamID}, cannot be null
+   * @param streamId a {@link StreamID}, cannot be null
    * @return an {@link Optional} containing a {@link StreamID}, never null but can be empty
    */
   Optional<StreamID> findParentId(StreamID streamId);

@@ -1,5 +1,7 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import com.sun.javafx.binding.Subscription;
+
 import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.plugin.cell.ModelMediaGridViewCellFactory;
@@ -35,7 +37,6 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.beans.value.Subscription;
 import javafx.scene.Node;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;

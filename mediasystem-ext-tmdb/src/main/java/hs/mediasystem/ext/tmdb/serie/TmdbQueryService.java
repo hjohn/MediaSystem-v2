@@ -16,18 +16,22 @@ import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.PersonRoles;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
+import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.checked.Flow;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 @PluginScoped
 public class TmdbQueryService extends AbstractQueryService {
+  private static final Logger LOGGER = Logger.getLogger(TmdbQueryService.class.getName());
+
   @Inject private TheMovieDatabase tmdb;
   @Inject private PersonRoles personRoles;
   @Inject private ObjectFactory objectFactory;
@@ -52,10 +56,15 @@ public class TmdbQueryService extends AbstractQueryService {
   }
 
   private Season toSeason(JsonNode node, String parentId) throws IOException {
-    List<JsonNode> episodes = new ArrayList<>();
+    List<Episode> episodes = new ArrayList<>();
 
     for(JsonNode episode : node.at("/episodes")) {
-      episodes.add(episode);
+      try {
+        episodes.add(toEpisode(episode, parentId));
+      }
+      catch(RuntimeException e) {
+        LOGGER.warning("Skipping Episode entry, exception while parsing: " + episode + ": " + Throwables.formatAsOneLine(e));
+      }
     }
 
     String releaseDate = node.path("air_date").textValue();
@@ -75,7 +84,7 @@ public class TmdbQueryService extends AbstractQueryService {
         null
       ),
       seasonNumber,
-      Flow.forIOException(episodes.stream()).map(e -> toEpisode(e, parentId)).collect(Collectors.toList())
+      episodes
     );
   }
 

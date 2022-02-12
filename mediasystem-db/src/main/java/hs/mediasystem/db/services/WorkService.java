@@ -252,7 +252,7 @@ public class WorkService {
     return Optional.ofNullable(Throwables.uncheck(() -> productionCollectionQueryServices.get(0).query(identifier)));
   }
 
-  // FIXME This can potentially be extremely slow as it can do for example a collection query... not acceptable really
+  // TODO This can potentially be extremely slow as it can do for example a collection query... not acceptable really
   Work toWork(Streamable streamable) {
     MediaDescriptor descriptor = findBestDescriptor(streamable);
     MediaDescriptor parentDescriptor = streamStore.findParentId(streamable.getId())

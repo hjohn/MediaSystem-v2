@@ -250,7 +250,7 @@ public class StreamCacheUpdateService {
 
           LOGGER.finer((existing == null ? "New stream found: " : "Existing stream modified: ") + found);
 
-          asyncEnrich(found);
+          asyncEnrich(found);  // TODO this could result in the enrich failing if the item is new, belongs to a serie and the serie data is old; next pass should fix this though (see else)
         }
         else {
 

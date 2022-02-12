@@ -1,5 +1,7 @@
 package javafx.beans.value;
 
+import com.sun.javafx.binding.Subscription;
+
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.ObjectBinding;
 
@@ -9,7 +11,7 @@ import javafx.beans.binding.ObjectBinding;
  *
  * @param <T> the type of the wrapped {@code Object}
  */
-public abstract class LazyObjectBinding<T> extends ObjectBinding<T> {
+abstract class LazyObjectBinding<T> extends ObjectBinding<T> {
   private Subscription subscription;
   private boolean wasObserved;
 
@@ -17,28 +19,28 @@ public abstract class LazyObjectBinding<T> extends ObjectBinding<T> {
   public void addListener(ChangeListener<? super T> listener) {
     super.addListener(listener);
 
-    updateSubcription();
+    updateSubcriptionAfterAdd();
   }
 
   @Override
   public void removeListener(ChangeListener<? super T> listener) {
     super.removeListener(listener);
 
-    updateSubcription();
+    updateSubcriptionAfterRemove();
   }
 
   @Override
   public void addListener(InvalidationListener listener) {
     super.addListener(listener);
 
-    updateSubcription();
+    updateSubcriptionAfterAdd();
   }
 
   @Override
   public void removeListener(InvalidationListener listener) {
     super.removeListener(listener);
 
-    updateSubcription();
+    updateSubcriptionAfterRemove();
   }
 
   @Override
@@ -46,11 +48,10 @@ public abstract class LazyObjectBinding<T> extends ObjectBinding<T> {
     return isObserved();
   }
 
-  private void updateSubcription() {
-    boolean isObserved = isObserved();
-
-    if(!wasObserved && isObserved) {  // was first observer registered?
-      subscription = observeInputs();  // start observing source
+  private void updateSubcriptionAfterAdd() {
+    // isObserved must be true
+    if(!wasObserved) { // was first observer registered?
+      subscription = observeInputs(); // start observing source
 
       /*
        * Although the act of registering a listener already attempts to make
@@ -62,15 +63,18 @@ public abstract class LazyObjectBinding<T> extends ObjectBinding<T> {
        * 'get' is called again.
        */
 
-      get();  // make binding valid as source wasn't tracked until now
+      get(); // make binding valid as source wasn't tracked until now
+      wasObserved = true;
     }
-    else if(wasObserved && !isObserved) {  // was last observer unregistered?
+  }
+
+  private void updateSubcriptionAfterRemove() {
+    if(wasObserved && !isObserved()) { // was last observer unregistered?
       subscription.unsubscribe();
       subscription = null;
-      invalidate();  // make binding invalid as source is no longer tracked
+      invalidate(); // make binding invalid as source is no longer tracked
+      wasObserved = false;
     }
-
-    wasObserved = isObserved;
   }
 
   /**

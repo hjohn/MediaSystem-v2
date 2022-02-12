@@ -25,10 +25,10 @@
 
 package javafx.beans.value;
 
-import java.util.Objects;
+import com.sun.javafx.binding.Subscription;
+
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -155,7 +155,7 @@ public interface ObservableValue<T> extends Observable {
      *     {@code ObservableValue} is {@code null}, never null
      */
     default <U> ObservableValue<U> map(Function<? super T, ? extends U> mapper) {
-        return Bindings.mapping(this, Objects.requireNonNull(mapper));
+        return new MappedBinding<>(this, mapper);
     }
 
     /**
@@ -172,25 +172,7 @@ public interface ObservableValue<T> extends Observable {
      *     never null
      */
     default ObservableValue<T> orElse(T alternativeValue) {
-        return orElseGet(() -> alternativeValue);
-    }
-
-    /**
-     * Returns an {@link ObservableValue} which holds a mapping of the value
-     * held by this {@code ObservableValue}, or the value supplied by {@code
-     * supplier} when this {@code ObservableValue} is {@code null}.
-     *
-     * @param supplier a {@link Supplier} to use when the value held by this
-     *     {@code ObservableValue} is {@code null}, cannot be null
-     * @return an {@link ObservableValue} which holds a mapping of the value
-     *     held by this {@code ObservableValue}, or the value supplied by
-     *     {@code supplier} when this {@code ObservableValue} is {@code null},
-     *     never null
-     */
-    default ObservableValue<T> orElseGet(Supplier<? extends T> supplier) {
-        Objects.requireNonNull(supplier);
-
-        return Bindings.nullableMapping(this, v -> v == null ? supplier.get() : v);
+        return new OrElseBinding<>(this, alternativeValue);
     }
 
     /**
@@ -211,7 +193,7 @@ public interface ObservableValue<T> extends Observable {
      *     {@code ObservableValue} is {@code null}, never null
      */
     default <U> ObservableValue<U> flatMap(Function<? super T, ? extends ObservableValue<? extends U>> mapper) {
-        return Bindings.flatMapping(this, Objects.requireNonNull(mapper));
+        return new FlatMapBinding<>(this, mapper);
     }
 
     /**
@@ -237,7 +219,7 @@ public interface ObservableValue<T> extends Observable {
      *     never null
      */
     default ObservableValue<T> conditionOn(ObservableValue<Boolean> condition) {
-        return Bindings.conditional(this, condition);
+        return new ConditionalBinding<>(condition, this);
     }
 
     /**

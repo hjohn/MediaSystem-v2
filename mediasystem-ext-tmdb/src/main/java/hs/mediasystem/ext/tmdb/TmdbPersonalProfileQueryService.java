@@ -19,17 +19,21 @@ import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
 import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.Throwables;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
 @PluginScoped
 public class TmdbPersonalProfileQueryService implements PersonalProfileQueryService {
+  private static final Logger LOGGER = Logger.getLogger(TmdbPersonalProfileQueryService.class.getName());
+
   @Inject private TheMovieDatabase tmdb;
 
   @Override
@@ -44,11 +48,21 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
     List<ProductionRole> roles = new ArrayList<>();
 
     for(JsonNode crew : info.path("crew")) {
-      roles.add(createProductionRole(crew, false));
+      try {
+        roles.add(createProductionRole(crew, false));
+      }
+      catch(RuntimeException e) {
+        LOGGER.warning("Skipping Crew entry, exception while parsing: " + crew + ": " + Throwables.formatAsOneLine(e));
+      }
     }
 
     for(JsonNode cast : info.path("cast")) {
-      roles.add(createProductionRole(cast, true));
+      try {
+        roles.add(createProductionRole(cast, true));
+      }
+      catch(RuntimeException e) {
+        LOGGER.warning("Skipping Cast entry, exception while parsing: " + cast + ": " + Throwables.formatAsOneLine(e));
+      }
     }
 
     return new PersonalProfile(

@@ -1,6 +1,5 @@
 package javafx.beans.value;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,7 +48,7 @@ public class ObservableValueTest {
 
       @Test
       void shouldNotBeStronglyReferenced() {
-        testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
+        ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
       }
 
       @Nested
@@ -98,7 +97,7 @@ public class ObservableValueTest {
 
         @Test
         void shouldBeStronglyReferenced() {
-          testIfStronglyReferenced(observableValue, () -> observableValue = null);
+          ReferenceAsserts.testIfStronglyReferenced(observableValue, () -> observableValue = null);
         }
 
         @Nested
@@ -125,7 +124,7 @@ public class ObservableValueTest {
 
           @Test
           void shouldNoLongerBeStronglyReferenced() {
-            testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
+            ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
           }
         }
       }
@@ -143,7 +142,7 @@ public class ObservableValueTest {
 
     @Test
     void shouldNotBeStronglyReferenced() {
-      testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
+      ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
     }
 
     @Nested
@@ -183,7 +182,7 @@ public class ObservableValueTest {
 
       @Test
       void shouldBeStronglyReferenced() {
-        testIfStronglyReferenced(observableValue, () -> observableValue = null);
+        ReferenceAsserts.testIfStronglyReferenced(observableValue, () -> observableValue = null);
       }
 
       @Nested
@@ -210,7 +209,7 @@ public class ObservableValueTest {
 
         @Test
         void shouldNoLongerBeStronglyReferenced() {
-          testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
+          ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
         }
       }
     }
@@ -240,7 +239,7 @@ public class ObservableValueTest {
 
       @Test
       void shouldNotBeStronglyReferenced() {
-        testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
+        ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
       }
 
       @Nested
@@ -337,7 +336,7 @@ public class ObservableValueTest {
 
         @Test
         void shouldBeStronglyReferenced() {
-          testIfStronglyReferenced(observableValue, () -> observableValue = null);
+          ReferenceAsserts.testIfStronglyReferenced(observableValue, () -> observableValue = null);
         }
 
         @Nested
@@ -364,7 +363,7 @@ public class ObservableValueTest {
 
           @Test
           void shouldNoLongerBeStronglyReferenced() {
-            testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
+            ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> observableValue = null);
           }
         }
       }
@@ -393,7 +392,7 @@ public class ObservableValueTest {
 
       @Test
       void shouldNotBeStronglyReferenced() {
-        testIfNotStronglyReferenced(observableValue, () -> {
+        ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> {
           observableValue = null;  // clear reference to ref to check
           active = null;  // clear conditional reference as a strong reference is allowed there
         });
@@ -507,7 +506,7 @@ public class ObservableValueTest {
 
         @Test
         void shouldBeStronglyReferenced() {
-          testIfStronglyReferenced(observableValue, () -> {
+          ReferenceAsserts.testIfStronglyReferenced(observableValue, () -> {
             observableValue = null;  // clear reference to ref to check
             active = null;  // clear conditional reference as a strong reference is allowed there
           });
@@ -537,7 +536,7 @@ public class ObservableValueTest {
 
           @Test
           void shouldNoLongerBeStronglyReferenced() {
-            testIfNotStronglyReferenced(observableValue, () -> {
+            ReferenceAsserts.testIfNotStronglyReferenced(observableValue, () -> {
               observableValue = null;  // clear reference to ref to check
               active = null;  // clear conditional reference as a strong reference is allowed there
             });
@@ -547,25 +546,4 @@ public class ObservableValueTest {
     }
   }
 
-  private static void testIfStronglyReferenced(Object obj, Runnable clearRefs) {
-    WeakReference<Object> ref = new WeakReference<>(obj);
-
-    clearRefs.run();
-    obj = null;
-
-    System.gc();
-
-    assertNotNull(ref.get());
-  }
-
-  private static void testIfNotStronglyReferenced(Object obj, Runnable clearRefs) {
-    WeakReference<Object> ref = new WeakReference<>(obj);
-
-    clearRefs.run();
-    obj = null;
-
-    System.gc();
-
-    assertNull(ref.get());
-  }
 }

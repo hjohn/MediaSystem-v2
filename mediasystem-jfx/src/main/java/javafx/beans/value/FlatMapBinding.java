@@ -1,9 +1,11 @@
 package javafx.beans.value;
 
+import com.sun.javafx.binding.Subscription;
+
 import java.util.Objects;
 import java.util.function.Function;
 
-public class FlatMapBinding<S, T> extends LazyObjectBinding<T> {
+class FlatMapBinding<S, T> extends LazyObjectBinding<T> {
   private final ObservableValue<S> source;
   private final Function<? super S, ? extends ObservableValue<? extends T>> mapper;
 
