@@ -31,6 +31,7 @@ import javax.inject.Inject;
 @PluginScoped
 public class TmdbQueryService extends AbstractQueryService {
   private static final Logger LOGGER = Logger.getLogger(TmdbQueryService.class.getName());
+  private static final int MAX_SEASONS_PER_QUERY = 10;
 
   @Inject private TheMovieDatabase tmdb;
   @Inject private PersonRoles personRoles;
@@ -43,16 +44,51 @@ public class TmdbQueryService extends AbstractQueryService {
   @Override
   public Serie query(Identifier identifier) throws IOException {
     JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "keywords,content_ratings"));  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
-    List<JsonNode> seasons = new ArrayList<>();
-
-    for(JsonNode season : node.path("seasons")) {
-      seasons.add(tmdb.query("3/tv/" + identifier.getId() + "/season/" + season.get("season_number").asText(), "text:json:" + new ProductionIdentifier(DataSources.TMDB_SEASON, identifier.getId() + "/" + season.get("season_number").asText())));
-    }
+    List<JsonNode> seasons = batchQuerySeasons(identifier, node);
 
     // Popularity... Status... last air date ... inproduction field
     //['Returning Series', 'Planned', 'In Production', 'Ended', 'Canceled', 'Pilot']
 
     return objectFactory.toSerie(node, Flow.forIOException(seasons.stream()).map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
+  }
+
+  private List<JsonNode> batchQuerySeasons(Identifier identifier, JsonNode node) throws IOException {
+    List<JsonNode> seasons = new ArrayList<>();
+    JsonNode seasonsPath = node.path("seasons");
+    String firstSeasonNumber = "";
+    String appendToResponse = "";
+
+    for(int i = 1; i <= seasonsPath.size(); i++) {
+      JsonNode season = seasonsPath.get(i - 1);
+      String seasonNumber = season.get("season_number").asText();
+
+      if(!appendToResponse.isEmpty()) {
+        firstSeasonNumber = seasonNumber;
+        appendToResponse += ",";
+      }
+
+      appendToResponse += "season/" + seasonNumber;
+
+      if(i % MAX_SEASONS_PER_QUERY == 0 || i == seasonsPath.size()) {
+        JsonNode seasonData = tmdb.query(
+          "3/tv/" + identifier.getId(),
+          "text:json:" + new ProductionIdentifier(DataSources.TMDB_SEASON, identifier.getId() + "/" + firstSeasonNumber + "-" + seasonNumber),
+          List.of("append_to_response", appendToResponse)
+        );
+
+        for(String path : appendToResponse.split(",")) {
+          JsonNode seasonPath = seasonData.path(path);
+
+          if(seasonPath.isContainerNode()) {
+            seasons.add(seasonPath);
+          }
+        }
+
+        appendToResponse = "";
+      }
+    }
+
+    return seasons;
   }
 
   private Season toSeason(JsonNode node, String parentId) throws IOException {
