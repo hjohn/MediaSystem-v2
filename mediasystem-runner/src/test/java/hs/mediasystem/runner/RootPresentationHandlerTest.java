@@ -4,6 +4,7 @@ import hs.mediasystem.presentation.ParentPresentation;
 import hs.mediasystem.presentation.Placer;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Theme;
+import hs.mediasystem.runner.expose.Annotations;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.PostConstructCaller;
 
@@ -16,13 +17,15 @@ import javafx.scene.layout.StackPane;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class RootPresentationHandlerTest {
   @Mock private Theme theme;
   @Mock private SceneManager sceneManager;
@@ -48,8 +51,6 @@ public class RootPresentationHandlerTest {
 
   @BeforeEach
   public void before() {
-    MockitoAnnotations.initMocks(this);
-
     button = new Button();
     subPane = new StackPane(button);
     rootPane = new StackPane(subPane);
@@ -57,6 +58,8 @@ public class RootPresentationHandlerTest {
 
     when(sceneManager.getScene()).thenReturn(scene);
     when(sceneManager.getRootPane()).thenReturn(rootPane);
+
+    Annotations.initialize();
 
     PostConstructCaller.call(handler);
   }

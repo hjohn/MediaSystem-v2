@@ -5,7 +5,6 @@ import hs.mediasystem.util.expose.ExposedControl;
 import hs.mediasystem.util.expose.Trigger;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +37,11 @@ public class InputActionHandler {
   }
 
   public List<Action> findActions(KeyCombination combination) {
-    LOGGER.fine("Findactions for " + combination);
-    List<Action> list = actions.get(combination);
+    List<Action> list = actions.getOrDefault(combination, List.of());
 
-    return list == null ? Collections.emptyList() : list;
+    LOGGER.fine("Findactions for " + combination + " -> " + list);
+
+    return list;
   }
 
   public void keyPressed(Event event, Object root, List<Action> actions) {

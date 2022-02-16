@@ -6,6 +6,7 @@ import hs.mediasystem.plugin.library.scene.grid.WorkCellPresentation;
 import hs.mediasystem.plugin.library.scene.overview.EpisodePresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
+import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.root.RootPresentation;
 import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.ui.api.player.AudioTrack;
@@ -19,6 +20,10 @@ import javafx.beans.property.SimpleLongProperty;
 public class Annotations {
 
   public static void initialize() {
+    Expose.action(Navigable::navigateBack)
+      .of(Navigable.class)
+      .as("navigateBack");
+
     Expose.action(EpisodePresentation::next)
       .of(EpisodePresentation.class)
       .as("next");

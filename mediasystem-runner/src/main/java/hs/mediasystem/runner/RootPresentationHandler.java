@@ -5,7 +5,6 @@ import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.InputActionHandler.Action;
 import hs.mediasystem.runner.util.SceneManager;
-import hs.mediasystem.util.expose.Expose;
 import hs.mediasystem.util.expose.ExposedControl;
 
 import java.util.List;
@@ -31,20 +30,13 @@ import javax.inject.Singleton;
 @Singleton
 public class RootPresentationHandler {
   private static final Logger LOGGER = Logger.getLogger(RootPresentationHandler.class.getName());
-  private static final Action BACK_ACTION;
-
-  static {
-    Expose.action(Navigable::navigateBack)
-      .of(Navigable.class)
-      .as("navigateBack");
-
-    BACK_ACTION = new Action(new ActionTarget(List.of(ExposedControl.find(Navigable.class, "navigateBack"))), "trigger");
-  }
 
   @Inject private Theme theme;
   @Inject private SceneManager sceneManager;
   @Inject private InputActionHandler inputActionHandler;
   @Inject private ContextMenuHandler contextMenuHandler;
+
+  private Action backAction;
 
   @PostConstruct
   private void postConstruct() {
@@ -55,6 +47,8 @@ public class RootPresentationHandler {
     sceneManager.getScene().setOnMouseClicked(this::onMouseClicked);
 
     sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
+
+    backAction = new Action(new ActionTarget(List.of(ExposedControl.find(Navigable.class, "navigateBack"))), "trigger");
   }
 
   private KeyCode keyPressedCode;
@@ -157,7 +151,7 @@ public class RootPresentationHandler {
   }
 
   public void handleNavigateBackEvent(NavigateEvent event) {
-    handleEvent(event, List.of(BACK_ACTION));
+    handleEvent(event, List.of(backAction));
   }
 
   public void handleNavigateEvent(NavigateEvent e) {
