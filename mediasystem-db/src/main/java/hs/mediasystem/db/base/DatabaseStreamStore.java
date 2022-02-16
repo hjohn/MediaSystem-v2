@@ -175,6 +175,10 @@ public class DatabaseStreamStore implements StreamableStore {
     return Optional.ofNullable(cache.get(streamId)).map(CachedStream::getDiscoveryTime);
   }
 
+  synchronized Optional<Instant> findLastEnrichTime(StreamID streamId) {
+    return Optional.ofNullable(cache.get(streamId)).map(CachedStream::getLastEnrichTime);
+  }
+
   synchronized Set<Streamable> findUnenrichedStreams() {
     return cache.values().stream()
       .filter(cs -> cs.getLastEnrichTime() == null)
