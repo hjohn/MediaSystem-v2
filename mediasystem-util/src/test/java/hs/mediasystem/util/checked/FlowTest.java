@@ -26,7 +26,7 @@ public class FlowTest {
   @Test
   void onlyTerminalOperationsShouldThrowExceptions() {
     // Does not throw an exception:
-    Flow<String, IOException, IOException> s1 = Flow.forIOException(List.of("a", "b", "c"))
+    Flow<String, IOException, IOException, IOException> s1 = CheckedStreams.forIOException(List.of("a", "b", "c"))
       .map(this::toLowerCase)  // accepts function without a throws clause
       .map(this::toUpperCase); // accepts function with a throws clause
 
@@ -39,19 +39,19 @@ public class FlowTest {
     }
 
     // Does not throw an exception:
-    Flow<String, IOException, IOException> s2 = Flow.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
+    Flow<String, IOException, IOException, IOException> s2 = CheckedStreams.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
 
     // Exception is thrown here:
     assertThrows(IOException.class, () -> s2.collect(Collectors.toList()));
 
     // Does not throw an exception:
-    Flow<String, IOException, IOException> s3 = Flow.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
+    Flow<String, IOException, IOException, IOException> s3 = CheckedStreams.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
 
     // Exception is thrown here:
     assertThrows(IOException.class, () -> s3.min(Comparator.naturalOrder()));
 
     // Does not throw an exception:
-    Flow<String, IOException, IOException> s4 = Flow.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
+    Flow<String, IOException, IOException, IOException> s4 = CheckedStreams.forIOException(List.of("aa", "b", "c")).map(this::toUpperCase);
 
     // Exception is thrown here:
     assertThrows(IOException.class, () -> s4.max(Comparator.naturalOrder()));
@@ -59,26 +59,34 @@ public class FlowTest {
 
   @Test
   void handleTwoExceptionTypes() throws IOException, URISyntaxException {
-    List<URI> list = Flow.of(List.of("a", "b", "c"), IOException.class, URISyntaxException.class)
+    List<URI> list = CheckedStreams.of(List.of("a", "b", "c"))
+      .declaring(IOException.class)
+      .declaring(URISyntaxException.class)
       .map(this::toUpperCase)
       .map(this::toUri)
       .collect(Collectors.toList());
 
     assertEquals(List.of(toUri("A"), toUri("B"), toUri("C")), list);
 
-    assertThrows(IOException.class, () -> Flow.of(List.of("a", "bb", "c"), IOException.class, URISyntaxException.class)
+    assertThrows(IOException.class, () -> CheckedStreams.of(List.of("a", "bb", "c"))
+      .declaring(IOException.class)
+      .declaring(URISyntaxException.class)
       .map(this::toUpperCase)
       .map(this::toUri)
       .collect(Collectors.toList())
     );
 
-    assertThrows(URISyntaxException.class, () -> Flow.of(List.of(":", "b", "c"), IOException.class, URISyntaxException.class)
+    assertThrows(URISyntaxException.class, () -> CheckedStreams.of(List.of(":", "b", "c"))
+      .declaring(IOException.class)
+      .declaring(URISyntaxException.class)
       .map(this::toUpperCase)
       .map(this::toUri)
       .collect(Collectors.toList())
     );
 
-    assertThrows(IllegalStateException.class, () -> Flow.of(List.of("a", "b", "c"), IOException.class, URISyntaxException.class)
+    assertThrows(IllegalStateException.class, () -> CheckedStreams.of(List.of("a", "b", "c"))
+      .declaring(IOException.class)
+      .declaring(URISyntaxException.class)
       .map(this::toUpperCase)
       .map(this::toUri)
       .map(x -> {

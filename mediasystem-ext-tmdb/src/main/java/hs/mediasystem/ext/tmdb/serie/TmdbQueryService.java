@@ -17,7 +17,7 @@ import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.PersonRoles;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.util.Throwables;
-import hs.mediasystem.util.checked.Flow;
+import hs.mediasystem.util.checked.CheckedStreams;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class TmdbQueryService extends AbstractQueryService {
     // Popularity... Status... last air date ... inproduction field
     //['Returning Series', 'Planned', 'In Production', 'Ended', 'Canceled', 'Pilot']
 
-    return objectFactory.toSerie(node, Flow.forIOException(seasons.stream()).map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
+    return objectFactory.toSerie(node, CheckedStreams.forIOException(seasons.stream()).map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
   }
 
   private List<JsonNode> batchQuerySeasons(Identifier identifier, JsonNode node) throws IOException {

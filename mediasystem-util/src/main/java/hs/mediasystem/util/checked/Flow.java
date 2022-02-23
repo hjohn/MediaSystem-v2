@@ -1,8 +1,9 @@
 package hs.mediasystem.util.checked;
 
-import java.io.IOException;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
@@ -12,65 +13,44 @@ import java.util.stream.Stream;
  * operations will declare the exception to be thrown.
  *
  * @param <T> the type of the {@link Stream}
- * @param <E> the type of exception to allow
- * @param <F> the second type of exception to allow
+ * @param <E1> the first type of exception to allow
+ * @param <E2> the second type of exception to allow
+ * @param <E3> the third type of exception to allow
  */
-public class Flow<T, E extends Exception, F extends Exception> {
-  private final Stream<T> stream;
-  private final Class<E> exceptionType;
-  private final Class<F> exceptionType2;
+public class Flow<T, E1 extends Exception, E2 extends Exception, E3 extends Exception> {
+  final Stream<T> stream;
+  final Class<?>[] exceptionTypes;
 
-  public static <T, E extends Exception, F extends Exception> Flow<T, E, F> of(Stream<T> stream, Class<E> exceptionType, Class<F> exceptionType2) {
-    return new Flow<>(stream, exceptionType, exceptionType2);
-  }
+  protected Flow(Stream<T> stream, Class<?>[] exceptionTypes) {
+    if(exceptionTypes.length > 3) {
+      throw new IllegalArgumentException("Only supports upto 3 checked exceptions: " + Arrays.toString(exceptionTypes));
+    }
 
-  public static <T, E extends Exception> Flow<T, E, E> of(Stream<T> stream, Class<E> exceptionType) {
-    return new Flow<>(stream, exceptionType, null);
-  }
-
-  public static <T, E extends Exception, F extends Exception> Flow<T, E, F> of(Collection<T> collection, Class<E> exceptionType, Class<F> exceptionType2) {
-    return new Flow<>(collection.stream(), exceptionType, exceptionType2);
-  }
-
-  public static <T, E extends Exception> Flow<T, E, E> of(Collection<T> collection, Class<E> exceptionType) {
-    return new Flow<>(collection.stream(), exceptionType, null);
-  }
-
-  public static <T> Flow<T, IOException, IOException> forIOException(Stream<T> stream) {
-    return new Flow<>(stream, IOException.class, null);
-  }
-
-  public static <T> Flow<T, IOException, IOException> forIOException(Collection<T> collection) {
-    return new Flow<>(collection.stream(), IOException.class, null);
-  }
-
-  private Flow(Stream<T> stream, Class<E> exceptionType, Class<F> exceptionType2) {
-    this.stream = stream;
-    this.exceptionType = exceptionType;
-    this.exceptionType2 = exceptionType2;
+    this.stream = Objects.requireNonNull(stream);
+    this.exceptionTypes = exceptionTypes;
   }
 
   /*
    * Intermediate operations:
    */
 
-  public Flow<T, E, F> filter(ThrowingPredicate<? super T, E, F> predicate) {
-    return new Flow<>(stream.filter(x -> handlePredicate(predicate, x)), exceptionType, exceptionType2);
+  public Flow<T, E1, E2, E3> filter(ThrowingPredicate<? super T, E1, E2, E3> predicate) {
+    return new Flow<>(stream.filter(x -> handlePredicate(predicate, x)), exceptionTypes);
   }
 
-  public <R> Flow<R, E, F> flatMap(ThrowingFunction<? super T, ? extends Stream<? extends R>, E, F> mapper) {
-    return new Flow<>(stream.flatMap(x -> handleFunction(mapper, x)), exceptionType, exceptionType2);
+  public <R> Flow<R, E1, E2, E3> flatMap(ThrowingFunction<? super T, ? extends Stream<? extends R>, E1, E2, E3> mapper) {
+    return new Flow<>(stream.flatMap(x -> handleFunction(mapper, x)), exceptionTypes);
   }
 
-  public <R> Flow<R, E, F> map(ThrowingFunction<? super T, ? extends R, E, F> mapper) {
-    return new Flow<>(stream.map(x -> handleFunction(mapper, x)), exceptionType, exceptionType2);
+  public <R> Flow<R, E1, E2, E3> map(ThrowingFunction<? super T, ? extends R, E1, E2, E3> mapper) {
+    return new Flow<>(stream.map(x -> handleFunction(mapper, x)), exceptionTypes);
   }
 
-  public Flow<T, E, F> peek(ThrowingConsumer<? super T, E, F> action) {
-    return new Flow<>(stream.peek(x -> handleConsumer(action, x)), exceptionType, exceptionType2);
+  public Flow<T, E1, E2, E3> peek(ThrowingConsumer<? super T, E1, E2, E3> action) {
+    return new Flow<>(stream.peek(x -> handleConsumer(action, x)), exceptionTypes);
   }
 
-  private <U> void handleConsumer(ThrowingConsumer<U, E, F> func, U x) {
+  private <U> void handleConsumer(ThrowingConsumer<U, E1, E2, E3> func, U x) {
     try {
       func.accept(x);
     }
@@ -82,7 +62,7 @@ public class Flow<T, E extends Exception, F extends Exception> {
     }
   }
 
-  private <R, U> R handleFunction(ThrowingFunction<U, ? extends R, E, F> func, U x) {
+  private <R, U> R handleFunction(ThrowingFunction<U, ? extends R, E1, E2, E3> func, U x) {
     try {
       return func.apply(x);
     }
@@ -94,7 +74,7 @@ public class Flow<T, E extends Exception, F extends Exception> {
     }
   }
 
-  private <U> boolean handlePredicate(ThrowingPredicate<U, E, F> func, U x) {
+  private <U> boolean handlePredicate(ThrowingPredicate<U, E1, E2, E3> func, U x) {
     try {
       return func.test(x);
     }
@@ -110,7 +90,7 @@ public class Flow<T, E extends Exception, F extends Exception> {
    * Terminal operations:
    */
 
-  public CheckedOptional<T> min(Comparator<? super T> comparator) throws E, F {
+  public CheckedOptional<T> min(Comparator<? super T> comparator) throws E1, E2, E3 {
     try {
       return CheckedOptional.from(stream.min(comparator));
     }
@@ -119,7 +99,7 @@ public class Flow<T, E extends Exception, F extends Exception> {
     }
   }
 
-  public CheckedOptional<T> max(Comparator<? super T> comparator) throws E, F {
+  public CheckedOptional<T> max(Comparator<? super T> comparator) throws E1, E2, E3 {
     try {
       return CheckedOptional.from(stream.max(comparator));
     }
@@ -128,7 +108,7 @@ public class Flow<T, E extends Exception, F extends Exception> {
     }
   }
 
-  public <R, A> R collect(Collector<? super T, A, R> collector) throws E, F {
+  public <R, A> R collect(Collector<? super T, A, R> collector) throws E1, E2, E3 {
     try {
       return stream.collect(collector);
     }
@@ -137,21 +117,38 @@ public class Flow<T, E extends Exception, F extends Exception> {
     }
   }
 
+  public List<T> toList() throws E1, E2, E3 {
+    try {
+      return stream.toList();
+    }
+    catch(WrapperException e) {
+      return throwException(e);
+    }
+  }
+
   private RuntimeException wrapException(Exception e) {
-    if(exceptionType.isInstance(e) || exceptionType2.isInstance(e)) {
-      return new WrapperException(e);
+    for(Class<?> type : exceptionTypes) {
+      if(type.isInstance(e)) {
+        return new WrapperException(e);
+      }
     }
 
     return new IllegalStateException(e);  // Shouldn't actually occur as that means a different checked exception type was snuck in
   }
 
   @SuppressWarnings("unchecked")
-  private <R> R throwException(WrapperException e) throws E, F {
-    if(exceptionType.isInstance(e.getCause())) {
-      throw (E)e.getCause();
+  private <R> R throwException(WrapperException e) throws E1, E2, E3 {
+    if(exceptionTypes.length > 0 && exceptionTypes[0].isInstance(e.getCause())) {
+      throw (E1)e.getCause();
+    }
+    if(exceptionTypes.length > 1 && exceptionTypes[1].isInstance(e.getCause())) {
+      throw (E2)e.getCause();
+    }
+    if(exceptionTypes.length > 2 && exceptionTypes[2].isInstance(e.getCause())) {
+      throw (E3)e.getCause();
     }
 
-    throw (F)e.getCause();
+    throw new AssertionError("WrapperException contained exception that was not declared: " + e.getCause());
   }
 
   /*

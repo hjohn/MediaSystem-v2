@@ -16,7 +16,7 @@ import hs.mediasystem.ext.tmdb.TextMatcher;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.checked.CheckedOptional;
-import hs.mediasystem.util.checked.Flow;
+import hs.mediasystem.util.checked.CheckedStreams;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -79,7 +79,7 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
 
     String postFix = (seq != null && !seq.equals("1") ? " " + seq : "") + (!subtitle.isEmpty() ? " " + subtitle : "");
 
-    return Flow.forIOException(Stream.concat(titleVariations.stream(), alternativeTitleVariations.stream()))
+    return CheckedStreams.forIOException(Stream.concat(titleVariations.stream(), alternativeTitleVariations.stream()))
       .map(tv -> tv + postFix)
       .peek(q -> LOGGER.fine("Matching '" + q + "' [" + year + "] ..."))
       .flatMap(q -> StreamSupport.stream(tmdb.query("3/search/tv", null, List.of("query", q, "language", "en", "include_adult", "true")).path("results").spliterator(), false)
