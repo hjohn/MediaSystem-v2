@@ -20,6 +20,11 @@
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
     </dependency>
+    <dependency>  <!-- remove once bug in Scene is fixed -->
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-graphics</artifactId>
+      <classifier>win</classifier>
+    </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
