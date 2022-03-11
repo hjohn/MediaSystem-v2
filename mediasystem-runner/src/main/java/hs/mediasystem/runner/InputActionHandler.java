@@ -90,7 +90,10 @@ public class InputActionHandler {
 
       LOGGER.fine("Input Mapping Key '" + key + "' converted to valid key combination: " + combination);
 
-      for(String action : inputMappings.get(key) instanceof List ? (List<String>)inputMappings.get(key) : List.of(inputMappings.get(key).toString())) {
+      @SuppressWarnings("unchecked")
+      List<String> actionNames = inputMappings.get(key) instanceof List ? (List<String>)inputMappings.get(key) : List.of(inputMappings.get(key).toString());
+
+      for(String action : actionNames) {
         String[] parts = action.split(":");
 
         try {

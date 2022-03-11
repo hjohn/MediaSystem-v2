@@ -13,6 +13,7 @@ public interface RecommendationQueryService {
    *
    * @param identifier a Movie or a Serie identifier, cannot be null
    * @return a list of recommended Productions, never null
+   * @throws IOException when an I/O problem occurred
    */
   List<Production> query(ProductionIdentifier identifier) throws IOException;
 }

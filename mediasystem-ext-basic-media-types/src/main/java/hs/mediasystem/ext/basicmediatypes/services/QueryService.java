@@ -15,6 +15,7 @@ public interface QueryService {
    *
    * @param identifier an {@link Identifier}, cannot be null
    * @return a {@link MediaDescriptor}, never null
+   * @throws IOException when an I/O problem occurred
    */
   MediaDescriptor query(Identifier identifier) throws IOException;
 }

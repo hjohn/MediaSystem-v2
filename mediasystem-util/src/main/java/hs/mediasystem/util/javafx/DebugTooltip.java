@@ -3,7 +3,6 @@ package hs.mediasystem.util.javafx;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
@@ -44,10 +43,10 @@ public class DebugTooltip {
   }
 
   public static String formatDimension(double x) {
-    if(x == Pane.USE_COMPUTED_SIZE) {
+    if(x == Region.USE_COMPUTED_SIZE) {
       return "c";
     }
-    if(x == Pane.USE_PREF_SIZE) {
+    if(x == Region.USE_PREF_SIZE) {
       return "p";
     }
 

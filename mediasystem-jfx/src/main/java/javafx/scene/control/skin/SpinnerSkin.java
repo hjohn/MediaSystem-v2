@@ -56,6 +56,7 @@ import javafx.scene.layout.StackPane;
  * @see Spinner
  * @since 9
  */
+@SuppressWarnings("all")
 public class SpinnerSkin<T> extends SkinBase<Spinner<T>> {
 
     /***************************************************************************

@@ -12,6 +12,7 @@ public interface Scanner {
    * @param root a root to scan
    * @param importSourceId an import source id to associate with each result
    * @return a {@link List} of results, never null
+   * @throws IOException when an I/O problem occurred
    */
   List<Streamable> scan(Path root, int importSourceId) throws IOException;
 }

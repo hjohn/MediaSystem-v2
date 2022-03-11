@@ -35,6 +35,7 @@ public class Serie extends Production {
    * @param lastAirDate a last air date, can be null if unknown
    * @param popularity a popularity value
    * @param seasons the seasons this serie consists of, can be null if unknown (due to partial information) and can be empty (if known there are no seasons)
+   * @param relatedIdentifiers a set of related {@link Identifier}, cannot be {@code null}
    */
   public Serie(ProductionIdentifier identifier, Details details, Reception reception, Classification classification, State state, LocalDate lastAirDate, double popularity, List<Season> seasons, Set<Identifier> relatedIdentifiers) {
     super(identifier, details, reception, classification, popularity, relatedIdentifiers);

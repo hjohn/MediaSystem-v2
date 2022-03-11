@@ -17,6 +17,7 @@ public interface IdentificationService {
    * @param streamable a {@link Streamable}, never null
    * @param parent a parent descriptor, can be null
    * @return an {@link Identification}, never null
+   * @throws IOException when an I/O problem occurred
    */
   Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) throws IOException;
 }
