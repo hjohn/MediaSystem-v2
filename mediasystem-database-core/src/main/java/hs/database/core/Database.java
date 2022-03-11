@@ -66,7 +66,7 @@ public class Database {
     return transaction;
   }
 
-  @SuppressWarnings("static-method")
+  @SuppressWarnings("resource")
   void endTransaction() {
     CURRENT_TRANSACTION.set(CURRENT_TRANSACTION.get().parent);
   }
@@ -601,6 +601,7 @@ public class Database {
      * manually will break the transient determination and this function may perform an
      * update on a non-existing object.
      *
+     * @param <T> the type of the object
      * @param obj an object to merge with the database
      * @throws DatabaseException when a database exception occurs
      */
@@ -649,7 +650,8 @@ public class Database {
     /**
      * Updates the given object, either completely or specific fields only.
      *
-     * @param obj an object to udpate
+     * @param <T> the type of the object
+     * @param obj an object to update
      * @param fieldNames the field names to update, or <code>null</code> for all fields
      * @throws DatabaseException when an I/O error occurs
      */
@@ -691,7 +693,8 @@ public class Database {
     /**
      * Updates the given object.
      *
-     * @param obj an object to udpate
+     * @param <T> the type of the object
+     * @param obj an object to update
      * @throws DatabaseException when an I/O error occurs
      */
     public synchronized <T> void update(T obj) throws DatabaseException {

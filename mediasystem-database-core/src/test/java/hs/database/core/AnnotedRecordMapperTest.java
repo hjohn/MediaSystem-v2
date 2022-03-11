@@ -8,18 +8,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings("static-method")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AnnotedRecordMapperTest {
   @Mock private Database.Transaction transaction;
   @Mock private Database database;
@@ -34,10 +39,8 @@ public class AnnotedRecordMapperTest {
   private TestOption testOption;
 
   @SuppressWarnings("resource")
-  @Before
-  public void before() {
-    MockitoAnnotations.initMocks(this);
-
+  @BeforeEach
+  public void beforeEach() {
     employeeMapper = AnnotatedRecordMapper.create(TestEmployee.class);
     carMapper = AnnotatedRecordMapper.create(TestCar.class);
     optionMapper = AnnotatedRecordMapper.create(TestOption.class);
@@ -223,7 +226,7 @@ public class AnnotedRecordMapperTest {
     assertEquals(0, results.size());
   }
 
-  @Test(expected = MappingException.class)
+  @Test
   public void shouldRejectClassWithDuplicateColumnSpecification() {
     @Table(name = "bad")
     class TestBadObjectWithDuplicateColumnSpecification extends DatabaseObject {
@@ -243,20 +246,20 @@ public class AnnotedRecordMapperTest {
       }
     }
 
-    AnnotatedRecordMapper.create(TestBadObjectWithDuplicateColumnSpecification.class);
+    assertThrows(MappingException.class, () -> AnnotatedRecordMapper.create(TestBadObjectWithDuplicateColumnSpecification.class));
   }
 
-  @Test(expected = MappingException.class)
+  @Test
   public void shouldRejectClassWithMissingTableAnnotation() {
     class TestBadObjectWithMissingTableAnnotation extends DatabaseObject {
       @Column
       private int field;
     }
 
-    AnnotatedRecordMapper.create(TestBadObjectWithMissingTableAnnotation.class);
+    assertThrows(MappingException.class, () -> AnnotatedRecordMapper.create(TestBadObjectWithMissingTableAnnotation.class));
   }
 
-  @Test(expected = MappingException.class)
+  @Test
   public void shouldRejectClassWithMissingSetters() {
     @Table(name = "bad")
     class TestBadObjectWithMissingSetters extends DatabaseObject {
@@ -266,6 +269,6 @@ public class AnnotedRecordMapperTest {
       }
     }
 
-    AnnotatedRecordMapper.create(TestBadObjectWithMissingSetters.class);
+    assertThrows(MappingException.class, () -> AnnotatedRecordMapper.create(TestBadObjectWithMissingSetters.class));
   }
 }

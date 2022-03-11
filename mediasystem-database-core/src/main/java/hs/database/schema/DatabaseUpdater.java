@@ -102,6 +102,8 @@ public class DatabaseUpdater {
 
   /**
    * Sets the database version.  Useful for debugging scripts.
+   *
+   * @param version a {@link Version} to set, cannot be {@code null}
    */
   public void setDatabaseVersion(Version version) {
     try {

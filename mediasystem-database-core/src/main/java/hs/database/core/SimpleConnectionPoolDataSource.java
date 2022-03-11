@@ -87,6 +87,7 @@ public class SimpleConnectionPoolDataSource implements ConnectionPoolDataSource 
     throw new UnsupportedOperationException();
   }
 
+  @SuppressWarnings("resource")
   @Override
   public PooledConnection getPooledConnection() throws SQLException {
     return new SimplePooledConnection(getConnection());

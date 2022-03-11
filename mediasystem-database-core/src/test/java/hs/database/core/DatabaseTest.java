@@ -16,18 +16,25 @@ import java.util.LinkedHashMap;
 
 import javax.inject.Provider;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Matchers;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings("resource")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class DatabaseTest {
   private static final Date DATE = new Date();
 
@@ -42,13 +49,11 @@ public class DatabaseTest {
   @Mock private ResultSetMetaData employeeResultSetMetaData;
   @Mock private ResultSetMetaData generatedKeysResultSetMetaData;
 
-  @Before
+  @BeforeEach
   public void before() throws SQLException {
-    MockitoAnnotations.initMocks(this);
-
     when(connection.setSavepoint()).thenReturn(savepoint);
-    when(connection.prepareStatement(Matchers.anyString())).thenReturn(statement);
-    when(connection.prepareStatement(Matchers.anyString(), Matchers.anyInt())).thenReturn(statement);
+    when(connection.prepareStatement(anyString())).thenReturn(statement);
+    when(connection.prepareStatement(anyString(), anyInt())).thenReturn(statement);
 
     when(statement.executeQuery()).thenReturn(employeeResultSet);
     when(statement.executeUpdate()).thenReturn(1);
@@ -89,15 +94,16 @@ public class DatabaseTest {
     database = new Database(connectionProvider);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void shouldAutoRollbackTransaction() throws SQLException {
-    try(Transaction transaction = database.beginTransaction()) {
-      throw new IllegalArgumentException();
-    }
-    finally {
-      verify(connection).rollback();
-      verify(connection, never()).commit();
-    }
+    assertThrows(IllegalArgumentException.class, () -> {
+      try(Transaction transaction = database.beginTransaction()) {
+        throw new IllegalArgumentException();
+      }
+    });
+
+    verify(connection).rollback();
+    verify(connection, never()).commit();
   }
 
   @Test
@@ -110,19 +116,21 @@ public class DatabaseTest {
     verify(connection, never()).rollback();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void shouldNotAllowCommitAfterRollback() {
     try(Transaction transaction = database.beginTransaction()) {
       transaction.rollback();
-      transaction.commit();
+
+      assertThrows(IllegalStateException.class, () -> transaction.commit());
     }
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void shouldNotAllowRollbackAfterCommit() {
     try(Transaction transaction = database.beginTransaction()) {
       transaction.commit();
-      transaction.rollback();
+
+      assertThrows(IllegalStateException.class, () -> transaction.rollback());
     }
   }
 
@@ -142,19 +150,19 @@ public class DatabaseTest {
     verify(connection).commit();
   }
 
-  @Test(expected = DatabaseException.class)
+  @Test
   public void shouldNotAllowUncommitedNestedTransactions() {
     try(Transaction transaction = database.beginTransaction()) {
       try(Transaction nestedTransaction = database.beginTransaction()) {
-        transaction.commit();
+        assertThrows(DatabaseException.class, () -> transaction.commit());
       }
     }
   }
 
-  @Test(expected = DatabaseException.class)
+  @Test
   public void shouldNotAllowWriteOperationsWithinReadOnlyTransactions() {
     try(Transaction transaction = database.beginReadOnlyTransaction()) {
-      transaction.insert(new TestEmployee());
+      assertThrows(DatabaseException.class, () -> transaction.insert(new TestEmployee()));
     }
   }
 
@@ -203,12 +211,12 @@ public class DatabaseTest {
     verify(statement).setObject(1, 1001);
   }
 
-  @Test(expected = DatabaseException.class)
+  @Test
   public void shouldThrowDatabaseExceptionWhenSelectFails() throws SQLException {
     when(statement.executeQuery()).thenThrow(new SQLException());
 
     try(Transaction transaction = database.beginTransaction()) {
-      transaction.selectUnique("*", "employees", "id=?", 1001);
+      assertThrows(DatabaseException.class, () -> transaction.selectUnique("*", "employees", "id=?", 1001));
     }
   }
 
@@ -266,10 +274,10 @@ public class DatabaseTest {
     verify(statement).setObject(1, 1001);
   }
 
-  @Test(expected = DatabaseException.class)
+  @Test
   public void shouldThrowExceptionWhenSelectObjectClassIsMissingEmptyConstructor() {
     try(Transaction transaction = database.beginTransaction()) {
-      transaction.selectUnique(TestBadEmployeeNoEmptyConstructor.class, "id=?", 1001);
+      assertThrows(DatabaseException.class, () -> transaction.selectUnique(TestBadEmployeeNoEmptyConstructor.class, "id=?", 1001));
     }
   }
 
