@@ -59,6 +59,8 @@ public interface MPV extends Library {
    * mpv_create_weak_client() or internal scripts), these mpv_handles will
    * be sent MPV_EVENT_SHUTDOWN. This function may block until these clients
    * have responded to the shutdown event, and the core is finally destroyed.
+   *
+   * @param handle a handle used to create MPV
    */
   void mpv_destroy(long handle);
 
@@ -91,6 +93,7 @@ public interface MPV extends Library {
    * As long as the timeout is 0, this is safe to be called from mpv render API
    * threads.
    *
+   * @param handle a handle used to create MPV
    * @param timeout Timeout in seconds, after which the function returns even if
    *                no event was received. A MPV_EVENT_NONE is returned on
    *                timeout. A value of 0 will disable waiting. Negative values
@@ -102,7 +105,7 @@ public interface MPV extends Library {
    *         released by the API on the next mpv_wait_event() call, or when the
    *         context is destroyed. The return value is never NULL.
    */
-  mpv_event mpv_wait_event(long handle, double timeOut);
+  mpv_event mpv_wait_event(long handle, double timeout);
 
   /**
    * Enable or disable the given event.
