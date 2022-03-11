@@ -19,26 +19,22 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class TmdbIdentificationServiceTest {
   private ObjectMapper objectMapper = new ObjectMapper();
 
   @Mock private TheMovieDatabase tmdb;
   @InjectMocks private TmdbIdentificationService service;
-
-  @Before
-  public void before() {
-    MockitoAnnotations.initMocks(this);
-  }
 
   @Test
   public void shouldIdentifyMovies() throws JsonProcessingException, IOException {
@@ -100,7 +96,6 @@ public class TmdbIdentificationServiceTest {
     assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getPrimaryIdentifier());
   }
 
-  @SuppressWarnings("static-method")
   @Test
   public void createVariationsShouldCreateCorrectVariations() {
     assertEquals(Arrays.asList("2012"), TextMatcher.createVariations("2012"));
