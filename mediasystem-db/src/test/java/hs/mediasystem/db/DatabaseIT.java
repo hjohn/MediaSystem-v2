@@ -1,9 +1,6 @@
 package hs.mediasystem.db;
 
-import hs.ddif.core.Injector;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.plugins.PluginScopeResolver;
+import hs.ddif.annotations.Produces;
 import hs.mediasystem.db.base.ImportSource;
 import hs.mediasystem.db.base.ImportSourceProvider;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
@@ -32,114 +29,78 @@ import hs.mediasystem.mediamanager.Movies;
 import hs.mediasystem.mediamanager.Series;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
+import hs.mediasystem.skipscan.db.DatabaseConfig;
 import hs.mediasystem.util.Attributes;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import io.zonky.test.db.postgres.embedded.DatabasePreparer;
-import io.zonky.test.db.postgres.junit5.EmbeddedPostgresExtension;
-import io.zonky.test.db.postgres.junit5.PreparedDbExtension;
+@ExtendWith(InjectorExtension.class)
+public class DatabaseIT extends DatabaseConfig {
+  private static final DataSource MOVIE_DS = DataSource.instance(MediaType.MOVIE, "TMDB");
+  private static final DataSource SERIE_DS = DataSource.instance(MediaType.SERIE, "TMDB");
+  private static final DataSource EPISODE_DS = DataSource.instance(MediaType.EPISODE, "TMDB");
 
-public class DatabaseIT {
-  private static String databaseURL;
+  @Inject private StreamCacheUpdateService updateService;
+  @Inject private WorkService workService;
+  @Inject private WorksService worksService;
+  @Inject private ContentPrintProvider contentPrintProvider;
+  @Inject private ImportSourceProvider importSourceProvider;
+  @Inject @Named("general.basedir") private String basePath;
 
-  @RegisterExtension
-  public static PreparedDbExtension pg = EmbeddedPostgresExtension.preparedDatabase(new DatabasePreparer() {
-    @SuppressWarnings("resource")
-    @Override
-    public void prepare(javax.sql.DataSource ds) throws SQLException {
-      try(Connection connection = ds.getConnection()) {
-        connection.prepareStatement("CREATE DATABASE mediasystem_test").execute();
-        connection.prepareStatement("CREATE ROLE testuser superuser CREATEDB LOGIN PASSWORD 'test'").execute();
+  private ContentPrint contentPrint1;
+  private ContentPrint contentPrint2;
+  private ContentPrint contentPrint3;
+  private ContentPrint contentPrint4;
+  private ContentPrint contentPrint5;
+  private ContentPrint contentPrint6;
 
-        String url = connection.getMetaData().getURL();
-
-        databaseURL = url.substring(0, url.lastIndexOf('/')) + "/mediasystem_test";
-      }
-    }
-  });
-
-  private static StreamCacheUpdateService updateService;
-  private static WorkService workService;
-  private static WorksService worksService;
-  private static ContentPrintProvider contentPrintProvider;
-  private static ImportSourceProvider importSourceProvider;
-  private static ContentPrint contentPrint1;
-  private static ContentPrint contentPrint2;
-  private static ContentPrint contentPrint3;
-  private static ContentPrint contentPrint4;
-  private static ContentPrint contentPrint5;
-  private static ContentPrint contentPrint6;
-
-  @BeforeAll
-  static void beforeAll() throws SecurityException, IOException, BeanResolutionException {
-    PluginScopeResolver pluginScopeResolver = new PluginScopeResolver();
-    Injector injector = new Injector(true, pluginScopeResolver);
-
-    injector.registerInstance(pluginScopeResolver);  // Register plugin scope resolver
-
-    String basePath = new File(DatabaseIT.class.getClassLoader().getResource(".").getFile()).getAbsolutePath().toString() + "/";
-
-    injector.registerInstance("org.postgresql.Driver", AnnotationDescriptor.named("database.driverClass"));
-    injector.registerInstance(databaseURL, AnnotationDescriptor.named("database.url"));
-    injector.registerInstance("testuser", AnnotationDescriptor.named("database.user"));
-    injector.registerInstance("test", AnnotationDescriptor.named("database.password"));
-    injector.registerInstance("SET search_path = public", AnnotationDescriptor.named("database.postConnectSql"));
-    injector.registerInstance(basePath + "/testdata", AnnotationDescriptor.named("general.basedir"));
-
-    injector.register(MovieIdentificationService.class);
-    injector.register(MovieQueryService.class);
-    injector.register(SerieIdentificationService.class);
-    injector.register(SerieQueryService.class);
-    injector.register(EpisodeIdentificationService.class);
-    injector.registerInstance(injector);
-    injector.registerInstance(injector.getStore());
-    injector.registerInstance(injector.getInstantiator());
-
-    ServiceRunner.startWithoutPlugins(injector);
-
-    updateService = injector.getInstance(StreamCacheUpdateService.class);
-    workService = injector.getInstance(WorkService.class);
-    worksService = injector.getInstance(WorksService.class);
-    importSourceProvider = injector.getInstance(ImportSourceProvider.class);
-    contentPrintProvider = injector.getInstance(ContentPrintProvider.class);
+  @PostConstruct
+  private void postConstruct() throws IOException {
+    contentPrint1 = contentPrintProvider.get(Paths.get(basePath + "/movies/Terminator.txt").toUri(), 100L, 200L);
+    contentPrint2 = contentPrintProvider.get(Paths.get(basePath + "/movies/Avatar.txt").toUri(), 101L, 201L);
+    contentPrint3 = contentPrintProvider.get(Paths.get(basePath + "/movies/Matrix.txt").toUri(), 102L, 202L);
+    contentPrint4 = contentPrintProvider.get(Paths.get(basePath + "/series/Friends").toUri(), null, 400L);
+    contentPrint5 = contentPrintProvider.get(Paths.get(basePath + "/series/Friends/friends_1x01.txt").toUri(), 301L, 401L);
+    contentPrint6 = contentPrintProvider.get(Paths.get(basePath + "/series/Friends/friends_1x02.txt").toUri(), 302L, 402L);
 
     importSourceProvider.set(List.of(
       new ImportSource(null, 1, null, new StreamSource(new StreamTags(Set.of("movies")), List.of("TMDB"))),
       new ImportSource(null, 2, null, new StreamSource(new StreamTags(Set.of("series")), List.of("TMDB")))
     ));
-
-    contentPrint1 = contentPrintProvider.get(Paths.get(basePath + "testdata/movies/Terminator.txt").toUri(), 100L, 200L);
-    contentPrint2 = contentPrintProvider.get(Paths.get(basePath + "testdata/movies/Avatar.txt").toUri(), 101L, 201L);
-    contentPrint3 = contentPrintProvider.get(Paths.get(basePath + "testdata/movies/Matrix.txt").toUri(), 102L, 202L);
-    contentPrint4 = contentPrintProvider.get(Paths.get(basePath + "testdata/series/Friends").toUri(), null, 400L);
-    contentPrint5 = contentPrintProvider.get(Paths.get(basePath + "testdata/series/Friends/friends_1x01.txt").toUri(), 301L, 401L);
-    contentPrint6 = contentPrintProvider.get(Paths.get(basePath + "testdata/series/Friends/friends_1x02.txt").toUri(), 302L, 402L);
   }
 
-  private static final DataSource MOVIE_DS = DataSource.instance(MediaType.MOVIE, "TMDB");
-  private static final DataSource SERIE_DS = DataSource.instance(MediaType.SERIE, "TMDB");
-  private static final DataSource EPISODE_DS = DataSource.instance(MediaType.EPISODE, "TMDB");
+  /*
+   * Create a few services that normally are provided by scanned plug-ins:
+   */
 
-  public static class MovieIdentificationService extends AbstractIdentificationService {
-    public MovieIdentificationService() {
+  @Produces private static final MovieIdentificationService MOVIE_IDENTIFICATION_SERVICE = new MovieIdentificationService();
+  @Produces private static final SerieIdentificationService SERIE_IDENTIFICATION_SERVICE = new SerieIdentificationService();
+  @Produces private static final EpisodeIdentificationService EPISODE_IDENTIFICATION_SERVICE = new EpisodeIdentificationService();
+  @Produces private static final MovieQueryService MOVIE_QUERY_SERVICE = new MovieQueryService();
+  @Produces private static final SerieQueryService SERIE_QUERY_SERVICE = new SerieQueryService();
+
+  static class MovieIdentificationService extends AbstractIdentificationService {
+    MovieIdentificationService() {
       super(MOVIE_DS);
     }
 
@@ -149,8 +110,8 @@ public class DatabaseIT {
     }
   }
 
-  public static class SerieIdentificationService extends AbstractIdentificationService {
-    public SerieIdentificationService() {
+  static class SerieIdentificationService extends AbstractIdentificationService {
+    SerieIdentificationService() {
       super(SERIE_DS);
     }
 
@@ -160,8 +121,8 @@ public class DatabaseIT {
     }
   }
 
-  public static class EpisodeIdentificationService extends AbstractIdentificationService {
-    public EpisodeIdentificationService() {
+  static class EpisodeIdentificationService extends AbstractIdentificationService {
+    EpisodeIdentificationService() {
       super(EPISODE_DS);
     }
 
@@ -171,8 +132,8 @@ public class DatabaseIT {
     }
   }
 
-  public static class MovieQueryService extends AbstractQueryService {
-    public MovieQueryService() {
+  static class MovieQueryService extends AbstractQueryService {
+    MovieQueryService() {
       super(MOVIE_DS);
     }
 
@@ -188,8 +149,8 @@ public class DatabaseIT {
     }
   }
 
-  public static class SerieQueryService extends AbstractQueryService {
-    public SerieQueryService() {
+  static class SerieQueryService extends AbstractQueryService {
+    SerieQueryService() {
       super(SERIE_DS);
     }
 
@@ -208,6 +169,7 @@ public class DatabaseIT {
   }
 
   @Nested
+  @TestInstance(Lifecycle.PER_CLASS)
   class WhenASerieIsAdded extends AddFriends {
     @Test
     void findShouldFindFriends() {
@@ -248,6 +210,7 @@ public class DatabaseIT {
   }
 
   @Nested
+  @TestInstance(Lifecycle.PER_CLASS)
   class WhenSomeMoviesAreAdded extends AddSomeMovies {
     @Test
     void findShouldFindTerminator() {
@@ -289,6 +252,7 @@ public class DatabaseIT {
     }
 
     @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
     class WhenAvatarIsGoneAndTerminatorIsRenamed extends RemoveAvatarAndModifyOne {
       @Test
       void findShouldFindTerminatorStillAlthoughItsTitleChanged() {
@@ -331,10 +295,10 @@ public class DatabaseIT {
     }
   }
 
-  static class AddSomeMovies {
+  class AddSomeMovies {
 
     @BeforeAll
-    static void beforeAll() throws InterruptedException {
+    void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
         streamable(MediaType.MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "Terminator"), "Terminator"),
         streamable(MediaType.MOVIE, "testdata/movies/Avatar.txt", new StreamID(1, contentPrint2.getId(), "Avatar"), "Avatar"),
@@ -346,15 +310,15 @@ public class DatabaseIT {
     }
 
     @AfterAll
-    static void afterAll() {
+    void afterAll() {
       updateService.update(1, List.of());  // Should remove everything
     }
   }
 
-  static class RemoveAvatarAndModifyOne {
+  class RemoveAvatarAndModifyOne {
 
     @BeforeAll
-    static void beforeAll() throws InterruptedException {
+    void beforeAll() throws InterruptedException {
       updateService.update(1, List.of(
         streamable(MediaType.MOVIE, "testdata/movies/Terminator.txt", new StreamID(1, contentPrint1.getId(), "The Terminator"), "The Terminator"),
         streamable(MediaType.MOVIE, "testdata/movies/Matrix.txt", new StreamID(1, contentPrint3.getId(), "The Matrix"), "The Matrix")
@@ -365,10 +329,10 @@ public class DatabaseIT {
     }
   }
 
-  static class AddFriends {
+  class AddFriends {
 
     @BeforeAll
-    static void beforeAll() throws InterruptedException {
+    void beforeAll() throws InterruptedException {
       StreamID sid = new StreamID(2, contentPrint4.getId(), "Friends");
 
       updateService.update(2, List.of(
@@ -382,7 +346,7 @@ public class DatabaseIT {
     }
 
     @AfterAll
-    static void afterAll() {
+    void afterAll() {
       updateService.update(2, List.of());  // Should remove everything
     }
   }

@@ -1,6 +1,5 @@
 package hs.mediasystem.ext.local;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
@@ -15,7 +14,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-@PluginScoped
+import javax.inject.Singleton;
+
+@Singleton
 public class FolderIdentificationService extends AbstractIdentificationService {
   private static final DataSource FOLDER = DataSource.instance(MediaType.FOLDER, "LOCAL");
 

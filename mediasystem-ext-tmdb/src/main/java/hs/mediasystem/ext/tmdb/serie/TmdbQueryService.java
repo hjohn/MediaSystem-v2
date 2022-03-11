@@ -2,7 +2,6 @@ package hs.mediasystem.ext.tmdb.serie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
@@ -27,8 +26,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-@PluginScoped
+@Singleton
 public class TmdbQueryService extends AbstractQueryService {
   private static final Logger LOGGER = Logger.getLogger(TmdbQueryService.class.getName());
   private static final int MAX_SEASONS_PER_QUERY = 10;

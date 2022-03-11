@@ -1,6 +1,5 @@
 package hs.mediasystem.ext.local;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
@@ -32,8 +31,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-@PluginScoped
+@Singleton
 public class LocalQueryService extends AbstractQueryService {
   private static final DataSource SERIE = DataSource.instance(MediaType.SERIE, "LOCAL");
   private static final DataSource SEASON = DataSource.instance(MediaType.SEASON, "LOCAL");

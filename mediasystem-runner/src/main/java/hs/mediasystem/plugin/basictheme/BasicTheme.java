@@ -1,9 +1,8 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.util.AnnotationDescriptor;
-import hs.ddif.core.util.Value;
+import hs.ddif.core.api.InstanceResolutionException;
+import hs.ddif.core.api.InstanceResolver;
+import hs.ddif.core.util.Annotations;
 import hs.mediasystem.plugin.home.HomePresentation;
 import hs.mediasystem.plugin.home.HomeScreenNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
@@ -33,6 +32,9 @@ import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.root.RootNodeFactory;
 import hs.mediasystem.runner.root.RootPresentation;
 
+import java.lang.annotation.Annotation;
+import java.util.Map;
+
 import javafx.scene.Node;
 
 import javax.inject.Inject;
@@ -40,7 +42,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class BasicTheme implements Theme {
-  @Inject private Instantiator instantiator;
+  @Inject private InstanceResolver instanceResolver;
 
   @Override
   public Class<? extends Presentation> findParent(Class<? extends Presentation> cls) {
@@ -122,12 +124,7 @@ public class BasicTheme implements Theme {
 
   @Override
   public <P extends Presentation> P createPresentation(Class<P> presentationClass) {
-    try {
-      return instantiator.getInstance(presentationClass);
-    }
-    catch(BeanResolutionException e) {
-      throw new IllegalStateException(e);
-    }
+    return instanceResolver.getInstance(presentationClass);
   }
 
   @Override
@@ -139,34 +136,31 @@ public class BasicTheme implements Theme {
       Class<?> parentNodeFactoryClass = findNodeFactory(parentPresentation.getClass());
 
       try {
-        AnnotationDescriptor descriptor = AnnotationDescriptor.describe(
+        Annotation descriptor = Annotations.of(
           PlacerQualifier.class,
-          new Value("parent", parentNodeFactoryClass),
-          new Value("child", childNodeFactoryClass)
+          Map.of(
+            "parent", parentNodeFactoryClass,
+            "child", childNodeFactoryClass
+          )
         );
 
         @SuppressWarnings("unchecked")
-        Placer<P, C> instance = instantiator.getInstance(Placer.class, descriptor);
+        Placer<P, C> instance = instanceResolver.getInstance(Placer.class, descriptor);
 
         return instance;
       }
-      catch(BeanResolutionException e) {
+      catch(InstanceResolutionException e) {
         // Fall-through
       }
     }
 
-    try {
-      NodeFactory<C> nodeFactory = instantiator.getInstance(childNodeFactoryClass);
+    NodeFactory<C> nodeFactory = instanceResolver.getInstance(childNodeFactoryClass);
 
-      return new Placer<>() {
-        @Override
-        public Node place(P parentPresentation, C presentation) {
-          return nodeFactory.create(presentation);
-        }
-      };
-    }
-    catch(BeanResolutionException e) {
-      throw new IllegalStateException(e);
-    }
+    return new Placer<>() {
+      @Override
+      public Node place(P parentPresentation, C presentation) {
+        return nodeFactory.create(presentation);
+      }
+    };
   }
 }

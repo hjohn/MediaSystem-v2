@@ -2,14 +2,15 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.VideoLink.Type;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@PluginScoped
+import javax.inject.Singleton;
+
+@Singleton
 public class VideoLinks {
 
   public List<VideoLink> toVideoLinks(JsonNode videos) {

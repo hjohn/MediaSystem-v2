@@ -1,7 +1,6 @@
 package hs.mediasystem.local.client;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
 import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
@@ -23,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * referenced files and setting their hash without changing their ContentID.
  */
 public class HashUpdater {
-  public static void main(String[] args) throws IOException, BeanResolutionException {
+  public static void main(String[] args) throws IOException {
     Injector injector = BasicSetup.create();
 
     ContentPrintDatabase store = injector.getInstance(ContentPrintDatabase.class);

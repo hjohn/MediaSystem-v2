@@ -1,6 +1,5 @@
 package hs.mediasystem.ext.scanners;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
@@ -32,8 +31,9 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-@PluginScoped
+@Singleton
 public class SeriesScanner implements Scanner {
   private static final Logger LOGGER = Logger.getLogger(SeriesScanner.class.getName());
   private static final NameDecoder NAME_DECODER = new NameDecoder(Mode.SERIE);

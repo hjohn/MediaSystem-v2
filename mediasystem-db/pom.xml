@@ -18,7 +18,7 @@
   <dependencies>
     <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
-      <artifactId>ddif-core</artifactId>
+      <artifactId>ddif-jsr330</artifactId>
     </dependency>
     <dependency>
       <groupId>hs.mediasystem</groupId>
@@ -106,8 +106,14 @@
     <dependency>
       <groupId>io.zonky.test</groupId>
       <artifactId>embedded-postgres</artifactId>
-      <version>1.2.6</version>
+      <version>1.2.6</version>  <!-- pulls in old commons-lang3, but after upgrading to 1.3.1 refuses to build in Jenkins -->
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

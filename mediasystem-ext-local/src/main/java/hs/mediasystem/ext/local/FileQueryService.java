@@ -1,6 +1,5 @@
 package hs.mediasystem.ext.local;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
@@ -17,8 +16,9 @@ import hs.mediasystem.mediamanager.StreamableStore;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-@PluginScoped
+@Singleton
 public class FileQueryService extends AbstractQueryService {
   private static final DataSource FILE = DataSource.instance(MediaType.FILE, "LOCAL");
 

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.Throwables;
@@ -25,7 +24,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
-@PluginScoped
+import javax.inject.Singleton;
+
+@Singleton
 public class DescriptionService {
   private static final Logger LOGGER = Logger.getLogger(DescriptionService.class.getName());
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory())

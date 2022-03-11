@@ -1,6 +1,5 @@
 package hs.mediasystem.ext.local;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
@@ -18,7 +17,9 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@PluginScoped
+import javax.inject.Singleton;
+
+@Singleton
 public class LocalEpisodeIdentificationService extends AbstractIdentificationService {
   private static final DataSource EPISODE = DataSource.instance(MediaType.EPISODE, "LOCAL");
   private static final Pattern PATTERN = Pattern.compile("([0-9]+),([0-9]+)");

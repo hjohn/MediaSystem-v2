@@ -1,11 +1,10 @@
 package hs.mediasystem.db;
 
-import hs.ddif.core.inject.instantiator.BeanResolutionException;
-import hs.ddif.core.inject.instantiator.Instantiator;
-import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.core.api.InstanceResolver;
+import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
+import hs.ddif.plugins.ComponentScannerFactory;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
-import hs.ddif.plugins.PluginScopeResolver;
 import hs.mediasystem.db.base.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
@@ -33,14 +32,14 @@ import javax.inject.Named;
 public class PluginInitializer {
   private static final Logger LOGGER = Logger.getLogger(PluginInitializer.class.getName());
 
-  @Inject private Instantiator instantiator;
-  @Inject private BeanDefinitionStore store;
-  @Inject private PluginScopeResolver pluginScopeResolver;
+  @Inject private InstanceResolver instanceResolver;
+  @Inject private InjectableStoreCandidateRegistry store;
+  @Inject private ComponentScannerFactory componentScannerFactory;
   @Inject @Nullable @Named("general.basedir") private String baseDir = ".";
 
   @PostConstruct
-  private void postConstruct() throws IOException, BeanResolutionException {
-    PluginManager pluginManager = new PluginManager(store, pluginScopeResolver);
+  private void postConstruct() throws IOException {
+    PluginManager pluginManager = new PluginManager(componentScannerFactory, store);
     List<Plugin> plugins = new ArrayList<>();
     Path root = Paths.get(baseDir, "plugins");
 
@@ -77,8 +76,8 @@ public class PluginInitializer {
 
     LOGGER.info(plugins.size() + " plugins loaded from: " + root);
 
-    instantiator.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
-    instantiator.getInstance(ScannerController.class);       // Triggers background thread
-    instantiator.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
+    instanceResolver.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
+    instanceResolver.getInstance(ScannerController.class);       // Triggers background thread
+    instanceResolver.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
   }
 }

@@ -2,7 +2,6 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
@@ -29,8 +28,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-@PluginScoped
+@Singleton
 public class ObjectFactory {
   @Inject private TheMovieDatabase tmdb;
 

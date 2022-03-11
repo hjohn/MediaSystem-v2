@@ -24,7 +24,7 @@
 
     <dependency>
       <groupId>com.github.hjohn.ddif</groupId>
-      <artifactId>ddif-annotations</artifactId>
+      <artifactId>ddif-jsr330</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>

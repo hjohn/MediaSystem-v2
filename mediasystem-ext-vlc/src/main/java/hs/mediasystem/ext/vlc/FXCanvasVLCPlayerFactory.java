@@ -1,9 +1,10 @@
 package hs.mediasystem.ext.vlc;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.ext.vlc.VLCPlayer.Mode;
 
-@PluginScoped
+import javax.inject.Singleton;
+
+@Singleton
 public class FXCanvasVLCPlayerFactory extends AbstractVLCPlayerFactory {
 
   public FXCanvasVLCPlayerFactory() {

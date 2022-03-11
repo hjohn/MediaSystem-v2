@@ -1,11 +1,11 @@
 package hs.mediasystem.local.client;
 
 import hs.ddif.core.Injector;
-import hs.ddif.core.inject.store.BeanDefinitionStore;
+import hs.ddif.core.api.CandidateRegistry;
 import hs.ddif.plugins.ComponentScanner;
+import hs.ddif.plugins.ComponentScannerFactory;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
-import hs.ddif.plugins.PluginScopeResolver;
 import hs.mediasystem.db.ServiceRunner;
 import hs.mediasystem.plugin.playback.scene.PlayerSetting;
 import hs.mediasystem.runner.NavigateEvent;
@@ -75,8 +75,10 @@ public class FrontEndRunner extends Application {
 
     Annotations.initialize();
 
-    ComponentScanner.scan(
-      injector.getStore(),
+    // TODO should try to have all these #getInstance calls work via regular injection
+
+    ComponentScannerFactory componentScannerFactory = injector.getInstance(ComponentScannerFactory.class);
+    ComponentScanner componentScanner = componentScannerFactory.create(
       "hs.mediasystem.runner",
       "hs.mediasystem.presentation",
       "hs.mediasystem.plugin",
@@ -84,7 +86,9 @@ public class FrontEndRunner extends Application {
       "hs.mediasystem.local.client.service"
     );
 
-    loadPlayerPlugins(injector.getStore(), injector.getInstance(PluginScopeResolver.class));
+    componentScanner.scan(injector.getCandidateRegistry());
+
+    loadPlayerPlugins(componentScannerFactory, injector.getCandidateRegistry());
 
     StartupPresentationProvider provider = injector.getInstance(StartupPresentationProvider.class);
 
@@ -120,8 +124,8 @@ public class FrontEndRunner extends Application {
     LOGGER.info("Window RenderScaleX/Y: " + window.getRenderScaleX() + "x" + window.getRenderScaleY());
   }
 
-  private static void loadPlayerPlugins(BeanDefinitionStore store, PluginScopeResolver pluginScopeResolver) throws IOException {
-    PluginManager pluginManager = new PluginManager(store, pluginScopeResolver);
+  private static void loadPlayerPlugins(ComponentScannerFactory componentScannerFactory, CandidateRegistry registry) throws IOException {
+    PluginManager pluginManager = new PluginManager(componentScannerFactory, registry);
     List<Plugin> plugins = new ArrayList<>();
     Path root = Paths.get("ui-plugins");
 

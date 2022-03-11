@@ -1,6 +1,6 @@
 package hs.mediasystem.runner;
 
-import hs.ddif.core.inject.instantiator.Instantiator;
+import hs.ddif.core.api.InstanceResolver;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.util.Throwables;
@@ -22,7 +22,7 @@ public class StartupPresentationProvider implements Supplier<Presentation> {
   }
 
   @Inject private MenuPresentation.Factory factory;
-  @Inject private Instantiator instantiator;
+  @Inject private InstanceResolver instanceResolver;
   @Inject @Named("general.startup-presentation-plugin") @Nullable private String startupPresentationPluginClassName;
 
   @Override
@@ -30,7 +30,7 @@ public class StartupPresentationProvider implements Supplier<Presentation> {
     if(startupPresentationPluginClassName != null) {
       try {
         Class<?> cls = Class.forName(startupPresentationPluginClassName);
-        Plugin plugin = (Plugin)instantiator.getInstance(cls);
+        Plugin plugin = (Plugin)instanceResolver.getInstance(cls);
 
         return plugin.create();
       }

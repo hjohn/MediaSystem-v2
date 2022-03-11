@@ -3,7 +3,6 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.util.CryptoUtil;
 import hs.mediasystem.util.HttpException;
 import hs.mediasystem.util.ImageURI;
@@ -19,7 +18,9 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.logging.Logger;
 
-@PluginScoped
+import javax.inject.Singleton;
+
+@Singleton
 public class TheMovieDatabase {
   private static final Logger LOGGER = Logger.getLogger(TheMovieDatabase.class.getName());
 

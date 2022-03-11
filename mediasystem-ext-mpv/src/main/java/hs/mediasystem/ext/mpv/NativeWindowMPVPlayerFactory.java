@@ -1,13 +1,13 @@
 package hs.mediasystem.ext.mpv;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.ui.api.player.PlayerFactory;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-@PluginScoped
+@Singleton
 public class NativeWindowMPVPlayerFactory implements PlayerFactory {
   @Inject private PlayerWindowIdSupplier supplier;
 

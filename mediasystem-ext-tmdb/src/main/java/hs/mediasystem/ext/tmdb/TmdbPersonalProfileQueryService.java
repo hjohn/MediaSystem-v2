@@ -2,7 +2,6 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.ddif.annotations.PluginScoped;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Reception;
@@ -29,8 +28,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-@PluginScoped
+@Singleton
 public class TmdbPersonalProfileQueryService implements PersonalProfileQueryService {
   private static final Logger LOGGER = Logger.getLogger(TmdbPersonalProfileQueryService.class.getName());
 
