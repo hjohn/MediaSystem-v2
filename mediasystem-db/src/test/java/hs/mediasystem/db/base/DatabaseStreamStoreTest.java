@@ -16,9 +16,10 @@ import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +27,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class DatabaseStreamsStoreTest {
+@ExtendWith(MockitoExtension.class)
+public class DatabaseStreamStoreTest {
 
   @Mock private CachedStreamCodec codec;
   @Mock private StreamDatabase database;
@@ -36,8 +38,6 @@ class DatabaseStreamsStoreTest {
 
   @BeforeEach
   void beforeEach() {
-    MockitoAnnotations.initMocks(this);
-
     PostConstructCaller.call(store);
   }
 
