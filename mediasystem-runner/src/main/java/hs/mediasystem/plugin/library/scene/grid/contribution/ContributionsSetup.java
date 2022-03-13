@@ -27,4 +27,9 @@ public class ContributionsSetup extends AbstractSetup<Contribution, Contribution
   protected void onItemSelected(ItemSelectedEvent<Contribution> event, ContributionsPresentation presentation) {
     PresentationLoader.navigate(event, () -> personParticipationsPresentationFactory.create(event.getItem().getPerson().getId()));
   }
+
+  @Override
+  protected Node createPreviewPanel(Contribution item) {
+    return contextLayout.create(item.getPerson());
+  }
 }

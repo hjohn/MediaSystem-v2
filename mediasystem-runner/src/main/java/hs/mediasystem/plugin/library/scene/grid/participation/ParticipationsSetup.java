@@ -27,4 +27,9 @@ public class ParticipationsSetup extends AbstractSetup<Participation, Participat
   protected void onItemSelected(ItemSelectedEvent<Participation> event, ParticipationsPresentation presentation) {
     PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem().getWork().getId()));
   }
+
+  @Override
+  protected Node createPreviewPanel(Participation item) {
+    return contextLayout.create(item.getWork());
+  }
 }

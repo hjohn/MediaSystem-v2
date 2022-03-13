@@ -5,10 +5,8 @@ import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.domain.Classification;
-import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Parent;
-import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
@@ -48,12 +46,6 @@ public class ContextLayout {
     if(item instanceof Work) {
       return create((Work)item);
     }
-    if(item instanceof Contribution) {
-      return create(((Contribution)item).getPerson());
-    }
-    if(item instanceof Participation) {
-      return create(((Participation)item).getWork());
-    }
     if(item instanceof WorksGroup) {
       return create(((WorksGroup)item));
     }
@@ -85,7 +77,7 @@ public class ContextLayout {
     return panel;
   }
 
-  private BasePanel create(WorksGroup wg) {
+  public BasePanel create(WorksGroup wg) {
     BasePanel panel = create(wg.getDetails());
     LocalDate now = LocalDate.now();
 
@@ -118,17 +110,6 @@ public class ContextLayout {
     return panel;
   }
 
-  private BasePanel create(Details details) {
-    BasePanel panel = new BasePanel();
-
-    panel.title.set(details.getTitle());
-    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getReleaseDate().orElse(null)));
-    panel.overview.set(details.getDescription().orElse(null));
-    panel.imageHandle.set(details.getCover().or(details::getSampleImage).orElse(null));
-
-    return panel;
-  }
-
   public BasePanel create(Person person) {
     BasePanel panel = new BasePanel();
 
@@ -138,6 +119,17 @@ public class ContextLayout {
     person.getBiography().ifPresent(panel.biography::set);
     person.getBirthPlace().ifPresent(panel.birthPlace::set);
     person.getBirthDate().ifPresent(bd -> panel.birthDate.set(MediaItemFormatter.formattedLocalDate(bd) + person.getDeathDate().map(MediaItemFormatter::formattedLocalDate).map(x -> " - " + x).orElse("")));
+
+    return panel;
+  }
+
+  private BasePanel create(Details details) {
+    BasePanel panel = new BasePanel();
+
+    panel.title.set(details.getTitle());
+    panel.releaseDate.set(MediaItemFormatter.formattedLocalDate(details.getReleaseDate().orElse(null)));
+    panel.overview.set(details.getDescription().orElse(null));
+    panel.imageHandle.set(details.getCover().or(details::getSampleImage).orElse(null));
 
     return panel;
   }

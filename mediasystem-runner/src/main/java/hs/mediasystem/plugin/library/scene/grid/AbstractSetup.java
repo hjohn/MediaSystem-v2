@@ -136,7 +136,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
       .successionEnds(java.time.Duration.ofMillis(500))
       .observe(current -> {
         if(current != null) {
-          Node context = contextLayout.createGeneric(current);
+          Node context = createPreviewPanel(current);
 
           if(context != null) {
             previewPanel.add(context);
@@ -234,6 +234,8 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
   }
 
   protected abstract void onItemSelected(ItemSelectedEvent<T> event, P presentation);
+
+  protected abstract Node createPreviewPanel(U item);
 
   protected Node createContextPanel(P presentation) {
     Object item = presentation.contextItem.getValue();
