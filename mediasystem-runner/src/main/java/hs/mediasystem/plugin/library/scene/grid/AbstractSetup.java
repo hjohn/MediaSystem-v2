@@ -63,8 +63,8 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
     PREVIEW_PANEL   // Panel that slides in from the right depending on the presence of content
   }
 
-  private MediaGridView<Object> createMediaGridView(P presentation) {
-    MediaGridView<Object> listView = new MediaGridView<>();
+  private MediaGridView<U> createMediaGridView(P presentation) {
+    MediaGridView<U> listView = new MediaGridView<>();
 
     listView.setOrientation(Orientation.VERTICAL);
     listView.pageByGroup.set(true);
@@ -86,7 +86,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     listView.getProperties().put("presentation2", workCellPresentationFactory.create(listView));
 
-    MediaGridViewCellFactory<Object> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
+    MediaGridViewCellFactory<U> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
 
     cellFactory.setMaxRatio(0.9);
     cellFactory.setContentBias(Orientation.VERTICAL);
@@ -99,16 +99,16 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
     });
 
     EventStreams.valuesOf(Nodes.showing(listView))
-      .map(visible -> visible ? presentation.items : FXCollections.emptyObservableList())
+      .map(visible -> visible ? presentation.items : FXCollections.<U>emptyObservableList())
       .feedTo(listView.itemsProperty());
 
     EventStreams.valuesOf(listView.itemsProperty())
       .conditionOnShowing(listView)
-      .observe(new Consumer<ObservableList<Object>>() {
+      .observe(new Consumer<ObservableList<U>>() {
         private Subscription subscription;
 
         @Override
-        public void accept(ObservableList<Object> list) {
+        public void accept(ObservableList<U> list) {
           if(subscription != null) {
             subscription.unsubscribe();
           }
@@ -125,7 +125,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
   }
 
   private void configurePanes(AreaPane2<Area> areaPane, TransitionPane contextPanel, TransitionPane previewPanel, P presentation) {
-    MediaGridView<Object> listView = createMediaGridView(presentation);
+    MediaGridView<U> listView = createMediaGridView(presentation);
 
     // Clear preview panel immediately:
     Val.wrap(listView.getSelectionModel().selectedItemProperty()).values()
@@ -172,7 +172,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
     areaPane.add(Area.INFORMATION_PANEL, viewStatusBarFactory.create(presentation));
   }
 
-  private void updateSelectedItem(MediaGridView<Object> listView, P presentation, Object selectedItem) {
+  private void updateSelectedItem(MediaGridView<U> listView, P presentation, U selectedItem) {
     if(Objects.equals(selectedItem, listView.getSelectionModel().getSelectedItem())) {
       return;
     }

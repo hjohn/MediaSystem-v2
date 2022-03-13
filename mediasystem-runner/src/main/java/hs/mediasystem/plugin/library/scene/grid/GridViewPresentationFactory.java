@@ -79,11 +79,11 @@ public abstract class GridViewPresentationFactory {
     public final ObservableList<Grouping<T, U>> availableGroupings = FXCollections.observableArrayList();
 
     private final ObservableList<Grouping<T, U>> originalGroupings = FXCollections.observableArrayList();
-    private final ObjectProperty<Object> internalSelectedItem = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<U> internalSelectedItem = new SimpleObjectProperty<>(null);
     private final String lastSelectedId;  // Contains the last selected id for this view, or null if there was none stored
 
-    public final ReadOnlyObjectProperty<Object> selectedItem = internalSelectedItem;  // TODO this could be cast back, not as safe as wrapper
-    public final ObservableList<Object> items = FXCollections.observableArrayList();
+    public final ReadOnlyObjectProperty<U> selectedItem = internalSelectedItem;  // TODO this could be cast back, not as safe as wrapper
+    public final ObservableList<U> items = FXCollections.observableArrayList();
     public final ObservableList<Group> groups = FXCollections.observableArrayList();
 
     private final IntegerProperty totalItemCountInternal = new SimpleIntegerProperty(0);
@@ -203,7 +203,7 @@ public abstract class GridViewPresentationFactory {
 
       // Before changing the final items, first determine which item to select based on what
       // is currently available:
-      Object itemToSelect = findBestItemToSelect();
+      U itemToSelect = findBestItemToSelect();
 
       SortOrder<U> order = sortOrder.getValue();
 
@@ -265,7 +265,7 @@ public abstract class GridViewPresentationFactory {
       selectItem(itemToSelect);
     }
 
-    private Object findById(String id) {
+    private U findById(String id) {
       return items.stream()
         .filter(i -> toId(i).equals(id))
         .findFirst()
@@ -284,7 +284,7 @@ public abstract class GridViewPresentationFactory {
       return groupedElements;
     }
 
-    public void selectItem(Object item) {
+    public void selectItem(U item) {
       internalSelectedItem.setValue(item);
     }
 
@@ -318,7 +318,7 @@ public abstract class GridViewPresentationFactory {
           // the old context item is actually the parent that was shown as context with the child,
           // so this is the one we want to try and select:
           if(contextItem.isBound() && c.getOldValue() != null) {
-            Object obj = findById(toId(c.getOldValue()));
+            U obj = findById(toId(c.getOldValue()));
 
             if(obj != null) {
               selectItem(obj);
@@ -337,9 +337,9 @@ public abstract class GridViewPresentationFactory {
      *
      * @return the best item to select, or <code>null</code> if no current item is part of the new filter
      */
-    private Object findBestItemToSelect() {
+    private U findBestItemToSelect() {
       Predicate<U> predicate = createFilterPredicate();
-      Object item = selectedItem.getValue();
+      U item = selectedItem.getValue();
 
       if(item == null && lastSelectedId != null) {
         item = rawBaseItems.stream()
