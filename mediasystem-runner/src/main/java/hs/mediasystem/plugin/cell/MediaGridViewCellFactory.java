@@ -178,6 +178,7 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
           }
           else {
             sideBarTopLeftText.unbind();
+            sideBarTopLeftText.set("");
           }
 
           if(binders.sideBarCenterBindProvider() != null && binders.sideBarCenterBindProvider().apply(item) != null) {
@@ -186,6 +187,7 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
           }
           else {
             sideBarCenterText.unbind();
+            sideBarCenterText.set("");
           }
 
           hasStreamProperty.set(binders.hasStream(item));
@@ -200,9 +202,17 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
           setGraphic(null);
 
           name.textProperty().unbind();
+          name.textProperty().set("");
+
           sideBarTopLeftText.unbind();
+          sideBarTopLeftText.set("");
+
           sideBarCenterText.unbind();
+          sideBarCenterText.set("");
+
           watchedProperty.unbind();
+          watchedProperty.set(false);
+
           hasStreamProperty.set(true);
           asyncImageProperty.imageHandleProperty().set(null);  // Helps to cancel bg loading of images when cells quickly change
           getStyleClass().removeAll(MEDIA_STATE_STYLES);
