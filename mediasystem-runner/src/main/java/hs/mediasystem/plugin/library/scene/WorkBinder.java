@@ -96,7 +96,7 @@ public class WorkBinder implements Binder<Work>, IDBinder<Work> {
     LocalDate date = details.getReleaseDate().orElse(null);
 
     if(date == null) {
-      return "";
+      return "Unknown";
     }
 
     Stage stage = details.getClassification().getStage().orElse(null);
