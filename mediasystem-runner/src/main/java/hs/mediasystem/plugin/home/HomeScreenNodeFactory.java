@@ -94,6 +94,8 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     ListView<String> menuListView = createMenu();
 
+    menuListView.setFocusTraversable(false);  // ensure the vertical list does not get focus by accident; keyboard input should arrive in the horizontal carousel, which uses left/right while grid parent handles up/down
+
     grid.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
       if(e.getCode().isNavigationKey()) {
         int index = menuListView.getSelectionModel().getSelectedIndex();
