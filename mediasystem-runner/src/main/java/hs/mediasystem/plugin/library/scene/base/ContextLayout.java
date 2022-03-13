@@ -111,6 +111,8 @@ public class ContextLayout {
         .map(Map.Entry::getKey)
         .collect(Collectors.joining(" / "))
       );
+
+      panel.totalEntries.set("" + wg.getChildren().size());
     }
 
     return panel;
@@ -203,13 +205,13 @@ public class ContextLayout {
           Labels.create("birth-date", birthDate)
         ),
         Containers.hbox().style("hbox").ignoreWhenEmpty().nodes(
-          Containers.vbox().ignoreWhen(totalEntries.isEmpty()).nodes(
-            Labels.create("header", "TOTAL"),
-            Labels.create("total-entries", totalEntries)
-          ),
           Containers.vbox().ignoreWhen(releaseDate.isEmpty()).nodes(
             Labels.create("header", "RELEASE DATE"),
             Labels.create("release-date", releaseDate)
+          ),
+          Containers.vbox().ignoreWhen(totalEntries.isEmpty()).nodes(
+            Labels.create("header", "TOTAL"),
+            Labels.create("total-entries", totalEntries)
           ),
           Containers.vbox().ignoreWhen(rating.isEmpty()).nodes(
             Labels.create("header", "RATING"),
