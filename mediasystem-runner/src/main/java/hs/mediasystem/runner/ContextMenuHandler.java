@@ -53,7 +53,7 @@ public class ContextMenuHandler {
 
   /*
    * In future, can add support for grouping certain options, and
-   * spreading the options accross tabs.
+   * spreading the options across tabs.
    */
 
   public void handle(KeyEvent event, List<Presentation> activePresentations) {
@@ -100,7 +100,7 @@ public class ContextMenuHandler {
         ObservableList<Object> allowedValues = exposedControl.getAllowedValues(parent);
 
         if(allowedValues.size() < 2) {
-          return null;  // Donot show control if there are only 0 or 1 options to choose from
+          return null;  // Do not show control if there are only 0 or 1 options to choose from
         }
 
         ListSpinnerValueFactory<Object> valueFactory = new ListSpinnerValueFactory<>(allowedValues);
@@ -110,8 +110,9 @@ public class ContextMenuHandler {
         valueFactory.setConverter(new StringConverter<>() {
           @Override
           public String toString(Object v) {
-            return formatter == null ? ResourceManager.getText(exposedControl.getDeclaringClass(), v)
-                                     : formatter.format(v);
+            return v == null ? "(empty)"
+              : formatter == null ? ResourceManager.getText(exposedControl.getDeclaringClass(), v)
+              : formatter.format(v);
           }
 
           @Override
