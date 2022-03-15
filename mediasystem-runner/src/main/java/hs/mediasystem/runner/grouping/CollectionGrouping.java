@@ -30,9 +30,15 @@ public class CollectionGrouping implements Grouping<Work, Object> {
       work.getParent().filter(p -> p.getType().equals(MediaType.COLLECTION)).ifPresent(p -> {
         if(!childWorks.containsKey(p.getId())) {
           workClient.find(p.getId()).ifPresent(r -> {
-            childWorks.put(p.getId(), workClient.findChildren(p.getId()));
+            List<Work> children = workClient.findChildren(p.getId()).stream()
+              .filter(c -> now.isAfter(c.getDetails().getReleaseDate().orElse(LocalDate.MAX)))
+              .toList();
 
-            topLevelItems.add(createWorkGroup(r, childWorks.get(p.getId()), now));
+            if(children.size() > 1) {  // don't bother creating a group when it contains 1 item
+              childWorks.put(p.getId(), children);
+
+              topLevelItems.add(createWorkGroup(r, childWorks.get(p.getId()), now));
+            }
           });
         }
       });
