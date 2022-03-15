@@ -106,6 +106,8 @@ public class AnnotatedImageCellFactory<T> implements Callback<ListView<T>, ListC
   @Override
   public CarouselListCell<T> call(ListView<T> view) {
     return new CarouselListCell<>() {
+      private final Model model = new Model();
+
       private final BiasedImageView imageView = new BiasedImageView();
       private final AsyncImageProperty asyncImageProperty = new AsyncImageProperty(900, 600);
 
@@ -119,7 +121,6 @@ public class AnnotatedImageCellFactory<T> implements Callback<ListView<T>, ListC
       private final StylableHBox overlay = StylableContainers.hbox("overlay", indicator, parentTitle, title, subtitle, sequence, age);
 
       private Timeline activeTimeline;
-      private final Model model = new Model();
 
       {
         imageView.setOrientation(Orientation.HORIZONTAL);
