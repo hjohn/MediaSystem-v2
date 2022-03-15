@@ -2,7 +2,6 @@ package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.jfx.eventstream.core.Values;
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
@@ -68,7 +67,7 @@ public class ProductionOverviewPane extends HBox {
     titleLabel,
     Containers.hbox(
       "subtitle-box",
-      Labels.create("release-year", model.work.map(WorkBinder::createYearRange)),
+      Labels.create("release-year", model.work.map(Work::getDetails).map(Details::getYearRange)),
       Labels.create("content-rating", model.work.map(this::extractContentRating), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT),
       Labels.create("adult-rating", model.work.map(w -> Boolean.TRUE.equals(w.getDetails().getClassification().getPornographic()) ? "XXX" : ""), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT)
     ),

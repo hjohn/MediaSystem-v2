@@ -4,7 +4,7 @@ import com.sun.javafx.binding.Subscription;
 
 import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
-import hs.mediasystem.plugin.cell.ModelMediaGridViewCellFactory;
+import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.overview.EpisodePane.Model;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
@@ -172,7 +172,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
   }
 
   private Pane buildEpisodeListUI(ProductionPresentation presentation) {
-    ModelMediaGridViewCellFactory<Work> cellFactory = new ModelMediaGridViewCellFactory<>((item, model) -> {
+    MediaGridViewCellFactory<Work> cellFactory = new MediaGridViewCellFactory<>((item, model) -> {
       model.title.set(item.getDetails().getTitle());
       model.annotation1.set(item.getDetails().getSequence().map(this::createSequenceInfo).orElse(null));
       model.imageHandle.set(item.getDetails().getSampleImage().orElse(null));

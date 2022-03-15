@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 
@@ -16,8 +15,8 @@ public class RecommendationsPresentationFactory extends GridViewPresentationFact
 
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
     new SortOrder<>("best", (a, b) -> 0),
-    new SortOrder<>("alpha", WorkBinder.BY_NAME),
-    new SortOrder<>("release-date", WorkBinder.BY_RELEASE_DATE.reversed())
+    new SortOrder<>("alpha", Work.BY_NAME),
+    new SortOrder<>("release-date", Work.BY_RELEASE_DATE.reversed())
   );
 
   private static final List<Filter<Work>> FILTERS = List.of(
@@ -41,7 +40,7 @@ public class RecommendationsPresentationFactory extends GridViewPresentationFact
     private final WorkId id;
 
     public RecommendationsPresentation(WorkId id) {
-      super("Recommendations", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS));
+      super("Recommendations", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), Work::getId);
 
       this.id = id;
 

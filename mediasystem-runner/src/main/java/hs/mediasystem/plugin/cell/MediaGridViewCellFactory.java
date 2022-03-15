@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.cell;
 
-import hs.mediasystem.plugin.library.scene.BinderBase;
-import hs.mediasystem.plugin.library.scene.BinderProvider;
+import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
@@ -13,14 +12,16 @@ import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
 import hs.mediasystem.util.javafx.control.csslayout.StylableVBox;
 
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiConsumer;
 
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Orientation;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
@@ -33,26 +34,40 @@ import javafx.util.Callback;
 public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCell<T>> {
   private static final List<String> MEDIA_STATE_STYLES = List.of("watched", "available", "unavailable");
 
-  public interface Binder<T> extends BinderBase<T> {
-    Function<T, ObservableValue<? extends String>> titleBindProvider();
-    Function<T, ImageHandle> imageHandleExtractor();
+  public static class Model {
+    public final StringProperty title = new SimpleStringProperty();
+    public final StringProperty subtitle = new SimpleStringProperty();
+    public final StringProperty annotation1 = new SimpleStringProperty();
+    public final StringProperty annotation2 = new SimpleStringProperty();
+    public final ObjectProperty<ImageHandle> imageHandle = new SimpleObjectProperty<>();
+    public final ObjectProperty<MediaStatus> status = new SimpleObjectProperty<>();
 
-    default Function<T, ObservableValue<? extends String>> sideBarTopLeftBindProvider() { return null; }
-    default Function<T, ObservableValue<? extends String>> sideBarCenterBindProvider() { return null; }
-    default Function<T, String> detailExtractor() { return null; }
-    default boolean watchedProperty(@SuppressWarnings("unused") T item) { return false; }
-    default boolean hasStream(@SuppressWarnings("unused") T item) { return false; }
+    private void clear() {
+      title.unbind();
+      subtitle.unbind();
+      annotation1.unbind();
+      annotation2.unbind();
+      imageHandle.unbind();
+      status.unbind();
+
+      title.set(null);
+      subtitle.set(null);
+      annotation1.set(null);
+      annotation2.set(null);
+      imageHandle.set(null);
+      status.set(null);
+    }
   }
 
-  private final BinderProvider bindersProvider;
+  private final BiConsumer<T, Model> updater;
 
   private Orientation orientation = Orientation.HORIZONTAL;
   private double aspectRatio = 2.0 / 3.0;
   private double maxRatio = Double.MAX_VALUE;
   private double minRatio = 0;
 
-  public MediaGridViewCellFactory(BinderProvider bindersProvider) {
-    this.bindersProvider = bindersProvider;
+  public MediaGridViewCellFactory(BiConsumer<T, Model> updater) {
+    this.updater = updater;
   }
 
   public void setContentBias(Orientation orientation) {
@@ -74,6 +89,9 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
   @Override
   public ListCell<T> call(ListView<T> param) {
     return new ListCell<>() {
+      private final Model model = new Model();
+      private final BooleanProperty allowUpdates = new SimpleBooleanProperty(true);
+
       private final Label placeHolderLabel = Labels.create("place-holder", "");
       private final Label name = Labels.create("name");
       private final Label detail = Labels.create("detail", Labels.HIDE_IF_EMPTY);
@@ -86,13 +104,12 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
       private final BiasedImageView imageView;
       private final StylableVBox container;
 
-      private final AsyncImageProperty asyncImageProperty = new AsyncImageProperty(400, 400);
+      private final AsyncImageProperty asyncImageProperty = new AsyncImageProperty(800, 600);  // TODO should really make this depend on actual space available
       private final StringProperty sideBarTopLeftText = new SimpleStringProperty();
       private final StringProperty sideBarCenterText = new SimpleStringProperty();
-      private final BooleanProperty watchedProperty = new SimpleBooleanProperty();
-      private final BooleanProperty hasStreamProperty = new SimpleBooleanProperty();
+      private final ObjectProperty<MediaStatus> mediaStatusProperty = new SimpleObjectProperty<>();
 
-      private final ChangeListener<Boolean> updateIndicatorListener = (obs, old, watched) -> updateMediaStateStyles();
+      private final ChangeListener<MediaStatus> updateIndicatorListener = (obs, old, watched) -> updateMediaStateStyles();
 
       {
         imageView = new BiasedImageView(placeHolderLabel, aspectRatio);
@@ -130,7 +147,7 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
         setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);  // Indicate to cell that it can become as big as possible
 
         name.textProperty().addListener((obs, old, current) -> {
-          if(current.length() >= 30) {
+          if(current != null && current.length() >= 30) {
             name.getStyleClass().add("smaller");
           }
           else {
@@ -138,21 +155,34 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
           }
         });
 
-        this.hasStreamProperty.addListener(updateIndicatorListener);
-        this.watchedProperty.addListener(updateIndicatorListener);
+        this.mediaStatusProperty.addListener(updateIndicatorListener);
+      }
+
+      {
+        BooleanBinding sideBarVisible = model.annotation1.isNotEmpty().or(model.annotation2.isNotEmpty());
+
+        indicatorPane.managedProperty().bind(sideBarVisible);
+        indicatorPane.visibleProperty().bind(sideBarVisible);
+
+        name.textProperty().bind(model.title.conditionOn(allowUpdates));
+        detail.textProperty().bind(model.subtitle.conditionOn(allowUpdates));
+        asyncImageProperty.imageHandleProperty().bind(model.imageHandle.conditionOn(allowUpdates));
+        sideBarTopLeftText.bind(model.annotation1.conditionOn(allowUpdates));
+        sideBarCenterText.bind(model.annotation2.conditionOn(allowUpdates));
+        mediaStatusProperty.bind(model.status.conditionOn(allowUpdates));
       }
 
       private void updateMediaStateStyles() {
         getStyleClass().removeAll(MEDIA_STATE_STYLES);
 
-        if(watchedProperty.get()) {
+        if(mediaStatusProperty.get() == MediaStatus.WATCHED) {
           getStyleClass().add("watched");
         }
-        else if(hasStreamProperty.get()) {
-          getStyleClass().add("available");
+        else if(mediaStatusProperty.get() == MediaStatus.UNAVAILABLE) {
+          getStyleClass().add("unavailable");
         }
         else {
-          getStyleClass().add("unavailable");
+          getStyleClass().add("available");
         }
       }
 
@@ -161,61 +191,22 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
         super.updateItem(item, empty);
 
         if(!empty) {
-          @SuppressWarnings("unchecked")
-          Binder<T> binders = bindersProvider.findBinder(Binder.class, item.getClass()).orElseThrow(() -> new IllegalStateException("No binder available for class: " + item.getClass()));
+          allowUpdates.set(false);
 
-          setGraphic(container);
+          try {
+            setGraphic(container);
 
-          name.textProperty().bind(binders.titleBindProvider().apply(item));
-          asyncImageProperty.imageHandleProperty().set(binders.imageHandleExtractor().apply(item));
-          detail.setText(binders.detailExtractor() == null ? null : binders.detailExtractor().apply(item));
-
-          boolean sideBarVisible = false;
-
-          if(binders.sideBarTopLeftBindProvider() != null && binders.sideBarTopLeftBindProvider().apply(item) != null) {
-            sideBarVisible = true;
-            sideBarTopLeftText.bind(binders.sideBarTopLeftBindProvider().apply(item));
+            model.clear();
+            updater.accept(item, model);
           }
-          else {
-            sideBarTopLeftText.unbind();
-            sideBarTopLeftText.set("");
+          finally {
+            allowUpdates.set(true);
           }
-
-          if(binders.sideBarCenterBindProvider() != null && binders.sideBarCenterBindProvider().apply(item) != null) {
-            sideBarVisible = true;
-            sideBarCenterText.bind(binders.sideBarCenterBindProvider().apply(item));
-          }
-          else {
-            sideBarCenterText.unbind();
-            sideBarCenterText.set("");
-          }
-
-          hasStreamProperty.set(binders.hasStream(item));
-          watchedProperty.set(binders.watchedProperty(item));
-
-          indicatorPane.setManaged(sideBarVisible);
-          indicatorPane.setVisible(sideBarVisible);
-
-          updateMediaStateStyles();
         }
         else {
           setGraphic(null);
 
-          name.textProperty().unbind();
-          name.textProperty().set("");
-
-          sideBarTopLeftText.unbind();
-          sideBarTopLeftText.set("");
-
-          sideBarCenterText.unbind();
-          sideBarCenterText.set("");
-
-          watchedProperty.unbind();
-          watchedProperty.set(false);
-
-          hasStreamProperty.set(true);
-          asyncImageProperty.imageHandleProperty().set(null);  // Helps to cancel bg loading of images when cells quickly change
-          getStyleClass().removeAll(MEDIA_STATE_STYLES);
+          model.clear();
         }
       }
     };

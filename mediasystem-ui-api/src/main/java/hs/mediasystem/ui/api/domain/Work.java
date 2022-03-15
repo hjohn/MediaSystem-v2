@@ -2,13 +2,21 @@ package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.WorkId;
+import hs.mediasystem.util.NaturalLanguage;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
 
 public class Work {
+  public static final Comparator<Work> BY_NAME = Comparator.comparing(Work::getDetails, Details.ALPHABETICAL);
+  public static final Comparator<Work> BY_SUBTITLE = Comparator.comparing(Work::getDetails, Comparator.comparing(d -> d.getSubtitle().orElse(null), Comparator.nullsLast(NaturalLanguage.ALPHABETICAL)));
+  public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE);
+  public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE_REVERSED);
+  public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
+
   private final WorkId id;
   private final MediaType type;
   private final Optional<Parent> parent;

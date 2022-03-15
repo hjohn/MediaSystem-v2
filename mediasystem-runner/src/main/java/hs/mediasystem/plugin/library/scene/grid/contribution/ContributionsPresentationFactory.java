@@ -46,7 +46,7 @@ public class ContributionsPresentationFactory extends GridViewPresentationFactor
     private final WorkId id;
 
     public ContributionsPresentation(WorkId id) {
-      super("CastAndCrew", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS));
+      super("CastAndCrew", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), c -> c.getPerson().getId());
 
       this.id = id;
 

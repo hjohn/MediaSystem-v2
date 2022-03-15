@@ -67,7 +67,8 @@ public class MoviesCollectionType implements CollectionType {
         STATE_FILTERS,
         List.of(collectionGrouper, genreGrouper, new NoGrouping<Work, Object>())
       ),
-      null
+      null,
+      i -> i instanceof Work w ? w.getId() : i instanceof WorksGroup wg ? wg.getId() : null
     );
   }
 

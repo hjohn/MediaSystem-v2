@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory.GenericCollectionPresentation;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
@@ -21,8 +20,8 @@ public class ProductionCollectionFactory {
   @Inject private WorkClient workClient;
 
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
-    new SortOrder<>("release-date", WorkBinder.BY_RELEASE_DATE.reversed()),
-    new SortOrder<>("alpha", WorkBinder.BY_NAME)
+    new SortOrder<>("release-date", Work.BY_RELEASE_DATE.reversed()),
+    new SortOrder<>("alpha", Work.BY_NAME)
   );
 
   private static final List<Filter<Work>> FILTERS = List.of(
@@ -37,6 +36,12 @@ public class ProductionCollectionFactory {
   );
 
   public GenericCollectionPresentation<Work, Work> create(WorkId id) {
-    return factory.create(() -> workClient.findChildren(id), "Collections", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), () -> workClient.find(id).orElseThrow(() -> new WorkNotFoundException(id)));
+    return factory.create(
+      () -> workClient.findChildren(id),
+      "Collections",
+      new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS),
+      () -> workClient.find(id).orElseThrow(() -> new WorkNotFoundException(id)),
+      Work::getId
+    );
   }
 }

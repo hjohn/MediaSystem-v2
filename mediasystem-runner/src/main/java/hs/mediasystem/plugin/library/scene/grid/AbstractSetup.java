@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
-import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
@@ -49,7 +48,6 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
   @Inject private ContextLayout contextLayout;
   @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
-  @Inject private BinderProvider binderProvider;
   @Inject private ViewStatusBarFactory viewStatusBarFactory;
 
   public enum Area {
@@ -86,7 +84,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     listView.getProperties().put("presentation2", workCellPresentationFactory.create(listView));
 
-    MediaGridViewCellFactory<U> cellFactory = new MediaGridViewCellFactory<>(binderProvider);
+    MediaGridViewCellFactory<U> cellFactory = new MediaGridViewCellFactory<>(AbstractSetup.this::fillModel);
 
     cellFactory.setMaxRatio(0.9);
     cellFactory.setContentBias(Orientation.VERTICAL);
@@ -236,6 +234,8 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
   protected abstract void onItemSelected(ItemSelectedEvent<T> event, P presentation);
 
   protected abstract Node createPreviewPanel(U item);
+
+  protected abstract void fillModel(U item, MediaGridViewCellFactory.Model model);
 
   protected Node createContextPanel(P presentation) {
     Object item = presentation.contextItem.getValue();

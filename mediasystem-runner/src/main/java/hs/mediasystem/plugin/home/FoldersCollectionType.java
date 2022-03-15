@@ -1,7 +1,6 @@
 package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
@@ -23,10 +22,10 @@ import javax.inject.Singleton;
 public class FoldersCollectionType implements CollectionType {
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
     new SortOrder<>("alpha", Comparator.comparing((Work work) -> work.getType().toString()).reversed()
-      .thenComparing(WorkBinder.BY_NAME)
-      .thenComparing(WorkBinder.BY_SUBTITLE)
+      .thenComparing(Work.BY_NAME)
+      .thenComparing(Work.BY_SUBTITLE)
     ),
-    new SortOrder<>("watched-date", WorkBinder.BY_LAST_WATCHED_DATE.reversed())
+    new SortOrder<>("watched-date", Work.BY_LAST_WATCHED_DATE.reversed())
   );
 
   private static final List<Filter<Work>> FILTERS = List.of(

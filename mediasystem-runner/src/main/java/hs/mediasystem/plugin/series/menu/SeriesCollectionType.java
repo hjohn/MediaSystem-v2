@@ -70,7 +70,8 @@ public class SeriesCollectionType implements CollectionType {
         STATE_FILTERS,
         List.of(genreGrouper, new NoGrouping<Work, Object>())
       ),
-      null
+      null,
+      i -> i instanceof Work w ? w.getId() : i instanceof WorksGroup wg ? wg.getId() : null
     );
   }
 

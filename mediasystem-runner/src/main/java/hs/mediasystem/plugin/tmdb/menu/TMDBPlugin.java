@@ -1,6 +1,5 @@
 package hs.mediasystem.plugin.tmdb.menu;
 
-import hs.mediasystem.plugin.library.scene.WorkBinder;
 import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
@@ -21,8 +20,8 @@ import javax.inject.Singleton;
 @Singleton
 public class TMDBPlugin implements Plugin {
   private static final List<SortOrder<Work>> SORT_ORDERS = List.of(
-    new SortOrder<>("release-date", WorkBinder.BY_RELEASE_DATE.reversed()),
-    new SortOrder<>("alpha", WorkBinder.BY_NAME)
+    new SortOrder<>("release-date", Work.BY_RELEASE_DATE.reversed()),
+    new SortOrder<>("alpha", Work.BY_NAME)
   );
 
   private static final List<Filter<Work>> FILTERS = List.of(
@@ -43,10 +42,10 @@ public class TMDBPlugin implements Plugin {
   public Menu getMenu() {
     return new Menu("TMDB", ResourceManager.getImage(getClass(), "image"), List.of(
       new MenuItem("Top 100", null, () -> factory.create(
-        () -> createProductionItems(), "Top100", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
+        () -> createProductionItems(), "Top100", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null, Work::getId
       )),
       new MenuItem("Recommendations", null, () -> factory.create(
-        () -> createProductionItems(), "Recommended", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null
+        () -> createProductionItems(), "Recommended", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), null, Work::getId
       ))
     ));
   }

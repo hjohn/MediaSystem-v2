@@ -1,11 +1,13 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
+import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Model;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.AbstractSetup;
 import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory.ContributionsPresentation;
 import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsPresentationFactory;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Contribution;
+import hs.mediasystem.ui.api.domain.Role;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import javafx.scene.Node;
@@ -31,5 +33,19 @@ public class ContributionsSetup extends AbstractSetup<Contribution, Contribution
   @Override
   protected Node createPreviewPanel(Contribution item) {
     return contextLayout.create(item.getPerson());
+  }
+
+  @Override
+  protected void fillModel(Contribution item, Model model) {
+    model.title.set(item.getPerson().getName());
+    model.imageHandle.set(item.getPerson().getCover().orElse(null));
+
+    Role role = item.getRole();
+
+    model.subtitle.set(
+      role.getCharacter() != null && !role.getCharacter().isEmpty() ? "as " + role.getCharacter()
+        : role.getJob() != null && !role.getJob().isEmpty() ? role.getJob()
+        : ""
+    );
   }
 }

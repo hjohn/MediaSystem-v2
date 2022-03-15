@@ -145,4 +145,24 @@ public class Details {
   public Classification getClassification() {
     return classification;
   }
+
+  public String getYearRange() {
+    LocalDate date = getReleaseDate().orElse(null);
+
+    if(date == null) {
+      return "Unknown";
+    }
+
+    Stage stage = getClassification().getStage().orElse(null);
+    LocalDate lastAirDate = getSerie().flatMap(Serie::getLastAirDate).orElse(null);
+
+    if(stage == Stage.ENDED && lastAirDate != null && lastAirDate.getYear() != date.getYear()) {
+      return date.getYear() + " - " + lastAirDate.getYear();
+    }
+    else if(getSerie().isPresent() && stage == Stage.RELEASED) {
+      return date.getYear() + " -";
+    }
+
+    return "" + date.getYear();
+  }
 }

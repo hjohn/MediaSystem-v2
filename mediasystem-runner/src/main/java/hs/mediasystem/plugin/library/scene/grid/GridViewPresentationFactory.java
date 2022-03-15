@@ -3,7 +3,6 @@ package hs.mediasystem.plugin.library.scene.grid;
 import hs.jfx.eventstream.core.Changes;
 import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
-import hs.mediasystem.plugin.library.scene.BinderProvider;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.grouping.Grouping;
@@ -18,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -38,7 +38,6 @@ public abstract class GridViewPresentationFactory {
   private static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
 
   @Inject private SettingsClient settingsClient;
-  @Inject private BinderProvider binderProvider;
 
   public interface Parent<T> {
     List<T> getChildren();
@@ -65,6 +64,7 @@ public abstract class GridViewPresentationFactory {
     public final ObjectProperty<Object> contextItem = new SimpleObjectProperty<>(null);
 
     private final SettingsSource settingsSource;
+    private final Function<U, Object> idProvider;
 
     public final ObjectProperty<SortOrder<U>> sortOrder = new SimpleObjectProperty<>(null);
     public final ObservableList<SortOrder<U>> availableSortOrders = FXCollections.observableArrayList();
@@ -99,11 +99,13 @@ public abstract class GridViewPresentationFactory {
     /**
      * Constructs a new instance.
      *
-     * @param settingName a name under which the view settings and last selected item can be stored, cannot be null
-     * @param viewOptions a {@link ViewOptions}, cannot be null
+     * @param settingName a name under which the view settings and last selected item can be stored, cannot be {@code null}
+     * @param viewOptions a {@link ViewOptions}, cannot be {@code null}
+     * @param idProvider a function converting a type {@code U} to an id object, cannot be {@code null}
      */
-    protected GridViewPresentation(String settingName, ViewOptions<T, U> viewOptions) {
-      this.settingsSource = settingsClient.of(SYSTEM_PREFIX + settingName);
+    protected GridViewPresentation(String settingName, ViewOptions<T, U> viewOptions, Function<U, Object> idProvider) {
+      this.settingsSource = settingsClient.of(SYSTEM_PREFIX + Objects.requireNonNull(settingName, "settingName cannot be null"));
+      this.idProvider = Objects.requireNonNull(idProvider, "idProvider cannot be null");
 
       this.contextItem.bind(rootContextItem);  // initially bound, can be unbound when navigating to a child
       this.lastSelectedId = settingsSource.getSetting("last-selected");
@@ -119,7 +121,7 @@ public abstract class GridViewPresentationFactory {
       this.stateFilter.setValue(viewOptions.stateFilters.get(0));
       this.grouping.setValue(viewOptions.groupings.get(0));
 
-      setupPersistence(settingsSource, binderProvider);
+      setupPersistence(settingsSource);
       setupSortingAndFiltering();  // Sets up grouping
     }
 
@@ -131,10 +133,11 @@ public abstract class GridViewPresentationFactory {
       }
     }
 
-    private void setupPersistence(SettingsSource ss, BinderProvider binderProvider) {
+    private void setupPersistence(SettingsSource ss) {
       this.sortOrder.setValue(this.availableSortOrders.get(ss.getIntSettingOrDefault("sort-order", 0, 0, this.availableSortOrders.size() - 1)));
       this.filter.setValue(this.availableFilters.get(ss.getIntSettingOrDefault("filter", 0, 0, this.availableFilters.size() - 1)));
       this.stateFilter.setValue(this.availableStateFilters.get(ss.getIntSettingOrDefault("state-filter", 0, 0, this.availableStateFilters.size() - 1)));
+
       if(this.availableGroupings.size() > 0) {
         this.grouping.setValue(this.availableGroupings.get(ss.getIntSettingOrDefault("grouping", 0, 0, this.availableGroupings.size() - 1)));
       }
@@ -150,7 +153,7 @@ public abstract class GridViewPresentationFactory {
 
       this.selectedItem.addListener((obs, old, current) -> {
         if(current != null) {
-          String id = binderProvider.map(IDBinder.class, IDBinder<Object>::toId, current);
+          String id = idProvider.apply(current).toString();
 
           ss.storeSetting("last-selected", id);
         }
@@ -318,7 +321,9 @@ public abstract class GridViewPresentationFactory {
           // the old context item is actually the parent that was shown as context with the child,
           // so this is the one we want to try and select:
           if(contextItem.isBound() && c.getOldValue() != null) {
-            U obj = findById(toId(c.getOldValue()));
+            @SuppressWarnings("unchecked")
+            U oldValue = (U)c.getOldValue();
+            U obj = findById(toId(oldValue));
 
             if(obj != null) {
               selectItem(obj);
@@ -327,8 +332,8 @@ public abstract class GridViewPresentationFactory {
         });
     }
 
-    private String toId(Object object) {
-      return binderProvider.map(IDBinder.class, IDBinder<Object>::toId, object);
+    private String toId(U object) {
+      return idProvider.apply(object).toString();
     }
 
     /**
