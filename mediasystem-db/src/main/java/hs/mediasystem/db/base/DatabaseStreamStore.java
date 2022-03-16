@@ -52,9 +52,9 @@ public class DatabaseStreamStore implements StreamableStore {
   @Inject private ContentPrintProvider contentPrintProvider;
 
   private final Comparator<CachedStream> reversedCreationOrder = Comparator
-      .comparing(CachedStream::getDiscoveryTime)
-      .thenComparingLong(cs -> contentPrintProvider.get(cs.getStreamable().getId().getContentId()).getLastModificationTime())
-      .reversed();
+    .comparing(CachedStream::getDiscoveryTime)
+    .thenComparingLong(cs -> contentPrintProvider.get(cs.getStreamable().getId().getContentId()).getLastModificationTime())
+    .reversed();
 
   @PostConstruct
   private void postConstruct() {
