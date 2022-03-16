@@ -210,11 +210,13 @@ public class DatabaseStreamStore implements StreamableStore {
     if(lastEnrichTime != null) {
       double secondsUntilNextTime = Math.abs(Duration.between(lastEnrichTime, now).toSeconds()) + 1;  // Make sure this is not zero or negative, or an infinite loop can result below
 
+      secondsUntilNextTime *= 1.6;
+
       while(secondsUntilNextTime < 6 * 60 * 60) {
         secondsUntilNextTime *= (0.1 * Math.random() + 1.4);
       }
 
-      while(secondsUntilNextTime > 90 * 24 * 60 * 60L) {
+      while(secondsUntilNextTime > 30 * 24 * 60 * 60L) {
         secondsUntilNextTime *= 0.95;
       }
 
