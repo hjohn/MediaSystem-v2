@@ -14,7 +14,6 @@ import hs.mediasystem.runner.grouping.NoGrouping;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.WorksClient;
 import hs.mediasystem.ui.api.domain.Details;
-import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.LocalDate;
@@ -43,7 +42,7 @@ public class MoviesCollectionType implements CollectionType {
 
   private static final List<Filter<Object>> STATE_FILTERS = List.of(
     new Filter<>("none", w -> true),
-    new Filter<>("unwatched", w -> !extractState(w).isConsumed())
+    new Filter<>("unwatched", w -> !isConsumed(w))
   );
 
   @Inject private GenericCollectionPresentationFactory factory;
@@ -88,13 +87,14 @@ public class MoviesCollectionType implements CollectionType {
     return extractDetails(obj).getReception().orElse(Reception.EMPTY);
   }
 
-  private static State extractState(Object obj) {
-    if(obj instanceof Work) {
-      Work work = (Work)obj;
-
-      return work.getState();
+  private static boolean isConsumed(Object obj) {
+    if(obj instanceof Work w) {
+      return w.getState().isConsumed();
+    }
+    if(obj instanceof WorksGroup wg) {
+      return wg.allWatched();
     }
 
-    return State.EMPTY;
+    return false;
   }
 }

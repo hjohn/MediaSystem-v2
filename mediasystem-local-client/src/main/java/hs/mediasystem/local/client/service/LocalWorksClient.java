@@ -66,7 +66,6 @@ public class LocalWorksClient implements WorksClient {
       work.getType(),
       createParent(work.getParent().orElse(null)),
       createDetails(work.getDescriptor(), work.getParent().orElse(null), primary),
-      primary == null ? State.EMPTY : primary.getState(),
       streams
     );
   }

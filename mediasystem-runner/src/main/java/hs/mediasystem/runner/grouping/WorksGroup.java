@@ -11,8 +11,9 @@ public class WorksGroup implements Parent<Work> {
   private final WorkId id;
   private final Details details;
   private final List<Work> children;
+  private final boolean allWatched;
 
-  public WorksGroup(WorkId id, Details details, List<Work> children) {
+  public WorksGroup(WorkId id, Details details, List<Work> children, boolean allWatched) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -26,6 +27,7 @@ public class WorksGroup implements Parent<Work> {
     this.id = id;
     this.details = details;
     this.children = children;
+    this.allWatched = allWatched;
   }
 
   public WorkId getId() {
@@ -39,5 +41,9 @@ public class WorksGroup implements Parent<Work> {
   @Override
   public List<Work> getChildren() {
     return children;
+  }
+
+  public boolean allWatched() {
+    return allWatched;
   }
 }

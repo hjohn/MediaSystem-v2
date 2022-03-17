@@ -21,10 +21,10 @@ public class Work {
   private final MediaType type;
   private final Optional<Parent> parent;
   private final Details details;
-  private final State state;
   private final List<MediaStream> streams;
+  private final Optional<MediaStream> primaryStream;
 
-  public Work(WorkId id, MediaType type, Parent parent, Details details, State state, List<MediaStream> streams) {
+  public Work(WorkId id, MediaType type, Parent parent, Details details, List<MediaStream> streams) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -34,9 +34,6 @@ public class Work {
     if(details == null) {
       throw new IllegalArgumentException("details cannot be null");
     }
-    if(state == null) {
-      throw new IllegalArgumentException("state cannot be null");
-    }
     if(streams == null) {
       throw new IllegalArgumentException("streams cannot be null");
     }
@@ -45,8 +42,13 @@ public class Work {
     this.type = type;
     this.parent = Optional.ofNullable(parent);
     this.details = details;
-    this.state = state;
     this.streams = streams;
+
+    /*
+     * Derived information:
+     */
+
+    this.primaryStream = determineBestStream();
   }
 
   public WorkId getId() {
@@ -65,9 +67,8 @@ public class Work {
     return details;
   }
 
-  // TODO state returned here is not the same type as the one in MediaStream, should be removed and an alternative solution devised for updating viewed state in views
   public State getState() {
-    return state;
+    return primaryStream.map(MediaStream::getState).orElse(State.EMPTY);
   }
 
   /**
@@ -78,24 +79,30 @@ public class Work {
    * @return a watched fraction
    */
   public OptionalDouble getWatchedFraction() {
-    MediaStream bestStream = determineBestStream();
-
-    if(bestStream == null) {
-      return OptionalDouble.empty();
-    }
-
-    long resumePosition = bestStream.getState().getResumePosition().toSeconds();
-
-    return OptionalDouble.of(bestStream.getDuration().map(d -> resumePosition / (double)d.toSeconds()).orElse(0.0));
+    return primaryStream
+      .map(s -> s.getDuration().map(d -> s.getState().getResumePosition().toSeconds() / (double)d.toSeconds()).orElse(0.0))
+      .map(OptionalDouble::of)
+      .orElse(OptionalDouble.empty());
   }
 
   public boolean isWatched() {
-    MediaStream bestStream = determineBestStream();
-
-    return bestStream == null ? false : bestStream.getState().isConsumed();
+    return getState().isConsumed();
   }
 
-  private MediaStream determineBestStream() {
+  public List<MediaStream> getStreams() {
+    return streams;
+  }
+
+  public Optional<MediaStream> getPrimaryStream() {
+    return primaryStream;
+  }
+
+  @Override
+  public String toString() {
+    return "Work[" + id + ": '" + details.getTitle() + "']";
+  }
+
+  private Optional<MediaStream> determineBestStream() {
     // This could take into account that two or more streams form a whole, and must also
     // deal with alternative streams (different cuts)
 
@@ -107,19 +114,6 @@ public class Work {
       }
     }
 
-    return bestStream;
-  }
-
-  public List<MediaStream> getStreams() {
-    return streams;
-  }
-
-  public Optional<MediaStream> getPrimaryStream() {
-    return streams.stream().findFirst();
-  }
-
-  @Override
-  public String toString() {
-    return "Work[" + id + ": '" + details.getTitle() + "']";
+    return Optional.ofNullable(bestStream);
   }
 }

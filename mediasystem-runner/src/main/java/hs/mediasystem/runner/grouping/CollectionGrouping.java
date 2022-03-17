@@ -58,6 +58,8 @@ public class CollectionGrouping implements Grouping<Work, Object> {
       .findFirst()
       .orElse(work);
 
+    boolean watched = list.stream().allMatch(Work::isWatched);
+
     Details latestDetails = latest.getDetails();
     Details groupDetails = work.getDetails();
 
@@ -78,6 +80,6 @@ public class CollectionGrouping implements Grouping<Work, Object> {
       groupDetails.getClassification()
     );
 
-    return new WorksGroup(work.getId(), combinedDetails, list);
+    return new WorksGroup(work.getId(), combinedDetails, list, watched);
   }
 }

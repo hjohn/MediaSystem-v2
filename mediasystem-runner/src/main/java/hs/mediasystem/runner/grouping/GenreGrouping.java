@@ -97,7 +97,8 @@ public class GenreGrouping implements Grouping<Work, Object> {
       WorksGroup parent = new WorksGroup(
         new WorkId(DATA_SOURCE, entry.getKey()),
         details,
-        children
+        children,
+        false
       );
 
       topLevelItems.add(parent);

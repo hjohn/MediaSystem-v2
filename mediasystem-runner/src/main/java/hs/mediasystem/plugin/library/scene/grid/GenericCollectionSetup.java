@@ -53,6 +53,7 @@ public class GenericCollectionSetup extends AbstractSetup<Work, Object, GenericC
       model.title.set(wg.getDetails().getTitle());
       model.imageHandle.set(wg.getDetails().getAnyCover().orElse(null));
       model.annotation1.set(toYearRange(wg));
+      model.status.set(wg.allWatched() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
     }
     else {
       throw new IllegalStateException("Unsupported item type: " + item);
