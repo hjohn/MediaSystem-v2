@@ -273,8 +273,8 @@ public final class AnnotatedRecordMapper<T> implements RecordMapper<T> {
 
   @Override
   public void invokeAfterLoadStore(Object object, Database database) throws DatabaseException {
-    if(object instanceof DatabaseObject) {
-      ((DatabaseObject)object).setDatabase(database);
+    if(object instanceof DatabaseObject dbObj) {
+      dbObj.setDatabase(database);
     }
 
     if(afterLoadStore != null) {
@@ -296,9 +296,7 @@ public final class AnnotatedRecordMapper<T> implements RecordMapper<T> {
       return;
     }
 
-    if(key instanceof Number) {
-      Number number = (Number)key;
-
+    if(key instanceof Number number) {
       if(idColumn.getType() == int.class || idColumn.getType() == Integer.class) {
         idColumn.getAccessor().set(object, number.intValue());
       }
@@ -408,8 +406,8 @@ public final class AnnotatedRecordMapper<T> implements RecordMapper<T> {
   }
 
   public static Accessor createAccessor(AccessibleObject accessibleObject) {
-    if(accessibleObject instanceof Field) {
-      return new FieldAccessor((Field)accessibleObject);
+    if(accessibleObject instanceof Field f) {
+      return new FieldAccessor(f);
     }
 
     Method method = (Method)accessibleObject;

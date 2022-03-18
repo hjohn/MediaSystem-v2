@@ -138,13 +138,13 @@ public class FXSceneManager implements SceneManager {
 
   @Override
   public void setPlayerRoot(Object playerDisplay) {
-    if(playerDisplay instanceof Node) {
+    if(playerDisplay instanceof Node node) {
 
       /*
-       * JavaFX node, just put it in stackpane of main scene.
+       * JavaFX node, just put it in StackPane of main scene.
        */
 
-      playerPane.getChildren().setAll((Node)playerDisplay);
+      playerPane.getChildren().setAll(node);
     }
   }
 

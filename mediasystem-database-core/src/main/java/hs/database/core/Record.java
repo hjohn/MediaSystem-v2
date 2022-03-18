@@ -24,8 +24,7 @@ public class Record implements Map<String, Object> {
   public String getString(String fieldName) {
     Object object = get(fieldName);
 
-    return object == null ? null :
-      object instanceof String ? (String)object : object.toString();
+    return object == null ? null : object.toString();
   }
 
   public Boolean getBoolean(String fieldName) {

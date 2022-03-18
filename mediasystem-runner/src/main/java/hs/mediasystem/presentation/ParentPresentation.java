@@ -53,7 +53,7 @@ public class ParentPresentation implements Presentation, Navigable {
     List<Presentation> presentations = Stream.iterate(
         presentation,
         Objects::nonNull,
-        p -> p instanceof ParentPresentation ? ((ParentPresentation)p).childPresentation.get() : null
+        p -> p instanceof ParentPresentation pp ? pp.childPresentation.get() : null
       )
       .collect(Collectors.toList());
 

@@ -157,8 +157,7 @@ public class StreamCacheUpdateService {
 
             asyncEnrich(Type.HIGH_UNCACHED, found);
           }
-          else if(mediaDescriptor instanceof Production) {
-            Production production = (Production)mediaDescriptor;
+          else if(mediaDescriptor instanceof Production production) {
             Identifier collectionIdentifier = production.getCollectionIdentifier().orElse(null);
 
             if(collectionIdentifier != null) {
@@ -285,9 +284,7 @@ public class StreamCacheUpdateService {
     // Production contains related Collection identifier which can be queried to get IdentifierCollection which in turn are each queried to get further Productions
     MediaDescriptor descriptor = mediaIdentification.getDescriptor();
 
-    if(descriptor instanceof Production) {
-      Production production = (Production)descriptor;
-
+    if(descriptor instanceof Production production) {
       production.getRelatedIdentifiers().stream()
         .filter(identifier -> identifier.getDataSource().getType().equals(MediaType.COLLECTION))  // After this filtering, stream consists of Collection type identifiers
         .filter(identifier -> identifier.getDataSource().getName().equals(production.getIdentifier().getDataSource().getName()))  // Only Collection type identifiers of same data source as production that contained it

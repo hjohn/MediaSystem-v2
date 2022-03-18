@@ -121,9 +121,7 @@ public class StreamCacheUpdater {
     if(mi != null) {
       LOGGER.info("Enrichment of " + streamId + " [" + mi.getIdentification().getPrimaryIdentifier().getDataSource() + "] succeeded for " + mi.getStreamable() + ":\n - " + mi.getIdentification() + (mi.getDescriptor() == null ? "" : " -> " + mi.getDescriptor()));
     }
-    else if(t instanceof EnrichmentException) {
-      EnrichmentException e = (EnrichmentException)t;
-
+    else if(t instanceof EnrichmentException e) {
       LOGGER.warning("Enrichment of " + streamId + " with data sources " + e.getDataSourceNames() + " failed for " + e.getStreamable() + ":\n - " + Throwables.formatAsOneLine(e));
     }
     else if(t instanceof CompletionException) {

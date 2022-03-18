@@ -30,13 +30,9 @@ public class ActionListView<T> extends ListView<T> {
         if(event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2) {
           EventTarget target = event.getTarget();
 
-          if(target instanceof Node) {
-            Node node = (Node)target;
-
+          if(target instanceof Node node) {
             while(node != null) {
-              if(node instanceof ListCell) {
-                ListCell<?> listCell = (ListCell<?>)node;
-
+              if(node instanceof ListCell<?> listCell) {
                 if(ActionListView.this.getFocusModel().getFocusedIndex() == listCell.getIndex()) {
                   onItemSelected(event);
                 }

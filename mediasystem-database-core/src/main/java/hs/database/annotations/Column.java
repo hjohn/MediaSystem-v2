@@ -25,8 +25,8 @@ public @interface Column {
   public static class DefaultConverter implements DataTypeConverter<Object, Object> {
     @Override
     public Object toStorageType(Object input) {
-      if(input instanceof LocalDateTime) {
-        return Date.from(((LocalDateTime)input).toInstant(ZoneOffset.UTC));
+      if(input instanceof LocalDateTime ldt) {
+        return Date.from(ldt.toInstant(ZoneOffset.UTC));
       }
       //else if(input instanceof String
 
@@ -41,25 +41,17 @@ public @interface Column {
 
           return method.invoke(null, input);
         }
-        else if(input instanceof Blob) {
-          Blob blob = (Blob)input;
-
-          return blob.getBytes(1L, (int)blob.length());
+        if(input instanceof Blob b) {
+          return b.getBytes(1L, (int)b.length());
         }
-        else if(input instanceof Date) {
-          Date date = (Date)input;
-
-          return date.toLocalDate();
+        if(input instanceof Date d) {
+          return d.toLocalDate();
         }
-        else if(input instanceof Timestamp) {
-          Timestamp timestamp = (Timestamp)input;
-
-          if(type.equals(LocalDateTime.class)) {
-            return timestamp.toLocalDateTime();
-          }
+        if(type.equals(LocalDateTime.class) && input instanceof Timestamp t) {
+          return t.toLocalDateTime();
         }
-        else if(type.equals(String.class) && input instanceof UUID) {
-          return ((UUID)input).toString();
+        if(type.equals(String.class) && input instanceof UUID u) {
+          return u.toString();
         }
 
         return input;

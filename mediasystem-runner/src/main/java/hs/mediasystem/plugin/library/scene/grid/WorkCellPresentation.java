@@ -36,12 +36,8 @@ public class WorkCellPresentation implements Presentation {
   public BooleanProperty watchedProperty() {
     Object obj = listView.getSelectionModel().getSelectedItem();
 
-    if(obj instanceof Work) {
-      Work work = (Work)obj;
-
-      if(work.getType().isPlayable() && !work.getStreams().isEmpty()) {
-        return streamStateClient.watchedProperty(work.getPrimaryStream().orElseThrow().getId().getContentId());
-      }
+    if(obj instanceof Work work && work.getType().isPlayable() && !work.getStreams().isEmpty()) {
+      return streamStateClient.watchedProperty(work.getPrimaryStream().orElseThrow().getId().getContentId());
     }
 
     return null;  // Indicates no state possible as there is no stream
@@ -50,14 +46,10 @@ public class WorkCellPresentation implements Presentation {
   public Trigger<Void> reidentify() {
     Object obj = listView.getSelectionModel().getSelectedItem();
 
-    if(obj instanceof Work) {
-      Work work = (Work)obj;
-
-      if(!work.getStreams().isEmpty()) {
-        return Trigger.asynchronous(event -> {
-          workClient.reidentify(work.getId());
-        });
-      }
+    if(obj instanceof Work work && !work.getStreams().isEmpty()) {
+      return Trigger.asynchronous(event -> {
+        workClient.reidentify(work.getId());
+      });
     }
 
     return null;

@@ -43,11 +43,11 @@ import javax.inject.Singleton;
 public class ContextLayout {
 
   public BasePanel createGeneric(Object item) {
-    if(item instanceof Work) {
-      return create((Work)item);
+    if(item instanceof Work w) {
+      return create(w);
     }
-    if(item instanceof WorksGroup) {
-      return create(((WorksGroup)item));
+    if(item instanceof WorksGroup wg) {
+      return create(wg);
     }
 
     return null;

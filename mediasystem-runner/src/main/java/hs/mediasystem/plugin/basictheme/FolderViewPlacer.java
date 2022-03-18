@@ -28,6 +28,6 @@ public class FolderViewPlacer extends AbstractPlacer<LibraryPresentation, Folder
   }
 
   private ImageHandle toImageHandle(Object obj) {
-    return obj instanceof Work ? ((Work)obj).getDetails().getBackdrop().orElse(null) : null;
+    return obj instanceof Work w ? w.getDetails().getBackdrop().orElse(null) : null;
   }
 }

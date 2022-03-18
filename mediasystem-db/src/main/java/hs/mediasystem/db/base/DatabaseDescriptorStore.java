@@ -68,9 +68,7 @@ public class DatabaseDescriptorStore implements DescriptorStore {
     cache.put(identifier, cd);
     descriptors.put(identifier, cd.getDescriptor());
 
-    if(cd.getDescriptor() instanceof Serie) {
-      Serie serie = (Serie)cd.getDescriptor();
-
+    if(cd.getDescriptor() instanceof Serie serie) {
       serie.getSeasons().stream()
         .map(Season::getEpisodes)
         .flatMap(Collection::stream)
@@ -84,9 +82,7 @@ public class DatabaseDescriptorStore implements DescriptorStore {
     if(cache.remove(identifier) != null) {
       descriptors.remove(identifier);
 
-      if(cd.getDescriptor() instanceof Serie) {
-        Serie serie = (Serie)cd.getDescriptor();
-
+      if(cd.getDescriptor() instanceof Serie serie) {
         serie.getSeasons().stream()
           .map(Season::getEpisodes)
           .flatMap(Collection::stream)

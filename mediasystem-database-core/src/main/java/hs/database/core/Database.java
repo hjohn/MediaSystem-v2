@@ -75,14 +75,14 @@ public class Database {
     int parameterIndex = 1;
 
     for(Object value : parameterValues) {
-      if(value instanceof Date) {
-        statement.setTimestamp(parameterIndex++, new Timestamp(((Date)value).getTime()));
+      if(value instanceof Date d) {
+        statement.setTimestamp(parameterIndex++, new Timestamp(d.getTime()));
       }
-      else if(value instanceof LocalDate) {
-        statement.setTimestamp(parameterIndex++, Timestamp.valueOf(((LocalDate)value).atStartOfDay()));
+      else if(value instanceof LocalDate ld) {
+        statement.setTimestamp(parameterIndex++, Timestamp.valueOf(ld.atStartOfDay()));
       }
-      else if(value instanceof Enum) {
-        statement.setObject(parameterIndex++, ((Enum<?>)value).name());
+      else if(value instanceof Enum<?> e) {
+        statement.setObject(parameterIndex++, e.name());
       }
       else if(value instanceof Json) {
         statement.setObject(parameterIndex++, value.toString(), Types.OTHER);

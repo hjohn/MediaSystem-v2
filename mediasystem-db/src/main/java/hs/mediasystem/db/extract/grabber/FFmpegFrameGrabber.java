@@ -203,8 +203,8 @@ public class FFmpegFrameGrabber extends FrameGrabber {
                 Loader.load(org.bytedeco.javacpp.avdevice.class);
                 avdevice_register_all();
             } catch (Throwable t) {
-                if (t instanceof Exception) {
-                    throw loadingException = (Exception)t;
+                if (t instanceof Exception e) {
+                    throw loadingException = e;
                 } else {
                     throw loadingException = new Exception("Failed to load " + FFmpegFrameGrabber.class, t);
                 }

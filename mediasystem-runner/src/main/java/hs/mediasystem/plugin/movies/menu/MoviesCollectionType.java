@@ -72,9 +72,7 @@ public class MoviesCollectionType implements CollectionType {
   }
 
   private static Details extractDetails(Object obj) {
-    if(obj instanceof Work) {
-      Work work = (Work)obj;
-
+    if(obj instanceof Work work) {
       return work.getDetails();
     }
 

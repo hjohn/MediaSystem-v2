@@ -78,7 +78,7 @@ public class ResourceManager {
   public static boolean getBoolean(Class<?> cls, String key, boolean defaultValue) {
     return getResourceBundle(cls)
       .map(rb -> rb.getObject(key))
-      .map(o -> o instanceof Boolean ? (Boolean)o : Boolean.parseBoolean((String)o))
+      .map(o -> o instanceof Boolean b ? b : Boolean.parseBoolean((String)o))
       .ignore(MissingResourceException.class)
       .orElse(defaultValue);
   }
@@ -90,7 +90,7 @@ public class ResourceManager {
   public static double getDouble(Class<?> cls, String key, double defaultValue) {
     return getResourceBundle(cls)
       .map(rb -> rb.getObject(key))
-      .map(o -> o instanceof Number ? ((Number)o).doubleValue() : Double.parseDouble((String)o))
+      .map(o -> o instanceof Number n ? n.doubleValue() : Double.parseDouble((String)o))
       .ignore(MissingResourceException.class)
       .orElse(defaultValue);
   }

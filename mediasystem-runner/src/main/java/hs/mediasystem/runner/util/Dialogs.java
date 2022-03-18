@@ -150,8 +150,8 @@ public class Dialogs {
   }
 
   public static String translateException(Throwable t) {
-    if(t instanceof Localizable) {
-      return ((Localizable)t).toLocalizedString();
+    if(t instanceof Localizable l) {
+      return l.toLocalizedString();
     }
 
     return "### Unexpected error\n"

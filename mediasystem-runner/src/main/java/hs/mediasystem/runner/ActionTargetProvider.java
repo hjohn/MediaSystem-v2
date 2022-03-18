@@ -25,8 +25,8 @@ public class ActionTargetProvider {
         currentPath.add(exposedControl);
 
         if(exposedControl instanceof AbstractExposedProperty) {
-          if(exposedControl instanceof ExposedNode) {
-            actionTargets.addAll(createActionTargets(((ExposedNode<?, ?>)exposedControl).getProvidedType(), currentPath));
+          if(exposedControl instanceof ExposedNode<?, ?> en) {
+            actionTargets.addAll(createActionTargets(en.getProvidedType(), currentPath));
           }
           else {
             actionTargets.add(new ActionTarget(currentPath));
