@@ -20,7 +20,6 @@ import hs.mediasystem.util.javafx.control.csslayout.StylableVBox;
 import java.util.Objects;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -111,7 +110,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
     });
 
     EventStreams.valuesOf(Nodes.showing(listView))
-      .map(visible -> visible ? (ObservableList<Work>)(ObservableList<?>)presentation.items : FXCollections.<Work>emptyObservableList())
+      .map(visible -> visible ? presentation.items : FXCollections.<Work>emptyObservableList())
       .feedTo(listView.itemsProperty());
 
     EventStreams.valuesOf(presentation.selectedItem)

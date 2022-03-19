@@ -3,8 +3,7 @@ package hs.mediasystem.util.expose;
 import java.util.function.Function;
 
 import javafx.beans.property.Property;
-
-import org.reactfx.value.Val;
+import javafx.beans.property.SimpleDoubleProperty;
 
 public class ExposedNumberProperty<P> extends AbstractExposedNumericProperty<P, Number> {
 
@@ -22,8 +21,11 @@ public class ExposedNumberProperty<P> extends AbstractExposedNumericProperty<P, 
 
   public class RangeBuilder {
     public NameBuilder range(double min, double max, double step) {
-      ExposedNumberProperty.this.min = p -> Val.constant(Double.valueOf(min));
-      ExposedNumberProperty.this.max = p -> Val.constant(Double.valueOf(max));
+      SimpleDoubleProperty minProperty = new SimpleDoubleProperty(min);
+      SimpleDoubleProperty maxProperty = new SimpleDoubleProperty(max);
+
+      ExposedNumberProperty.this.min = p -> minProperty;
+      ExposedNumberProperty.this.max = p -> maxProperty;
       ExposedNumberProperty.this.step = Double.valueOf(step);
 
       return new NameBuilder();

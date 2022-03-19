@@ -29,6 +29,7 @@ import com.sun.javafx.binding.Subscription;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
@@ -220,6 +221,10 @@ public interface ObservableValue<T> extends Observable {
      */
     default ObservableValue<T> conditionOn(ObservableValue<Boolean> condition) {
         return new ConditionalBinding<>(condition, this);
+    }
+
+    default ObservableValue<T> filter(Predicate<? super T> predicate) {
+        return new FilteredBinding<>(this, predicate);
     }
 
     /**

@@ -10,21 +10,18 @@ import hs.mediasystem.ui.api.domain.Work;
 
 import javax.inject.Singleton;
 
-import org.reactfx.value.Val;
-
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = ParticipationsSetup.class)
 public class ParticipationsPlacer extends AbstractPlacer<LibraryPresentation, ParticipationsPresentation, ParticipationsSetup> {
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, ParticipationsPresentation presentation) {
-    parentPresentation.backdrop.bind(
-      Val.wrap(presentation.selectedItem)
-        .filter(ConsolidatedParticipation.class::isInstance)
-        .map(ConsolidatedParticipation.class::cast)
-        .map(ConsolidatedParticipation::getWork)
-        .map(Work::getDetails)
-        .map(d -> d.getBackdrop().orElse(null))
+    parentPresentation.backdrop.bind(presentation.selectedItem
+      .filter(ConsolidatedParticipation.class::isInstance)
+      .map(ConsolidatedParticipation.class::cast)
+      .map(ConsolidatedParticipation::getWork)
+      .map(Work::getDetails)
+      .map(d -> d.getBackdrop().orElse(null))
     );
   }
 }

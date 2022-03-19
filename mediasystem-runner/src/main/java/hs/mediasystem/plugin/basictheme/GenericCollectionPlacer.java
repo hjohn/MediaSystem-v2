@@ -11,22 +11,20 @@ import hs.mediasystem.ui.api.domain.Work;
 
 import javax.inject.Singleton;
 
-import org.reactfx.value.Val;
-
 @Singleton
 @PlacerQualifier(parent = LibraryNodeFactory.class, child = GenericCollectionSetup.class)
 public class GenericCollectionPlacer extends AbstractPlacer<LibraryPresentation, GenericCollectionPresentation<Work, Object>, GenericCollectionSetup> {
 
   @Override
   protected void linkPresentations(LibraryPresentation parentPresentation, GenericCollectionPresentation<Work, Object> presentation) {
-    parentPresentation.backdrop.bind(
-      Val.wrap(presentation.selectedItem)
-        .filter(Work.class::isInstance)
-        .map(Work.class::cast)
-        .map(Work::getDetails)
-        .map(Details::getBackdrop)
-        .orElse(Val.wrap(presentation.selectedItem).filter(WorksGroup.class::isInstance).map(WorksGroup.class::cast).map(WorksGroup::getDetails).map(Details::getBackdrop))
-        .map(o -> o.orElse(null))
+    parentPresentation.backdrop.bind(presentation.selectedItem
+      .map(i -> {
+        if(i instanceof Work w) return w.getDetails();
+        if(i instanceof WorksGroup wg) return wg.getDetails();
+        return null;
+      })
+      .map(Details::getBackdrop)
+      .map(o -> o.orElse(null))
     );
   }
 }

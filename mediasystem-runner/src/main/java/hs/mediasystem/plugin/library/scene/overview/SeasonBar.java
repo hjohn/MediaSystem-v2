@@ -9,6 +9,10 @@ import java.util.Collections;
 import java.util.List;
 
 import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -29,8 +33,8 @@ import org.reactfx.util.Interpolator;
 import org.reactfx.value.Var;
 
 public class SeasonBar extends HBox {
-  public final Var<List<Entry>> entries = Var.newSimpleVar(Collections.emptyList());
-  public final Var<Integer> activeIndex = Var.newSimpleVar(0);
+  public final ObjectProperty<List<Entry>> entries = new SimpleObjectProperty<>(Collections.emptyList());
+  public final IntegerProperty activeIndex = new SimpleIntegerProperty();
   public final HBox content = Containers.hbox("items");
   public final ScrollPane scrollPane = new ScrollPane(content);
 
@@ -42,9 +46,9 @@ public class SeasonBar extends HBox {
     scrollPane.setHbarPolicy(ScrollBarPolicy.NEVER);
     scrollPane.setVbarPolicy(ScrollBarPolicy.NEVER);
 
-    entries.changes().observe(c -> recreateChildren());
+    entries.addListener((obs, old, current) -> recreateChildren());
 
-    activeIndex.observeChanges((ov, old, current) -> updateActiveEntry(entries.getValue().get(current)));
+    activeIndex.addListener((ov, old, current) -> updateActiveEntry(entries.getValue().get(current.intValue())));
 
     content.sceneProperty().addListener(obs -> Platform.runLater(() -> {
       hscroll.setValue(calculateScrollPositionForActiveNode());
@@ -149,9 +153,7 @@ public class SeasonBar extends HBox {
 
       StackPane stackPane = Containers.stack(label, graphicBackground, graphic);
 
-      entry.mediaStatus.changes()
-        .withDefaultEvent(null)
-        .observe(e -> setStyle(stackPane, entry.mediaStatus.getValue()));
+      entry.mediaStatus.subscribe(ms -> setStyle(stackPane, ms));
 
       StackPane.setAlignment(graphic, Pos.CENTER_RIGHT);
       StackPane.setAlignment(graphicBackground, Pos.CENTER_RIGHT);
@@ -187,7 +189,7 @@ public class SeasonBar extends HBox {
   }
 
   public static class Entry {
-    public final Var<MediaStatus> mediaStatus = Var.newSimpleVar(null);
+    public final ObjectProperty<MediaStatus> mediaStatus = new SimpleObjectProperty<>();
 
     private final String title;
     private final boolean isSeason;
