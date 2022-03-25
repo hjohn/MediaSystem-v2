@@ -28,7 +28,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class RootPresentationHandler {
+public class RootPresentationHandler implements EventRoot {
   private static final Logger LOGGER = Logger.getLogger(RootPresentationHandler.class.getName());
 
   @Inject private Theme theme;
@@ -53,6 +53,11 @@ public class RootPresentationHandler {
     sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
 
     backAction = new Action(new ActionTarget(List.of(ExposedControl.find(Navigable.class, "navigateBack"))), "trigger");
+  }
+
+  @Override
+  public void fire(Event event) {
+    sceneManager.getScene().getFocusOwner().fireEvent(event);
   }
 
   private void onKeyReleased(KeyEvent event) {

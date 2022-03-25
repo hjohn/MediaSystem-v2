@@ -4,6 +4,8 @@ import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.runner.EventRoot;
+import hs.mediasystem.ui.api.ConsumedStateChanged;
 import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
@@ -19,6 +21,7 @@ import javax.inject.Inject;
 public class WorkCellPresentation implements Presentation {
   @Inject private WorkClient workClient;
   @Inject private StreamStateClient streamStateClient;
+  @Inject private EventRoot eventRoot;
   @Inject @Argument private ObservableValue<?> selectedItem;
 
   public BooleanProperty watchedProperty() {
@@ -30,6 +33,7 @@ public class WorkCellPresentation implements Presentation {
 
       property.addListener((ov, old, current) -> {
         streamStateClient.setConsumed(contentId, current);
+        eventRoot.fire(new ConsumedStateChanged(contentId, current));
       });
 
       return property;

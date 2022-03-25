@@ -7,6 +7,7 @@ import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Grid
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Parent;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.ui.api.ConsumedStateChanged;
 import hs.mediasystem.util.javafx.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.Nodes;
 import hs.mediasystem.util.javafx.control.AreaPane2;
@@ -27,6 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javafx.animation.Interpolator;
+import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -83,6 +85,8 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
         presentation.contextItem.setValue(e.getItem());
       }
     });
+
+    listView.addEventHandler(ConsumedStateChanged.ANY, e -> new Thread(() -> Platform.runLater(presentation.createUpdateTask())).start());
 
     listView.getProperties().put("presentation2", workCellPresentationFactory.apply(presentation.selectedItem));
 
