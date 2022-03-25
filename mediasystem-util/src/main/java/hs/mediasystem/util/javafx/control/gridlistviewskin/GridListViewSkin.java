@@ -103,7 +103,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     this.skinnable = skinnable;
 
     skinnable.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
-    skinnable.getSelectionModel().selectedIndexProperty().addListener(this::animateWhenSelectedChanges);
+    skinnable.getSelectionModel().selectedIndexProperty().addListener((obs, old, current) -> Platform.runLater(this::animateWhenSelectedChanges));  // Platform#runLater here solves the problem where the selection index rapidly changes 3 times (current, -1, 0, current) when all items are replaced
     skinnable.getSelectionModel().selectedItemProperty().addListener(obs -> skin.requestLayout());   // Calls layout when focused cell changes (to make sure it is at the top)
 
     this.content = new Region() {
@@ -319,7 +319,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       groups.get() == null ? new int[] {} : groups.get().stream().mapToInt(Group::getPosition).toArray(),
       vertical ? visibleColumns.get() : visibleRows.get()
     );
-    animateWhenSelectedChanges(null);
+    animateWhenSelectedChanges();
   }
 
   private void relayout() {
@@ -423,7 +423,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
   private boolean firstTime = true;
 
-  private void animateWhenSelectedChanges(@SuppressWarnings("unused") Observable obs) {
+  private void animateWhenSelectedChanges() {
     int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
     int length = vertical ? visibleRows.get() : visibleColumns.get();
     int visibleItems = gm.countViewItems(firstVisibleIndex, length);
