@@ -8,6 +8,7 @@ import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
+import hs.mediasystem.util.concurrent.NamedExecutors;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,6 +18,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.Executor;
 import java.util.logging.Logger;
 
 import javafx.beans.property.BooleanProperty;
@@ -33,12 +35,15 @@ import javax.inject.Singleton;
 
 public class PlaybackOverlayPresentation implements Navigable, Presentation {
   private static final Logger LOGGER = Logger.getLogger(PlaybackOverlayPresentation.class.getName());
+  private static final Executor EXECUTOR = NamedExecutors.newSingleTaskExecutor(PlaybackOverlayPresentation.class.getName());
 
   public final Work work;
   public final ObjectProperty<PlayerPresentation> playerPresentation = new SimpleObjectProperty<>();
   public final BooleanProperty overlayVisible = new SimpleBooleanProperty(true);
   public final URI uri;
   public final Duration startPosition;
+
+  private final ConsumptionUpdater consumptionUpdater;
 
   @Singleton
   public static class TaskFactory {
@@ -111,67 +116,47 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
     ContentID contentId = stream == null ? null : stream.getId().getContentId();
 
-    this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
-      private long totalTimeViewed;
-      private long timeViewedSinceLastSkip;
-      private long lastSaveTime = Long.MIN_VALUE;
+    this.consumptionUpdater = contentId == null ? null : new ConsumptionUpdater(streamStateClient, work, contentId);
 
-      @Override
-      public void changed(ObservableValue<? extends Number> observableValue, Number oldValue, Number value) {
-        long old = oldValue.longValue();
-        long current = value.longValue();
+    if(consumptionUpdater != null) {
+      this.playerPresentation.get().positionProperty().addListener(new ChangeListener<Number>() {
+        private long totalTimeViewed;
+        private long timeViewedSinceLastSkip;
+        private long lastCallTime = Long.MIN_VALUE;
 
-        if(old < current) {
-          long diff = current - old;
+        @Override
+        public void changed(ObservableValue<? extends Number> observableValue, Number oldValue, Number value) {
+          long old = oldValue.longValue();
+          long current = value.longValue();
 
-          if(diff > 0 && diff < 4000) {
-            totalTimeViewed += diff;
-            timeViewedSinceLastSkip += diff;
+          if(old < current) {
+            long diff = current - old;
 
-            if(contentId != null) {
-              updatePositionAndViewed(contentId);  // TODO this involves db communication / server communication, may not want to do that on FX thread
-            }
-          }
+            if(diff > 0 && diff < 4000) {
+              totalTimeViewed += diff;
+              timeViewedSinceLastSkip += diff;
 
-          if(Math.abs(diff) >= 4000) {
-            timeViewedSinceLastSkip = 0;
-          }
-        }
-      }
+              long length = playerPresentation.lengthProperty().get();
 
-      private void updatePositionAndViewed(ContentID contentId) {
-        PlayerPresentation player = PlaybackOverlayPresentation.this.playerPresentation.get();
-        long length = player.lengthProperty().getValue();
+              if(length > 0 && lastCallTime < System.currentTimeMillis() - 10 * 1000) {
+                lastCallTime = System.currentTimeMillis();
 
-        if(length > 0) {
-          long timeViewed = totalTimeViewed + startPosition.toMillis();
-
-          boolean consumed = streamStateClient.isConsumed(contentId);
-
-          if(timeViewed >= length * 9 / 10 && !consumed) {   // 90% viewed and not viewed yet?
-            LOGGER.info("Marking as viewed: " + work);
-
-            streamStateClient.setConsumed(true);
-          }
-
-          if(timeViewedSinceLastSkip > 30 * 1000) {
-            int resumePosition = 0;
-            long position = player.positionProperty().getValue();
-
-            if(position > 30 * 1000 && position < length * 9 / 10) {
-              resumePosition = (int)(position / 1000) - 10;
+                EXECUTOR.execute(() -> consumptionUpdater.updatePositionAndViewed(
+                  playerPresentation.positionProperty().get(),
+                  length,
+                  totalTimeViewed + startPosition.toMillis(),
+                  timeViewedSinceLastSkip
+                ));
+              }
             }
 
-            if(lastSaveTime < System.currentTimeMillis() - 10 * 1000) {
-              streamStateClient.setResumePosition(contentId, Duration.ofSeconds(resumePosition));
-              streamStateClient.setLastConsumedTime(contentId, Instant.now());
-
-              lastSaveTime = System.currentTimeMillis();
+            if(Math.abs(diff) >= 4000) {
+              timeViewedSinceLastSkip = 0;
             }
           }
         }
-      }
-    });
+      });
+    }
   }
 
   @Override
@@ -188,5 +173,50 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
         return null;
       }
     });
+  }
+
+  /**
+   * Updates the consumption state of an item currently being consumed.
+   *
+   * <p>This is a separate class as the update process must happen on a different thread
+   * (as it is making potentially slow calls), and having the class separate and static
+   * makes it easier to avoid sharing state.
+   */
+  private static class ConsumptionUpdater {
+    private final StreamStateClient streamStateClient;
+    private final Work work;
+    private final ContentID contentId;
+
+    private Boolean consumed;
+
+    ConsumptionUpdater(StreamStateClient streamStateClient, Work work, ContentID contentId) {
+      this.streamStateClient = streamStateClient;
+      this.work = work;
+      this.contentId = contentId;
+    }
+
+    void updatePositionAndViewed(long position, long length, long timeViewed, long timeViewedSinceLastSkip) {
+      if(consumed == null) {
+        consumed = streamStateClient.isConsumed(contentId);
+      }
+
+      if(timeViewed >= length * 9 / 10 && !consumed) {   // 90% viewed and not viewed yet?
+        LOGGER.info("Marking as viewed: " + work);
+
+        streamStateClient.setConsumed(contentId, true);
+        streamStateClient.setResumePosition(contentId, Duration.ZERO);
+      }
+
+      if(timeViewedSinceLastSkip > 30 * 1000) {
+        Duration resumePosition = Duration.ZERO;
+
+        if(position > 30 * 1000 && position < length * 9 / 10) {
+          resumePosition = Duration.ofSeconds(position / 1000 - 10);
+        }
+
+        streamStateClient.setResumePosition(contentId, resumePosition);
+        streamStateClient.setLastConsumptionTime(contentId, Instant.now());
+      }
+    }
   }
 }
