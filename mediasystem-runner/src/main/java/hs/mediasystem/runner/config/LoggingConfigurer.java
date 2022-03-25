@@ -20,6 +20,7 @@ public class LoggingConfigurer {
 
     LOGGER.info("Logging configured");
     LOGGER.info("Java version: " + System.getProperty("java.version"));
+    LOGGER.info("JavaFX version: " + System.getProperty("javafx.runtime.version"));
     LOGGER.info("Default encoding: " + Charset.defaultCharset());
   }
 }
