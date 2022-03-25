@@ -1,5 +1,6 @@
 package hs.mediasystem.db.base;
 
+import hs.ddif.annotations.Opt;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.NamedThreadFactory;
 import hs.mediasystem.util.Throwables;
@@ -9,7 +10,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -22,8 +22,8 @@ public class ScannerController {
 
   @Inject private StreamCacheUpdateService updateService;
   @Inject private ImportSourceProvider importSourceProvider;
-  @Inject @Nullable @Named("scanners.initialDelay") private Long initialDelay = 15L;  // After 15 seconds start scans
-  @Inject @Nullable @Named("scanners.delay") private Long delay = 5 * 60L;  // Time in between scans: 5 minutes
+  @Inject @Opt @Named("server.scanner.initial-delay") private Long initialDelay = 15L;  // After 15 seconds start scans
+  @Inject @Opt @Named("server.scanner.delay") private Long delay = 5 * 60L;  // Time in between scans: 5 minutes
 
   @PostConstruct
   private void postConstruct() {

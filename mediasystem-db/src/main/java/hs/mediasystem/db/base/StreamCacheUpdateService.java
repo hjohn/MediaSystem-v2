@@ -1,5 +1,6 @@
 package hs.mediasystem.db.base;
 
+import hs.ddif.annotations.Opt;
 import hs.mediasystem.db.base.StreamCacheUpdater.EnrichmentException;
 import hs.mediasystem.db.base.StreamCacheUpdater.Type;
 import hs.mediasystem.domain.stream.MediaType;
@@ -27,6 +28,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 /*
@@ -62,6 +64,8 @@ public class StreamCacheUpdateService {
   @Inject private DatabaseStreamStore streamStore;
   @Inject private DatabaseDescriptorStore descriptorStore;
   @Inject private StreamCacheUpdater streamCacheUpdater;
+
+  @Inject @Opt @Named("server.meta-data-updater.initial-delay") private double initialDelay = 15;
 
   private final AutoReentrantLock storeConsistencyLock = new AutoReentrantLock();  // Used to sync actions of this class
 
@@ -200,7 +204,7 @@ public class StreamCacheUpdateService {
   private void initializePeriodicEnrichThread() {
     Thread reidentifyThread = new Thread(() -> {
       try {
-        Thread.sleep(300000);  // Initial delay, to avoid triggering immediately on restart
+        Thread.sleep((long)(initialDelay * 1000));  // Initial delay, to avoid triggering immediately on restart
       }
       catch(InterruptedException e1) {
         // Ignore
