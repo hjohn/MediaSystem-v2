@@ -37,22 +37,23 @@ public class RootPresentationHandler {
   @Inject private ContextMenuHandler contextMenuHandler;
 
   private Action backAction;
+  private KeyCode keyPressedCode;
+  private long keyPressedStartTime;
 
   @PostConstruct
   private void postConstruct() {
-    sceneManager.getScene().addEventHandler(NavigateEvent.NAVIGATION_TO, e -> handleNavigateEvent(e));
-    sceneManager.getScene().addEventHandler(NavigateEvent.NAVIGATION_BACK, e -> handleNavigateBackEvent(e));
-    sceneManager.getScene().setOnKeyPressed(this::onKeyPressed);
-    sceneManager.getScene().setOnKeyReleased(this::onKeyReleased);
-    sceneManager.getScene().setOnMouseClicked(this::onMouseClicked);
+    Scene scene = sceneManager.getScene();
+
+    scene.addEventHandler(NavigateEvent.NAVIGATION_TO, e -> handleNavigateEvent(e));
+    scene.addEventHandler(NavigateEvent.NAVIGATION_BACK, e -> handleNavigateBackEvent(e));
+    scene.setOnKeyPressed(this::onKeyPressed);
+    scene.setOnKeyReleased(this::onKeyReleased);
+    scene.setOnMouseClicked(this::onMouseClicked);
 
     sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
 
     backAction = new Action(new ActionTarget(List.of(ExposedControl.find(Navigable.class, "navigateBack"))), "trigger");
   }
-
-  private KeyCode keyPressedCode;
-  private long keyPressedStartTime;
 
   private void onKeyReleased(KeyEvent event) {
     if(event.getCode().isModifierKey()) {
