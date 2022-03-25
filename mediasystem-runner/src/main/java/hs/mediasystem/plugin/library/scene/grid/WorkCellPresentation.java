@@ -1,5 +1,7 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.ddif.annotations.Argument;
+import hs.ddif.annotations.Assisted;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.ui.api.StreamStateClient;
@@ -8,34 +10,19 @@ import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.expose.Trigger;
 
 import javafx.beans.property.BooleanProperty;
-import javafx.scene.control.ListView;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ObservableValue;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
+@Assisted
 public class WorkCellPresentation implements Presentation {
-  private final WorkClient workClient;
-  private final ListView<?> listView;
-  private final StreamStateClient streamStateClient;
-
-  @Singleton
-  public static class Factory {
-    @Inject private WorkClient workClient;
-    @Inject private StreamStateClient streamStateClient;
-
-    public WorkCellPresentation create(ListView<?> listView) {
-      return new WorkCellPresentation(workClient, streamStateClient, listView);
-    }
-  }
-
-  private WorkCellPresentation(WorkClient workClient, StreamStateClient streamStateClient, ListView<?> listView) {
-    this.workClient = workClient;
-    this.streamStateClient = streamStateClient;
-    this.listView = listView;
-  }
+  @Inject private WorkClient workClient;
+  @Inject private StreamStateClient streamStateClient;
+  @Inject @Argument private ObservableValue<?> selectedItem;
 
   public BooleanProperty watchedProperty() {
-    Object obj = listView.getSelectionModel().getSelectedItem();
+    Object obj = selectedItem.getValue();
 
     if(obj instanceof Work work && work.getType().isPlayable() && !work.getStreams().isEmpty()) {
       ContentID contentId = work.getPrimaryStream().orElseThrow().getId().getContentId();
@@ -52,7 +39,7 @@ public class WorkCellPresentation implements Presentation {
   }
 
   public Trigger<Void> reidentify() {
-    Object obj = listView.getSelectionModel().getSelectedItem();
+    Object obj = selectedItem.getValue();
 
     if(obj instanceof Work work && !work.getStreams().isEmpty()) {
       return Trigger.asynchronous(event -> {

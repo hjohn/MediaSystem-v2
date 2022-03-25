@@ -18,7 +18,9 @@ import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
 import hs.mediasystem.util.javafx.control.csslayout.StylableVBox;
 
 import java.util.Objects;
+import java.util.function.Function;
 
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -36,7 +38,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
   @Inject private ProductionPresentationFactory productionPresentationFactory;
   @Inject private FolderPresentationFactory folderPresentationFactory;
   @Inject private WorkClient workClient;
-  @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
+  @Inject private Function<ObservableValue<?>, WorkCellPresentation> workCellPresentationFactory;
   @Inject private ViewStatusBarFactory viewStatusBarFactory;
 
   @Override
@@ -72,7 +74,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
     listView.visibleColumns.set(3);
     listView.getStyleClass().add("glass-pane");
     listView.onItemSelected.set(e -> onItemSelected(e, presentation));
-    listView.getProperties().put("presentation2", workCellPresentationFactory.create(listView));
+    listView.getProperties().put("presentation2", workCellPresentationFactory.apply(presentation.selectedItem));
 
     AnnotatedImageCellFactory<Work> cellFactory = new AnnotatedImageCellFactory<>((work, model) -> {
       model.title.set(work.getDetails().getTitle());

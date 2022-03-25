@@ -24,8 +24,10 @@ import hs.mediasystem.util.javafx.control.transition.multi.Custom;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import javafx.animation.Interpolator;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
@@ -47,7 +49,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
   private static final String STYLES_URL = LessLoader.compile(AbstractSetup.class, "styles.less");
 
   @Inject private ContextLayout contextLayout;
-  @Inject private WorkCellPresentation.Factory workCellPresentationFactory;
+  @Inject private Function<ObservableValue<?>, WorkCellPresentation> workCellPresentationFactory;
   @Inject private ViewStatusBarFactory viewStatusBarFactory;
 
   public enum Area {
@@ -82,7 +84,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
       }
     });
 
-    listView.getProperties().put("presentation2", workCellPresentationFactory.create(listView));
+    listView.getProperties().put("presentation2", workCellPresentationFactory.apply(presentation.selectedItem));
 
     MediaGridViewCellFactory<U> cellFactory = new MediaGridViewCellFactory<>(AbstractSetup.this::fillModel);
 
