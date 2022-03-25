@@ -1,16 +1,8 @@
 package hs.mediasystem.db.base;
 
-import hs.database.util.WeakValueMap;
 import hs.mediasystem.domain.stream.ContentID;
 
 import java.time.Instant;
-import java.util.Map;
-
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -24,24 +16,12 @@ public class StreamStateService {
 
   @Inject private StreamStateProvider streamStateProvider;
 
-  private final Map<String, Property<?>> properties = new WeakValueMap<>();
-
   public boolean isWatched(ContentID contentId) {
     return streamStateProvider.getOrDefault(contentId, WATCHED_KEY, false);
   }
 
   public void setWatched(ContentID contentId, boolean watched) {
-    watchedProperty(contentId).set(watched);
-  }
-
-  public BooleanProperty watchedProperty(ContentID contentId) {
-    return (BooleanProperty)properties.computeIfAbsent(contentId.asInt() + "/" + WATCHED_KEY, k -> {
-      BooleanProperty property = new SimpleBooleanProperty(isWatched(contentId));
-
-      property.addListener((ov, old, current) -> streamStateProvider.put(contentId, WATCHED_KEY, current));
-
-      return property;
-    });
+    streamStateProvider.put(contentId, WATCHED_KEY, watched);
   }
 
   /**
@@ -57,18 +37,7 @@ public class StreamStateService {
   }
 
   public void setLastWatchedTime(ContentID contentId, Instant lastWatchedTime) {
-    lastWatchedTimeProperty(contentId).set(lastWatchedTime);
-  }
-
-  @SuppressWarnings("unchecked")
-  public ObjectProperty<Instant> lastWatchedTimeProperty(ContentID contentId) {
-    return (ObjectProperty<Instant>)properties.computeIfAbsent(contentId.asInt() + "/" + LAST_WATCHED_TIME_KEY, k -> {
-      ObjectProperty<Instant> property = new SimpleObjectProperty<>(getLastWatchedTime(contentId));
-
-      property.addListener((ov, old, current) -> streamStateProvider.put(contentId, LAST_WATCHED_TIME_KEY, current.toString()));
-
-      return property;
-    });
+    streamStateProvider.put(contentId, LAST_WATCHED_TIME_KEY, lastWatchedTime.toString());
   }
 
   /**
@@ -82,18 +51,7 @@ public class StreamStateService {
   }
 
   public void setResumePosition(ContentID contentId, int resumePosition) {
-    resumePositionProperty(contentId).set(resumePosition);
-  }
-
-  @SuppressWarnings("unchecked")
-  public ObjectProperty<Integer> resumePositionProperty(ContentID contentId) {
-    return (ObjectProperty<Integer>)properties.computeIfAbsent(contentId.asInt() + "/" + RESUME_POSITION_KEY, k -> {
-      ObjectProperty<Integer> property = new SimpleObjectProperty<>(getResumePosition(contentId));
-
-      property.addListener((ov, old, current) -> streamStateProvider.put(contentId, RESUME_POSITION_KEY, current));
-
-      return property;
-    });
+    streamStateProvider.put(contentId, RESUME_POSITION_KEY, resumePosition);
   }
 
   /**
@@ -107,18 +65,6 @@ public class StreamStateService {
   }
 
   public void setTotalDuration(ContentID contentId, int totalDuration) {
-    totalDurationProperty(contentId).set(totalDuration);
+    streamStateProvider.put(contentId, TOTAL_DURATION_KEY, totalDuration);
   }
-
-  @SuppressWarnings("unchecked")
-  public ObjectProperty<Integer> totalDurationProperty(ContentID contentId) {
-    return (ObjectProperty<Integer>)properties.computeIfAbsent(contentId.asInt() + "/" + TOTAL_DURATION_KEY, k -> {
-      ObjectProperty<Integer> property = new SimpleObjectProperty<>(getTotalDuration(contentId));
-
-      property.addListener((ov, old, current) -> streamStateProvider.put(contentId, TOTAL_DURATION_KEY, current));
-
-      return property;
-    });
-  }
-
 }
