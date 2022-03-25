@@ -21,6 +21,10 @@
       <artifactId>ddif-plugins</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.github.hjohn.ddif.extensions</groupId>
+      <artifactId>extensions-assisted</artifactId>
+    </dependency>
+    <dependency>
       <groupId>hs.mediasystem</groupId>
       <artifactId>mediasystem-util</artifactId>
       <version>${revision}</version>

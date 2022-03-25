@@ -13,7 +13,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.jackson>2.9.9</version.jackson>
     <version.javafx>16</version.javafx>
-    <version.ddif>4.0.0-alpha.5</version.ddif>
+    <version.ddif>4.0.0-alpha.6</version.ddif>
     <version.eventstream>0.3.0</version.eventstream>
     <version.junit5>5.6.0</version.junit5>
     <version.mockito>3.12.4</version.mockito>
@@ -62,6 +62,11 @@
       <dependency>
         <groupId>com.github.hjohn.ddif</groupId>
         <artifactId>ddif-plugins</artifactId>
+        <version>${version.ddif}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.hjohn.ddif.extensions</groupId>
+        <artifactId>extensions-assisted</artifactId>
         <version>${version.ddif}</version>
       </dependency>
       <dependency>

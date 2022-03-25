@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import hs.ddif.annotations.Assisted;
 import hs.ddif.annotations.Produces;
 import hs.ddif.core.Injector;
 import hs.ddif.core.api.CandidateRegistry;
@@ -44,7 +45,8 @@ public class BasicSetup {
       new AnnotatedElement[] {Named.class, Singleton.class},
       new AnnotatedElement[] {Inject.class, Produces.class},
       new AnnotatedElement[] {Inject.class, Produces.class},
-      new AnnotatedElement[] {Inject.class}
+      new AnnotatedElement[] {Inject.class},
+      c -> !c.isAnnotationPresent(Assisted.class)
     ));
 
     /*
