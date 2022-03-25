@@ -146,12 +146,12 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
         if(length > 0) {
           long timeViewed = totalTimeViewed + startPosition.toMillis();
 
-          BooleanProperty consumed = streamStateClient.watchedProperty(contentId);
+          boolean consumed = streamStateClient.isConsumed(contentId);
 
-          if(timeViewed >= length * 9 / 10 && !consumed.getValue()) {   // 90% viewed and not viewed yet?
+          if(timeViewed >= length * 9 / 10 && !consumed) {   // 90% viewed and not viewed yet?
             LOGGER.info("Marking as viewed: " + work);
 
-            consumed.setValue(true);
+            streamStateClient.setConsumed(true);
           }
 
           if(timeViewedSinceLastSkip > 30 * 1000) {
@@ -163,8 +163,8 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             }
 
             if(lastSaveTime < System.currentTimeMillis() - 10 * 1000) {
-              streamStateClient.resumePositionProperty(contentId).setValue(resumePosition);
-              streamStateClient.lastWatchedTimeProperty(contentId).set(Instant.now());
+              streamStateClient.setResumePosition(contentId, Duration.ofSeconds(resumePosition));
+              streamStateClient.setLastConsumedTime(contentId, Instant.now());
 
               lastSaveTime = System.currentTimeMillis();
             }

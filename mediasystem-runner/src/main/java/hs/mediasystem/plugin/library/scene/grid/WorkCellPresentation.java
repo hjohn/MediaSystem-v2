@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.WorkClient;
@@ -37,7 +38,14 @@ public class WorkCellPresentation implements Presentation {
     Object obj = listView.getSelectionModel().getSelectedItem();
 
     if(obj instanceof Work work && work.getType().isPlayable() && !work.getStreams().isEmpty()) {
-      return streamStateClient.watchedProperty(work.getPrimaryStream().orElseThrow().getId().getContentId());
+      ContentID contentId = work.getPrimaryStream().orElseThrow().getId().getContentId();
+      BooleanProperty property = new SimpleBooleanProperty(streamStateClient.isConsumed(contentId));
+
+      property.addListener((ov, old, current) -> {
+        streamStateClient.setConsumed(contentId, current);
+      });
+
+      return property;
     }
 
     return null;  // Indicates no state possible as there is no stream

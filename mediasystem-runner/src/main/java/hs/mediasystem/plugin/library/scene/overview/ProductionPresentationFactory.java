@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
@@ -23,6 +24,7 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
 
@@ -183,7 +185,12 @@ public class ProductionPresentationFactory {
       Work rootItem = root.get();
 
       if(rootItem.getType().isPlayable() && !rootItem.getStreams().isEmpty()) {
-        return streamStateClient.watchedProperty(rootItem.getPrimaryStream().orElseThrow().getId().getContentId());
+        ContentID contentId = rootItem.getPrimaryStream().orElseThrow().getId().getContentId();
+        BooleanProperty property = new SimpleBooleanProperty(streamStateClient.isConsumed(contentId));
+
+        property.addListener((ov, old, current) -> streamStateClient.setConsumed(contentId, current));
+
+        return property;
       }
 
       return null;  // Indicates no state possible as there is no stream or is a serie
@@ -194,7 +201,12 @@ public class ProductionPresentationFactory {
         Work work = selectedChild.getValue();
 
         if(work != null && !work.getStreams().isEmpty()) {
-          return streamStateClient.watchedProperty(work.getPrimaryStream().orElseThrow().getId().getContentId());
+          ContentID contentId = work.getPrimaryStream().orElseThrow().getId().getContentId();
+          BooleanProperty property = new SimpleBooleanProperty(streamStateClient.isConsumed(contentId));
+
+          property.addListener((ov, old, current) -> streamStateClient.setConsumed(contentId, current));
+
+          return property;
         }
       }
 
@@ -226,9 +238,10 @@ public class ProductionPresentationFactory {
 
       seasonWatchedProperty.addListener((obs, old, current) -> {
         for(Work episode : seasonEpisodes) {
-          BooleanProperty watched = streamStateClient.watchedProperty(episode.getPrimaryStream().orElseThrow().getId().getContentId());
-
-          watched.setValue(current == null ? initialWatchedEpisodes.contains(episode) : Boolean.TRUE.equals(current));
+          streamStateClient.setConsumed(
+            episode.getPrimaryStream().orElseThrow().getId().getContentId(),
+            current == null ? initialWatchedEpisodes.contains(episode) : Boolean.TRUE.equals(current)
+          );
         }
       });
 

@@ -2,13 +2,16 @@ package hs.mediasystem.ui.api;
 
 import hs.mediasystem.domain.stream.ContentID;
 
+import java.time.Duration;
 import java.time.Instant;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
-
 public interface StreamStateClient {
-  ObjectProperty<Instant> lastWatchedTimeProperty(ContentID contentId);
-  ObjectProperty<Integer> resumePositionProperty(ContentID contentId);
-  BooleanProperty watchedProperty(ContentID contentId);
+  boolean isConsumed(ContentID contentId);
+  void setConsumed(ContentID contentId, boolean consumed);
+
+  Instant getLastConsumptionTime(ContentID contentId);
+  void setLastConsumptionTime(ContentID contentId, Instant time);
+
+  Duration getResumePosition(ContentID contentId);
+  void setResumePosition(ContentID contentId, Duration duration);
 }
