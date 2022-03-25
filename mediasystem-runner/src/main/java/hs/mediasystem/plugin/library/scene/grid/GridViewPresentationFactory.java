@@ -169,6 +169,31 @@ public abstract class GridViewPresentationFactory {
     private void setRootItems(List<U> newItems) {
       this.rootItems = newItems;
 
+      if(!contextItem.isBound()) {
+
+        /*
+         * Replace the context item (and its children) with a newer version when all items
+         * have been replaced.
+         */
+
+        @SuppressWarnings("unchecked")
+        U castContextItem = (U)contextItem.get();
+        String contextItemId = toId(castContextItem);
+        boolean found = false;
+
+        for(U item : rootItems) {
+          if(contextItemId.equals(toId(item))) {
+            found = true;
+            contextItem.set(item);  // replace with new version
+            break;
+          }
+        }
+
+        if(!found) {  // if context item does not exist anymore, switch back to root
+          contextItem.bind(rootContextItem);
+        }
+      }
+
       updateRawBaseItems();
     }
 
