@@ -267,7 +267,7 @@ public interface ObservableValue<T> extends Observable {
      *     never null
      */
     default ObservableValue<T> conditionOn(ObservableValue<Boolean> condition) {
-        return new ConditionalBinding<>(condition, this);
+        return new ConditionalBinding<>(this, condition);
     }
 
     default ObservableValue<T> filter(Predicate<? super T> predicate) {

@@ -10,7 +10,7 @@ public class ConditionalBinding<T> extends LazyObjectBinding<T> {
 
   private Subscription subscription;
 
-  public ConditionalBinding(ObservableValue<Boolean> condition, ObservableValue<T> source) {
+  public ConditionalBinding(ObservableValue<T> source, ObservableValue<Boolean> condition) {
     this.source = Objects.requireNonNull(source);
     this.condition = Objects.requireNonNull(condition);
 
