@@ -82,7 +82,6 @@ public class FrontEndRunner extends Application {
       "hs.mediasystem.runner",
       "hs.mediasystem.presentation",
       "hs.mediasystem.plugin",
-      "hs.mediasystem.ui.api",
       "hs.mediasystem.local.client.service"
     );
 
