@@ -14,7 +14,7 @@ import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.layout.StackPane;
 
-public class StylableStackPane extends StackPane {
+public class StylableStackPane extends StackPane implements Resolvable {
   private static final StyleablePropertyFactory<StylableStackPane> FACTORY = new StyleablePropertyFactory<>(StackPane.getClassCssMetaData());
   private static final String PERCENTAGE_MARGINS = StylableStackPane.class.getName() + ":PercentageMargin";
 
@@ -31,12 +31,7 @@ public class StylableStackPane extends StackPane {
 
   @Override
   protected void layoutChildren() {
-    String v = nodes.getValue();
-
-    if(v != null && !v.isEmpty() && !resolved) {
-      getChildren().setAll(CssLayoutFactory.createNewChildren(v, this));
-      resolved = true;
-    }
+    CssLayoutFactory.resolveChildren(this);
 
     List<Node> managed = getManagedChildren();
     Insets insets = getInsets();
@@ -72,6 +67,21 @@ public class StylableStackPane extends StackPane {
   @Override
   public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
     return FACTORY.getCssMetaData();
+  }
+
+  @Override
+  public String getNodeLayout() {
+    return nodes.getValue();
+  }
+
+  @Override
+  public boolean isResolved() {
+    return resolved;
+  }
+
+  @Override
+  public void setResolved() {
+    resolved = true;
   }
 
   public static void setPercentageMargin(Node child, Insets margin) {

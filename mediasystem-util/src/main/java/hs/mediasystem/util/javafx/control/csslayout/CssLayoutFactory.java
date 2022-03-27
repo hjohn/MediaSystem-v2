@@ -34,7 +34,7 @@ import javafx.scene.layout.VBox;
  *   <li>{@code key} and {@code value} are key value pairs with extra options.
  *   </ul>
  *
- * Support options are:<ul>
+ * Supported options are:<ul>
  *
  *   <li>{@code align} for aligning a child in a {@link StackPane}, see {@link Pos} for allowed values</li>
  *   <li>{@code hgrow} and {@code vgrow}, see {@link Priority} for allowed values</li>
@@ -90,7 +90,18 @@ public class CssLayoutFactory {
     parent.getProperties().put(POTENTIALS, potentials);
   }
 
-  public static List<Node> createNewChildren(String v, Pane parent) {
+  public static <T extends Pane & Resolvable> void resolveChildren(T pane) {
+    if(!pane.isResolved()) {
+      String layout = pane.getNodeLayout();
+
+      if(layout != null && !layout.isEmpty()) {
+        pane.getChildren().setAll(createNewChildren(layout, pane));
+        pane.setResolved();
+      }
+    }
+  }
+
+  private static List<Node> createNewChildren(String v, Pane parent) {
     List<Node> newChildren = new ArrayList<>();
     List<Node> children = new ArrayList<>(parent.getChildren());
     List<ChildDefinition> childDefinitions = fromYaml(v);
