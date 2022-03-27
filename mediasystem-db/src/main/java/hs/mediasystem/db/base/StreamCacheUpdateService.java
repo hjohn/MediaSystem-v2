@@ -103,6 +103,8 @@ public class StreamCacheUpdateService {
   }
 
   public Optional<CompletableFuture<MediaIdentification>> reidentifyStream(StreamID streamId) {
+    LOGGER.info("Triggered manual reidentificating of: " + streamId);
+
     return streamStore.findStream(streamId).map(s -> asyncEnrich(Type.HIGH_UNCACHED, s));
   }
 
