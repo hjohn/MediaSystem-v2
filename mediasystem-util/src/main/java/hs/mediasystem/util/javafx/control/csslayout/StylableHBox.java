@@ -18,17 +18,7 @@ public class StylableHBox extends HBox implements Resolvable {
   private boolean resolved;
 
   public StylableHBox(Node... nodes) {
-    CssLayoutFactory.setPotentials(this, Arrays.asList(nodes));
-  }
-
-  public StylableHBox() {
-  }
-
-  @Override
-  protected void layoutChildren() {
-    CssLayoutFactory.resolveChildren(this);
-
-    super.layoutChildren();
+    CssLayoutFactory.initialize(this, Arrays.asList(nodes));
   }
 
   @Override

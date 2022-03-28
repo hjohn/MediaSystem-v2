@@ -9,14 +9,19 @@ import hs.mediasystem.util.javafx.control.Labels;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.stream.Collectors;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
@@ -46,57 +51,84 @@ import javafx.scene.layout.VBox;
  */
 public class CssLayoutFactory {
   private static final String POTENTIALS = "css-layout-factory.potential-children";
-
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());
+  private static final Map<Scene, Set<Resolvable>> UNRESOLVED_RESOLVABLES = new WeakHashMap<>();
 
-  private static ChildDefinition toChildDefinition(Object obj) {
-    if(obj instanceof String) {
-      return new ChildDefinition((String)obj, Map.of());
-    }
+  /**
+   * Initializes a given stylable container with a given list of potential {@link Node}s. Potential
+   * nodes represent the list of available nodes which can be selected via the layout CSS
+   * property.
+   *
+   * @param <T> a resolvable pane type
+   * @param stylableContainer a stylable container, cannot be {@code null}
+   * @param potentials a list of potentials, cannot be {@code null} or contain {@code null}
+   */
+  public static <T extends Pane & Resolvable> void initialize(T stylableContainer, List<Node> potentials) {
+    Objects.requireNonNull(stylableContainer, "stylableContainer cannot be null")
+      .getProperties()
+      .put(POTENTIALS, Objects.requireNonNull(potentials, "potentials cannot be null"));
 
-    if(obj instanceof Map) {
-      @SuppressWarnings("unchecked")
-      Map<String, Object> map = (Map<String, Object>)obj;
+    /*
+     * Implementation note: only a single PreLayoutPulseListener is added for each known Scene.
+     * Per Scene a list of resolvable instances are tracked which need resolving. The
+     * Scene is weakly referenced and so the listener will be automatically garbage collected when
+     * no longer needed.
+     *
+     * As new child nodes may be created during the resolve process this cannot be part of a
+     * method like {@code layoutChildren} as this would cause at least one frame to be displayed
+     * where the {@link Pane} is not in its final state, potentially causing visual artifacts.
+     */
 
-      if(map.size() != 1) {
-        throw new IllegalStateException("Expected map of exactly 1 element: " + map);
-      }
+    sceneInvalidated(stylableContainer);
 
-      Map.Entry<String, Object> entry = map.entrySet().iterator().next();
-
-      @SuppressWarnings("unchecked")
-      Map<String, Object> value = (Map<String, Object>)entry.getValue();
-
-      return new ChildDefinition(entry.getKey(), value);
-    }
-
-    throw new IllegalStateException("Did not expect type: " + obj);
+    stylableContainer.sceneProperty().addListener(obs -> sceneInvalidated(stylableContainer));
   }
 
-  private static List<ChildDefinition> fromYaml(String v) {
-    try {
-      List<Object> list = OBJECT_MAPPER.readValue(v, new TypeReference<List<Object>>() {});
+  private static <T extends Pane & Resolvable> void sceneInvalidated(T pane) {
+    Scene scene = pane.getScene();
 
-      return list.stream()
-        .map(CssLayoutFactory::toChildDefinition)
-        .collect(Collectors.toList());
-    }
-    catch(IOException e) {
-      throw new IllegalStateException("Problem parsing \"" + v + "\"", e);
+    if(scene != null && !pane.isResolved()) {
+      UNRESOLVED_RESOLVABLES.computeIfAbsent(scene, k -> {
+        scene.addPreLayoutPulseListener(new Runnable() {  // Adds a listener that runs for one pulse only as it is removed when pulse is received
+          @Override
+          public void run() {
+            Set<Resolvable> resolvables = UNRESOLVED_RESOLVABLES.remove(scene);
+
+            scene.removePreLayoutPulseListener(this);
+
+            for(Resolvable resolvable : resolvables) {
+              @SuppressWarnings("unchecked")
+              T castResolvable = (T)resolvable;  // safe cast to T; if it is Resolvable it must be a Pane as well
+
+              CssLayoutFactory.resolveChildren(castResolvable);
+            }
+          }
+        });
+
+        return new HashSet<>();
+      }).add(pane);
     }
   }
 
-  public static void setPotentials(Pane parent, List<Node> potentials) {
-    parent.getProperties().put(POTENTIALS, potentials);
-  }
-
-  public static <T extends Pane & Resolvable> void resolveChildren(T pane) {
+  private static <T extends Pane & Resolvable> void resolveChildren(T pane) {
     if(!pane.isResolved()) {
+      pane.applyCss();  // apply CSS to this node so layout property is up-to-date
+
       String layout = pane.getNodeLayout();
 
       if(layout != null && !layout.isEmpty()) {
         pane.getChildren().setAll(createNewChildren(layout, pane));
         pane.setResolved();
+
+        // Recursively resolve StylableContainers that may have been created:
+        for(Node child : pane.getChildren()) {
+          if(child instanceof Resolvable) {
+            @SuppressWarnings("unchecked")
+            T castChild = (T)child;  // safe cast to T; if it is Resolvable it must be a Pane as well
+
+            resolveChildren(castChild);
+          }
+        }
       }
     }
   }
@@ -169,6 +201,43 @@ public class CssLayoutFactory {
     }
 
     return newChildren;
+  }
+
+  private static ChildDefinition toChildDefinition(Object obj) {
+    if(obj instanceof String) {
+      return new ChildDefinition((String)obj, Map.of());
+    }
+
+    if(obj instanceof Map) {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> map = (Map<String, Object>)obj;
+
+      if(map.size() != 1) {
+        throw new IllegalStateException("Expected map of exactly 1 element: " + map);
+      }
+
+      Map.Entry<String, Object> entry = map.entrySet().iterator().next();
+
+      @SuppressWarnings("unchecked")
+      Map<String, Object> value = (Map<String, Object>)entry.getValue();
+
+      return new ChildDefinition(entry.getKey(), value);
+    }
+
+    throw new IllegalStateException("Did not expect type: " + obj);
+  }
+
+  private static List<ChildDefinition> fromYaml(String v) {
+    try {
+      List<Object> list = OBJECT_MAPPER.readValue(v, new TypeReference<List<Object>>() {});
+
+      return list.stream()
+        .map(CssLayoutFactory::toChildDefinition)
+        .collect(Collectors.toList());
+    }
+    catch(IOException e) {
+      throw new IllegalStateException("Problem parsing \"" + v + "\"", e);
+    }
   }
 
   private static class ChildDefinition {

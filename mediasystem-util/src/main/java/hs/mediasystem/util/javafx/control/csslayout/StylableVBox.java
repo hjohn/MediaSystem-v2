@@ -18,17 +18,7 @@ public class StylableVBox extends VBox implements Resolvable {
   private boolean resolved;
 
   public StylableVBox(Node... nodes) {
-    CssLayoutFactory.setPotentials(this, Arrays.asList(nodes));
-  }
-
-  public StylableVBox() {
-  }
-
-  @Override
-  protected void layoutChildren() {
-    CssLayoutFactory.resolveChildren(this);
-
-    super.layoutChildren();
+    CssLayoutFactory.initialize(this, Arrays.asList(nodes));
   }
 
   @Override

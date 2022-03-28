@@ -23,16 +23,11 @@ public class StylableStackPane extends StackPane implements Resolvable {
   private boolean resolved;
 
   public StylableStackPane(Node... nodes) {
-    CssLayoutFactory.setPotentials(this, Arrays.asList(nodes));
-  }
-
-  public StylableStackPane() {
+    CssLayoutFactory.initialize(this, Arrays.asList(nodes));
   }
 
   @Override
   protected void layoutChildren() {
-    CssLayoutFactory.resolveChildren(this);
-
     List<Node> managed = getManagedChildren();
     Insets insets = getInsets();
     double top = insets.getTop();
