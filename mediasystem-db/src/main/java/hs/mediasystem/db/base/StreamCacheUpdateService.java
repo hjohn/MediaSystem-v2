@@ -65,13 +65,12 @@ public class StreamCacheUpdateService {
   @Inject private DatabaseDescriptorStore descriptorStore;
   @Inject private StreamCacheUpdater streamCacheUpdater;
 
-  @Inject @Opt @Named("server.meta-data-updater.initial-delay") private double initialDelay = 15;
+  @Inject @Opt @Named("server.meta-data-updater.initial-delay") private long initialDelay = 15;
 
   private final AutoReentrantLock storeConsistencyLock = new AutoReentrantLock();  // Used to sync actions of this class
 
   @PostConstruct
   private void postConstruct() {
-    triggerInitialEnriches();
     initializePeriodicEnrichThread();
   }
 
@@ -206,11 +205,13 @@ public class StreamCacheUpdateService {
   private void initializePeriodicEnrichThread() {
     Thread reidentifyThread = new Thread(() -> {
       try {
-        Thread.sleep((long)(initialDelay * 1000));  // Initial delay, to avoid triggering immediately on restart
+        Thread.sleep(initialDelay * 1000);  // Initial delay, to avoid triggering immediately on restart
       }
       catch(InterruptedException e1) {
         // Ignore
       }
+
+      triggerInitialEnriches();
 
       for(;;) {
         streamStore.findStreamsNeedingRefresh(500).stream().forEach(s -> asyncEnrich(Type.LOW_UNCACHED, s));
