@@ -145,6 +145,10 @@ public class Annotations {
       .of(WorkCellPresentation.class)
       .as("reidentify");
 
+    Expose.indirectAction(WorkCellPresentation::showInfo)
+      .of(WorkCellPresentation.class)
+      .as("showInfo");
+
     // Debug actions
 
     Expose.action(RootPresentation::debugOnce)

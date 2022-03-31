@@ -11,6 +11,16 @@ import javafx.event.Event;
 
 public class Expose {
 
+  /**
+   * Creates an indirect action. This allows running the action on a background thread and to control
+   * when the action is available. Returning {@code null} from the supplier indicates the action is currently
+   * unavailable.
+   *
+   * @param <P> the type of presentation this action applies to
+   * @param <V> the type of the value the action returns
+   * @param supplier the {@link Trigger} supplier, cannot be {@code null}
+   * @return a fluent builder, never {@code null}
+   */
   public static <P, V> ExposedMethod<P, V>.ActionParentBuilder indirectAction(Function<P, Trigger<V>> supplier) {
     return new ExposedMethod<>(supplier).new ActionParentBuilder();
   }

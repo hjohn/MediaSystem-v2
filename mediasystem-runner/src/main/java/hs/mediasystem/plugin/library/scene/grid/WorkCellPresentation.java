@@ -3,6 +3,7 @@ package hs.mediasystem.plugin.library.scene.grid;
 import hs.ddif.annotations.Argument;
 import hs.ddif.annotations.Assisted;
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.plugin.library.scene.overview.ShowInfoEventHandler;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.EventRoot;
 import hs.mediasystem.ui.api.ConsumedStateChanged;
@@ -22,6 +23,7 @@ public class WorkCellPresentation implements Presentation {
   @Inject private WorkClient workClient;
   @Inject private StreamStateClient streamStateClient;
   @Inject private EventRoot eventRoot;
+  @Inject private ShowInfoEventHandler showInfoEventHandler;
   @Inject @Argument private ObservableValue<?> selectedItem;
 
   public BooleanProperty watchedProperty() {
@@ -48,6 +50,18 @@ public class WorkCellPresentation implements Presentation {
     if(obj instanceof Work work && !work.getStreams().isEmpty()) {
       return Trigger.asynchronous(event -> {
         workClient.reidentify(work.getId());
+      });
+    }
+
+    return null;
+  }
+
+  public Trigger<Void> showInfo() {
+    Object obj = selectedItem.getValue();
+
+    if(obj instanceof Work work) {
+      return Trigger.synchronous(e -> {
+        showInfoEventHandler.handle(e, work);
       });
     }
 

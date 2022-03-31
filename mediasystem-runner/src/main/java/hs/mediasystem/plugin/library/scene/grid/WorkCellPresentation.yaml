@@ -2,6 +2,9 @@ action-target:
   watched:
     order: 5
     label: Watched
-  reidentify:
+  showInfo:
     order: 6
+    label: Show Stream Information
+  reidentify:
+    order: 7
     label: Reidentify Media

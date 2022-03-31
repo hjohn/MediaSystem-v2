@@ -27,6 +27,10 @@ public interface Trigger<V> {
     };
   }
 
+  public static <V> Trigger<V> synchronous(Consumer<Event> task) {
+    return synchronous(e -> { task.accept(e); return null; });
+  }
+
   public static <V> Trigger<V> asynchronous(Function<Event, V> task) {
     return new Trigger<>() {
       @Override
