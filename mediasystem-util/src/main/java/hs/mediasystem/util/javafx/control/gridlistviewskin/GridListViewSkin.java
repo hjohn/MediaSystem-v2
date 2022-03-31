@@ -94,188 +94,18 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
   private ScrollBar scrollBar = new ScrollBar();
   private BorderPane skin;
-  private Region content;
+  private Content content;
 
   private GroupManager gm;
   private boolean vertical;
 
   public GridListViewSkin(ListView<?> skinnable) {
     this.skinnable = skinnable;
+    this.content = new Content();
 
     skinnable.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
     skinnable.getSelectionModel().selectedIndexProperty().addListener((obs, old, current) -> Platform.runLater(this::animateWhenSelectedChanges));  // Platform#runLater here solves the problem where the selection index rapidly changes 3 times (current, -1, 0, current) when all items are replaced
     skinnable.getSelectionModel().selectedItemProperty().addListener(obs -> skin.requestLayout());   // Calls layout when focused cell changes (to make sure it is at the top)
-
-    this.content = new Region() {
-      private final HeaderRegion groupHeaderPane = new HeaderRegion();
-
-      private Rectangle clip = null;
-
-      {
-        groupHeaderPane.setMouseTransparent(true);
-
-        getChildren().add(groupHeaderPane);
-
-        groupHeaderPane.setViewOrder(-1);
-      }
-
-      @Override
-      protected double computeMinWidth(double height) {
-        return 200;
-      }
-
-      @Override
-      protected double computeMinHeight(double width) {
-        return 200;
-      }
-
-      @Override
-      protected double computePrefWidth(double height) {
-        return 400;
-      }
-
-      @Override
-      protected double computePrefHeight(double width) {
-        return 400;
-      }
-
-      @Override
-      protected double computeMaxWidth(double height) {
-        return Double.MAX_VALUE;
-      }
-
-      @Override
-      protected double computeMaxHeight(double width) {
-        return Double.MAX_VALUE;
-      }
-
-      @Override
-      protected void layoutChildren() {
-        int lines = vertical ? visibleColumns.get() : visibleRows.get();
-        int firstIndex = (int)(scrollPosition.get()) * lines;
-
-        manageCells(firstIndex);
-
-        Insets insets = getSkinnable().getInsets();
-
-        double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
-        double h = getSkinnable().getHeight() - insets.getTop() - insets.getBottom();
-
-        int cellWidth = (int)(w / visibleColumns.get());
-        int cellHeight = (int)(h / visibleRows.get());
-        int index = firstIndexInDeque;
-
-        if(clip == null || clip.getWidth() != getSkinnable().getWidth() || clip.getHeight() != getSkinnable().getHeight()) {
-          this.clip = new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight());
-
-          setClip(clip);  // Needed to clip off cells while scrolling
-          layoutInArea(groupHeaderPane, 0, 0, getSkinnable().getWidth(), getSkinnable().getHeight(), 0, Insets.EMPTY, true, true, cellAlignment.get().getHpos(), cellAlignment.get().getVpos());
-        }
-
-        groupHeaderPane.layoutChildren();
-
-        for(ListCell<?> cell : cells) {
-          int viewIndex = gm.toViewIndex(index++);
-
-          cell.setVisible(false);
-
-          if(viewIndex >= firstIndex) {
-            if(vertical) {
-              int column = viewIndex % visibleColumns.get();
-              int row = viewIndex / visibleColumns.get();
-
-              double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
-
-              if(y < getSkinnable().getHeight()) {
-                cell.setVisible(true);
-                layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, cellAlignment.get().getHpos(), cellAlignment.get().getVpos());
-              }
-            }
-            else {
-              int column = viewIndex / visibleRows.get();
-              int row = viewIndex % visibleRows.get();
-
-              double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
-
-              if(x < w) {
-                cell.setVisible(true);
-                layoutInArea(cell, x, row * cellHeight + insets.getTop(), cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
-              }
-            }
-          }
-        }
-      }
-
-      private void manageCells(int firstIndex) {  // this is a view index
-        int cellsPerPage = visibleColumns.get() * visibleRows.get();
-        int firstIndexToCache = gm.toModelIndexSmart(firstIndex - pagesToCache * cellsPerPage);
-        int requiredFirstIndexInDeque = Math.max(0, firstIndexToCache);
-        int requiredLastIndexInDeque = Math.min(firstIndexToCache + (pagesToCache * 2 + 1) * cellsPerPage, getSkinnable().getItems().size());  // exclusive
-
-        /*
-         * To avoid creating new cells, always first remove cells that are not part of the new
-         * range before creating new ones.
-         */
-
-        // Remove cells from front of queue if needed:
-        while(firstIndexInDeque < requiredFirstIndexInDeque && !cells.isEmpty()) {
-          recycleCell(cells.removeFirst());
-          firstIndexInDeque++;
-        }
-
-        // Remove cells from end of queue if needed:
-        while(firstIndexInDeque + cells.size() > requiredLastIndexInDeque && !cells.isEmpty()) {
-          recycleCell(cells.removeLast());
-        }
-
-        /*
-         * If all cells were recycled, there was no overlap at all.  In this special
-         * case firstIndexInDeque will be reset to requiredFirstIndexInDeque.
-         */
-
-        if(cells.isEmpty()) {
-          GridListViewSkin.this.firstIndexInDeque = requiredFirstIndexInDeque;
-        }
-
-        // Add cells to start of queue if needed
-        while(firstIndexInDeque > requiredFirstIndexInDeque) {
-          ListCell<?> cell = createCell();
-
-          cell.updateIndex(--firstIndexInDeque);
-          cells.addFirst(cell);
-        }
-
-        // Add cells to end of queue if needed:
-        while(requiredFirstIndexInDeque + cells.size() < requiredLastIndexInDeque) {
-          ListCell<?> cell = createCell();
-
-          cell.updateIndex(requiredFirstIndexInDeque + cells.size());
-          cells.addLast(cell);
-        }
-      }
-
-      private final List<ListCell<?>> recycledCells = new ArrayList<>();
-
-      private void recycleCell(ListCell<?> cell) {
-        recycledCells.add(cell);
-        cell.setVisible(false);  // Needed because cells on recycled list are still part of Children, but will not be made invisible in layoutChildren as they're not part of cells list
-      }
-
-      private ListCell<?> createCell() {
-        if(!recycledCells.isEmpty()) {
-          return recycledCells.remove(recycledCells.size() - 1);
-        }
-
-        @SuppressWarnings("unchecked")
-        ListView<Object> listView = (ListView<Object>)getSkinnable();
-        ListCell<Object> cell = listView.getCellFactory().call(listView);
-
-        cell.updateListView(listView);
-        getChildren().add(cell);
-
-        return cell;
-      }
-    };
 
     scrollBar.orientationProperty().bind(skinnable.orientationProperty());
     skinnable.orientationProperty().addListener(obs -> relayout());
@@ -311,6 +141,176 @@ public class GridListViewSkin implements Skin<ListView<?>> {
 
     updateProperties();
     relayout();
+  }
+
+  private class Content extends Region {
+    private final HeaderRegion groupHeaderPane = new HeaderRegion();
+    private final List<ListCell<?>> recycledCells = new ArrayList<>();
+
+    private Rectangle clip = null;
+
+    {
+      groupHeaderPane.setMouseTransparent(true);
+
+      getChildren().add(groupHeaderPane);
+
+      groupHeaderPane.setViewOrder(-1);
+    }
+
+    @Override
+    protected double computeMinWidth(double height) {
+      return 200;
+    }
+
+    @Override
+    protected double computeMinHeight(double width) {
+      return 200;
+    }
+
+    @Override
+    protected double computePrefWidth(double height) {
+      return 400;
+    }
+
+    @Override
+    protected double computePrefHeight(double width) {
+      return 400;
+    }
+
+    @Override
+    protected double computeMaxWidth(double height) {
+      return Double.MAX_VALUE;
+    }
+
+    @Override
+    protected double computeMaxHeight(double width) {
+      return Double.MAX_VALUE;
+    }
+
+    @Override
+    protected void layoutChildren() {
+      int lines = vertical ? visibleColumns.get() : visibleRows.get();
+      int firstIndex = (int)(scrollPosition.get()) * lines;
+
+      manageCells(firstIndex);
+
+      Insets insets = getSkinnable().getInsets();
+
+      double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
+      double h = getSkinnable().getHeight() - insets.getTop() - insets.getBottom();
+
+      int cellWidth = (int)(w / visibleColumns.get());
+      int cellHeight = (int)(h / visibleRows.get());
+      int index = firstIndexInDeque;
+
+      if(clip == null || clip.getWidth() != getSkinnable().getWidth() || clip.getHeight() != getSkinnable().getHeight()) {
+        this.clip = new Rectangle(0, 0, getSkinnable().getWidth(), getSkinnable().getHeight());
+
+        setClip(clip);  // Needed to clip off cells while scrolling
+        layoutInArea(groupHeaderPane, 0, 0, getSkinnable().getWidth(), getSkinnable().getHeight(), 0, Insets.EMPTY, true, true, cellAlignment.get().getHpos(), cellAlignment.get().getVpos());
+      }
+
+      groupHeaderPane.layoutChildren();
+
+      for(ListCell<?> cell : cells) {
+        int viewIndex = gm.toViewIndex(index++);
+
+        cell.setVisible(false);
+
+        if(viewIndex >= firstIndex) {
+          if(vertical) {
+            int column = viewIndex % visibleColumns.get();
+            int row = viewIndex / visibleColumns.get();
+
+            double y = ((row - scrollPosition.get()) * cellHeight) + insets.getTop();
+
+            if(y < getSkinnable().getHeight()) {
+              cell.setVisible(true);
+              layoutInArea(cell, column * cellWidth + insets.getLeft(), y, cellWidth, cellHeight, 0, cell.getInsets(), true, true, cellAlignment.get().getHpos(), cellAlignment.get().getVpos());
+            }
+          }
+          else {
+            int column = viewIndex / visibleRows.get();
+            int row = viewIndex % visibleRows.get();
+
+            double x = ((column - scrollPosition.get()) * cellWidth) + insets.getLeft();
+
+            if(x < w) {
+              cell.setVisible(true);
+              layoutInArea(cell, x, row * cellHeight + insets.getTop(), cellWidth, cellHeight, 0, cell.getInsets(), true, true, HPos.CENTER, VPos.CENTER);
+            }
+          }
+        }
+      }
+    }
+
+    private void manageCells(int firstIndex) {  // this is a view index
+      int cellsPerPage = visibleColumns.get() * visibleRows.get();
+      int firstIndexToCache = gm.toModelIndexSmart(firstIndex - pagesToCache * cellsPerPage);
+      int requiredFirstIndexInDeque = Math.max(0, firstIndexToCache);
+      int requiredLastIndexInDeque = Math.min(firstIndexToCache + (pagesToCache * 2 + 1) * cellsPerPage, getSkinnable().getItems().size());  // exclusive
+
+      /*
+       * To avoid creating new cells, always first remove cells that are not part of the new
+       * range before creating new ones.
+       */
+
+      // Remove cells from front of queue if needed:
+      while(firstIndexInDeque < requiredFirstIndexInDeque && !cells.isEmpty()) {
+        recycleCell(cells.removeFirst());
+        firstIndexInDeque++;
+      }
+
+      // Remove cells from end of queue if needed:
+      while(firstIndexInDeque + cells.size() > requiredLastIndexInDeque && !cells.isEmpty()) {
+        recycleCell(cells.removeLast());
+      }
+
+      /*
+       * If all cells were recycled, there was no overlap at all.  In this special
+       * case firstIndexInDeque will be reset to requiredFirstIndexInDeque.
+       */
+
+      if(cells.isEmpty()) {
+        GridListViewSkin.this.firstIndexInDeque = requiredFirstIndexInDeque;
+      }
+
+      // Add cells to start of queue if needed
+      while(firstIndexInDeque > requiredFirstIndexInDeque) {
+        ListCell<?> cell = createCell();
+
+        cell.updateIndex(--firstIndexInDeque);
+        cells.addFirst(cell);
+      }
+
+      // Add cells to end of queue if needed:
+      while(requiredFirstIndexInDeque + cells.size() < requiredLastIndexInDeque) {
+        ListCell<?> cell = createCell();
+
+        cell.updateIndex(requiredFirstIndexInDeque + cells.size());
+        cells.addLast(cell);
+      }
+    }
+
+    private void recycleCell(ListCell<?> cell) {
+      recycledCells.add(cell);
+      cell.setVisible(false);  // Needed because cells on recycled list are still part of Children, but will not be made invisible in layoutChildren as they're not part of cells list
+    }
+
+    private ListCell<?> createCell() {
+      if(!recycledCells.isEmpty()) {
+        return recycledCells.remove(recycledCells.size() - 1);
+      }
+
+      @SuppressWarnings("unchecked")
+      ListView<Object> listView = (ListView<Object>)getSkinnable();
+      ListCell<Object> cell = listView.getCellFactory().call(listView);
+
+      cell.updateListView(listView);
+      getChildren().add(cell);
+
+      return cell;
+    }
   }
 
   private void updateProperties() {
@@ -548,6 +548,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
     this.skinnable = null;
     this.skin = null;
     this.scrollBar = null;
+    this.content = null;
     this.animationTimer = null;
   }
 
