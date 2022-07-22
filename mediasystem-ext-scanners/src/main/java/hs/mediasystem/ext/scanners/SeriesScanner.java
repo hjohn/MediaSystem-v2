@@ -160,7 +160,7 @@ public class SeriesScanner implements Scanner {
 
     Files.walkFileTree(scanPath, FILE_VISIT_OPTIONS, 2, new SimpleFileVisitor<Path>() {
       @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
         if(dir.equals(scanPath)) {
           return FileVisitResult.CONTINUE;
         }

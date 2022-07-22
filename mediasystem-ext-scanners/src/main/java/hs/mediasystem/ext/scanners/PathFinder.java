@@ -26,7 +26,7 @@ public class PathFinder {
 
     Files.walkFileTree(scanPath, FOLLOW_LINKS, maxDepth, new SimpleFileVisitor<Path>() {
       @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
         if(!attrs.isDirectory() && pattern.matcher(file.getFileName().toString()).matches()) {
           results.add(file);
         }

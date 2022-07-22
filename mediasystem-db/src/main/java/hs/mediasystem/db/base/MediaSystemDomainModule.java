@@ -26,7 +26,7 @@ public class MediaSystemDomainModule extends SimpleModule {
   public MediaSystemDomainModule() {
     addKeyDeserializer(Identifier.class, new KeyDeserializer() {
       @Override
-      public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException {
+      public Object deserializeKey(String key, DeserializationContext ctxt) {
         return Identifier.fromString(key);
       }
     });

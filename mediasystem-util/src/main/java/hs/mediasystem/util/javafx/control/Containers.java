@@ -19,10 +19,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 /**
- * Provides convience methods for creating standard JavaFX node containers.<p>
+ * Provides convenience methods for creating standard JavaFX node containers.<p>
  *
  * All the methods that accept a list of {@link Node}s will ignore <code>null</code>s
- * for convenience when programmaticaly constructing elements.<p>
+ * for convenience when programmatically constructing elements.<p>
  *
  * Multiple style classes can be assigned by providing a comma separated string.
  */

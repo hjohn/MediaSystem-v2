@@ -59,7 +59,7 @@ public class LocalMediaIdentificationServiceTest {
   private LocalMediaIdentificationService db;
 
   @BeforeEach
-  public void before() throws Exception {
+  public void before() {
     when(idServiceForDS1.getDataSource()).thenReturn(DATA_SOURCE_1);
     when(idServiceForDS2.getDataSource()).thenReturn(DATA_SOURCE_2);
     when(idServiceForDS3.getDataSource()).thenReturn(DATA_SOURCE_3);

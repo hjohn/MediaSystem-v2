@@ -136,12 +136,12 @@ public class DatabaseResponseCache extends ResponseCache {
 
       return new CacheResponse() {
         @Override
-        public Map<String, List<String>> getHeaders() throws IOException {
+        public Map<String, List<String>> getHeaders() {
           return conn.getHeaderFields();
         }
 
         @Override
-        public InputStream getBody() throws IOException {
+        public InputStream getBody() {
           return new ByteArrayInputStream(buf, 8 + headerBuf.size(), buf.length - 8 - headerBuf.size());
         }
       };
@@ -183,12 +183,12 @@ public class DatabaseResponseCache extends ResponseCache {
 
       return new CacheResponse() {
         @Override
-        public Map<String, List<String>> getHeaders() throws IOException {
+        public Map<String, List<String>> getHeaders() {
           return headers;
         }
 
         @Override
-        public InputStream getBody() throws IOException {
+        public InputStream getBody() {
           return new ByteArrayInputStream(data, 8 + size, data.length - 8 - size);
         }
       };
@@ -201,7 +201,7 @@ public class DatabaseResponseCache extends ResponseCache {
   }
 
   @Override
-  public CacheRequest put(URI uri, URLConnection conn) throws IOException {
+  public CacheRequest put(URI uri, URLConnection conn) {
     return null;  // Storage is handled directly in #get
   }
 }

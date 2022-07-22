@@ -37,7 +37,7 @@ public interface Trigger<V> {
       public V run(Event event, Function<Task<V>, V> taskRunner) {
         return taskRunner.apply(new Task<>() {
           @Override
-          protected V call() throws Exception {
+          protected V call() {
             task.apply(event);
 
             return null;
