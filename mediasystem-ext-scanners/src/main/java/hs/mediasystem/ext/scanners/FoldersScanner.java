@@ -18,7 +18,6 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,8 +39,7 @@ public class FoldersScanner implements Scanner {
     return CheckedStreams.forIOException(Files.walk(root, 1, FileVisitOption.FOLLOW_LINKS))
         .filter(path -> !path.equals(root))
         .filter(path -> Files.isDirectory(path) || Constants.VIDEOS.matcher(path.getFileName().toString()).matches())
-        .map(p -> toStreamables(p, importSourceId, parentId))
-        .flatMap(Collection::stream)
+        .flatMap(p -> CheckedStreams.forIOException(toStreamables(p, importSourceId, parentId)))
         .collect(Collectors.toList());
   }
 

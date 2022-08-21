@@ -17,7 +17,7 @@ public class Stream0<T> extends Flow<T, RuntimeException, RuntimeException, Runt
     super(stream, new Class<?>[] {});
   }
 
-  <X extends Exception> Stream1<T, X> declaring(Class<X> exceptionType) {
+  public <X extends Exception> Stream1<T, X> declaring(Class<X> exceptionType) {
     return new Stream1<>(stream, exceptionType);
   }
 

@@ -1,5 +1,6 @@
 package hs.mediasystem.util.checked;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,6 +25,12 @@ public class CheckedOptional<T> {
 
   private CheckedOptional(T value) {
     this.value = value;
+  }
+
+  public <E1 extends Exception, E2 extends Exception, E3 extends Exception> CheckedOptional<T> filter(ThrowingPredicate<? super T, E1, E2, E3> predicate) throws E1, E2, E3 {
+    Objects.requireNonNull(predicate);
+
+    return isPresent() && predicate.test(value) ? this : empty();
   }
 
   public <U, E1 extends Exception, E2 extends Exception, E3 extends Exception> CheckedOptional<U> map(ThrowingFunction<? super T, ? extends U, E1, E2, E3> mapper) throws E1, E2, E3 {
@@ -58,12 +65,24 @@ public class CheckedOptional<T> {
     return Objects.requireNonNull((CheckedOptional<T>)supplier.get());
   }
 
+  public <E1 extends Exception, E2 extends Exception, E3 extends Exception> T orElseGet(ThrowingSupplier<? extends T, E1, E2, E3> supplier) throws E1, E2, E3 {
+    return isPresent() ? value : supplier.get();
+  }
+
+  public T orElse(T other) {
+    return isPresent() ? value : other;
+  }
+
   public T orElseThrow() {
     if(value == null) {
       throw new NoSuchElementException("No value present");
     }
 
     return value;
+  }
+
+  public Stream0<T> stream() {
+    return isPresent() ? CheckedStreams.of(List.of(value)) : CheckedStreams.of(List.of());
   }
 
   public Optional<T> toOptional() {

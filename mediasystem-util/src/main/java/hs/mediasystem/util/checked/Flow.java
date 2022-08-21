@@ -38,8 +38,12 @@ public class Flow<T, E1 extends Exception, E2 extends Exception, E3 extends Exce
     return new Flow<>(stream.filter(x -> handlePredicate(predicate, x)), exceptionTypes);
   }
 
-  public <R> Flow<R, E1, E2, E3> flatMap(ThrowingFunction<? super T, ? extends Stream<? extends R>, E1, E2, E3> mapper) {
+  public <R> Flow<R, E1, E2, E3> flatMapStream(ThrowingFunction<? super T, ? extends Stream<? extends R>, E1, E2, E3> mapper) {
     return new Flow<>(stream.flatMap(x -> handleFunction(mapper, x)), exceptionTypes);
+  }
+
+  public <R> Flow<R, E1, E2, E3> flatMap(ThrowingFunction<? super T, ? extends Flow<? extends R, E1, E2, E3>, E1, E2, E3> mapper) {
+    return new Flow<>(stream.flatMap(x -> handleFunction(mapper, x).stream), exceptionTypes);
   }
 
   public <R> Flow<R, E1, E2, E3> map(ThrowingFunction<? super T, ? extends R, E1, E2, E3> mapper) {
@@ -48,6 +52,10 @@ public class Flow<T, E1 extends Exception, E2 extends Exception, E3 extends Exce
 
   public Flow<T, E1, E2, E3> peek(ThrowingConsumer<? super T, E1, E2, E3> action) {
     return new Flow<>(stream.peek(x -> handleConsumer(action, x)), exceptionTypes);
+  }
+
+  public void forEach(ThrowingConsumer<? super T, E1, E2, E3> action) {
+    stream.forEach(x -> handleConsumer(action, x));
   }
 
   private <U> void handleConsumer(ThrowingConsumer<U, E1, E2, E3> func, U x) {
@@ -102,6 +110,15 @@ public class Flow<T, E1 extends Exception, E2 extends Exception, E3 extends Exce
   public CheckedOptional<T> max(Comparator<? super T> comparator) throws E1, E2, E3 {
     try {
       return CheckedOptional.from(stream.max(comparator));
+    }
+    catch(WrapperException e) {
+      return throwException(e);
+    }
+  }
+
+  public CheckedOptional<T> findFirst() throws E1, E2, E3 {
+    try {
+      return CheckedOptional.from(stream.findFirst());
     }
     catch(WrapperException e) {
       return throwException(e);

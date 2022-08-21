@@ -82,7 +82,7 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
     return CheckedStreams.forIOException(Stream.concat(titleVariations.stream(), alternativeTitleVariations.stream()))
       .map(tv -> tv + postFix)
       .peek(q -> LOGGER.fine("Matching '" + q + "' [" + year + "] ..."))
-      .flatMap(q -> StreamSupport.stream(tmdb.query("3/search/tv", null, List.of("query", q, "language", "en", "include_adult", "true")).path("results").spliterator(), false)
+      .flatMapStream(q -> StreamSupport.stream(tmdb.query("3/search/tv", null, List.of("query", q, "language", "en", "include_adult", "true")).path("results").spliterator(), false)
         .flatMap(jsonNode -> Stream.of(jsonNode.path("name").asText(), jsonNode.path("original_name").asText())
           .filter(t -> !t.isEmpty())
           .distinct()
