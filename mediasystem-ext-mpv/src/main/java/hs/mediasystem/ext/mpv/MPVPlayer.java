@@ -12,6 +12,7 @@ import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
+import hs.mediasystem.ui.api.player.SubtitlePresentation;
 import hs.mediasystem.util.javafx.Events;
 
 import java.net.URI;
@@ -60,6 +61,7 @@ public class MPVPlayer implements PlayerPresentation {
   private final Property<StatOverlay> statOverlay = new SimpleObjectProperty<>(StatOverlay.DISABLED);
   private final BooleanProperty paused = new SimpleBooleanProperty(false);
   private final BooleanProperty muted = new SimpleBooleanProperty(false);
+  private final Property<SubtitlePresentation> subtitlePresentation = new SimpleObjectProperty<>(null);
 
   private final ObjectProperty<EventHandler<PlayerEvent>> onPlayerEvent = new SimpleObjectProperty<>();
   private final ObservableList<Subtitle> subtitles = FXCollections.observableArrayList(Subtitle.DISABLED);
@@ -172,6 +174,7 @@ public class MPVPlayer implements PlayerPresentation {
     // Reset some properties
     removeTrackListeners();
 
+    subtitlePresentation.setValue(null);
     audioTracks.setAll(AudioTrack.NO_AUDIO_TRACK);
     subtitles.setAll(Subtitle.DISABLED);
     audioTrack.setValue(AudioTrack.NO_AUDIO_TRACK);
@@ -244,18 +247,8 @@ public class MPVPlayer implements PlayerPresentation {
   }
 
   @Override
-  public LongProperty subtitleDelayProperty() {
-    return subtitleDelay;
-  }
-
-  @Override
-  public Property<Subtitle> subtitleProperty() {
-    return subtitle;
-  }
-
-  @Override
-  public ObservableList<Subtitle> subtitles() {
-    return FXCollections.unmodifiableObservableList(subtitles);
+  public Property<SubtitlePresentation> subtitlePresentationProperty() {
+    return subtitlePresentation;
   }
 
   @Override
@@ -377,6 +370,25 @@ public class MPVPlayer implements PlayerPresentation {
                   subtitle.setValue(track);
                 }
               }
+            }
+
+            if(subtitles.size() > 1) {
+              subtitlePresentation.setValue(new SubtitlePresentation() {
+                @Override
+                public LongProperty subtitleDelayProperty() {
+                  return subtitleDelay;
+                }
+
+                @Override
+                public Property<Subtitle> subtitleProperty() {
+                  return subtitle;
+                }
+
+                @Override
+                public ObservableList<Subtitle> subtitles() {
+                  return subtitles;
+                }
+              });
             }
           }
         });

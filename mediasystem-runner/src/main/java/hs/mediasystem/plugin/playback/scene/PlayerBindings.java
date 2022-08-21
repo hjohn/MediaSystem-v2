@@ -3,6 +3,7 @@ package hs.mediasystem.plugin.playback.scene;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.Subtitle;
+import hs.mediasystem.ui.api.player.SubtitlePresentation;
 import hs.mediasystem.util.SizeFormatter;
 
 import javafx.beans.Observable;
@@ -39,11 +40,11 @@ public class PlayerBindings {
     length = player.flatMap(PlayerPresentation::lengthProperty).map(Number::longValue).orElse(1000L);
     volume = player.flatMap(PlayerPresentation::volumeProperty).map(Number::longValue).orElse(100L);
     audioDelay = player.flatMap(PlayerPresentation::audioDelayProperty).map(Number::longValue).orElse(0L);
-    subtitleDelay = player.flatMap(PlayerPresentation::subtitleDelayProperty).map(Number::longValue).orElse(0L);
+    subtitleDelay = player.flatMap(PlayerPresentation::subtitlePresentationProperty).flatMap(SubtitlePresentation::subtitleDelayProperty).map(Number::longValue).orElse(0L);
     rate = player.flatMap(PlayerPresentation::rateProperty).map(Number::doubleValue).orElse(1.0);
     brightness = player.flatMap(PlayerPresentation::brightnessProperty).map(Number::doubleValue).orElse(1.0);
     audioTrack = player.flatMap(PlayerPresentation::audioTrackProperty);
-    subtitle = player.flatMap(PlayerPresentation::subtitleProperty);
+    subtitle = player.flatMap(PlayerPresentation::subtitlePresentationProperty).flatMap(SubtitlePresentation::subtitleProperty);
     muted = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "muted"));
     paused = Bindings.when(player.isNull()).then(false).otherwise(Bindings.selectBoolean(player, "paused"));
 

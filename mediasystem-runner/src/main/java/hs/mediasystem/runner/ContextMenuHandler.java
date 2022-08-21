@@ -93,6 +93,10 @@ public class ContextMenuHandler {
     P parent = (P)actionTarget.findDirectParentFromRoot(root);
     ExposedControl<?> control = actionTarget.getExposedControl();
 
+    if(parent == null) {
+      return null;
+    }
+
     if(control instanceof AbstractExposedProperty) {
       if(control instanceof ExposedListProperty) {
         @SuppressWarnings("unchecked")
@@ -217,6 +221,10 @@ public class ContextMenuHandler {
     Slider slider = new Slider();
 
     Property<T> value = exposedProperty.getProperty(parent);  // model
+
+    if(value == null) {
+      return null;
+    }
 
     // Bidirectional mapping binding:
     value.conditionOn(Nodes.showing(slider)).map(toNumber).subscribe(slider.valueProperty()::setValue);

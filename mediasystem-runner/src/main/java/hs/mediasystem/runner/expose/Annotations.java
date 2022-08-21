@@ -13,6 +13,7 @@ import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
+import hs.mediasystem.ui.api.player.SubtitlePresentation;
 import hs.mediasystem.util.expose.Expose;
 
 import javafx.beans.property.SimpleLongProperty;
@@ -58,6 +59,11 @@ public class Annotations {
       .provides(PlayerPresentation.class)
       .as("player");
 
+    Expose.nodeProperty((PlayerPresentation p) -> p.subtitlePresentationProperty())
+      .of(PlayerPresentation.class)
+      .provides(SubtitlePresentation.class)
+      .as("subtitlePresentation");
+
     Expose.longProperty(PlayerPresentation::positionProperty)
       .of(PlayerPresentation.class)
       .range((PlayerPresentation p) -> new SimpleLongProperty(0), (PlayerPresentation p) -> p.lengthProperty(), 3)
@@ -76,8 +82,8 @@ public class Annotations {
       .of(PlayerPresentation.class)
       .as("paused");
 
-    Expose.longProperty(PlayerPresentation::subtitleDelayProperty)
-      .of(PlayerPresentation.class)
+    Expose.longProperty(SubtitlePresentation::subtitleDelayProperty)
+      .of(SubtitlePresentation.class)
       .range(-60000, 60000, 100)
       .format(v -> v == 0 ? "None" :
             v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0))
@@ -95,8 +101,8 @@ public class Annotations {
       .format(v -> v.floatValue() == 1.0f ? "Standard" : String.format("%+.0f%%", (v.floatValue() - 1) * 100))
       .as("brightness");
 
-    Expose.listProperty(PlayerPresentation::subtitleProperty)
-      .of(PlayerPresentation.class)
+    Expose.listProperty(SubtitlePresentation::subtitleProperty)
+      .of(SubtitlePresentation.class)
       .allowedValues(p -> p.subtitles())
       .format(Subtitle::getDescription)
       .as("subtitle");

@@ -10,6 +10,7 @@ import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
+import hs.mediasystem.ui.api.player.SubtitlePresentation;
 import hs.mediasystem.util.javafx.Events;
 
 import java.nio.file.Path;
@@ -291,6 +292,7 @@ public class VLCPlayer implements PlayerPresentation {
     rate.setValue(1.0);
     subtitle.setValue(getSubtitleInternal());
     subtitleDelay.setValue(-mediaPlayer.subpictures().delay() / 1000);
+    subtitlePresentation.setValue(null);
 
     List<String> arguments = new ArrayList<>();
 
@@ -334,6 +336,28 @@ public class VLCPlayer implements PlayerPresentation {
       if(spuDescription.id() >= 0) {
         subtitles.add(new Subtitle(spuDescription.id(), spuDescription.description()));
       }
+    }
+
+    if(subtitles.size() > 1) {
+      subtitlePresentation.setValue(new SubtitlePresentation() {
+        @Override
+        public LongProperty subtitleDelayProperty() {
+          return subtitleDelay;
+        }
+
+        @Override
+        public Property<Subtitle> subtitleProperty() {
+          return subtitle;
+        }
+
+        @Override
+        public ObservableList<Subtitle> subtitles() {
+          return subtitles;
+        }
+      });
+    }
+    else {
+      subtitlePresentation.setValue(null);
     }
 
     System.out.println("[FINE] VLCPlayer.updateSubtitles(), now available: " + subtitles);
@@ -389,15 +413,15 @@ public class VLCPlayer implements PlayerPresentation {
   @Override public DoubleProperty brightnessProperty() { return brightness; }
 
   private final ObjectProperty<Subtitle> subtitle = new SimpleObjectProperty<>(Subtitle.DISABLED);
-  @Override public Property<Subtitle> subtitleProperty() { return subtitle; }
-  @Override public ObservableList<Subtitle> subtitles() { return FXCollections.unmodifiableObservableList(subtitles); }
 
   private final ObjectProperty<AudioTrack> audioTrack = new SimpleObjectProperty<>(AudioTrack.NO_AUDIO_TRACK);
   @Override public Property<AudioTrack> audioTrackProperty() { return audioTrack; }
   @Override public ObservableList<AudioTrack> audioTracks() { return FXCollections.unmodifiableObservableList(audioTracks); }
 
   private final LongProperty subtitleDelay = new SimpleLongProperty();
-  @Override public LongProperty subtitleDelayProperty() { return subtitleDelay; }
+
+  private final Property<SubtitlePresentation> subtitlePresentation = new SimpleObjectProperty<>(null);
+  @Override public Property<SubtitlePresentation> subtitlePresentationProperty() { return subtitlePresentation; }
 
   private final BooleanProperty mutedProperty;
   @Override public BooleanProperty mutedProperty() { return mutedProperty; }

@@ -1,0 +1,7 @@
+action-target:
+  subtitle:
+    order: 3
+    label: Subtitle
+  subtitleDelay:
+    order: 4
+    label: Subtitle Delay

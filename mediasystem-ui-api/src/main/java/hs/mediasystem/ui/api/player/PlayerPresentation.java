@@ -45,21 +45,7 @@ public interface PlayerPresentation {
 
   BooleanProperty pausedProperty();
 
-  /**
-   * Returns the current subtitle delay in milliseconds.
-   *
-   * @return the current subtitle delay in milliseconds
-   */
-  LongProperty subtitleDelayProperty();
-
-  /**
-   * Returns the current subtitle.  Will return a Subtitle.DISABLED when not showing any
-   * subtitle.
-   *
-   * @return the current subtitle
-   */
-  Property<Subtitle> subtitleProperty();
-  ObservableList<Subtitle> subtitles();
+  Property<SubtitlePresentation> subtitlePresentationProperty();
 
   /**
    * Returns the current rate of playback as factor of normal speed.

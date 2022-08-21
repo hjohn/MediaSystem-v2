@@ -178,6 +178,10 @@ public class ActionTarget {
     Object parent = findDirectParentFromRoot(root);
     ExposedControl<?> exposedControl = getExposedControl();
 
+    if(parent == null) {
+      return null;
+    }
+
     LOGGER.fine("Doing '" + action + "' for '" + exposedControl.getName() + "' of " + parent);
 
     Matcher matcher = NUMERIC_PROPERTY_PATTERN.matcher(action);
@@ -202,8 +206,9 @@ public class ActionTarget {
           if(exposedControl instanceof AbstractExposedProperty) {
             @SuppressWarnings("unchecked")
             AbstractExposedProperty<Object, Object> abstractExposedProperty = (AbstractExposedProperty<Object, Object>)exposedControl;
+            Property<Object> property = abstractExposedProperty.getProperty(parent);
 
-            handler.handle(actionEvent, abstractExposedProperty.getProperty(parent));
+            handler.handle(actionEvent, property);
           }
           else {
             handler.handle(actionEvent, null);

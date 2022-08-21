@@ -5,12 +5,6 @@ action-target:
   rate:
     order: 2
     label: Playback Speed
-  subtitle:
-    order: 3
-    label: Subtitle
-  subtitleDelay:
-    order: 4
-    label: Subtitle Delay
   audioTrack:
     order: 5
     label: Audio Track
