@@ -66,6 +66,18 @@ public class Throwables {
     return new WrappedCheckedException(throwable);
   }
 
+  public static void uncheck(ExceptionalRunnable runnable) {
+    try {
+      runnable.run();
+    }
+    catch(RuntimeException e) {
+      throw e;
+    }
+    catch(Exception e) {
+      throw uncheck(e);
+    }
+  }
+
   public static <T> T uncheck(Callable<T> callable) {
     try {
       return callable.call();
@@ -76,5 +88,9 @@ public class Throwables {
     catch(Exception e) {
       throw uncheck(e);
     }
+  }
+
+  public interface ExceptionalRunnable {
+    void run() throws Exception;
   }
 }
