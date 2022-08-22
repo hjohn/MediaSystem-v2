@@ -172,6 +172,9 @@ public class ContextLayout {
         setAlignment(Pos.TOP_CENTER);
       }};
 
+      imageView.managedProperty().bind(imageHandle.isNotNull());
+      imageView.visibleProperty().bind(imageHandle.isNotNull());
+
       getChildren().addAll(
         Containers.vbox().nodes(
           Labels.create("groupTitle", groupTitle, Labels.HIDE_IF_EMPTY),
