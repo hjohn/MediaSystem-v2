@@ -3,17 +3,16 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.PersonId;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.RoleId;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile.Gender;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
@@ -37,8 +36,8 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
   @Inject private TheMovieDatabase tmdb;
 
   @Override
-  public PersonalProfile query(PersonIdentifier identifier) throws IOException {
-    JsonNode node = tmdb.query("3/person/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "combined_credits"));
+  public PersonalProfile query(PersonId id) throws IOException {
+    JsonNode node = tmdb.query("3/person/" + id.getKey(), "text:json:" + id, List.of("append_to_response", "combined_credits"));
     String birthDay = node.path("birthday").textValue();
     String deathDay = node.path("deathday").textValue();
     int gender = node.path("gender").intValue();
@@ -66,7 +65,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
     }
 
     return new PersonalProfile(
-      new Person(identifier, node.path("name").textValue(), tmdb.createImageURI(node.path("profile_path").textValue(), "original", "image:person:" + identifier)),
+      new Person(id, node.path("name").textValue(), tmdb.createImageURI(node.path("profile_path").textValue(), "original", "image:person:" + id)),
       gender == 1 ? Gender.FEMALE : gender == 2 ? Gender.MALE : null,
       node.path("popularity").doubleValue(),
       node.path("place_of_birth").textValue(),
@@ -79,9 +78,9 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
 
   private ProductionRole createProductionRole(JsonNode node, boolean isCast) throws IOException {
     boolean isMovie = node.get("media_type").textValue().equals("movie");
-    ProductionIdentifier identifier = new ProductionIdentifier(DataSource.instance(isMovie ? MediaType.MOVIE : MediaType.SERIE, "TMDB"), node.get("id").asText());
-    ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + identifier);
-    ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier);
+    WorkId id = new WorkId(DataSources.TMDB, isMovie ? MediaType.MOVIE : MediaType.SERIE, node.get("id").asText());
+    ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id);
+    ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + id);
 
     String releaseDate = node.has("release_date") ? node.path("release_date").textValue() : node.path("first_air_date").textValue();
 
@@ -95,7 +94,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
     }
 
     Production production = new Production(
-      identifier,
+      id,
       new Details(
         isMovie ? node.path("title").textValue() : node.path("name").textValue(),
         null,
@@ -117,10 +116,10 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
       Set.of()
     );
 
-    Identifier roleIdentifier = new Identifier(DataSources.TMDB_CREDIT, node.get("credit_id").asText());
+    RoleId roleId = new RoleId(DataSources.TMDB, node.get("credit_id").asText());
 
-    Role role = isCast ? Role.asCast(roleIdentifier, node.path("character").textValue())
-                       : Role.asCrew(roleIdentifier, node.path("department").textValue(), node.path("job").textValue());
+    Role role = isCast ? Role.asCast(roleId, node.path("character").textValue())
+                       : Role.asCrew(roleId, node.path("department").textValue(), node.path("job").textValue());
 
     return new ProductionRole(production, role, node.has("episode_count") ? node.get("episode_count").asInt() : null, node.get("popularity").asDouble());
   }

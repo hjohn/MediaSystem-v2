@@ -1,6 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -13,8 +14,8 @@ public class Episode extends Release {
   private final List<PersonRole> personRoles;
   private final Duration duration;
 
-  public Episode(EpisodeIdentifier identifier, Details details, Reception reception, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
-    super(identifier, details, reception);
+  public Episode(WorkId id, Details details, Reception reception, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
+    super(id, details, reception);
 
     if(number < 0) {
       throw new IllegalArgumentException("number must not be negative: " + number);

@@ -1,9 +1,10 @@
 package hs.mediasystem.ext.tmdb.serie;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
@@ -29,11 +30,11 @@ import javax.inject.Singleton;
 public class TmdbEpisodeIdentificationService extends AbstractIdentificationService {
 
   public TmdbEpisodeIdentificationService() {
-    super(DataSources.TMDB_EPISODE);
+    super(DataSources.TMDB, MediaType.EPISODE);
   }
 
   @Override
-  public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
+  public Optional<Identification> identify(Streamable streamable, WorkDescriptor parent) {
     return findChildDescriptors((Serie)parent, streamable.getAttributes());
   }
 
@@ -46,7 +47,7 @@ public class TmdbEpisodeIdentificationService extends AbstractIdentificationServ
       List<Episode> list = attemptMatch(serie, sequence);  // This will also match specials of the TMDB supported form, with season 0 and an episode number
 
       if(!list.isEmpty()) {
-        return Optional.of(new Identification(list.stream().map(Episode::getIdentifier).collect(Collectors.toList()), new Match(Type.DERIVED, 1.0f, Instant.now())));
+        return Optional.of(new Identification(list.stream().map(Episode::getId).collect(Collectors.toList()), new Match(Type.DERIVED, 1.0f, Instant.now())));
       }
     }
 
@@ -54,7 +55,7 @@ public class TmdbEpisodeIdentificationService extends AbstractIdentificationServ
       Tuple2<Float, Episode> match = attemptSpecialsMatch(serie, childAttributes.get(Attribute.TITLE), childAttributes.get(Attribute.SUBTITLE), sequence);
 
       if(match != null) {
-        return Optional.of(new Identification(Collections.singletonList(match.b.getIdentifier()), new Match(Type.NAME, match.a, Instant.now())));
+        return Optional.of(new Identification(Collections.singletonList(match.b.getId()), new Match(Type.NAME, match.a, Instant.now())));
       }
     }
 

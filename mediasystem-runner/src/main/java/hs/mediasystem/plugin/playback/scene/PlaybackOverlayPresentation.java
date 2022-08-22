@@ -90,7 +90,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
     }
 
     public Task<PlaybackOverlayPresentation> create(Work work, MediaStream stream, Duration startPosition) {
-      return create(work, stream, stream.getAttributes().getUri(), startPosition);
+      return create(work, stream, stream.getUri(), startPosition);
     }
 
     public Task<PlaybackOverlayPresentation> create(Work work, URI uri, Duration startPosition) {

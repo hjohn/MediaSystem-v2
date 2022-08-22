@@ -2,7 +2,6 @@ package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Snapshot;
-import hs.mediasystem.domain.work.StreamAttributes;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.VideoTrack;
 import hs.mediasystem.domain.work.WorkId;
@@ -17,6 +16,7 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
@@ -175,9 +175,9 @@ public class NavigationButtonsFactory {
   }
 
   private Node streamToTitleButton(MediaStream stream, EventHandler<ActionEvent> eventHandler) {
-    StreamAttributes attributes = stream.getAttributes();
-    String groupTitle = attributes.getAttributes().get("title");
-    String title = attributes.getAttributes().get("subtitle");
+    Attributes attributes = stream.getAttributes();
+    String groupTitle = attributes.get("title");
+    String title = attributes.get("subtitle");
 
     if(title == null || title.isBlank()) {
       title = groupTitle;
@@ -187,8 +187,8 @@ public class NavigationButtonsFactory {
     String info = Stream.of(
         stream.getDuration().map(d -> SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds())).orElse(null),
         stream.getMediaStructure().flatMap(ms -> ms.getVideoTracks().stream().findFirst()).map(VideoTrack::getResolution).map(r -> r.getWidth() + "✕" + r.getHeight()).orElse(null),
-        stream.getAttributes().getSize().map(s -> SizeFormatter.BYTES_THREE_SIGNIFICANT.format(s)).orElse(null),
-        DATE_TIME_FORMATTER.format(stream.getAttributes().getLastModificationTime())
+        stream.getSize().map(s -> SizeFormatter.BYTES_THREE_SIGNIFICANT.format(s)).orElse(null),
+        DATE_TIME_FORMATTER.format(stream.getLastModificationTime())
       )
       .filter(Objects::nonNull)
       .collect(Collectors.joining(" • "));

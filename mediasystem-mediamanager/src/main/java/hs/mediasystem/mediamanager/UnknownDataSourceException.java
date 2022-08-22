@@ -1,13 +1,11 @@
 package hs.mediasystem.mediamanager;
 
-import hs.mediasystem.domain.work.DataSource;
-
 import java.util.Objects;
 
 public class UnknownDataSourceException extends RuntimeException {
-  private final DataSource dataSource;
+  private final TypedDataSource dataSource;
 
-  public UnknownDataSourceException(DataSource dataSource) {
+  public UnknownDataSourceException(TypedDataSource dataSource) {
     super("" + dataSource);
 
     if(dataSource == null) {

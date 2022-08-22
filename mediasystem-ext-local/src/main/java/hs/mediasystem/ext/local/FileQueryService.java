@@ -3,11 +3,10 @@ package hs.mediasystem.ext.local;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
@@ -20,21 +19,21 @@ import javax.inject.Singleton;
 
 @Singleton
 public class FileQueryService extends AbstractQueryService {
-  private static final DataSource FILE = DataSource.instance(MediaType.FILE, "LOCAL");
+  private static final DataSource LOCAL = DataSource.instance("LOCAL");
 
   @Inject private StreamableStore streamStore;
 
   public FileQueryService() {
-    super(FILE);
+    super(LOCAL, MediaType.FILE);
   }
 
   @Override
-  public Production query(Identifier identifier) {
-    StreamID streamId = StreamID.of(identifier.getId());
+  public Production query(WorkId id) {
+    StreamID streamId = StreamID.of(id.getKey());
     Streamable streamable = streamStore.findStream(streamId).orElseThrow();
 
     return new Production(
-      (ProductionIdentifier)identifier,
+      id,
       new Details(
         streamable.getAttributes().get(Attribute.TITLE),
         streamable.getAttributes().get(Attribute.SUBTITLE),

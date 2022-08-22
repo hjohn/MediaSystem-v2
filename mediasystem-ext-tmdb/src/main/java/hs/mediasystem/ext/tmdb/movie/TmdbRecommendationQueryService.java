@@ -3,9 +3,8 @@ package hs.mediasystem.ext.tmdb.movie;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
@@ -21,15 +20,15 @@ public class TmdbRecommendationQueryService implements RecommendationQueryServic
   @Inject private ObjectFactory objectFactory;
 
   @Override
-  public List<Production> query(ProductionIdentifier identifier) throws IOException {
-    JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
+  public List<Production> query(WorkId id) throws IOException {
+    JsonNode info = tmdb.query(idToLocation(id), "text:json:" + id);
     List<Production> productions = new ArrayList<>();
 
     for(JsonNode result : info.path("results")) {
-      if(identifier.getDataSource().getType() == MediaType.MOVIE) {
+      if(id.getType() == MediaType.MOVIE) {
         productions.add(objectFactory.toMovie(result));
       }
-      else if(identifier.getDataSource().getType() == MediaType.SERIE) {
+      else if(id.getType() == MediaType.SERIE) {
         productions.add(objectFactory.toSerie(result, null));
       }
     }
@@ -37,14 +36,14 @@ public class TmdbRecommendationQueryService implements RecommendationQueryServic
     return productions;
   }
 
-  private static String identifierToLocation(Identifier identifier) {
-    if(identifier.getDataSource().getType() == MediaType.MOVIE) {
-      return "3/movie/" + identifier.getId() + "/recommendations";
+  private static String idToLocation(WorkId id) {
+    if(id.getType() == MediaType.MOVIE) {
+      return "3/movie/" + id.getKey() + "/recommendations";
     }
-    if(identifier.getDataSource().getType() == MediaType.SERIE) {
-      return "3/tv/" + identifier.getId() + "/recommendations";
+    if(id.getType() == MediaType.SERIE) {
+      return "3/tv/" + id.getKey() + "/recommendations";
     }
 
-    throw new IllegalArgumentException("Unsupported identifier: " + identifier);
+    throw new IllegalArgumentException("Unsupported type: " + id);
   }
 }

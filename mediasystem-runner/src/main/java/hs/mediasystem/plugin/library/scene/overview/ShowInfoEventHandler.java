@@ -76,7 +76,7 @@ public class ShowInfoEventHandler {
 
       tabPane.getTabs().add(tab);
 
-      String path = URLDecoder.decode(stream.getAttributes().getUri().toString().trim(), StandardCharsets.UTF_8);
+      String path = URLDecoder.decode(stream.getUri().toString().trim(), StandardCharsets.UTF_8);
 
       if(path.startsWith("file://")) {
         path = path.substring(5);
@@ -92,7 +92,7 @@ public class ShowInfoEventHandler {
         GridPane.FILL
       );
 
-      stream.getAttributes().getSize().ifPresent(size -> {
+      stream.getSize().ifPresent(size -> {
         gridPane.addRow(
           Labels.create("title", "File Size"),
           Labels.create("value", SizeFormatter.BYTES_THREE_SIGNIFICANT.format(size)),
@@ -103,34 +103,24 @@ public class ShowInfoEventHandler {
 
       gridPane.addRow(
         Labels.create("title", "Last Modified"),
-        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getAttributes().getLastModificationTime().atOffset(ZoneOffset.UTC))),
+        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getLastModificationTime().atOffset(ZoneOffset.UTC))),
         GridPane.FILL,
         GridPane.FILL
       );
 
       gridPane.addRow(
         Labels.create("title", "First Seen"),
-        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getAttributes().getDiscoveryTime().atOffset(ZoneOffset.UTC))),
+        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getDiscoveryTime().atOffset(ZoneOffset.UTC))),
         GridPane.FILL,
         GridPane.FILL
       );
 
-      stream.getMatch().ifPresentOrElse(match -> {
-        gridPane.addRow(
-          Labels.create("title", "Identification"),
-          Labels.create("value", "" + toText(match)),
-          GridPane.FILL,
-          GridPane.FILL
-        );
-      },
-      () -> {
-        gridPane.addRow(
-          Labels.create("title", "Identification"),
-          Labels.create("value", "- (Unable to identify)"),
-          GridPane.FILL,
-          GridPane.FILL
-        );
-      });
+      gridPane.addRow(
+        Labels.create("title", "Identification"),
+        Labels.create("value", "" + toText(stream.getMatch())),
+        GridPane.FILL,
+        GridPane.FILL
+      );
 
       stream.getDuration().ifPresent(d -> {
         gridPane.addRow(

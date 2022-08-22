@@ -1,7 +1,6 @@
 package hs.mediasystem.db.services;
 
 import hs.mediasystem.domain.work.PersonId;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Participation;
@@ -10,7 +9,10 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Person.Gender;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
 import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.checked.CheckedOptional;
+import hs.mediasystem.util.checked.CheckedStreams;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,16 +25,17 @@ public class PersonService {
   @Inject private WorkService workService;
   @Inject private List<PersonalProfileQueryService> personalProfileQueryServices;
 
-  public Optional<Person> findPerson(PersonId id) {
-    PersonalProfile personalProfile = Throwables.uncheck(() -> personalProfileQueryServices.get(0).query(new PersonIdentifier(id.getDataSource(), id.getKey())));
+  public Optional<Person> findPerson(PersonId id) throws IOException {
+    PersonalProfile personalProfile = Throwables.uncheck(() -> personalProfileQueryServices.get(0).query(id));
 
-    return Optional.ofNullable(personalProfile)
-      .map(this::toPerson);
+    return CheckedOptional.ofNullable(personalProfile)
+      .map(this::toPerson)
+      .toOptional();
   }
 
-  private Person toPerson(PersonalProfile pp) {
+  private Person toPerson(PersonalProfile pp) throws IOException {
     return new Person(
-      new PersonId(pp.getPerson().getIdentifier().getDataSource(), pp.getPerson().getIdentifier().getId()),
+      pp.getPerson().getId(),
       pp.getPerson().getName(),
       pp.getBiography(),
       pp.getPerson().getCover(),
@@ -41,12 +44,12 @@ public class PersonService {
       pp.getBirthPlace(),
       pp.getBirthDate(),
       pp.getDeathDate(),
-      pp.getProductionRoles().stream().map(this::toParticipation).collect(Collectors.toList())
+      CheckedStreams.forIOException(pp.getProductionRoles()).map(this::toParticipation).collect(Collectors.toList())
     );
   }
 
-  private Participation toParticipation(ProductionRole pr) {
-    Work work = workService.toWork(pr.getProduction(), null);
+  private Participation toParticipation(ProductionRole pr) throws IOException {
+    Work work = workService.toWork(pr.getProduction());
 
     return new Participation(
       pr.getRole(),

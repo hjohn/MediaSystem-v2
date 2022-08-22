@@ -2,9 +2,10 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
@@ -23,27 +24,27 @@ public class TmdbProductionCollectionQueryService implements ProductionCollectio
   @Inject private ObjectFactory objectFactory;
 
   @Override
-  public ProductionCollection query(Identifier identifier) throws IOException {
-    JsonNode node = tmdb.query("3/collection/" + identifier.getId(), "text:json:" + identifier);
+  public ProductionCollection query(WorkId id) throws IOException {
+    JsonNode node = tmdb.query("3/collection/" + id.getKey(), "text:json:" + id);
     List<Production> productions = new ArrayList<>();
 
     for(JsonNode p : node.path("parts")) {
-      productions.add(objectFactory.toProduction(p, DataSources.TMDB_MOVIE));
+      productions.add(objectFactory.toProduction(p, DataSources.TMDB, MediaType.MOVIE));
     }
 
-    Identifier productionCollectionIdentifier = new Identifier(DataSources.TMDB_COLLECTION, node.path("id").asText());
+    WorkId collectionId = new WorkId(DataSources.TMDB, MediaType.COLLECTION, node.path("id").asText());
 
     return new ProductionCollection(
       new CollectionDetails(
-        productionCollectionIdentifier,
+        collectionId,
         new Details(
           node.path("name").asText(),
           null,
           node.path("overview").asText(),
           null,
-          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + productionCollectionIdentifier),  // as cover
+          tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + collectionId),  // as cover
           null,
-          tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + productionCollectionIdentifier)
+          tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + collectionId)
         )
       ),
       productions

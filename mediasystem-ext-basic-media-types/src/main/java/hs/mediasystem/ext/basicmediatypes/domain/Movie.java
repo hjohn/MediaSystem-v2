@@ -1,6 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 
 import java.time.Duration;
 import java.util.Set;
@@ -16,8 +17,8 @@ public class Movie extends Production {
   private final String tagLine;
   private final State state;
 
-  public Movie(ProductionIdentifier identifier, Details details, Reception reception, Duration runtime, Classification classification, double popularity, String tagLine, State state, Set<Identifier> relatedIdentifiers) {
-    super(identifier, details, reception, classification, popularity, relatedIdentifiers);
+  public Movie(WorkId id, Details details, Reception reception, Duration runtime, Classification classification, double popularity, String tagLine, State state, Set<WorkId> relatedWorks) {
+    super(id, details, reception, classification, popularity, relatedWorks);
 
     this.runtime = runtime;
     this.state = state;

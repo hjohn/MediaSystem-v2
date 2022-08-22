@@ -4,6 +4,8 @@ import hs.ddif.annotations.Produces;
 import hs.mediasystem.db.base.ImportSource;
 import hs.mediasystem.db.base.ImportSourceProvider;
 import hs.mediasystem.db.base.StreamCacheUpdateService;
+import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
+import hs.mediasystem.db.services.LinkedResourcesService;
 import hs.mediasystem.db.services.WorkService;
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.MediaType;
@@ -13,10 +15,7 @@ import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
@@ -56,9 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(InjectorExtension.class)
 public class DatabaseIT extends DatabaseConfig {
-  private static final DataSource MOVIE_DS = DataSource.instance(MediaType.MOVIE, "TMDB");
-  private static final DataSource SERIE_DS = DataSource.instance(MediaType.SERIE, "TMDB");
-  private static final DataSource EPISODE_DS = DataSource.instance(MediaType.EPISODE, "TMDB");
+  private static final DataSource TMBD = DataSource.instance("TMDB");
 
   @Inject private StreamCacheUpdateService updateService;
   @Inject private WorkService workService;
@@ -66,6 +63,9 @@ public class DatabaseIT extends DatabaseConfig {
   @Inject private ContentPrintProvider contentPrintProvider;
   @Inject private ImportSourceProvider importSourceProvider;
   @Inject @Named("general.basedir") private String basePath;
+
+  @Inject LinkedResourcesService linkedResourcesService;  // cannot be auto-discovered as not directly used, ensure it is present
+  @Inject DefaultStreamMetaDataStore streamMetaDataStore;  // cannot be auto-discovered as not directly used, ensure it is present
 
   private ContentPrint contentPrint1;
   private ContentPrint contentPrint2;
@@ -101,69 +101,69 @@ public class DatabaseIT extends DatabaseConfig {
 
   static class MovieIdentificationService extends AbstractIdentificationService {
     MovieIdentificationService() {
-      super(MOVIE_DS);
+      super(TMBD, MediaType.MOVIE);
     }
 
     @Override
-    public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(MOVIE_DS, "T" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+    public Optional<Identification> identify(Streamable streamable, WorkDescriptor parent) {
+      return Optional.of(new Identification(List.of(new WorkId(TMBD, MediaType.MOVIE, "T" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
   static class SerieIdentificationService extends AbstractIdentificationService {
     SerieIdentificationService() {
-      super(SERIE_DS);
+      super(TMBD, MediaType.SERIE);
     }
 
     @Override
-    public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(SERIE_DS, "S" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+    public Optional<Identification> identify(Streamable streamable, WorkDescriptor parent) {
+      return Optional.of(new Identification(List.of(new WorkId(TMBD, MediaType.SERIE, "S" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
   static class EpisodeIdentificationService extends AbstractIdentificationService {
     EpisodeIdentificationService() {
-      super(EPISODE_DS);
+      super(TMBD, MediaType.EPISODE);
     }
 
     @Override
-    public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) {
-      return Optional.of(new Identification(List.of(new ProductionIdentifier(EPISODE_DS, "S4/E" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
+    public Optional<Identification> identify(Streamable streamable, WorkDescriptor parent) {
+      return Optional.of(new Identification(List.of(new WorkId(TMBD, MediaType.EPISODE, "S4/E" + streamable.getId().getContentId().asInt())), new Match(Type.NAME_AND_RELEASE_DATE, 0.8f, Instant.now())));
     }
   }
 
   static class MovieQueryService extends AbstractQueryService {
     MovieQueryService() {
-      super(MOVIE_DS);
+      super(TMBD, MediaType.MOVIE);
     }
 
     @Override
-    public MediaDescriptor query(Identifier identifier) {
-      switch(identifier.toString()) {
-      case "TMDB:MOVIE:T1": return Movies.create((ProductionIdentifier)identifier, "The Terminator");
-      case "TMDB:MOVIE:T2": return Movies.create((ProductionIdentifier)identifier, "Avatar");
-      case "TMDB:MOVIE:T3": return Movies.create((ProductionIdentifier)identifier, "The Matrix");
+    public WorkDescriptor query(WorkId id) {
+      switch(id.toString()) {
+      case "TMDB:MOVIE:T1": return Movies.create(id, "The Terminator");
+      case "TMDB:MOVIE:T2": return Movies.create(id, "Avatar");
+      case "TMDB:MOVIE:T3": return Movies.create(id, "The Matrix");
       default:
-        throw new IllegalStateException("Unknown identifier: " + identifier);
+        throw new IllegalStateException("Unknown id: " + id);
       }
     }
   }
 
   static class SerieQueryService extends AbstractQueryService {
     SerieQueryService() {
-      super(SERIE_DS);
+      super(TMBD, MediaType.SERIE);
     }
 
     @Override
-    public MediaDescriptor query(Identifier identifier) {
-      switch(identifier.toString()) {
-      case "TMDB:SERIE:S4": return Series.create((ProductionIdentifier)identifier, "Friends", List.of(
-        Episodes.create(new EpisodeIdentifier(EPISODE_DS, "S4/E5"), "Forever", 1, 1),
-        Episodes.create(new EpisodeIdentifier(EPISODE_DS, "S4/E6"), "Never", 1, 2),
-        Episodes.create(new EpisodeIdentifier(EPISODE_DS, "S4/E7"), "Not Included", 1, 3)
+    public WorkDescriptor query(WorkId id) {
+      switch(id.toString()) {
+      case "TMDB:SERIE:S4": return Series.create(id, "Friends", List.of(
+        Episodes.create(new WorkId(TMBD, MediaType.EPISODE, "S4/E5"), "Forever", 1, 1),
+        Episodes.create(new WorkId(TMBD, MediaType.EPISODE, "S4/E6"), "Never", 1, 2),
+        Episodes.create(new WorkId(TMBD, MediaType.EPISODE, "S4/E7"), "Not Included", 1, 3)
       ));
       default:
-        throw new IllegalStateException("Unknown identifier: " + identifier);
+        throw new IllegalStateException("Unknown id: " + id);
       }
     }
   }
@@ -172,32 +172,32 @@ public class DatabaseIT extends DatabaseConfig {
   @TestInstance(Lifecycle.PER_CLASS)
   class WhenASerieIsAdded extends AddFriends {
     @Test
-    void findShouldFindFriends() {
-      Work work = workService.find(new WorkId(SERIE_DS, "S4")).get();
+    void findShouldFindFriends() throws IOException {
+      Work work = workService.query(new WorkId(TMBD, MediaType.SERIE, "S4")).orElseThrow();
 
       assertEquals("Friends", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
     @Test
-    void findShouldFindFriendsEp1() {
-      Work work = workService.find(new WorkId(EPISODE_DS, "S4/E5")).get();
+    void findShouldFindFriendsEp1() throws IOException {
+      Work work = workService.query(new WorkId(TMBD, MediaType.EPISODE, "S4/E5")).orElseThrow();
 
       assertEquals("Forever", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
     @Test
-    void findShouldFindFriendsEp2() {
-      Work work = workService.find(new WorkId(EPISODE_DS, "S4/E6")).get();
+    void findShouldFindFriendsEp2() throws IOException {
+      Work work = workService.query(new WorkId(TMBD, MediaType.EPISODE, "S4/E6")).orElseThrow();
 
       assertEquals("Never", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
     @Test
-    void findShouldFindFriendsEp3WithoutStreamEquivalent() {
-      Work work = workService.find(new WorkId(EPISODE_DS, "S4/E7")).get();
+    void findShouldFindFriendsEp3WithoutStreamEquivalent() throws IOException {
+      Work work = workService.query(new WorkId(TMBD, MediaType.EPISODE, "S4/E7")).orElseThrow();
 
       assertEquals("Not Included", work.getDescriptor().getDetails().getTitle());
       assertEquals(0, work.getStreams().size());
@@ -213,24 +213,24 @@ public class DatabaseIT extends DatabaseConfig {
   @TestInstance(Lifecycle.PER_CLASS)
   class WhenSomeMoviesAreAdded extends AddSomeMovies {
     @Test
-    void findShouldFindTerminator() {
-      Work work = workService.find(new WorkId(MOVIE_DS, "T1")).get();
+    void findShouldFindTerminator() throws IOException {
+      Work work = workService.query(new WorkId(TMBD, MediaType.MOVIE, "T1")).orElseThrow();
 
       assertEquals("The Terminator", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
     @Test
-    void findShouldFindAvatar() {
-      Work work = workService.find(new WorkId(MOVIE_DS, "T2")).get();
+    void findShouldFindAvatar() throws IOException {
+      Work work = workService.query(new WorkId(TMBD, MediaType.MOVIE, "T2")).orElseThrow();
 
       assertEquals("Avatar", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
     }
 
     @Test
-    void findShouldFindMatrix() {
-      Work work = workService.find(new WorkId(MOVIE_DS, "T3")).get();
+    void findShouldFindMatrix() throws IOException {
+      Work work = workService.query(new WorkId(TMBD, MediaType.MOVIE, "T3")).orElseThrow();
 
       assertEquals("The Matrix", work.getDescriptor().getDetails().getTitle());
       assertEquals(1, work.getStreams().size());
@@ -255,24 +255,24 @@ public class DatabaseIT extends DatabaseConfig {
     @TestInstance(Lifecycle.PER_CLASS)
     class WhenAvatarIsGoneAndTerminatorIsRenamed extends RemoveAvatarAndModifyOne {
       @Test
-      void findShouldFindTerminatorStillAlthoughItsTitleChanged() {
-        Work work = workService.find(new WorkId(MOVIE_DS, "T1")).get();
+      void findShouldFindTerminatorStillAlthoughItsTitleChanged() throws IOException {
+        Work work = workService.query(new WorkId(TMBD, MediaType.MOVIE, "T1")).orElseThrow();
 
         assertEquals("The Terminator", work.getDescriptor().getDetails().getTitle());
         assertEquals(1, work.getStreams().size());
       }
 
       @Test
-      void findShouldFindAvatarStillButWithoutAStream() {
-        Work work = workService.find(new WorkId(MOVIE_DS, "T2")).get();
+      void findShouldFindAvatarStillButWithoutAStream() throws IOException {
+        Work work = workService.query(new WorkId(TMBD, MediaType.MOVIE, "T2")).orElseThrow();
 
         assertEquals("Avatar", work.getDescriptor().getDetails().getTitle());
         assertEquals(0, work.getStreams().size());
       }
 
       @Test
-      void findShouldFindMatrixStill() {
-        Work work = workService.find(new WorkId(MOVIE_DS, "T3")).get();
+      void findShouldFindMatrixStill() throws IOException {
+        Work work = workService.query(new WorkId(TMBD, MediaType.MOVIE, "T3")).orElseThrow();
 
         assertEquals("The Matrix", work.getDescriptor().getDetails().getTitle());
         assertEquals(1, work.getStreams().size());

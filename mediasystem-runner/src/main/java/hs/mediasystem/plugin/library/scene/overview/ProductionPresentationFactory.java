@@ -36,6 +36,9 @@ import org.reactfx.EventSource;
 @Singleton
 public class ProductionPresentationFactory {
   private static final String SYSTEM = "MediaSystem:Episode";
+  private static final Comparator<Work> CHILDREN_ORDER = // in order of sequence, and then by title (for extras)
+    Comparator.comparing((Work w) -> w.getDetails().getSequence().orElseThrow(), Sequence.COMPARATOR)
+      .thenComparing(w -> w.getDetails().getTitle());
 
   @Inject private WorkClient workClient;
   @Inject private SettingsClient settingsClient;
@@ -60,7 +63,7 @@ public class ProductionPresentationFactory {
 
   private List<Work> queryChildren(WorkId id) {
     return workClient.findChildren(id).stream()
-      .sorted(Comparator.comparing(w -> w.getDetails().getSequence().orElseThrow(), Sequence.COMPARATOR))
+      .sorted(CHILDREN_ORDER)
       .collect(Collectors.toList());
   }
 

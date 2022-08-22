@@ -7,8 +7,8 @@ import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match.Type;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.tmdb.movie.TmdbIdentificationService;
@@ -46,7 +46,7 @@ public class TmdbIdentificationServiceTest {
 
     assertEquals(0.77, identification.getMatch().getAccuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80000"), identification.getPrimaryIdentifier());
+    assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80000"), identification.getPrimaryWorkId());
   }
 
   @Test
@@ -57,7 +57,7 @@ public class TmdbIdentificationServiceTest {
 
     assertEquals(1.0, identification.getMatch().getAccuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getPrimaryIdentifier());
+    assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 
   @Test
@@ -68,7 +68,7 @@ public class TmdbIdentificationServiceTest {
 
     assertEquals(0.470, identification.getMatch().getAccuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getPrimaryIdentifier());
+    assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 
   @Test
@@ -82,7 +82,7 @@ public class TmdbIdentificationServiceTest {
 
     assertEquals(1.0, identification.getMatch().getAccuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getPrimaryIdentifier());
+    assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 
   @Test
@@ -93,7 +93,7 @@ public class TmdbIdentificationServiceTest {
 
     assertEquals(1.0, identification.getMatch().getAccuracy(), 0.01f);
     assertEquals(Type.ID, identification.getMatch().getType());
-    assertEquals(new Identifier(DataSources.TMDB_MOVIE, "80001"), identification.getPrimaryIdentifier());
+    assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 
   @Test

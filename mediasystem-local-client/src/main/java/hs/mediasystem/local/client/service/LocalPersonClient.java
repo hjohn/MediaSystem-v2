@@ -7,6 +7,7 @@ import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
 import hs.mediasystem.ui.api.domain.Role;
 import hs.mediasystem.util.ImageHandleFactory;
+import hs.mediasystem.util.Throwables;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public class LocalPersonClient implements PersonClient {
 
   @Override
   public Optional<Person> findPerson(PersonId id) {
-    return personService.findPerson(id).map(this::toPerson);
+    return Throwables.uncheck(() -> personService.findPerson(id)).map(this::toPerson);
   }
 
   private Person toPerson(hs.mediasystem.ext.basicmediatypes.domain.stream.Person p) {
@@ -52,7 +53,7 @@ public class LocalPersonClient implements PersonClient {
 
   Person toPerson(hs.mediasystem.ext.basicmediatypes.domain.Person p) {
     return new Person(
-      new PersonId(p.getIdentifier().getDataSource(), p.getIdentifier().getId()),
+      p.getId(),
       p.getName(),
       null,
       p.getCover() == null ? null : imageHandleFactory.fromURI(p.getCover()),

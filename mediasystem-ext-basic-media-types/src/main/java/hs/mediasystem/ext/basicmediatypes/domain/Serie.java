@@ -1,6 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class Serie extends Production {
   /**
    * Constructs a new instance.
    *
-   * @param identifier a {@link ProductionIdentifier}, cannot be null
+   * @param id a {@link WorkId}, cannot be null
    * @param details a {@link Details}, cannot be null
    * @param reception a {@link Reception}, can be null
    * @param classification a {@link Classification}, cannot be null
@@ -35,10 +36,10 @@ public class Serie extends Production {
    * @param lastAirDate a last air date, can be null if unknown
    * @param popularity a popularity value
    * @param seasons the seasons this serie consists of, can be null if unknown (due to partial information) and can be empty (if known there are no seasons)
-   * @param relatedIdentifiers a set of related {@link Identifier}, cannot be {@code null}
+   * @param relatedWorks a set of related {@link WorkId}s, cannot be {@code null}
    */
-  public Serie(ProductionIdentifier identifier, Details details, Reception reception, Classification classification, State state, LocalDate lastAirDate, double popularity, List<Season> seasons, Set<Identifier> relatedIdentifiers) {
-    super(identifier, details, reception, classification, popularity, relatedIdentifiers);
+  public Serie(WorkId id, Details details, Reception reception, Classification classification, State state, LocalDate lastAirDate, double popularity, List<Season> seasons, Set<WorkId> relatedWorks) {
+    super(id, details, reception, classification, popularity, relatedWorks);
 
     this.state = state;
     this.lastAirDate = lastAirDate;

@@ -1,5 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
+import hs.mediasystem.domain.work.WorkId;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -8,8 +10,8 @@ public class Season extends Release {
   private final int number;
   private final List<Episode> episodes;
 
-  public Season(ProductionIdentifier identifier, Details details, int number, List<Episode> episodes) {
-    super(identifier, details, null);
+  public Season(WorkId id, Details details, int number, List<Episode> episodes) {
+    super(id, details, null);
 
     this.number = number;
     this.episodes = new ArrayList<>(Collections.unmodifiableList(episodes));

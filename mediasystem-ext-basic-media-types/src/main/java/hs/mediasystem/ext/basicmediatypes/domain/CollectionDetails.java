@@ -1,23 +1,25 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
+import hs.mediasystem.domain.work.WorkId;
+
 public class CollectionDetails {
-  private final Identifier identifier;
+  private final WorkId id;
   private final Details details;
 
-  public CollectionDetails(Identifier identifier, Details details) {
-    if(identifier == null) {
-      throw new IllegalArgumentException("identifier cannot be null");
+  public CollectionDetails(WorkId id, Details details) {
+    if(id == null) {
+      throw new IllegalArgumentException("id cannot be null");
     }
     if(details == null) {
       throw new IllegalArgumentException("details cannot be null");
     }
 
-    this.identifier = identifier;
+    this.id = id;
     this.details = details;
   }
 
-  public Identifier getIdentifier() {
-    return identifier;
+  public WorkId getId() {
+    return id;
   }
 
   public Details getDetails() {

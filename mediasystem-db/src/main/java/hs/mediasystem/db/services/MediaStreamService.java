@@ -1,46 +1,47 @@
 package hs.mediasystem.db.services;
 
-import hs.mediasystem.db.base.DatabaseStreamStore;
 import hs.mediasystem.db.base.StreamStateService;
-import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
+import hs.mediasystem.db.services.domain.LinkedResource;
+import hs.mediasystem.db.services.domain.LinkedWork;
+import hs.mediasystem.db.services.domain.MatchedResource;
+import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.State;
-import hs.mediasystem.domain.work.StreamAttributes;
 import hs.mediasystem.domain.work.StreamMetaData;
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
+import hs.mediasystem.mediamanager.StreamMetaDataStore;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class MediaStreamService {
-  @Inject private DatabaseStreamStore streamStore;
   @Inject private StreamStateService stateService;
-  @Inject private DefaultStreamMetaDataStore metaDataStore;
-  @Inject private ContentPrintProvider contentPrintProvider;
+  @Inject private StreamMetaDataStore metaDataStore;
 
-  public synchronized Optional<MediaStream> findFirst(ContentID contentId) {
-    return streamStore.findStreams(contentId).stream().findFirst().map(this::toMediaStream);
+  public MediaStream toMediaStream(LinkedResource linkedResource) {
+    return toMediaStream(linkedResource.match(), linkedResource.resource());
   }
 
-  public MediaStream toMediaStream(Streamable streamable) {
-    Match match = streamStore.findIdentification(streamable.getId()).map(Identification::getMatch).orElse(null);
-    StreamID id = streamable.getId();
-    StreamID parentId = streamStore.findParentId(id).orElse(null);
-    State state = toState(streamable);
+  public MediaStream toMediaStream(MatchedResource matchedResource) {
+    return toMediaStream(matchedResource.match(), matchedResource.resource());
+  }
+
+  public MediaStream toMediaStream(LinkedWork linkedWork) {
+    return linkedWork.matchedResources().stream().findFirst().map(this::toMediaStream).orElseThrow();
+  }
+
+  private MediaStream toMediaStream(Match match, Resource resource) {
+    StreamID id = resource.id();
+    State state = toState(id.getContentId());
     StreamMetaData md = metaDataStore.find(id.getContentId()).orElse(null);
     int totalDuration = stateService.getTotalDuration(id.getContentId());
 
@@ -48,12 +49,14 @@ public class MediaStreamService {
       md = new StreamMetaData(id.getContentId(), Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
     }
 
-    ContentPrint contentPrint = contentPrintProvider.get(id.getContentId());
-
     return new MediaStream(
       id,
-      parentId,
-      new StreamAttributes(streamable.getUri(), streamStore.findDiscoveryTime(id).orElseThrow(), Instant.ofEpochMilli(contentPrint.getLastModificationTime()), contentPrint.getSize(), streamable.getAttributes()),
+      resource.parentId().orElse(null),
+      resource.uri(),
+      resource.discoveryTime(),
+      resource.lastModificationTime(),
+      resource.size().orElse(null),
+      resource.attributes(),
       state,
       md == null ? (totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null) : md.getLength().orElse(null),
       md == null ? null : new MediaStructure(md.getVideoTracks(), md.getAudioTracks(), md.getSubtitleTracks()),
@@ -62,9 +65,7 @@ public class MediaStreamService {
     );
   }
 
-  private State toState(Streamable streamable) {
-    ContentID contentId = streamable.getId().getContentId();
-
+  private State toState(ContentID contentId) {
     // TODO for Series, need to compute last watched time and watched status based on its children
 
     Instant lastWatchedTime = stateService.getLastWatchedTime(contentId);

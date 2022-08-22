@@ -2,7 +2,7 @@ package hs.mediasystem.local.client.service;
 
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
@@ -22,6 +22,7 @@ import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.Throwables;
 
 import java.util.Collection;
 import java.util.List;
@@ -54,7 +55,7 @@ public class LocalWorksClient implements WorksClient {
 
   @Override
   public List<Work> findTop100() {
-    return worksService.findTop100().stream().map(this::toWork).collect(Collectors.toList());
+    return Throwables.uncheck(() -> worksService.findTop100()).stream().map(this::toWork).collect(Collectors.toList());
   }
 
   Work toWork(hs.mediasystem.ext.basicmediatypes.domain.stream.Work work) {
@@ -72,9 +73,9 @@ public class LocalWorksClient implements WorksClient {
 
   private Parent createParent(hs.mediasystem.domain.work.Parent parent) {
     return parent == null ? null : new Parent(
-      parent.getId(),
-      parent.getName(),
-      parent.getBackdrop().map(imageHandleFactory::fromURI).orElse(null)
+      parent.id(),
+      parent.title(),
+      parent.backdrop().map(imageHandleFactory::fromURI).orElse(null)
     );
   }
 
@@ -84,7 +85,7 @@ public class LocalWorksClient implements WorksClient {
    * - sample image is taken first snapshot if missing (don't use backdrop, it is not a sample!)
    * - backdrop is taken from parent or from the second snapshot if missing
    */
-  private Details createDetails(MediaDescriptor descriptor, hs.mediasystem.domain.work.Parent parent, MediaStream stream) {
+  private Details createDetails(WorkDescriptor descriptor, hs.mediasystem.domain.work.Parent parent, MediaStream stream) {
     Optional<MediaStream> mediaStream = Optional.ofNullable(stream);
 
     return new Details(
@@ -103,13 +104,13 @@ public class LocalWorksClient implements WorksClient {
         .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor.getDetails().getBackdrop()
-        .or(() -> parent == null ? Optional.empty() : parent.getBackdrop())
+        .or(() -> parent == null ? Optional.empty() : parent.backdrop())
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
         .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor instanceof Movie m ? m.getTagLine() : null,
       descriptor instanceof Serie s ? createSerie(s) : null,
-      descriptor instanceof Episode e ? createSequence(e) : null,
+      parent != null && parent.getType() == MediaType.SERIE ? createSequence(descriptor) : null,
       descriptor instanceof Release r ? r.getReception() : null,
       descriptor instanceof Production p ? p.getPopularity() : null,
       descriptor instanceof Production p ? createClassification(p) : Classification.DEFAULT
@@ -189,22 +190,34 @@ public class LocalWorksClient implements WorksClient {
 
   private static Sequence createSequence(Episode episode) {
     return new Sequence(
-      episode.getSeasonNumber() == 0 ? Type.SPECIAL : episode.getSeasonNumber() < 0 ? Type.EXTRA : Type.EPISODE,
+      episode.getSeasonNumber() == 0 ? Type.SPECIAL : Type.EPISODE,
       episode.getNumber(),
       episode.getSeasonNumber() <= 0 ? null : episode.getSeasonNumber()
     );
+  }
+
+  private static Sequence createSequence(WorkDescriptor descriptor) {
+    if(descriptor instanceof Episode episode) {
+      return createSequence(episode);
+    }
+
+    return new Sequence(Type.EXTRA, 0, null);
   }
 
   private static MediaStream toStream(hs.mediasystem.domain.work.MediaStream stream) {
     return new MediaStream(
       stream.getId(),
       stream.getParentId().orElse(null),
+      stream.getUri(),
+      stream.getDiscoveryTime(),
+      stream.getLastModificationTime(),
+      stream.getSize().orElse(null),
       stream.getAttributes(),
       toState(stream.getState()),
       stream.getDuration().orElse(null),
       stream.getMediaStructure().orElse(null),
       stream.getSnapshots(),
-      stream.getMatch().orElse(null)
+      stream.getMatch()
     );
   }
 }

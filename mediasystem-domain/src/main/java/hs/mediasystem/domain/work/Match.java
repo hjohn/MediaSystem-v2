@@ -13,12 +13,12 @@ public class Match {
     MANUAL,
 
     /**
-     * Matched directly by a provider specific id (like an imdbid parsed from file name).
+     * Matched directly by a provider specific id (like an IMDB id parsed from file name).
      */
     ID,
 
     /**
-     * Matched derived from another match, for example when an identifier (for another source)
+     * Matched derived from another match, for example when an identification (for another source)
      * is returned by a match from the current source.  These kinds of matches are only as
      * trustworthy as the original match.
      */
@@ -37,7 +37,12 @@ public class Match {
     /**
      * Matched on name only.
      */
-    NAME
+    NAME,
+
+    /**
+     * There was no match.
+     */
+    NONE
   }
 
   private final Type type;

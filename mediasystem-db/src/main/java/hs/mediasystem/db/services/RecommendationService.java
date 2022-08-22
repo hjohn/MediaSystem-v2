@@ -6,15 +6,11 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.State;
-import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
-import hs.mediasystem.mediamanager.DescriptorStore;
-import hs.mediasystem.mediamanager.StreamableStore;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -31,8 +27,8 @@ import javax.inject.Singleton;
 public class RecommendationService {
   @Inject private WorksService worksService;
   @Inject private WorkService workService;
-  @Inject private StreamableStore streamStore;
-  @Inject private DescriptorStore descriptorStore;
+  @Inject private LinkedResourcesService linkedResourcesService;
+  @Inject private LinkedWorksService linkedWorksService;
   @Inject private StreamStateProvider streamStateProvider;
   @Inject private MediaStreamService mediaStreamService;
 
@@ -46,8 +42,7 @@ public class RecommendationService {
     // TODO this should really be backed by a db query; as it is, it will walk through all stream states
     return streamStateProvider.map(stream -> stream
       .map(StreamState::getContentID)
-      .map(mediaStreamService::findFirst)
-      .flatMap(Optional::stream)
+      .flatMap(cid -> linkedResourcesService.findFirst(cid).map(mediaStreamService::toMediaStream).stream())
       .filter(ms -> ms.getState().getLastConsumptionTime().isPresent())  // this check could be done earlier as stream state should have this information already
       .sorted(Comparator.comparing((MediaStream ms) -> ms.getState().getLastConsumptionTime().orElseThrow()).reversed())
       .map(this::toPartiallyWatchedOrNextUnwatchedRecommendation)
@@ -73,7 +68,7 @@ public class RecommendationService {
   private Recommendation toNewRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
 
-    return new Recommendation(stream.getAttributes().getDiscoveryTime(), work);
+    return new Recommendation(stream.getDiscoveryTime(), work);
   }
 
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(MediaStream stream) {
@@ -94,7 +89,7 @@ public class RecommendationService {
       // TODO Must be a movie, find collection for "next"
     }
     else if(!state.getResumePosition().isZero()) {  // Partially watched movie
-      return workService.find(stream.getId())
+      return workService.findFirst(stream.getId())
         .map(w -> new Recommendation(lastWatchedTime, w));
     }
 
@@ -109,46 +104,32 @@ public class RecommendationService {
     Duration position = state.getResumePosition();
     Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
 
-    return findBestIdentifier(parentId).flatMap(
-      identifier -> descriptorStore.find(identifier).filter(Serie.class::isInstance).map(Serie.class::cast).map(serie -> {
-        Episode episode = (Episode)findBestDescriptor(stream.getId()).orElse(null);
+    return findBestDescriptor(parentId).filter(Serie.class::isInstance).map(Serie.class::cast).map(serie -> {
+      WorkDescriptor descriptor = findBestDescriptor(stream.getId()).orElse(null);
 
-        if(episode != null) {
-          if(watched) {
-            return serie.findNextEpisode(episode)
-              .flatMap(nextEpisode -> streamStore.findStreams(nextEpisode.getIdentifier()).stream().findFirst()  // Episode to Stream
-                .map(mediaStreamService::toMediaStream)
-                .map(ms -> {
-                  if(!ms.getState().isConsumed() && ms.getState().getResumePosition().isZero()) {
-                    return workService.find(ms.getId())
-                      .map(w -> new Recommendation(lastWatchedTime, w))
-                      .orElse(null);
-                  }
+      if(descriptor instanceof Episode episode && watched) {
+        return serie.findNextEpisode(episode)
+          .flatMap(nextEpisode -> linkedWorksService.find(nextEpisode.getId())  // Episode to Stream
+            .map(mediaStreamService::toMediaStream)
+            .map(ms -> !ms.getState().isConsumed() && ms.getState().getResumePosition().isZero()
+              ? workService.findFirst(ms.getId()).map(w -> new Recommendation(lastWatchedTime, w)).orElse(null)
+              : null
+            )
+          )
+          .orElse(null);
+      }
 
-                  return null;
-                })
-              )
-              .orElse(null);
-          }
-          else if(!position.isZero()) {
-            return workService.find(stream.getId())
-              .map(w -> new Recommendation(lastWatchedTime, w))
-              .orElse(null);
-          }
-        }
+      if(!position.isZero()) {
+        return workService.findFirst(stream.getId())
+          .map(w -> new Recommendation(lastWatchedTime, w))
+          .orElse(null);
+      }
 
-        return null;
-      })
-    );
+      return null;
+    });
   }
 
-  private Optional<Identifier> findBestIdentifier(StreamID id) {
-    return streamStore.findIdentification(id)
-      .map(Identification::getPrimaryIdentifier);
-  }
-
-  private Optional<MediaDescriptor> findBestDescriptor(StreamID id) {
-    return findBestIdentifier(id)
-      .flatMap(descriptorStore::find);
+  private Optional<WorkDescriptor> findBestDescriptor(StreamID id) {
+    return linkedWorksService.find(id).stream().map(lw -> lw.work().descriptor()).findFirst();
   }
 }

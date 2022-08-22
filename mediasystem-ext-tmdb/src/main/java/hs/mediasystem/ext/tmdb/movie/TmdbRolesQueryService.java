@@ -3,7 +3,7 @@ package hs.mediasystem.ext.tmdb.movie;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.tmdb.PersonRoles;
@@ -24,25 +24,25 @@ public class TmdbRolesQueryService implements RolesQueryService {
   }
 
   @Override
-  public List<PersonRole> query(Identifier identifier) throws IOException {
-    JsonNode info = tmdb.query(identifierToLocation(identifier), "text:json:" + identifier);
+  public List<PersonRole> query(WorkId id) throws IOException {
+    JsonNode info = tmdb.query(idToLocation(id), "text:json:" + id);
 
     return personRoles.toPersonRoles(info);
   }
 
-  private static String identifierToLocation(Identifier identifier) {
-    if(identifier.getDataSource().getType() == MediaType.MOVIE) {
-      return "3/movie/" + identifier.getId() + "/credits";
+  private static String idToLocation(WorkId id) {
+    if(id.getType() == MediaType.MOVIE) {
+      return "3/movie/" + id.getKey() + "/credits";
     }
-    if(identifier.getDataSource().getType() == MediaType.SERIE) {
-      return "3/tv/" + identifier.getId() + "/credits";
+    if(id.getType() == MediaType.SERIE) {
+      return "3/tv/" + id.getKey() + "/credits";
     }
-    if(identifier.getDataSource().getType() == MediaType.EPISODE) {
-      String[] parts = identifier.getId().split("/");
+    if(id.getType() == MediaType.EPISODE) {
+      String[] parts = id.getKey().split("/");
 
       return "3/tv/" + parts[0] + "/season/" + parts[1] + "/episode/" + parts[2] + "/credits";
     }
 
-    throw new IllegalArgumentException("Unsupported identifier: " + identifier);
+    throw new IllegalArgumentException("Unsupported type: " + id);
   }
 }

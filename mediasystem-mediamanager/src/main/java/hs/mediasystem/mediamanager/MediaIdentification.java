@@ -1,15 +1,15 @@
 package hs.mediasystem.mediamanager;
 
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 
 public class MediaIdentification {
   private final Streamable streamable;
   private final Identification identification;
-  private final MediaDescriptor descriptor;
+  private final WorkDescriptor descriptor;
 
-  public MediaIdentification(Streamable streamable, Identification identification, MediaDescriptor descriptor) {
+  public MediaIdentification(Streamable streamable, Identification identification, WorkDescriptor descriptor) {
     if(streamable == null) {
       throw new IllegalArgumentException("streamable cannot be null");
     }
@@ -29,7 +29,7 @@ public class MediaIdentification {
     return identification;
   }
 
-  public MediaDescriptor getDescriptor() {
+  public WorkDescriptor getDescriptor() {
     return descriptor;
   }
 

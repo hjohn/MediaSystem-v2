@@ -5,7 +5,7 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Collection;
 import hs.mediasystem.domain.work.CollectionDefinition;
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
@@ -39,7 +39,7 @@ public class CollectionService {
 
       String uris = works.stream()
         .map(Work::getDescriptor)
-        .map(MediaDescriptor::getDetails)
+        .map(WorkDescriptor::getDetails)
         .map(Details::getCover)
         .flatMap(Optional::stream)
         .map(Object::toString)
@@ -48,7 +48,7 @@ public class CollectionService {
 
       Optional<ImageURI> backgroundImage = works.stream()
         .map(Work::getDescriptor)
-        .map(MediaDescriptor::getDetails)
+        .map(WorkDescriptor::getDetails)
         .map(Details::getBackdrop)
         .flatMap(Optional::stream)
         .findFirst();

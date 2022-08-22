@@ -119,7 +119,7 @@ public class StreamCacheUpdater {
 
   private static void log(MediaIdentification mi, Throwable t, StreamID streamId) {
     if(mi != null) {
-      LOGGER.info("Enrichment of " + streamId + " [" + mi.getIdentification().getPrimaryIdentifier().getDataSource() + "] succeeded for " + mi.getStreamable() + ":\n - " + mi.getIdentification() + (mi.getDescriptor() == null ? "" : " -> " + mi.getDescriptor()));
+      LOGGER.info("Enrichment of " + streamId + " [" + mi.getIdentification().getPrimaryWorkId().getDataSource() + "] succeeded for " + mi.getStreamable() + ":\n - " + mi.getIdentification() + (mi.getDescriptor() == null ? "" : " -> " + mi.getDescriptor()));
     }
     else if(t instanceof EnrichmentException e) {
       LOGGER.warning("Enrichment of " + streamId + " with data sources " + e.getDataSourceNames() + " failed for " + e.getStreamable() + ":\n - " + Throwables.formatAsOneLine(e));

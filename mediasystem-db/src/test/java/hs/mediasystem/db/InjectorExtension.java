@@ -14,10 +14,11 @@ import org.junit.jupiter.api.extension.TestInstantiationException;
  * A JUnit 5 extension that sets up an auto-discovering {@link Injector}.
  */
 public class InjectorExtension implements TestInstanceFactory {
-  private final Injector injector = Injectors.autoDiscovering();
 
   @Override
   public Object createTestInstance(TestInstanceFactoryContext factoryContext, ExtensionContext extensionContext) throws TestInstantiationException {
+    Injector injector = Injectors.autoDiscovering();
+
     try {
       if(factoryContext.getOuterInstance().isPresent()) {
         Object outer = factoryContext.getOuterInstance().get();

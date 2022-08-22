@@ -2,11 +2,12 @@ package hs.mediasystem.ext.tmdb.serie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractIdentificationService;
@@ -39,11 +40,11 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
   @Inject private TheMovieDatabase tmdb;
 
   public TmdbIdentificationService() {
-    super(DataSources.TMDB_SERIE);
+    super(DataSources.TMDB, MediaType.SERIE);
   }
 
   @Override
-  public Optional<Identification> identify(Streamable streamable, MediaDescriptor parent) throws IOException {
+  public Optional<Identification> identify(Streamable streamable, WorkDescriptor parent) throws IOException {
     Attributes attributes = streamable.getAttributes();
 
     return CheckedOptional.ofNullable((String)attributes.get(Attribute.ID_PREFIX + "IMDB"))
@@ -57,7 +58,7 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
 
     return CheckedOptional.from(StreamSupport.stream(node.path("tv_results").spliterator(), false)
       .findFirst()
-      .map(n -> new Identification(List.of(new Identifier(DataSources.TMDB_SERIE, n.get("id").asText())), new Match(Type.ID, 1, Instant.now())))
+      .map(n -> new Identification(List.of(new WorkId(DataSources.TMDB, MediaType.SERIE, n.get("id").asText())), new Match(Type.ID, 1, Instant.now())))
     );
   }
 
@@ -91,6 +92,6 @@ public class TmdbIdentificationService extends AbstractIdentificationService {
         )
       )
       .max(Comparator.comparingDouble(m -> m.getNormalizedScore()))
-      .map(match -> new Identification(List.of(new Identifier(DataSources.TMDB_SERIE, match.getId())), new Match(match.getType(), match.getScore() / 100, Instant.now())));
+      .map(match -> new Identification(List.of(new WorkId(DataSources.TMDB, MediaType.SERIE, match.getId())), new Match(match.getType(), match.getScore() / 100, Instant.now())));
   }
 }

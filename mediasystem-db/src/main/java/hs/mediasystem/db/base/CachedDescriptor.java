@@ -1,14 +1,14 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 
 import java.time.Instant;
 
 public class CachedDescriptor {
   private final Instant lastUsedTime;
-  private final MediaDescriptor descriptor;
+  private final WorkDescriptor descriptor;
 
-  public CachedDescriptor(Instant lastUsedTime, MediaDescriptor descriptor) {
+  public CachedDescriptor(Instant lastUsedTime, WorkDescriptor descriptor) {
     if(lastUsedTime == null) {
       throw new IllegalArgumentException("lastUsedTime cannot be null");
     }
@@ -24,7 +24,7 @@ public class CachedDescriptor {
     return lastUsedTime;
   }
 
-  public MediaDescriptor getDescriptor() {
+  public WorkDescriptor getDescriptor() {
     return descriptor;
   }
 }

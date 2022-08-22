@@ -6,6 +6,7 @@ import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Work;
+import hs.mediasystem.util.Throwables;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,32 +23,32 @@ public class LocalWorkClient implements WorkClient {
 
   @Override
   public List<Work> findChildren(WorkId workId) {
-    return workService.findChildren(workId).stream().map(worksClient::toWork).collect(Collectors.toList());
+    return Throwables.uncheck(() -> workService.queryChildren(workId)).stream().map(worksClient::toWork).collect(Collectors.toList());
   }
 
   @Override
   public Optional<Work> find(WorkId workId) {
-    return workService.find(workId).map(worksClient::toWork);
+    return Throwables.uncheck(() -> workService.query(workId)).map(worksClient::toWork);
   }
 
   @Override
   public List<Work> findRecommendations(WorkId workId) {
-    return workService.findRecommendations(workId).stream().map(worksClient::toWork).collect(Collectors.toList());
+    return Throwables.uncheck(() -> workService.queryRecommendations(workId)).stream().map(worksClient::toWork).collect(Collectors.toList());
   }
 
   @Override
   public List<Contribution> findContributions(WorkId id) {
-    return workService.findContributions(id).stream().map(this::toContribution).collect(Collectors.toList());
+    return workService.queryContributions(id).stream().map(this::toContribution).collect(Collectors.toList());
   }
 
   @Override
   public List<VideoLink> findVideoLinks(WorkId id) {
-    return workService.findVideoLinks(id);
+    return workService.queryVideoLinks(id);
   }
 
   @Override
   public void reidentify(WorkId id) {
-    workService.reidentify(id);
+    Throwables.uncheck(() -> workService.reidentify(id));
   }
 
   private Contribution toContribution(hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution c) {

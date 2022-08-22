@@ -4,41 +4,66 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.Snapshot;
-import hs.mediasystem.domain.work.StreamAttributes;
+import hs.mediasystem.util.Attributes;
 
+import java.net.URI;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
 public class MediaStream {
   private final StreamID id;
   private final Optional<StreamID> parentId;
-  private final StreamAttributes attributes;  // physical attributes
+  private final URI uri;
+  private final Instant discoveryTime;
+  private final Instant lastModificationTime;
+  private final Optional<Long> size;
+  private final Attributes attributes;  // low-level attributes
   private final State state;
   private final Optional<Duration> duration;
   private final Optional<MediaStructure> mediaStructure;  // logical attributes (tracks)
   private final List<Snapshot> snapshots;
-  private final Optional<Match> match;
+  private final Match match;
 
-  public MediaStream(StreamID id, StreamID parentId, StreamAttributes attributes, State state, Duration duration, MediaStructure mediaStructure, List<Snapshot> snapshots, Match match) {
+  public MediaStream(StreamID id, StreamID parentId, URI uri, Instant discoveryTime, Instant lastModificationTime, Long size, Attributes attributes, State state, Duration duration, MediaStructure mediaStructure, List<Snapshot> snapshots, Match match) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
     if(state == null) {
       throw new IllegalArgumentException("state cannot be null");
     }
+    if(uri == null) {
+      throw new IllegalArgumentException("uri cannot be null");
+    }
+    if(discoveryTime == null) {
+      throw new IllegalArgumentException("discoveryTime cannot be null");
+    }
+    if(lastModificationTime == null) {
+      throw new IllegalArgumentException("lastModifiedTime cannot be null");
+    }
+    if(size != null && size < 0) {
+      throw new IllegalArgumentException("size cannot be negative: " + size);
+    }
     if(attributes == null) {
       throw new IllegalArgumentException("attributes cannot be null");
+    }
+    if(match == null) {
+      throw new IllegalArgumentException("match cannot be null");
     }
 
     this.id = id;
     this.parentId = Optional.ofNullable(parentId);
+    this.uri = uri;
+    this.discoveryTime = discoveryTime;
+    this.lastModificationTime = lastModificationTime;
+    this.size = Optional.ofNullable(size);
     this.attributes = attributes;
     this.state = state;
     this.duration = Optional.ofNullable(duration);
     this.mediaStructure = Optional.ofNullable(mediaStructure);
     this.snapshots = List.copyOf(snapshots);
-    this.match = Optional.ofNullable(match);
+    this.match = match;
   }
 
   public StreamID getId() {
@@ -49,7 +74,28 @@ public class MediaStream {
     return parentId;
   }
 
-  public StreamAttributes getAttributes() {
+  public URI getUri() {
+    return uri;
+  }
+
+  /**
+   * Returns the time the item was first discovered.
+   *
+   * @return the time the item was first discovered, never <code>null</code>
+   */
+  public Instant getDiscoveryTime() {
+    return discoveryTime;
+  }
+
+  public Instant getLastModificationTime() {
+    return lastModificationTime;
+  }
+
+  public Optional<Long> getSize() {
+    return size;
+  }
+
+  public Attributes getAttributes() {
     return attributes;
   }
 
@@ -69,7 +115,7 @@ public class MediaStream {
     return snapshots;
   }
 
-  public Optional<Match> getMatch() {
+  public Match getMatch() {
     return match;
   }
 }

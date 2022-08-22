@@ -2,12 +2,11 @@ package hs.mediasystem.ext.tmdb.serie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
@@ -38,21 +37,21 @@ public class TmdbQueryService extends AbstractQueryService {
   @Inject private ObjectFactory objectFactory;
 
   public TmdbQueryService() {
-    super(DataSources.TMDB_SERIE);
+    super(DataSources.TMDB, MediaType.SERIE);
   }
 
   @Override
-  public Serie query(Identifier identifier) throws IOException {
-    JsonNode node = tmdb.query("3/tv/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "keywords,content_ratings"));  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
-    List<JsonNode> seasons = batchQuerySeasons(identifier, node);
+  public Serie query(WorkId id) throws IOException {
+    JsonNode node = tmdb.query("3/tv/" + id.getKey(), "text:json:" + id, List.of("append_to_response", "keywords,content_ratings"));  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
+    List<JsonNode> seasons = batchQuerySeasons(id, node);
 
     // Popularity... Status... last air date ... inproduction field
     //['Returning Series', 'Planned', 'In Production', 'Ended', 'Canceled', 'Pilot']
 
-    return objectFactory.toSerie(node, CheckedStreams.forIOException(seasons.stream()).map(s -> toSeason(s, identifier.getId())).collect(Collectors.toList()));
+    return objectFactory.toSerie(node, CheckedStreams.forIOException(seasons.stream()).map(s -> toSeason(s, id.getKey())).collect(Collectors.toList()));
   }
 
-  private List<JsonNode> batchQuerySeasons(Identifier identifier, JsonNode node) throws IOException {
+  private List<JsonNode> batchQuerySeasons(WorkId id, JsonNode node) throws IOException {
     List<JsonNode> seasons = new ArrayList<>();
     JsonNode seasonsPath = node.path("seasons");
     String firstSeasonNumber = "";
@@ -71,8 +70,8 @@ public class TmdbQueryService extends AbstractQueryService {
 
       if(i % MAX_SEASONS_PER_QUERY == 0 || i == seasonsPath.size()) {
         JsonNode seasonData = tmdb.query(
-          "3/tv/" + identifier.getId(),
-          "text:json:" + new ProductionIdentifier(DataSources.TMDB_SEASON, identifier.getId() + "/" + firstSeasonNumber + "-" + seasonNumber),
+          "3/tv/" + id.getKey(),
+          "text:json:" + new WorkId(DataSources.TMDB, MediaType.SEASON, id.getKey() + "/" + firstSeasonNumber + "-" + seasonNumber),
           List.of("append_to_response", appendToResponse)
         );
 
@@ -106,16 +105,16 @@ public class TmdbQueryService extends AbstractQueryService {
     String releaseDate = node.path("air_date").textValue();
     int seasonNumber = node.get("season_number").asInt();
 
-    ProductionIdentifier identifier = new ProductionIdentifier(DataSources.TMDB_SEASON, parentId + "/" + seasonNumber);
+    WorkId id = new WorkId(DataSources.TMDB, MediaType.SEASON, parentId + "/" + seasonNumber);
 
     return new Season(
-      identifier,
+      id,
       new Details(
         Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),
         null,
         node.path("overview").textValue(),
         TheMovieDatabase.parseDateOrNull(releaseDate),
-        tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier),  // as cover
+        tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + id),  // as cover
         null,
         null
       ),
@@ -124,23 +123,23 @@ public class TmdbQueryService extends AbstractQueryService {
     );
   }
 
-  private Episode toEpisode(JsonNode node, String parentId) throws IOException {
+  private Episode toEpisode(JsonNode node, String parentKey) throws IOException {
     String releaseDate = node.path("air_date").textValue();
     Reception reception = node.get("vote_count").isNumber() && node.get("vote_average").isNumber() ?
       new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt()) : null;
     int seasonNumber = node.get("season_number").asInt();
     int episodeNumber = node.get("episode_number").asInt();
-    EpisodeIdentifier identifier = new EpisodeIdentifier(DataSources.TMDB_EPISODE, parentId + "/" + seasonNumber + "/" + episodeNumber);
+    WorkId id = new WorkId(DataSources.TMDB, MediaType.EPISODE, parentKey + "/" + seasonNumber + "/" + episodeNumber);
 
     return new Episode(
-      identifier,
+      id,
       new Details(
         Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),
         null,
         node.path("overview").textValue(),
         TheMovieDatabase.parseDateOrNull(releaseDate),
         null,
-        tmdb.createImageURI(node.path("still_path").textValue(), "original", "image:cover:" + identifier),  // as sample image
+        tmdb.createImageURI(node.path("still_path").textValue(), "original", "image:cover:" + id),  // as sample image
         null
       ),
       reception,

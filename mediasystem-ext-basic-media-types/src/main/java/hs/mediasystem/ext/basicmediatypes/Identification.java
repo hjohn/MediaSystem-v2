@@ -1,34 +1,34 @@
 package hs.mediasystem.ext.basicmediatypes;
 
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.domain.work.WorkId;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 public class Identification {
-  private final List<Identifier> identifiers;
+  private final List<WorkId> ids;
   private final Match match;
 
-  public Identification(List<Identifier> identifiers, Match match) {
-    if(identifiers == null || identifiers.isEmpty()) {
-      throw new IllegalArgumentException("identifiers cannot be null or empty: " + identifiers);
+  public Identification(List<WorkId> ids, Match match) {
+    if(ids == null || ids.isEmpty()) {
+      throw new IllegalArgumentException("ids cannot be null or empty: " + ids);
     }
     if(match == null) {
       throw new IllegalArgumentException("match cannot be null");
     }
 
-    this.identifiers = Collections.unmodifiableList(identifiers);
+    this.ids = Collections.unmodifiableList(ids);
     this.match = match;
   }
 
-  public Identifier getPrimaryIdentifier() {
-    return identifiers.get(0);
+  public WorkId getPrimaryWorkId() {
+    return ids.get(0);
   }
 
-  public List<Identifier> getIdentifiers() {
-    return identifiers;
+  public List<WorkId> getWorkIds() {
+    return ids;
   }
 
   public Match getMatch() {
@@ -37,12 +37,12 @@ public class Identification {
 
   @Override
   public String toString() {
-    return "[" + identifiers + ", " + match + "]";
+    return "[" + ids + ", " + match + "]";
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(identifiers, match);
+    return Objects.hash(ids, match);
   }
 
   @Override
@@ -56,7 +56,7 @@ public class Identification {
 
     Identification other = (Identification)obj;
 
-    if(!identifiers.equals(other.identifiers)) {
+    if(!ids.equals(other.ids)) {
       return false;
     }
     if(!match.equals(other.match)) {

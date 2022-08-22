@@ -2,6 +2,7 @@ package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,10 +14,10 @@ import java.util.Set;
 public class Production extends Release {
   private final Classification classification;
   private final double popularity;
-  private final Set<Identifier> relatedIdentifiers;
+  private final Set<WorkId> relatedWorks;
 
-  public Production(ProductionIdentifier identifier, Details details, Reception reception, Classification classification, double popularity, Set<Identifier> relatedIdentifiers) {
-    super(identifier, details, reception);
+  public Production(WorkId id, Details details, Reception reception, Classification classification, double popularity, Set<WorkId> relatedWorks) {
+    super(id, details, reception);
 
     if(classification == null) {
       throw new IllegalArgumentException("classification cannot be null");
@@ -24,7 +25,7 @@ public class Production extends Release {
 
     this.popularity = popularity;
     this.classification = classification;
-    this.relatedIdentifiers = Set.copyOf(relatedIdentifiers);
+    this.relatedWorks = Set.copyOf(relatedWorks);
   }
 
   public List<String> getLanguages() {
@@ -43,12 +44,12 @@ public class Production extends Release {
     return popularity;
   }
 
-  public Set<Identifier> getRelatedIdentifiers() {
-    return relatedIdentifiers;
+  public Set<WorkId> getRelatedWorks() {
+    return relatedWorks;
   }
 
-  public Optional<Identifier> getCollectionIdentifier() {
-    return relatedIdentifiers.stream().filter(i -> i.getDataSource().getType().equals(MediaType.COLLECTION)).findAny();
+  public Optional<WorkId> getCollectionId() {
+    return relatedWorks.stream().filter(i -> i.getType().equals(MediaType.COLLECTION)).findAny();
   }
 
   @Override

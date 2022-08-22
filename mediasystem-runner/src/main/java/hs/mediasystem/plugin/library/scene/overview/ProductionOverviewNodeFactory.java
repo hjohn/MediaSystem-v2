@@ -298,7 +298,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       return "Special " + sequence.getNumber();
     }
     if(sequence.getType() == Type.EXTRA) {
-      return "Extra " + sequence.getNumber();
+      return "Extra";
     }
 
     return "Ep. " + sequence.getNumber();

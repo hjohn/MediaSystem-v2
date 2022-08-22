@@ -2,9 +2,9 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.domain.work.PersonId;
+import hs.mediasystem.domain.work.RoleId;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.util.ImageURI;
@@ -32,12 +32,12 @@ public class PersonRoles {
 
     for(JsonNode cast : node.path("cast")) {
       try {
-        PersonIdentifier identifier = new PersonIdentifier(DataSources.TMDB_PERSON, cast.get("id").asText());
-        ImageURI imageURI = tmdb.createImageURI(cast.path("profile_path").textValue(), "original", "image:person:" + identifier);
+        PersonId id = new PersonId(DataSources.TMDB, cast.get("id").asText());
+        ImageURI imageURI = tmdb.createImageURI(cast.path("profile_path").textValue(), "original", "image:person:" + id);
 
         roles.add(new PersonRole(
-          new Person(identifier, cast.get("name").asText(), imageURI),
-          Role.asCast(new Identifier(DataSources.TMDB_CREDIT, cast.get("credit_id").asText()), cast.get("character").asText()),
+          new Person(id, cast.get("name").asText(), imageURI),
+          Role.asCast(new RoleId(DataSources.TMDB, cast.get("credit_id").asText()), cast.get("character").asText()),
           cast.get("order").asDouble()
         ));
       }
@@ -48,12 +48,12 @@ public class PersonRoles {
 
     for(JsonNode guestStar : node.path("guest_stars")) {
       try {
-        PersonIdentifier identifier = new PersonIdentifier(DataSources.TMDB_PERSON, guestStar.get("id").asText());
-        ImageURI imageURI = tmdb.createImageURI(guestStar.path("profile_path").textValue(), "original", "image:person:" + identifier);
+        PersonId id = new PersonId(DataSources.TMDB, guestStar.get("id").asText());
+        ImageURI imageURI = tmdb.createImageURI(guestStar.path("profile_path").textValue(), "original", "image:person:" + id);
 
         roles.add(new PersonRole(
-          new Person(identifier, guestStar.get("name").asText(), imageURI),
-          Role.asGuestStar(new Identifier(DataSources.TMDB_CREDIT, guestStar.get("credit_id").asText()), guestStar.get("character").asText()),
+          new Person(id, guestStar.get("name").asText(), imageURI),
+          Role.asGuestStar(new RoleId(DataSources.TMDB, guestStar.get("credit_id").asText()), guestStar.get("character").asText()),
           guestStar.get("order").asDouble() + GUEST_STAR_MINIMUM_VALUE
         ));
       }
@@ -66,12 +66,12 @@ public class PersonRoles {
 
     for(JsonNode crew : node.path("crew")) {
       try {
-        PersonIdentifier identifier = new PersonIdentifier(DataSources.TMDB_PERSON, crew.get("id").asText());
-        ImageURI imageURI = tmdb.createImageURI(crew.path("profile_path").textValue(), "original", "image:person:" + identifier);
+        PersonId id = new PersonId(DataSources.TMDB, crew.get("id").asText());
+        ImageURI imageURI = tmdb.createImageURI(crew.path("profile_path").textValue(), "original", "image:person:" + id);
 
         roles.add(new PersonRole(
-          new Person(identifier, crew.get("name").asText(), imageURI),
-          Role.asCrew(new Identifier(DataSources.TMDB_CREDIT, crew.get("credit_id").asText()), crew.get("department").asText(), crew.get("job").asText()),
+          new Person(id, crew.get("name").asText(), imageURI),
+          Role.asCrew(new RoleId(DataSources.TMDB, crew.get("credit_id").asText()), crew.get("department").asText(), crew.get("job").asText()),
           CREW_MINIMUM_VALUE + crewCount++
         ));
       }

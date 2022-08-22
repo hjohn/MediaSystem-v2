@@ -1,7 +1,7 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.domain.work.WorkId;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.mediamanager.DescriptorStore;
@@ -25,10 +25,10 @@ import javax.inject.Singleton;
 public class DatabaseDescriptorStore implements DescriptorStore {
   private static final Logger LOGGER = Logger.getLogger(DatabaseDescriptorStore.class.getName());
 
-  private final Map<Identifier, CachedDescriptor> cache = new HashMap<>();
+  private final Map<WorkId, CachedDescriptor> cache = new HashMap<>();
 
   // Indices
-  private final Map<Identifier, MediaDescriptor> descriptors = new HashMap<>();
+  private final Map<WorkId, WorkDescriptor> descriptors = new HashMap<>();
 
   @Inject private DescriptorDatabase database;
   @Inject private CachedDescriptorCodec codec;
@@ -53,7 +53,7 @@ public class DatabaseDescriptorStore implements DescriptorStore {
     LOGGER.fine("Loaded " + cache.size() + " cached descriptor records, deleted " + badIds.size() + " bad ones");
   }
 
-  synchronized void add(MediaDescriptor descriptor) {
+  synchronized void add(WorkDescriptor descriptor) {
     CachedDescriptor cachedDescriptor = new CachedDescriptor(Instant.now(), descriptor);
 
     database.store(codec.toRecord(cachedDescriptor));
@@ -63,36 +63,36 @@ public class DatabaseDescriptorStore implements DescriptorStore {
   }
 
   private void addToCache(CachedDescriptor cd) {
-    Identifier identifier = cd.getDescriptor().getIdentifier();
+    WorkId id = cd.getDescriptor().getId();
 
-    cache.put(identifier, cd);
-    descriptors.put(identifier, cd.getDescriptor());
+    cache.put(id, cd);
+    descriptors.put(id, cd.getDescriptor());
 
     if(cd.getDescriptor() instanceof Serie serie) {
       serie.getSeasons().stream()
         .map(Season::getEpisodes)
         .flatMap(Collection::stream)
-        .forEach(ep -> descriptors.put(ep.getIdentifier(), ep));
+        .forEach(ep -> descriptors.put(ep.getId(), ep));
     }
   }
 
   private void removeFromCache(CachedDescriptor cd) {
-    Identifier identifier = cd.getDescriptor().getIdentifier();
+    WorkId id = cd.getDescriptor().getId();
 
-    if(cache.remove(identifier) != null) {
-      descriptors.remove(identifier);
+    if(cache.remove(id) != null) {
+      descriptors.remove(id);
 
       if(cd.getDescriptor() instanceof Serie serie) {
         serie.getSeasons().stream()
           .map(Season::getEpisodes)
           .flatMap(Collection::stream)
-          .forEach(ep -> descriptors.remove(ep.getIdentifier()));
+          .forEach(ep -> descriptors.remove(ep.getId()));
       }
     }
   }
 
   @Override
-  public synchronized Optional<MediaDescriptor> find(Identifier identifier) {
-    return Optional.ofNullable(descriptors.get(identifier));
+  public synchronized Optional<WorkDescriptor> find(WorkId id) {
+    return Optional.ofNullable(descriptors.get(id));
   }
 }

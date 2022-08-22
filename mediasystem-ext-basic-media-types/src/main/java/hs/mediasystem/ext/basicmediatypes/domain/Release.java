@@ -1,33 +1,34 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.domain.work.WorkId;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;
 import java.util.Optional;
 
-public class Release implements MediaDescriptor {
-  private final ProductionIdentifier identifier;
+public class Release implements WorkDescriptor {
+  private final WorkId id;
   private final Details details;
   private final Reception reception;
 
-  public Release(ProductionIdentifier identifier, Details details, Reception reception) {
-    if(identifier == null) {
-      throw new IllegalArgumentException("identifier cannot be null");
+  public Release(WorkId id, Details details, Reception reception) {
+    if(id == null) {
+      throw new IllegalArgumentException("id cannot be null");
     }
     if(details == null) {
       throw new IllegalArgumentException("details cannot be null");
     }
 
-    this.identifier = identifier;
+    this.id = id;
     this.details = details;
     this.reception = reception;
   }
 
   @Override
-  public ProductionIdentifier getIdentifier() {
-    return identifier;
+  public WorkId getId() {
+    return id;
   }
 
   @Override
@@ -87,6 +88,6 @@ public class Release implements MediaDescriptor {
 
   @Override
   public String toString() {
-    return "Release[" + identifier + ": " + details + "]";
+    return "Release[" + id + ": " + details + "]";
   }
 }

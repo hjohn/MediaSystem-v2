@@ -1,34 +1,32 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.domain.work.PersonId;
 import hs.mediasystem.util.ImageURI;
 
-public class Person implements MediaDescriptor {
-  private final PersonIdentifier identifier;
+public class Person {
+  private final PersonId id;
   private final String name;
   private final ImageURI cover;
   private final Details details;
 
-  public Person(PersonIdentifier identifier, String name, ImageURI cover) {
-    if(identifier == null) {
-      throw new IllegalArgumentException("identifier cannot be null");
+  public Person(PersonId id, String name, ImageURI cover) {
+    if(id == null) {
+      throw new IllegalArgumentException("id cannot be null");
     }
     if(name == null) {
       throw new IllegalArgumentException("name cannot be null");
     }
 
-    this.identifier = identifier;
+    this.id = id;
     this.name = name;
     this.details = new Details(name, null, null, null, cover, null, null);
     this.cover = cover;
   }
 
-  @Override
-  public PersonIdentifier getIdentifier() {
-    return identifier;
+  public PersonId getId() {
+    return id;
   }
 
-  @Override
   public Details getDetails() {
     return details;
   }

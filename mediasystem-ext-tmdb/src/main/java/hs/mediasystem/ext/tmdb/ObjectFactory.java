@@ -2,15 +2,16 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.KeywordId;
 import hs.mediasystem.domain.work.Reception;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.util.ImageURI;
@@ -34,12 +35,12 @@ import javax.inject.Singleton;
 public class ObjectFactory {
   @Inject private TheMovieDatabase tmdb;
 
-  public Production toProduction(JsonNode node, DataSource dataSource) throws IOException {
-    ProductionIdentifier identifier = new ProductionIdentifier(dataSource, node.path("id").asText());
+  public Production toProduction(JsonNode node, DataSource dataSource, MediaType mediaType) throws IOException {
+    WorkId id = new WorkId(dataSource, mediaType, node.path("id").asText());
 
     return new Production(
-      identifier,
-      createDetails(node, identifier),
+      id,
+      createDetails(node, id),
       createReception(node),
       new Classification(
         node.path("genres").findValuesAsText("name"),
@@ -57,50 +58,50 @@ public class ObjectFactory {
     Number runtime = node.path("runtime").numberValue();
 
     JsonNode collectionPath = node.path("belongs_to_collection");
-    Set<Identifier> relatedIdentifiers = new HashSet<>();
+    Set<WorkId> relatedWorks = new HashSet<>();
 
     if(collectionPath.isObject()) {
-      relatedIdentifiers.add(new Identifier(DataSources.TMDB_COLLECTION, collectionPath.path("id").asText()));
+      relatedWorks.add(new WorkId(DataSources.TMDB, MediaType.COLLECTION, collectionPath.path("id").asText()));
     }
 
     String imdbId = node.path("imdb_id").textValue();
 
     if(imdbId != null) {
-      relatedIdentifiers.add(new Identifier(DataSources.IMDB_MOVIE, imdbId));
+      relatedWorks.add(new WorkId(DataSources.IMDB, MediaType.MOVIE, imdbId));
     }
 
-    ProductionIdentifier identifier = new ProductionIdentifier(DataSources.TMDB_MOVIE, node.path("id").asText());
+    WorkId id = new WorkId(DataSources.TMDB, MediaType.MOVIE, node.path("id").asText());
 
     return new Movie(
-      identifier,
-      createDetails(node, identifier),
+      id,
+      createDetails(node, id),
       createReception(node),
       runtime == null ? null : Duration.ofMinutes(runtime.intValue()),
       new Classification(
         node.path("genres").findValuesAsText("name"),
         node.path("spoken_languages").findValuesAsText("name"),
-        StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new Identifier(DataSources.TMDB_KEYWORD, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
+        StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new KeywordId(DataSources.TMDB, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
         extractCertifications(node.path("release_dates").path("results")),
         node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
       ),
       node.path("popularity").doubleValue(),
       node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       toMovieState(node.path("status").textValue()),
-      relatedIdentifiers
+      relatedWorks
     );
   }
 
   public Serie toSerie(JsonNode node, List<Season> seasons) throws IOException {
-    ProductionIdentifier identifier = new ProductionIdentifier(DataSources.TMDB_SERIE, node.path("id").asText());
+    WorkId id = new WorkId(DataSources.TMDB, MediaType.SERIE, node.path("id").asText());
 
     return new Serie(
-      identifier,
-      createDetails(node, identifier),
+      id,
+      createDetails(node, id),
       createReception(node),
       new Classification(
         node.path("genres").findValuesAsText("name"),
         node.path("languages").findValuesAsText("name"),
-        StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new Identifier(DataSources.TMDB_KEYWORD, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
+        StreamSupport.stream(node.path("keywords").path("keywords").spliterator(), false).map(n -> new Keyword(new KeywordId(DataSources.TMDB, n.path("id").asText()), n.path("name").textValue())).collect(Collectors.toList()),
         extractCertifications(node.path("content_ratings").path("results")),
         node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
       ),
@@ -112,10 +113,10 @@ public class ObjectFactory {
     );
   }
 
-  private Details createDetails(JsonNode node, Identifier identifier) throws IOException {
+  private Details createDetails(JsonNode node, WorkId id) throws IOException {
     String releaseDate = node.get("release_date") == null ? node.path("first_air_date").textValue() : node.get("release_date").textValue();
-    ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + identifier.toString());
-    ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + identifier.toString());
+    ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id.toString());
+    ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + id.toString());
 
     return new Details(
       Optional.ofNullable(node.get("title")).or(() -> Optional.ofNullable(node.get("name"))).map(JsonNode::textValue).orElse("(untitled)"),

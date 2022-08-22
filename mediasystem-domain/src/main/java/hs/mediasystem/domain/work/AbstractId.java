@@ -1,7 +1,5 @@
 package hs.mediasystem.domain.work;
 
-import hs.mediasystem.domain.stream.MediaType;
-
 import java.util.Objects;
 
 public abstract class AbstractId {
@@ -26,10 +24,6 @@ public abstract class AbstractId {
 
   public final String getKey() {
     return key;
-  }
-
-  public final MediaType getType() {
-    return dataSource.getType();
   }
 
   @Override

@@ -29,7 +29,7 @@ import javax.inject.Singleton;
 @Singleton
 public class GenreGrouping implements Grouping<Work, Object> {
   private static final ResourceManager RM = new ResourceManager(GenreGrouping.class);
-  private static final DataSource DATA_SOURCE = DataSource.instance(MediaType.GROUPING, "GENRE");
+  private static final DataSource DATA_SOURCE = DataSource.instance("GENRE");
   private static final Comparator<Work> WEIGHTED_RATING_COMPARATOR = Comparator.comparing(GenreGrouping::score).reversed();
 
   @Inject private ImageHandleFactory imageHandleFactory;
@@ -95,7 +95,7 @@ public class GenreGrouping implements Grouping<Work, Object> {
       List<Work> children = entry.getValue();
 
       WorksGroup parent = new WorksGroup(
-        new WorkId(DATA_SOURCE, entry.getKey()),
+        new WorkId(DATA_SOURCE, MediaType.FOLDER, entry.getKey()),
         details,
         children,
         false

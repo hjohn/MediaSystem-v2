@@ -2,7 +2,8 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
 import hs.mediasystem.ext.tmdb.DataSources;
@@ -19,12 +20,12 @@ public class TmdbQueryService extends AbstractQueryService {
   @Inject private ObjectFactory objectFactory;
 
   public TmdbQueryService() {
-    super(DataSources.TMDB_MOVIE);
+    super(DataSources.TMDB, MediaType.MOVIE);
   }
 
   @Override
-  public Movie query(Identifier identifier) throws IOException {
-    JsonNode node = tmdb.query("3/movie/" + identifier.getId(), "text:json:" + identifier, List.of("append_to_response", "keywords,release_dates"));  // keywords,alternative_titles,recommendations,similar,reviews
+  public Movie query(WorkId id) throws IOException {
+    JsonNode node = tmdb.query("3/movie/" + id.getKey(), "text:json:" + id, List.of("append_to_response", "keywords,release_dates"));  // keywords,alternative_titles,recommendations,similar,reviews
 
     return objectFactory.toMovie(node);
   }

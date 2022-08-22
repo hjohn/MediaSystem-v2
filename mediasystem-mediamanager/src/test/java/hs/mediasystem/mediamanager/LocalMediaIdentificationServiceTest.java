@@ -8,8 +8,8 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
@@ -38,12 +38,12 @@ import static org.mockito.Mockito.when;
 public class LocalMediaIdentificationServiceTest {
   private static final StreamID STREAM_ID = new StreamID(1, new ContentID(999), "Stuff");
 
-  private static final DataSource DATA_SOURCE_1 = DataSource.instance(MediaType.MOVIE, "D1");
-  private static final DataSource DATA_SOURCE_2 = DataSource.instance(MediaType.MOVIE, "D2");
-  private static final DataSource DATA_SOURCE_3 = DataSource.instance(MediaType.EPISODE, "D3");
-  private static final DataSource DATA_SOURCE_4 = DataSource.instance(MediaType.EPISODE, "D4");
-  private static final DataSource DATA_SOURCE_5 = DataSource.instance(MediaType.MOVIE, "D5");
-  private static final DataSource DATA_SOURCE_6 = DataSource.instance(MediaType.MOVIE, "D6");
+  private static final DataSource DATA_SOURCE_1 = DataSource.instance("D1");
+  private static final DataSource DATA_SOURCE_2 = DataSource.instance("D2");
+  private static final DataSource DATA_SOURCE_3 = DataSource.instance("D3");
+  private static final DataSource DATA_SOURCE_4 = DataSource.instance("D4");
+  private static final DataSource DATA_SOURCE_5 = DataSource.instance("D5");
+  private static final DataSource DATA_SOURCE_6 = DataSource.instance("D6");
 
   @Mock private IdentificationService idServiceForDS1;
   @Mock private IdentificationService idServiceForDS2;
@@ -61,16 +61,26 @@ public class LocalMediaIdentificationServiceTest {
   @BeforeEach
   public void before() {
     when(idServiceForDS1.getDataSource()).thenReturn(DATA_SOURCE_1);
+    when(idServiceForDS1.getMediaType()).thenReturn(MediaType.MOVIE);
     when(idServiceForDS2.getDataSource()).thenReturn(DATA_SOURCE_2);
+    when(idServiceForDS2.getMediaType()).thenReturn(MediaType.MOVIE);
     when(idServiceForDS3.getDataSource()).thenReturn(DATA_SOURCE_3);
+    when(idServiceForDS3.getMediaType()).thenReturn(MediaType.EPISODE);
     when(idServiceForDS4.getDataSource()).thenReturn(DATA_SOURCE_4);
+    when(idServiceForDS4.getMediaType()).thenReturn(MediaType.EPISODE);
     when(idServiceForDS6.getDataSource()).thenReturn(DATA_SOURCE_6);
-    when(serieIdService.getDataSource()).thenReturn(DataSource.instance(MediaType.SERIE, "TMDB"));
-    when(episodeIdService.getDataSource()).thenReturn(DataSource.instance(MediaType.EPISODE, "TMDB"));
+    when(idServiceForDS6.getMediaType()).thenReturn(MediaType.MOVIE);
+    when(serieIdService.getDataSource()).thenReturn(DataSource.instance("TMDB"));
+    when(serieIdService.getMediaType()).thenReturn(MediaType.SERIE);
+    when(episodeIdService.getDataSource()).thenReturn(DataSource.instance("TMDB"));
+    when(episodeIdService.getMediaType()).thenReturn(MediaType.EPISODE);
 
     when(queryServiceForDS1.getDataSource()).thenReturn(DATA_SOURCE_1);
+    when(queryServiceForDS1.getMediaType()).thenReturn(MediaType.MOVIE);
     when(queryServiceForDS3.getDataSource()).thenReturn(DATA_SOURCE_3);
+    when(queryServiceForDS3.getMediaType()).thenReturn(MediaType.EPISODE);
     when(queryServiceForDS6.getDataSource()).thenReturn(DATA_SOURCE_6);
+    when(queryServiceForDS6.getMediaType()).thenReturn(MediaType.MOVIE);
 
     Injector injector = Injectors.autoDiscovering();
 
@@ -91,24 +101,24 @@ public class LocalMediaIdentificationServiceTest {
   @Test
   public void reidentifyShouldCreateIdentificationWithoutMatchingQueryService() throws IOException {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
-    Identifier identifier1 = new Identifier(DATA_SOURCE_1, "12345");
-    Identifier identifier2 = new Identifier(DATA_SOURCE_2, "12345");
+    WorkId id1 = new WorkId(DATA_SOURCE_1, MediaType.MOVIE, "12345");
+    WorkId id2 = new WorkId(DATA_SOURCE_2, MediaType.MOVIE, "12345");
     Match match = new Match(Type.ID, 1.0f, Instant.now());
     Streamable streamable = createMovie("file://parent/test", attributes);
 
-    when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(identifier1), match)));
-    when(idServiceForDS2.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(identifier2), match)));
-    when(queryServiceForDS1.query(eq(identifier1))).thenReturn(Movies.create());
+    when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(id1), match)));
+    when(idServiceForDS2.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(id2), match)));
+    when(queryServiceForDS1.query(eq(id1))).thenReturn(Movies.create());
 
     MediaIdentification mi1 = db.identify(streamable, null, "D1");  // id service available and query works
     Exceptional<MediaIdentification> mi2 = Exceptional.from(() -> db.identify(streamable, null, "D2"));  // id service available and returns result, but query fails
     Exceptional<MediaIdentification> mi5 = Exceptional.from(() -> db.identify(streamable, null, "D5"));  // no id service at all
 
     assertEquals(streamable, mi1.getStreamable());
-    assertEquals(new Identification(List.of(identifier1), match), mi1.getIdentification());
+    assertEquals(new Identification(List.of(id1), match), mi1.getIdentification());
     assertNotNull(mi1.getDescriptor());
-    assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_2)), mi2);
-    assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_5)), mi5);
+    assertEquals(Exceptional.ofException(new UnknownDataSourceException(new TypedDataSource(DATA_SOURCE_2, MediaType.MOVIE))), mi2);
+    assertEquals(Exceptional.ofException(new UnknownDataSourceException(new TypedDataSource(DATA_SOURCE_5, MediaType.MOVIE))), mi5);
   }
 
   @Test
@@ -127,21 +137,21 @@ public class LocalMediaIdentificationServiceTest {
 
     assertEquals(Exceptional.ofException(new UnknownStreamableException(streamable, idServiceForDS1)), mi1);
     assertEquals(Exceptional.ofException(illegalStateException), mi2);
-    assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_5)), mi5);
+    assertEquals(Exceptional.ofException(new UnknownDataSourceException(new TypedDataSource(DATA_SOURCE_5, MediaType.MOVIE))), mi5);
   }
 
   @Test
   public void reindentifyShouldHandleQueryException() throws IOException {
     Attributes attributes = Attributes.of(Attribute.TITLE, "Title");
-    Identifier identifier = new Identifier(DATA_SOURCE_1, "12345");
+    WorkId id = new WorkId(DATA_SOURCE_1, MediaType.MOVIE, "12345");
     Match match = new Match(Type.ID, 1.0f, Instant.now());
 
     IllegalStateException illegalStateException = new IllegalStateException("oops");
     Streamable streamable = createMovie("file://parent/test", attributes);
 
-    when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(identifier), match)));
+    when(idServiceForDS1.identify(eq(streamable), eq(null))).thenReturn(Optional.of(new Identification(List.of(id), match)));
     when(idServiceForDS2.identify(eq(streamable), eq(null))).thenReturn(Optional.empty());
-    when(queryServiceForDS1.query(identifier)).thenThrow(illegalStateException);
+    when(queryServiceForDS1.query(id)).thenThrow(illegalStateException);
 
     Exceptional<MediaIdentification> mi1 = Exceptional.from(() -> db.identify(streamable, null, "D1"));  // id service available, returns result, but query throws exception
     Exceptional<MediaIdentification> mi2 = Exceptional.from(() -> db.identify(streamable, null, "D2"));  // id service available, but unable to identify
@@ -149,7 +159,7 @@ public class LocalMediaIdentificationServiceTest {
 
     assertEquals(Exceptional.ofException(illegalStateException), mi1);
     assertEquals(Exceptional.ofException(new UnknownStreamableException(streamable, idServiceForDS2)), mi2);
-    assertEquals(Exceptional.ofException(new UnknownDataSourceException(DATA_SOURCE_5)), mi5);
+    assertEquals(Exceptional.ofException(new UnknownDataSourceException(new TypedDataSource(DATA_SOURCE_5, MediaType.MOVIE))), mi5);
   }
 
   private static Streamable createMovie(String uri, Attributes attributes) {

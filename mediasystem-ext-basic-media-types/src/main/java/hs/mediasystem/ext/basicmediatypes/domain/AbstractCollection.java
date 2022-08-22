@@ -1,12 +1,13 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.domain.work.WorkId;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class AbstractCollection<T> implements MediaDescriptor {
+public abstract class AbstractCollection<T> implements WorkDescriptor {
   private final CollectionDetails collectionDetails;
   private final List<T> items;
 
@@ -27,8 +28,8 @@ public abstract class AbstractCollection<T> implements MediaDescriptor {
   }
 
   @Override
-  public Identifier getIdentifier() {
-    return collectionDetails.getIdentifier();
+  public WorkId getId() {
+    return collectionDetails.getId();
   }
 
   public CollectionDetails getCollectionDetails() {

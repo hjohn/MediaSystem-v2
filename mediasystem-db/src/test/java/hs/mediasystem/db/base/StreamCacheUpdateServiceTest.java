@@ -7,8 +7,8 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
@@ -56,7 +56,7 @@ public class StreamCacheUpdateServiceTest {
   private final String allowedDataSource = "TMDB";
   private final Map<StreamID, MediaIdentification> knownIds = new HashMap<>();
 
-  private static final DataSource MOVIE_DATASOURCE = DataSource.instance(MediaType.MOVIE, "TMDB");
+  private static final DataSource TMDB = DataSource.instance("TMDB");
   private static final Match MATCH = new Match(Type.NAME, 1.0f, Instant.now());
   private static final Movie MOVIE = Movies.create();
 
@@ -80,14 +80,14 @@ public class StreamCacheUpdateServiceTest {
     when(streamStore.findStream(streamId1)).thenReturn(Optional.of(stream1));
     when(identificationService.identify(stream1, null, allowedDataSource)).thenReturn(new MediaIdentification(
       stream1,
-      new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH),
+      new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000")), MATCH),
       MOVIE
     ));
 
     service.update(7, List.of(stream1));
 
     verify(streamStore).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica")));
-    verify(streamStore).putIdentification(streamId1, new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
+    verify(streamStore).putIdentification(streamId1, new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
 
@@ -102,7 +102,7 @@ public class StreamCacheUpdateServiceTest {
 
     when(identificationService.identify(streamable2, null, allowedDataSource)).thenReturn(new MediaIdentification(
       streamable2,
-      new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH),
+      new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000")), MATCH),
       MOVIE
     ));
 
@@ -112,7 +112,7 @@ public class StreamCacheUpdateServiceTest {
 
     verify(streamStore).put(argThat(s -> s.getUri().toString().equals("/home/user/Battlestar%20Galactica%20Renamed")));
     verify(streamStore).remove(streamable1.getId());
-    verify(streamStore).putIdentification(streamable2.getId(), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
+    verify(streamStore).putIdentification(streamable2.getId(), new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
 
@@ -126,14 +126,14 @@ public class StreamCacheUpdateServiceTest {
 
     when(identificationService.identify(streamable2, null, allowedDataSource)).thenReturn(new MediaIdentification(
       streamable2,
-      new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH),
+      new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000")), MATCH),
       MOVIE
     ));
 
     service.update(7, List.of(streamable2));
 
     verify(streamStore).put(argThat(ms -> ms.getAttributes().get(Attribute.TITLE).equals("Battlestar Galactica v2")));
-    verify(streamStore).putIdentification(streamable2.getId(), new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH));
+    verify(streamStore).putIdentification(streamable2.getId(), new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000")), MATCH));
     verify(descriptorStore).add(MOVIE);
   }
 
@@ -142,7 +142,7 @@ public class StreamCacheUpdateServiceTest {
     @Nested
     class AndASerieIsDiscovered {
       Streamable serie = streamable(123, "/home/user/Serie", "Serie");
-      Identification identification = new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000")), MATCH);
+      Identification identification = new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000")), MATCH);
       MediaIdentification serieMediaIdentification = new MediaIdentification(serie, identification, MOVIE);
 
       @BeforeEach
@@ -168,8 +168,8 @@ public class StreamCacheUpdateServiceTest {
       class AndAnEpisodeIsDiscovered {
         Streamable episode1 = childStreamable(serie.getId(), 124, "/home/user/Serie/Episode1", "Episode1");
         Streamable episode2 = childStreamable(serie.getId(), 125, "/home/user/Serie/Episode2", "Episode2");
-        Identification episode1Identification = new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000:ep1")), MATCH);
-        Identification episode2Identification = new Identification(List.of(new Identifier(MOVIE_DATASOURCE, "10000:ep2")), MATCH);
+        Identification episode1Identification = new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000:ep1")), MATCH);
+        Identification episode2Identification = new Identification(List.of(new WorkId(TMDB, MediaType.MOVIE, "10000:ep2")), MATCH);
         MediaIdentification episode1MediaIdentification = new MediaIdentification(episode1, episode1Identification, MOVIE);
         MediaIdentification episode2MediaIdentification = new MediaIdentification(episode1, episode2Identification, MOVIE);
 

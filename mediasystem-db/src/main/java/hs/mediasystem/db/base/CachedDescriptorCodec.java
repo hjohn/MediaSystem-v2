@@ -10,7 +10,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.ext.basicmediatypes.MediaDescriptor;
+import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -36,14 +36,14 @@ public class CachedDescriptorCodec {
   }
 
   public CachedDescriptor fromRecord(DescriptorRecord record) throws IOException {
-    return new CachedDescriptor(Instant.ofEpochSecond(record.getLastUsedTime()), objectMapper.readValue(record.getJson(), MediaDescriptor.class));
+    return new CachedDescriptor(Instant.ofEpochSecond(record.getLastUsedTime()), objectMapper.readValue(record.getJson(), WorkDescriptor.class));
   }
 
   public DescriptorRecord toRecord(CachedDescriptor descriptor) {
     try {
       DescriptorRecord record = new DescriptorRecord();
 
-      record.setIdentifier(descriptor.getDescriptor().getIdentifier().toString());
+      record.setIdentifier(descriptor.getDescriptor().getId().toString());
       record.setLastUsedTime(descriptor.getLastUsedTime().getEpochSecond());
       record.setJson(objectMapper.writeValueAsBytes(descriptor.getDescriptor()));
 

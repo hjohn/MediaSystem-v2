@@ -3,12 +3,10 @@ package hs.mediasystem.ext.local;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.EpisodeIdentifier;
-import hs.mediasystem.ext.basicmediatypes.domain.Identifier;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionIdentifier;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
@@ -35,21 +33,19 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LocalQueryService extends AbstractQueryService {
-  private static final DataSource SERIE = DataSource.instance(MediaType.SERIE, "LOCAL");
-  private static final DataSource SEASON = DataSource.instance(MediaType.SEASON, "LOCAL");
-  private static final DataSource EPISODE = DataSource.instance(MediaType.EPISODE, "LOCAL");
+  private static final DataSource LOCAL = DataSource.instance("LOCAL");
   private static final Pattern PATTERN = Pattern.compile("([0-9]+),([0-9]+)");
 
   @Inject private StreamableStore streamStore;
   @Inject private DescriptionService descriptionService;
 
   public LocalQueryService() {
-    super(SERIE);
+    super(LOCAL, MediaType.SERIE);
   }
 
   @Override
-  public Serie query(Identifier identifier) {
-    StreamID streamId = StreamID.of(identifier.getId());
+  public Serie query(WorkId id) {
+    StreamID streamId = StreamID.of(id.getKey());
     Streamable streamable = streamStore.findStream(streamId).orElseThrow();
     Map<Integer, List<Episode>> episodes = new HashMap<>();
 
@@ -61,7 +57,7 @@ public class LocalQueryService extends AbstractQueryService {
         int episodeNumber = Integer.parseInt(matcher.group(2));
 
         episodes.computeIfAbsent(seasonNumber, k -> new ArrayList<>()).add(new Episode(
-          new EpisodeIdentifier(EPISODE, identifier.getId() + "/" + seasonNumber + "/" + episodeNumber),
+          new WorkId(LOCAL, MediaType.EPISODE, id.getKey() + "/" + seasonNumber + "/" + episodeNumber),
           new Details(
             childStream.getAttributes().get(Attribute.TITLE),
             childStream.getAttributes().get(Attribute.SUBTITLE),
@@ -81,7 +77,7 @@ public class LocalQueryService extends AbstractQueryService {
     }
 
     List<Season> seasons = episodes.entrySet().stream().sorted(Comparator.comparing(Map.Entry::getKey)).map(e -> new Season(
-      new ProductionIdentifier(SEASON, identifier.getId() + "/" + e.getKey()),
+      new WorkId(LOCAL, MediaType.SEASON, id.getKey() + "/" + e.getKey()),
       new Details(
         "Season " + e.getKey(),
         null,
@@ -99,7 +95,7 @@ public class LocalQueryService extends AbstractQueryService {
     Attributes attributes = streamable.getAttributes();
 
     return new Serie(
-      (ProductionIdentifier)identifier,
+      id,
       new Details(
         description.map(Description::getTitle).orElse(attributes.get(Attribute.TITLE)),
         description.map(Description::getSubtitle).orElse(attributes.get(Attribute.SUBTITLE)),
