@@ -6,6 +6,20 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * A content print is a finger print style identifier.
+ *
+ * <p>A file has the same content print only when its last modification time, size
+ * and binary content (verified by a sparse hash) are all exactly the same. A file
+ * that is a binary copy but has a different last modification time will still have
+ * a different content print.
+ *
+ * <p>A directory conversely has the same content print when its URI matches. Its
+ * last modification time and hash are irrelevant.
+ *
+ * <p>Content prints are primarily intended to associate state with that should not be
+ * lost when a file is renamed.
+ */
 public class ContentPrint {
   private final ContentID id;  // an identifier that never changes for this particular ContentPrint
   private final Long size;

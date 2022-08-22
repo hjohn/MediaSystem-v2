@@ -18,7 +18,7 @@ public class StreamMetaData {
   private final List<SubtitleTrack> subtitleTracks;
   private final List<Snapshot> snapshots;
 
-  // TODO remove aliases after a while
+  // TODO remove aliases after a while -- think of a way to migrate; might be good to store JSON not as byte[]
   public StreamMetaData(ContentID contentId, Duration duration, @JsonAlias("videoStreams") List<VideoTrack> videoTracks, @JsonAlias("audioStreams") List<AudioTrack> audioTracks, @JsonAlias("subtitleStreams") List<SubtitleTrack> subtitleTracks, List<Snapshot> snapshots) {
     if(contentId == null) {
       throw new IllegalArgumentException("contentId cannot be null");

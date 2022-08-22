@@ -44,7 +44,7 @@ public class Episode extends Release {
     return duration;
   }
 
-  public List<PersonRole> getPersonRoles() {  // TODO Unused
+  public List<PersonRole> getPersonRoles() {  // TODO Unused, perhaps useful to create a consolidated view of all cast and crew for a serie
     return personRoles;
   }
 }

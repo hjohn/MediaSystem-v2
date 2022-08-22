@@ -100,7 +100,7 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
            * modification time and hash, but does not affect how it would be
            * matched.
            *
-           * Unlike files, directories donot have a specific signature that
+           * Unlike files, directories do not have a specific signature that
            * needs to be tracked for, for example, watched state.
            */
 
