@@ -5,9 +5,11 @@ import hs.mediasystem.ui.api.RecommendationClient;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.ui.api.domain.Sequence;
+import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -59,14 +61,22 @@ public class NewItemsPresentation {
       Parent parent = work.getParent().orElse(null);
       boolean hasParent = recommendation.getWork().getType().isComponent();
 
-      if(!hasParent || parent == null || sequence == null || sequence.getSeasonNumber().orElse(0) <= 0) {
-        groupedMap.put(work.getId().toString(), new ConsolidatedNewItem(recommendation, 0));
+      if(!hasParent || parent == null || sequence == null) {
+        groupedMap.put(work.getId().toString(), new ConsolidatedNewItem(recommendation));
       }
       else {
-        ConsolidatedNewItem item = groupedMap.computeIfAbsent(parent.getId().toString(), k -> new ConsolidatedNewItem(recommendation, -1));
+        ConsolidatedNewItem item = groupedMap.computeIfAbsent(parent.getId().toString(), k -> new ConsolidatedNewItem(recommendation));
 
-        item.similarCount++;
-        item.seasonCounts.merge(sequence.getSeasonNumber().orElse(0), 1, (a, b) -> a + b);
+        if(sequence.getType() == Type.EPISODE) {
+          item.episodes++;
+          item.seasonCounts.merge(sequence.getSeasonNumber().orElse(0), 1, (a, b) -> a + b);
+        }
+        else if(sequence.getType() == Type.SPECIAL) {
+          item.specials++;
+        }
+        else {
+          item.extras++;
+        }
 
         if(Sequence.COMPARATOR.compare(sequence, item.recommendation.getWork().getDetails().getSequence().orElseThrow()) < 0) {
           item.recommendation = recommendation;
@@ -83,7 +93,7 @@ public class NewItemsPresentation {
   private static Item toItem(ConsolidatedNewItem item) {
     Recommendation recommendation = item.recommendation;
 
-    if(item.similarCount == 0) {
+    if(item.episodes <= 1 && item.specials == 0 && item.extras == 0) {
       return toItem(recommendation);
     }
 
@@ -98,11 +108,42 @@ public class NewItemsPresentation {
   }
 
   private static String createSubtitle(ConsolidatedNewItem item) {
+    StringBuilder builder = new StringBuilder();
+
     if(item.seasonCounts.size() == 1) {
-      return "Season " + item.seasonCounts.firstKey() + ": " + (item.similarCount + 1) + " new episode" + (item.similarCount > 0 ? "s" : "");
+      builder.append("Season " + item.seasonCounts.firstKey() + ": ");
+    }
+    else if(item.seasonCounts.size() > 1) {
+      builder.append(item.seasonCounts.size() + " new seasons");
     }
 
-    return (item.similarCount + 1) + " new episodes in " + item.seasonCounts.size() + " seasons";
+    List<String> parts = new ArrayList<>();
+
+    if(item.episodes > 0) {
+      parts.add(item.episodes == 1 ? "a new episode" : item.episodes + " new episodes");
+    }
+
+    if(item.specials > 0) {
+      parts.add(item.specials == 1 ? "a new special" : item.specials + " new specials");
+    }
+
+    if(item.extras > 0) {
+      parts.add(item.extras == 1 ? "a new extra" : item.extras + " new extras");
+    }
+
+    for(int i = 0; i < parts.size(); i++) {
+      String part = parts.get(i);
+
+      if(builder.isEmpty()) {
+        builder.append(part.substring(0, 1).toUpperCase()).append(part.substring(1));
+      }
+      else {
+        builder.append(builder.charAt(builder.length() - 1) == ' ' ? "" : i == parts.size() - 1 ? " and " : ", ");
+        builder.append(part);
+      }
+    }
+
+    return builder.toString();
   }
 
   private static Item toItem(Recommendation recommendation) {
@@ -134,11 +175,12 @@ public class NewItemsPresentation {
     public final SortedMap<Integer, Integer> seasonCounts = new TreeMap<>();
 
     public Recommendation recommendation;
-    public int similarCount;
+    public int episodes;
+    public int extras;
+    public int specials;
 
-    public ConsolidatedNewItem(Recommendation recommendation, int similarCount) {
+    public ConsolidatedNewItem(Recommendation recommendation) {
       this.recommendation = recommendation;
-      this.similarCount = similarCount;
     }
   }
 }
