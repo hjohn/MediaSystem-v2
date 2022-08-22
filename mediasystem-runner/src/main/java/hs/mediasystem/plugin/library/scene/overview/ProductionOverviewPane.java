@@ -132,7 +132,7 @@ public class ProductionOverviewPane extends HBox {
   }
 
   public ProductionOverviewPane() {
-    imageProperty.imageHandleProperty().bind(model.work.map(w -> w.getDetails().getCover().orElse(null)));
+    imageProperty.imageHandleProperty().bind(model.work.map(w -> w.getDetails().getAnyCover().orElse(null)));
 
     getChildren().addAll(poster, descriptionBox);
 
