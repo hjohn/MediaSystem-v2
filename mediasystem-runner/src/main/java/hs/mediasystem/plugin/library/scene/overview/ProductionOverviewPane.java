@@ -69,9 +69,9 @@ public class ProductionOverviewPane extends HBox {
       "subtitle-box",
       Labels.create("release-year", model.work.map(Work::getDetails).map(Details::getYearRange)),
       Labels.create("content-rating", model.work.map(this::extractContentRating), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT),
-      Labels.create("adult-rating", model.work.map(w -> Boolean.TRUE.equals(w.getDetails().getClassification().getPornographic()) ? "XXX" : ""), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT)
+      Labels.create("adult-rating", model.work.map(w -> Boolean.TRUE.equals(w.getDetails().getClassification().pornographic()) ? "XXX" : ""), Labels.HIDE_IF_EMPTY, Labels.REVERSE_CLIP_TEXT)
     ),
-    Labels.create("genres", model.work.map(w -> w.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / "))))
+    Labels.create("genres", model.work.map(w -> w.getDetails().getClassification().genres().stream().collect(Collectors.joining(" / "))))
   );
 
   {
@@ -141,6 +141,6 @@ public class ProductionOverviewPane extends HBox {
   }
 
   private String extractContentRating(Work work) {
-    return work.getDetails().getClassification().getContentRatings().get("US");
+    return work.getDetails().getClassification().contentRatings().get("US");
   }
 }

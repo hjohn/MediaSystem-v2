@@ -61,7 +61,7 @@ import javax.inject.Singleton;
 public class NavigationButtonsFactory {
   private static final String STYLES_URL = LessLoader.compile(NavigationButtonsFactory.class, "play-dialog.less");
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withZone(ZoneId.systemDefault());
-  private static final Comparator<MediaStream> LAST_WATCHED = Comparator.comparing((MediaStream s) -> s.getState().getLastConsumptionTime().orElse(Instant.MIN)).reversed();
+  private static final Comparator<MediaStream> LAST_WATCHED = Comparator.comparing((MediaStream s) -> s.state().lastConsumptionTime().orElse(Instant.MIN)).reversed();
 
   @Inject private ProductionCollectionFactory productionCollectionFactory;
   @Inject private RecommendationsPresentationFactory recommendationsPresentationFactory;
@@ -100,7 +100,7 @@ public class NavigationButtonsFactory {
 
     if(work.getPrimaryStream().isPresent()) {
       List<MediaStream> resumableStreams = work.getStreams().stream()
-        .filter(s -> s.getState().getResumePosition() != null && !s.getState().getResumePosition().isZero())
+        .filter(s -> s.state().resumePosition() != null && !s.state().resumePosition().isZero())
         .sorted(LAST_WATCHED)
         .collect(Collectors.toList());
 
@@ -110,7 +110,7 @@ public class NavigationButtonsFactory {
       }
       else if(resumableStreams.size() == 1) {
         MediaStream stream = resumableStreams.get(0);
-        Duration resumePosition = stream.getState().getResumePosition();
+        Duration resumePosition = stream.state().resumePosition();
 
         nodes.add(createDirectPlayButton(
           work,
@@ -157,7 +157,7 @@ public class NavigationButtonsFactory {
         dialogPane.getChildren().add(createStreamButtons(streams, dialogPane));
 
         Optional.ofNullable(dialogPane.showDialog(((Node)e.getTarget()).getScene(), true))
-          .ifPresent(ms -> PresentationLoader.navigate(e, factory.create(work, ms, resume ? ms.getState().getResumePosition() : Duration.ZERO)));
+          .ifPresent(ms -> PresentationLoader.navigate(e, factory.create(work, ms, resume ? ms.state().resumePosition() : Duration.ZERO)));
       }
     );
   }
@@ -175,7 +175,7 @@ public class NavigationButtonsFactory {
   }
 
   private Node streamToTitleButton(MediaStream stream, EventHandler<ActionEvent> eventHandler) {
-    Attributes attributes = stream.getAttributes();
+    Attributes attributes = stream.attributes();
     String groupTitle = attributes.get("title");
     String title = attributes.get("subtitle");
 
@@ -185,10 +185,10 @@ public class NavigationButtonsFactory {
     }
 
     String info = Stream.of(
-        stream.getDuration().map(d -> SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds())).orElse(null),
-        stream.getMediaStructure().flatMap(ms -> ms.videoTracks().stream().findFirst()).map(VideoTrack::resolution).map(r -> r.width() + "✕" + r.height()).orElse(null),
-        stream.getSize().map(s -> SizeFormatter.BYTES_THREE_SIGNIFICANT.format(s)).orElse(null),
-        DATE_TIME_FORMATTER.format(stream.getLastModificationTime())
+        stream.duration().map(d -> SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds())).orElse(null),
+        stream.mediaStructure().flatMap(ms -> ms.videoTracks().stream().findFirst()).map(VideoTrack::resolution).map(r -> r.width() + "✕" + r.height()).orElse(null),
+        stream.size().map(s -> SizeFormatter.BYTES_THREE_SIGNIFICANT.format(s)).orElse(null),
+        DATE_TIME_FORMATTER.format(stream.lastModificationTime())
       )
       .filter(Objects::nonNull)
       .collect(Collectors.joining(" • "));
@@ -210,7 +210,7 @@ public class NavigationButtonsFactory {
 
   private HBox createSnapshotsBox(MediaStream stream) {
     HBox box = Containers.hbox("snapshots-box");
-    List<ImageHandle> handles = stream.getSnapshots().stream()
+    List<ImageHandle> handles = stream.snapshots().stream()
       .map(Snapshot::imageUri)
       .map(imageHandleFactory::fromURI)
       .limit(3)
@@ -262,9 +262,9 @@ public class NavigationButtonsFactory {
     nodes.add(Buttons.create("cast", "Cast & Crew", e -> navigateToCastAndCrew(e, work)));
     nodes.add(Buttons.create("recommended", "Recommended", e -> navigateToRecommendations(e, work)));
 
-    work.getParent().filter(p -> p.getType().equals(MediaType.COLLECTION))
+    work.getParent().filter(p -> p.type().equals(MediaType.COLLECTION))
       .ifPresent(p -> {
-        nodes.add(Buttons.create("collection", "Collection", e -> navigateToCollection(e, p.getId())));
+        nodes.add(Buttons.create("collection", "Collection", e -> navigateToCollection(e, p.id())));
       });
 
     return new MultiButton(nodes);

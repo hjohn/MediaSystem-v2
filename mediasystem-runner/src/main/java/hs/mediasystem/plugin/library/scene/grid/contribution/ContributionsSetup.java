@@ -27,24 +27,24 @@ public class ContributionsSetup extends AbstractSetup<Contribution, Contribution
 
   @Override
   protected void onItemSelected(ItemSelectedEvent<Contribution> event, ContributionsPresentation presentation) {
-    PresentationLoader.navigate(event, () -> personParticipationsPresentationFactory.create(event.getItem().getPerson().getId()));
+    PresentationLoader.navigate(event, () -> personParticipationsPresentationFactory.create(event.getItem().person().getId()));
   }
 
   @Override
   protected Node createPreviewPanel(Contribution item) {
-    return contextLayout.create(item.getPerson());
+    return contextLayout.create(item.person());
   }
 
   @Override
   protected void fillModel(Contribution item, Model model) {
-    model.title.set(item.getPerson().getName());
-    model.imageHandle.set(item.getPerson().getCover().orElse(null));
+    model.title.set(item.person().getName());
+    model.imageHandle.set(item.person().getCover().orElse(null));
 
-    Role role = item.getRole();
+    Role role = item.role();
 
     model.subtitle.set(
-      role.getCharacter() != null && !role.getCharacter().isEmpty() ? "as " + role.getCharacter()
-        : role.getJob() != null && !role.getJob().isEmpty() ? role.getJob()
+      role.character() != null && !role.character().isEmpty() ? "as " + role.character()
+        : role.job() != null && !role.job().isEmpty() ? role.job()
         : ""
     );
   }

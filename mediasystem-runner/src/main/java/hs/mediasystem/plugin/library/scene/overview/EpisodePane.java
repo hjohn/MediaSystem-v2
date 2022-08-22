@@ -143,15 +143,15 @@ public class EpisodePane extends HBox {
   }
 
   private static String createSeasonEpisodeText(Sequence sequence) {
-    int seasonNumber = sequence.getSeasonNumber().orElse(-1);
+    int seasonNumber = sequence.seasonNumber().orElse(-1);
 
-    if(sequence.getType() == Type.SPECIAL) {
+    if(sequence.type() == Type.SPECIAL) {
       return "Special";
     }
-    if(sequence.getType() == Type.EXTRA || seasonNumber == -1) {
+    if(sequence.type() == Type.EXTRA || seasonNumber == -1) {
       return "Extra";
     }
 
-    return "Season " + seasonNumber + ", Episode " + sequence.getNumber();
+    return "Season " + seasonNumber + ", Episode " + sequence.number();
   }
 }

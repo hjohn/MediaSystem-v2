@@ -18,13 +18,13 @@ public abstract class AbstractCarouselNodeFactory {
   @Inject private ProductionPresentationFactory productionPresentationFactory;
 
   protected void fillRecommendationModel(Recommendation recommendation, String parentTitle, String title, String subtitle, AnnotatedImageCellFactory.Model model) {
-    Work work = recommendation.getWork();
+    Work work = recommendation.work();
 
     model.parentTitle.set(parentTitle);
     model.title.set(title);
     model.subtitle.set(subtitle);
     model.sequence.set(work.getDetails().getSequence()
-      .map(seq -> seq.getSeasonNumber().map(s -> s + "x").orElse("") + seq.getNumber())
+      .map(seq -> seq.seasonNumber().map(s -> s + "x").orElse("") + seq.number())
       .orElse(null)
     );
 
@@ -36,7 +36,7 @@ public abstract class AbstractCarouselNodeFactory {
     double fraction = work.getWatchedFraction().orElse(-1);
 
     model.watchedFraction.set(work.isWatched() ? 1.0 : fraction > 0 ? fraction : -1);
-    model.age.set(Optional.of(recommendation.getSampleTime())
+    model.age.set(Optional.of(recommendation.sampleTime())
       .map(i -> i.atZone(ZoneId.systemDefault()))
       .map(ZonedDateTime::toLocalDateTime)
       .map(SizeFormatter::formatTimeAgo)
@@ -45,6 +45,6 @@ public abstract class AbstractCarouselNodeFactory {
   }
 
   protected ProductionPresentation getRecommendedProductionPresentation(Recommendation r) {
-    return productionPresentationFactory.create(r.getWork().getId());
+    return productionPresentationFactory.create(r.work().getId());
   }
 }

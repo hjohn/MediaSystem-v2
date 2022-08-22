@@ -40,7 +40,7 @@ public class ParticipationsPresentationFactory extends GridViewPresentationFacto
   private static final List<Filter<ConsolidatedParticipation>> STATE_FILTERS = List.of(
     new Filter<>("none", p -> true),
     new Filter<>("available", p -> p.getWork().getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", p -> p.getWork().getPrimaryStream().isPresent() && !p.getWork().getState().isConsumed())
+    new Filter<>("unwatched", p -> p.getWork().getPrimaryStream().isPresent() && !p.getWork().getState().consumed())
   );
 
   @Inject private PersonClient personClient;
@@ -72,7 +72,7 @@ public class ParticipationsPresentationFactory extends GridViewPresentationFacto
         this.person.set(person);
 
         for(Participation participation : person.getParticipations()) {
-          map.computeIfAbsent(participation.getWork().getId(), k -> new ConsolidatedParticipation(participation.getWork())).addParticipation(participation);
+          map.computeIfAbsent(participation.work().getId(), k -> new ConsolidatedParticipation(participation.work())).addParticipation(participation);
         }
 
         this.inputItems.set(new ArrayList<>(map.values()));

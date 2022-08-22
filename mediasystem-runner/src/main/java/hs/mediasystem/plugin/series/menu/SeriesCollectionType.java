@@ -42,12 +42,12 @@ public class SeriesCollectionType implements CollectionType {
   private static final List<Filter<Object>> FILTERS = List.of(
     new Filter<>("none", w -> true),
     new Filter<>("released-recently", w -> extractDetails(w).getReleaseDate().filter(d -> d.isAfter(LocalDate.now().minusYears(5))).isPresent()),
-    new Filter<>("watched-recently", w -> extractState(w).getLastConsumptionTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent())
+    new Filter<>("watched-recently", w -> extractState(w).lastConsumptionTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent())
   );
 
   private static final List<Filter<Object>> STATE_FILTERS = List.of(
     new Filter<>("none", w -> true),
-    new Filter<>("unwatched", w -> !extractState(w).isConsumed())
+    new Filter<>("unwatched", w -> !extractState(w).consumed())
   );
 
   @Inject private GenericCollectionPresentationFactory factory;

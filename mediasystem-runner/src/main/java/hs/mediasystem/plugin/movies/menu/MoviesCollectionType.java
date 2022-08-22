@@ -87,7 +87,7 @@ public class MoviesCollectionType implements CollectionType {
 
   private static boolean isConsumed(Object obj) {
     if(obj instanceof Work w) {
-      return w.getState().isConsumed();
+      return w.getState().consumed();
     }
     if(obj instanceof WorksGroup wg) {
       return wg.allWatched();

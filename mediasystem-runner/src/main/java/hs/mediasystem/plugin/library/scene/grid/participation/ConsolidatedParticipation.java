@@ -40,27 +40,27 @@ public class ConsolidatedParticipation {
   public void addParticipation(Participation participation) {
     lines.add(participation);
 
-    this.popularity = Math.max(this.popularity, participation.getPopularity());
-    this.roleType = ROLE_TYPE_ORDER.indexOf(roleType) > ROLE_TYPE_ORDER.indexOf(participation.getRole().getType()) ? participation.getRole().getType() : this.roleType;
+    this.popularity = Math.max(this.popularity, participation.popularity());
+    this.roleType = ROLE_TYPE_ORDER.indexOf(roleType) > ROLE_TYPE_ORDER.indexOf(participation.role().type()) ? participation.role().type() : this.roleType;
   }
 
   public String getParticipationText() {
     return lines.stream()
-      .sorted(Comparator.comparing(p -> ROLE_TYPE_ORDER.indexOf(p.getRole().getType())))
+      .sorted(Comparator.comparing(p -> ROLE_TYPE_ORDER.indexOf(p.role().type())))
       .map(ConsolidatedParticipation::createParticipationLine)
       .filter(s -> !s.isBlank())
       .collect(Collectors.joining("; "));
   }
 
   private static String createParticipationLine(Participation participation) {
-    Role role = participation.getRole();
+    Role role = participation.role();
 
-    String text = role.getCharacter() != null && !role.getCharacter().isBlank() ?
-      "as " + role.getCharacter() :
-      role.getJob() != null && !role.getJob().isBlank() ? role.getJob() : "";
+    String text = role.character() != null && !role.character().isBlank() ?
+      "as " + role.character() :
+      role.job() != null && !role.job().isBlank() ? role.job() : "";
 
-    if(!text.isBlank() && participation.getEpisodeCount() > 1) {
-      text += " [x" + participation.getEpisodeCount() + "]";
+    if(!text.isBlank() && participation.episodeCount() > 1) {
+      text += " [x" + participation.episodeCount() + "]";
     }
 
     return text;

@@ -1,9 +1,8 @@
 package hs.mediasystem.domain.work;
 
 import java.time.Instant;
-import java.util.Objects;
 
-public class Match {
+public record Match(Type type, float accuracy, Instant creationTime) {
 
   public enum Type {
 
@@ -45,11 +44,7 @@ public class Match {
     NONE
   }
 
-  private final Type type;
-  private final float accuracy;
-  private final Instant creationTime;
-
-  public Match(Type type, float accuracy, Instant creationTime) {
+  public Match {
     if(type == null) {
       throw new IllegalArgumentException("type cannot be null");
     }
@@ -59,51 +54,6 @@ public class Match {
     if(creationTime == null) {
       throw new IllegalArgumentException("creationTime cannot be null");
     }
-
-    this.type = type;
-    this.accuracy = accuracy;
-    this.creationTime = creationTime;
-  }
-
-  public Type getType() {
-    return type;
-  }
-
-  public float getAccuracy() {
-    return accuracy;
-  }
-
-  public Instant getCreationTime() {
-    return creationTime;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(type, accuracy, creationTime);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if(this == obj) {
-      return true;
-    }
-    if(obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-
-    Match other = (Match)obj;
-
-    if(Double.doubleToLongBits(accuracy) != Double.doubleToLongBits(other.accuracy)) {
-      return false;
-    }
-    if(type != other.type) {
-      return false;
-    }
-    if(creationTime != other.creationTime) {
-      return false;
-    }
-
-    return true;
   }
 
   @Override

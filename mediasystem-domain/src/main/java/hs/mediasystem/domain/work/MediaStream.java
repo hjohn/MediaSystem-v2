@@ -9,26 +9,29 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-public class MediaStream {
-  private final StreamID id;
-  private final Optional<StreamID> parentId;
-  private final URI uri;
-  private final Instant discoveryTime;
-  private final Instant lastModificationTime;
-  private final Optional<Long> size;
-  private final Attributes attributes;  // physical attributes
-  private final State state;
-  private final Optional<Duration> duration;
-  private final Optional<MediaStructure> mediaStructure;  // logical attributes (tracks)
-  private final List<Snapshot> snapshots;
-  private final Match match;
-
-  public MediaStream(StreamID id, StreamID parentId, URI uri, Instant discoveryTime, Instant lastModificationTime, Long size, Attributes attributes, State state, Duration duration, MediaStructure mediaStructure, List<Snapshot> snapshots, Match match) {
+/**
+ * Represents a stream.
+ *
+ * @param id a {@link StreamID}, never {@code null}
+ * @param parentId an optional parent {@link StreamID}, never {@code null} but can be empty
+ * @param uri a {@link URI}, never {@code null}
+ * @param discoveryTime the time the item was first discovered, never {@code null}
+ * @param lastModificationTime the time the item was last modified, never {@code null}
+ * @param size the optional size of the item, never {@code null} or negative but can be empty
+ * @param attributes the {@link Attributes} for this item, never {@code null}
+ * @param state the {@link State} of this item, never {@code null}
+ * @param duration the optional {@link Duration} of the item, never {@code null} but can be empty
+ * @param mediaStructure the optional {@link MediaStructure} of the item, never {@code null} but can be empty
+ * @param snapshots a list of {@link Snapshot}s for the item, never {@code null} but can be empty
+ * @param match a {@link Match} for the item, never {@code null}
+ */
+public record MediaStream(StreamID id, Optional<StreamID> parentId, URI uri, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, Attributes attributes, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
+  public MediaStream {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
-    if(state == null) {
-      throw new IllegalArgumentException("state cannot be null");
+    if(parentId == null) {
+      throw new IllegalArgumentException("parentId cannot be null");
     }
     if(uri == null) {
       throw new IllegalArgumentException("uri cannot be null");
@@ -39,80 +42,32 @@ public class MediaStream {
     if(lastModificationTime == null) {
       throw new IllegalArgumentException("lastModifiedTime cannot be null");
     }
-    if(size != null && size < 0) {
-      throw new IllegalArgumentException("size cannot be negative: " + size);
+    if(size == null) {
+      throw new IllegalArgumentException("size cannot be null");
     }
     if(attributes == null) {
       throw new IllegalArgumentException("attributes cannot be null");
+    }
+    if(state == null) {
+      throw new IllegalArgumentException("state cannot be null");
+    }
+    if(duration == null) {
+      throw new IllegalArgumentException("duration cannot be null");
+    }
+    if(mediaStructure == null) {
+      throw new IllegalArgumentException("mediaStructure cannot be null");
+    }
+    if(snapshots == null) {
+      throw new IllegalArgumentException("snapshots cannot be null");
     }
     if(match == null) {
       throw new IllegalArgumentException("match cannot be null");
     }
 
-    this.id = id;
-    this.parentId = Optional.ofNullable(parentId);
-    this.uri = uri;
-    this.discoveryTime = discoveryTime;
-    this.lastModificationTime = lastModificationTime;
-    this.size = Optional.ofNullable(size);
-    this.attributes = attributes;
-    this.state = state;
-    this.duration = Optional.ofNullable(duration);
-    this.mediaStructure = Optional.ofNullable(mediaStructure);
-    this.snapshots = List.copyOf(snapshots);
-    this.match = match;
-  }
-
-  public StreamID getId() {
-    return id;
-  }
-
-  public Optional<StreamID> getParentId() {
-    return parentId;
-  }
-
-  public URI getUri() {
-    return uri;
-  }
-
-  /**
-   * Returns the time the item was first discovered.
-   *
-   * @return the time the item was first discovered, never <code>null</code>
-   */
-  public Instant getDiscoveryTime() {
-    return discoveryTime;
-  }
-
-  public Instant getLastModificationTime() {
-    return lastModificationTime;
-  }
-
-  public Optional<Long> getSize() {
-    return size;
-  }
-
-  public Attributes getAttributes() {
-    return attributes;
-  }
-
-  public State getState() {
-    return state;
-  }
-
-  public Optional<Duration> getDuration() {
-    return duration;
-  }
-
-  public Optional<MediaStructure> getMediaStructure() {
-    return mediaStructure;
-  }
-
-  public List<Snapshot> getSnapshots() {
-    return snapshots;
-  }
-
-  public Match getMatch() {
-    return match;
+    size.ifPresent(s -> {
+      if(s < 0) {
+        throw new IllegalArgumentException("size cannot be negative: " + s);
+      }
+    });
   }
 }

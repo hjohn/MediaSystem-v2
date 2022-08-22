@@ -30,13 +30,13 @@ public class FoldersCollectionType implements CollectionType {
 
   private static final List<Filter<Work>> FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("watched-recently", r -> r.getState().getLastConsumptionTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent()
+    new Filter<>("watched-recently", r -> r.getState().lastConsumptionTime().filter(d -> d.isAfter(Instant.now().minus(365 * 2, ChronoUnit.DAYS))).isPresent()
     )
   );
 
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
-    new Filter<>("unwatched", r -> !r.getState().isConsumed())
+    new Filter<>("unwatched", r -> !r.getState().consumed())
   );
 
   @Inject private FolderPresentationFactory factory;

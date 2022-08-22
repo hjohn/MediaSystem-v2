@@ -181,7 +181,7 @@ public class EpisodeListPane extends VBox {
 
     for(Work episodeItem : episodes) {
       boolean missing = episodeItem.getPrimaryStream().isEmpty();
-      boolean watched = missing ? false : episodeItem.getState().isConsumed();
+      boolean watched = missing ? false : episodeItem.getState().consumed();
 
       int seasonNumber = toSeasonBarIndex(episodeItem);
 
@@ -200,7 +200,7 @@ public class EpisodeListPane extends VBox {
   private static int toSeasonBarIndex(Work episode) {
     Sequence sequence = episode.getDetails().getSequence().orElseThrow();
 
-    return sequence.getType() == Type.SPECIAL ? 0 : sequence.getType() == Type.EXTRA ? -1 : sequence.getSeasonNumber().orElse(-1);
+    return sequence.type() == Type.SPECIAL ? 0 : sequence.type() == Type.EXTRA ? -1 : sequence.seasonNumber().orElse(-1);
   }
 
   private static class SeasonWatchState {

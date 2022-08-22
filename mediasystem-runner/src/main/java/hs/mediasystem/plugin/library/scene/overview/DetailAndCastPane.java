@@ -101,8 +101,8 @@ public class DetailAndCastPane extends HBox {
     actorsGrid.getChildren().clear();
 
     List<Contribution> topContributors = contributors.stream()
-      .filter(c -> c.getRole().getType() == Type.CAST)
-      .sorted(Comparator.comparing(c -> c.getOrder()))
+      .filter(c -> c.role().type() == Type.CAST)
+      .sorted(Comparator.comparing(c -> c.order()))
       .limit(3)
       .collect(Collectors.toList());
 
@@ -110,7 +110,7 @@ public class DetailAndCastPane extends HBox {
       Contribution contributor = topContributors.get(i);
       AsyncImageProperty imageProperty = new AsyncImageProperty(400, 600);
 
-      imageProperty.imageHandleProperty().set(contributor.getPerson().getCover().orElse(null));
+      imageProperty.imageHandleProperty().set(contributor.person().getCover().orElse(null));
 
       Label ph = Labels.create("ph", "?");
 
@@ -121,7 +121,7 @@ public class DetailAndCastPane extends HBox {
       photo.imageProperty().bind(imageProperty);
       photo.setAlignment(Pos.BOTTOM_CENTER);
 
-      String role = contributor.getRole().getCharacter();
+      String role = contributor.role().character();
 
       Label roleLabel = Labels.create("role", "as " + role, Labels.hide(new SimpleBooleanProperty(role == null || role.isEmpty())));
 
@@ -130,7 +130,7 @@ public class DetailAndCastPane extends HBox {
       actorsGrid.at(i, 0).add(photo);
       actorsGrid.at(i, 1).add(Containers.vbox(
         "actor-description",
-        Labels.create("name", contributor.getPerson().getName()),
+        Labels.create("name", contributor.person().getName()),
         roleLabel
       ));
     }

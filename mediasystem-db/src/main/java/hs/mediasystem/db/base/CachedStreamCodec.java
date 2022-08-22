@@ -83,9 +83,9 @@ public class CachedStreamCodec {
 
       stream.getIdentification().ifPresent(i -> {
         record.setIdentifiers(i.getWorkIds().stream().map(Object::toString).collect(Collectors.toList()));
-        record.setMatchType(i.getMatch().getType().toString());
-        record.setMatchAccuracy(i.getMatch().getAccuracy());
-        record.setMatchMillis(i.getMatch().getCreationTime().toEpochMilli());
+        record.setMatchType(i.getMatch().type().toString());
+        record.setMatchAccuracy(i.getMatch().accuracy());
+        record.setMatchMillis(i.getMatch().creationTime().toEpochMilli());
       });
 
       return record;

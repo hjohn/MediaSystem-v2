@@ -55,7 +55,7 @@ public class ShowInfoEventHandler {
     }
 
     VBox titleBox = Containers.vbox("title-panel",
-      Labels.create("serie-title", work.getType().isComponent() ? work.getParent().map(Parent::getName).orElse("") : "", Labels.HIDE_IF_EMPTY),
+      Labels.create("serie-title", work.getType().isComponent() ? work.getParent().map(Parent::title).orElse("") : "", Labels.HIDE_IF_EMPTY),
       titleLabel
     );
 
@@ -76,7 +76,7 @@ public class ShowInfoEventHandler {
 
       tabPane.getTabs().add(tab);
 
-      String path = URLDecoder.decode(stream.getUri().toString().trim(), StandardCharsets.UTF_8);
+      String path = URLDecoder.decode(stream.uri().toString().trim(), StandardCharsets.UTF_8);
 
       if(path.startsWith("file://")) {
         path = path.substring(5);
@@ -92,7 +92,7 @@ public class ShowInfoEventHandler {
         GridPane.FILL
       );
 
-      stream.getSize().ifPresent(size -> {
+      stream.size().ifPresent(size -> {
         gridPane.addRow(
           Labels.create("title", "File Size"),
           Labels.create("value", SizeFormatter.BYTES_THREE_SIGNIFICANT.format(size)),
@@ -103,26 +103,26 @@ public class ShowInfoEventHandler {
 
       gridPane.addRow(
         Labels.create("title", "Last Modified"),
-        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getLastModificationTime().atOffset(ZoneOffset.UTC))),
+        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.lastModificationTime().atOffset(ZoneOffset.UTC))),
         GridPane.FILL,
         GridPane.FILL
       );
 
       gridPane.addRow(
         Labels.create("title", "First Seen"),
-        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.getDiscoveryTime().atOffset(ZoneOffset.UTC))),
+        Labels.create("value", "" + DATE_TIME_FORMATTER.format(stream.discoveryTime().atOffset(ZoneOffset.UTC))),
         GridPane.FILL,
         GridPane.FILL
       );
 
       gridPane.addRow(
         Labels.create("title", "Identification"),
-        Labels.create("value", "" + toText(stream.getMatch())),
+        Labels.create("value", "" + toText(stream.match())),
         GridPane.FILL,
         GridPane.FILL
       );
 
-      stream.getDuration().ifPresent(d -> {
+      stream.duration().ifPresent(d -> {
         gridPane.addRow(
           Labels.create("title", "Duration"),
           Labels.create("value", SizeFormatter.DURATION.format(d.toSeconds())),
@@ -131,7 +131,7 @@ public class ShowInfoEventHandler {
         );
       });
 
-      stream.getMediaStructure().ifPresent(ms -> {
+      stream.mediaStructure().ifPresent(ms -> {
         List<VideoTrack> videoTracks = ms.videoTracks();
 
         for(int i = 0; i < videoTracks.size(); i++) {
@@ -189,7 +189,7 @@ public class ShowInfoEventHandler {
       });
 
       GridPane snapshotsBox = Containers.grid("snapshots-box");
-      List<ImageHandle> handles = stream.getSnapshots().stream()
+      List<ImageHandle> handles = stream.snapshots().stream()
         .map(Snapshot::imageUri)
         .map(imageHandleFactory::fromURI)
         .collect(Collectors.toList());
@@ -251,14 +251,14 @@ public class ShowInfoEventHandler {
   private static String toText(Match match) {
     StringBuilder builder = new StringBuilder();
 
-    builder.append(match.getType());
+    builder.append(match.type());
 
-    if(match.getType() == Type.NAME || match.getType() == Type.NAME_AND_RELEASE_DATE) {
-      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(match.getAccuracy() * 100.0) + "% match)");
+    if(match.type() == Type.NAME || match.type() == Type.NAME_AND_RELEASE_DATE) {
+      builder.append(" (" + SizeFormatter.DOUBLE_THREE_SIGNIFICANT.format(match.accuracy() * 100.0) + "% match)");
     }
 
     builder.append(" at ");
-    builder.append(DATE_TIME_FORMATTER.format(match.getCreationTime().atOffset(ZoneOffset.UTC)));
+    builder.append(DATE_TIME_FORMATTER.format(match.creationTime().atOffset(ZoneOffset.UTC)));
 
     return builder.toString();
   }

@@ -21,13 +21,13 @@ import javax.inject.Singleton;
 public class ContributionsPresentationFactory extends GridViewPresentationFactory {
 
   private static final List<SortOrder<Contribution>> SORT_ORDERS = List.of(
-    new SortOrder<>("best", Comparator.comparing((Contribution c) -> c.getOrder()))
+    new SortOrder<>("best", Comparator.comparing((Contribution c) -> c.order()))
   );
 
   private static final List<Filter<Contribution>> FILTERS = List.of(
     new Filter<>("none", c -> true),
-    new Filter<>("cast", c -> c.getRole().getType() != Role.Type.CREW),
-    new Filter<>("crew", c -> c.getRole().getType() == Role.Type.CREW)
+    new Filter<>("cast", c -> c.role().type() != Role.Type.CREW),
+    new Filter<>("crew", c -> c.role().type() == Role.Type.CREW)
   );
 
   private static final List<Filter<Contribution>> STATE_FILTERS = List.of(
@@ -46,7 +46,7 @@ public class ContributionsPresentationFactory extends GridViewPresentationFactor
     private final WorkId id;
 
     public ContributionsPresentation(WorkId id) {
-      super("CastAndCrew", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), c -> c.getPerson().getId());
+      super("CastAndCrew", new ViewOptions<>(SORT_ORDERS, FILTERS, STATE_FILTERS), c -> c.person().getId());
 
       this.id = id;
 

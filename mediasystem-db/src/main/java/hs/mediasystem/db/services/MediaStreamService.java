@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -51,15 +52,15 @@ public class MediaStreamService {
 
     return new MediaStream(
       id,
-      resource.parentId().orElse(null),
+      resource.parentId(),
       resource.uri(),
       resource.discoveryTime(),
       resource.lastModificationTime(),
-      resource.size().orElse(null),
+      resource.size(),
       resource.attributes(),
       state,
-      md == null ? (totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null) : md.getLength().orElse(null),
-      md == null ? null : new MediaStructure(md.getVideoTracks(), md.getAudioTracks(), md.getSubtitleTracks()),
+      Optional.ofNullable(md == null ? (totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null) : md.getLength().orElse(null)),
+      Optional.ofNullable(md == null ? null : new MediaStructure(md.getVideoTracks(), md.getAudioTracks(), md.getSubtitleTracks())),
       md == null ? List.of() : md.getSnapshots(),
       match
     );
@@ -72,6 +73,6 @@ public class MediaStreamService {
     boolean watched = stateService.isWatched(contentId);
     Duration resumePosition = Duration.ofSeconds(stateService.getResumePosition(contentId));
 
-    return new State(lastWatchedTime, watched, resumePosition);
+    return new State(Optional.ofNullable(lastWatchedTime), watched, resumePosition);
   }
 }

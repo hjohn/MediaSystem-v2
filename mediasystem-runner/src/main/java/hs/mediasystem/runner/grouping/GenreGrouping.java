@@ -39,7 +39,7 @@ public class GenreGrouping implements Grouping<Work, Object> {
     Map<String, List<Work>> map = new HashMap<>();
 
     for(Work item : items) {
-      for(String genre : item.getDetails().getClassification().getGenres()) {
+      for(String genre : item.getDetails().getClassification().genres()) {
         map.computeIfAbsent(genre, k -> new ArrayList<>()).add(item);
       }
     }
@@ -48,7 +48,7 @@ public class GenreGrouping implements Grouping<Work, Object> {
 
     for(Map.Entry<String, List<Work>> entry : map.entrySet()) {
       Comparator<Work> majorGenreComparator = Comparator.comparing((Work r) -> {
-        int index = r.getDetails().getClassification().getGenres().indexOf(entry.getKey());
+        int index = r.getDetails().getClassification().genres().indexOf(entry.getKey());
 
         return index == -1 ? Integer.MAX_VALUE : index;
       });
@@ -111,7 +111,7 @@ public class GenreGrouping implements Grouping<Work, Object> {
     Reception reception = work.getDetails().getReception().orElse(null);
     LocalDate date = work.getDetails().getReleaseDate().orElse(null);
 
-    if(reception != null && date != null && !Boolean.TRUE.equals(work.getDetails().getClassification().getPornographic())) {
+    if(reception != null && date != null && !Boolean.TRUE.equals(work.getDetails().getClassification().pornographic())) {
       return reception.rating() + date.getYear() * 0.05;
     }
 

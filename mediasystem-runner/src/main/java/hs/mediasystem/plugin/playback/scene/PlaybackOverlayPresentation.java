@@ -90,7 +90,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
     }
 
     public Task<PlaybackOverlayPresentation> create(Work work, MediaStream stream, Duration startPosition) {
-      return create(work, stream, stream.getUri(), startPosition);
+      return create(work, stream, stream.uri(), startPosition);
     }
 
     public Task<PlaybackOverlayPresentation> create(Work work, URI uri, Duration startPosition) {
@@ -114,7 +114,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
     this.startPosition = startPosition;
     this.playerPresentation.set(playerPresentation);
 
-    ContentID contentId = stream == null ? null : stream.getId().getContentId();
+    ContentID contentId = stream == null ? null : stream.id().getContentId();
 
     this.consumptionUpdater = contentId == null ? null : new ConsumptionUpdater(streamStateClient, work, contentId);
 

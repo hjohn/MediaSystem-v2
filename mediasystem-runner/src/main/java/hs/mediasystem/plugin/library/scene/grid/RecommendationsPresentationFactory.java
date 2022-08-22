@@ -27,7 +27,7 @@ public class RecommendationsPresentationFactory extends GridViewPresentationFact
   private static final List<Filter<Work>> STATE_FILTERS = List.of(
     new Filter<>("none", r -> true),
     new Filter<>("available", r -> r.getPrimaryStream().isPresent()),
-    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().isConsumed())
+    new Filter<>("unwatched", r -> r.getPrimaryStream().isPresent() && !r.getState().consumed())
   );
 
   @Inject private WorkClient workClient;

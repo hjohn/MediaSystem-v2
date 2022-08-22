@@ -145,8 +145,8 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     }
 
     HBox timeBox = current.getStreams().stream()
-      .map(MediaStream::getState)
-      .map(hs.mediasystem.ui.api.domain.State::getLastConsumptionTime)
+      .map(MediaStream::state)
+      .map(hs.mediasystem.ui.api.domain.State::lastConsumptionTime)
       .flatMap(Optional::stream)
       .max(Comparator.naturalOrder())
       .map(time -> Containers.hbox(
@@ -157,7 +157,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       .orElse(null);
 
     return Containers.vbox().style("stream-info-panel").mouseTransparent().nodes(
-      stream.getDuration().map(d -> Containers.hbox(
+      stream.duration().map(d -> Containers.hbox(
         "duration-box",
         Labels.create("duration-icon", "🕑"),
         Labels.create("duration-text", SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds()))
@@ -176,7 +176,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
       model.title.set(item.getDetails().getTitle());
       model.annotation1.set(item.getDetails().getSequence().map(this::createSequenceInfo).orElse(null));
       model.imageHandle.set(item.getDetails().getSampleImage().orElse(null));
-      model.status.set(item.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : item.getState().isConsumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
+      model.status.set(item.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : item.getState().consumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
     });
 
     cellFactory.setPlaceHolderAspectRatio(16.0 / 9.0);
@@ -265,7 +265,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           .subscribe(work -> {
             Details details = work.getDetails();
 
-            double percentage = work.getState().isConsumed() ? 1.0 : work.getWatchedFraction().orElse(-1);
+            double percentage = work.getState().consumed() ? 1.0 : work.getWatchedFraction().orElse(-1);
 
             Model model = pane.model;
 
@@ -294,13 +294,13 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
   }
 
   private String createSequenceInfo(Sequence sequence) {
-    if(sequence.getType() == Type.SPECIAL) {
-      return "Special " + sequence.getNumber();
+    if(sequence.type() == Type.SPECIAL) {
+      return "Special " + sequence.number();
     }
-    if(sequence.getType() == Type.EXTRA) {
+    if(sequence.type() == Type.EXTRA) {
       return "Extra";
     }
 
-    return "Ep. " + sequence.getNumber();
+    return "Ep. " + sequence.number();
   }
 }

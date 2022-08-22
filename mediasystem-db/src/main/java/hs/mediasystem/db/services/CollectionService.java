@@ -55,8 +55,8 @@ public class CollectionService {
 
       collections.add(new Collection(
         collectionDefinition.title(),
-        uris.isEmpty() ? null : new ImageURI("multi:landscape:" + uris, null),
-        backgroundImage.orElse(null),
+        Optional.ofNullable(uris.isEmpty() ? null : new ImageURI("multi:landscape:" + uris, null)),
+        backgroundImage,
         collectionDefinition
       ));
     }
@@ -69,7 +69,7 @@ public class CollectionService {
       Reception reception = production.getReception();
       LocalDate date = production.getDetails().getDate().orElse(null);
 
-      if(reception != null && date != null && !Boolean.TRUE.equals(production.getClassification().getPornographic())) {
+      if(reception != null && date != null && !Boolean.TRUE.equals(production.getClassification().pornographic())) {
         return reception.rating() + date.getYear() * 0.05;
       }
     }

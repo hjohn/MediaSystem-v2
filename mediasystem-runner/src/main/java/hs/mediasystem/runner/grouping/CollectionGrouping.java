@@ -27,23 +27,23 @@ public class CollectionGrouping implements Grouping<Work, Object> {
     List<Object> topLevelItems = new ArrayList<>();
 
     for(Work work : items) {
-      work.getParent().filter(p -> p.getType().equals(MediaType.COLLECTION)).ifPresent(p -> {
-        if(!childWorks.containsKey(p.getId())) {
-          workClient.find(p.getId()).ifPresent(r -> {
-            List<Work> children = workClient.findChildren(p.getId()).stream()
+      work.getParent().filter(p -> p.type().equals(MediaType.COLLECTION)).ifPresent(p -> {
+        if(!childWorks.containsKey(p.id())) {
+          workClient.find(p.id()).ifPresent(r -> {
+            List<Work> children = workClient.findChildren(p.id()).stream()
               .filter(c -> now.isAfter(c.getDetails().getReleaseDate().orElse(LocalDate.MAX)))
               .toList();
 
             if(children.size() > 1) {  // don't bother creating a group when it contains 1 item
-              childWorks.put(p.getId(), children);
+              childWorks.put(p.id(), children);
 
-              topLevelItems.add(createWorkGroup(r, childWorks.get(p.getId()), now));
+              topLevelItems.add(createWorkGroup(r, childWorks.get(p.id()), now));
             }
           });
         }
       });
 
-      if(work.getParent().filter(p -> childWorks.containsKey(p.getId())).isEmpty()) {
+      if(work.getParent().filter(p -> childWorks.containsKey(p.id())).isEmpty()) {
         topLevelItems.add(work);
       }
     }

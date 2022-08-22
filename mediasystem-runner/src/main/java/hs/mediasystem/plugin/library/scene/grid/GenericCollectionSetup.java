@@ -43,11 +43,11 @@ public class GenericCollectionSetup extends AbstractSetup<Work, Object, GenericC
       model.imageHandle.set(work.getDetails().getAnyCover().orElse(null));
       model.annotation1.set(work.getDetails().getSequence().map(this::createSequenceInfo).orElseGet(() -> work.getDetails().getYearRange()));
       model.annotation2.set(work.getParent()
-        .filter(p -> p.getType().equals(MediaType.COLLECTION))
-        .map(Parent::getName)
+        .filter(p -> p.type().equals(MediaType.COLLECTION))
+        .map(Parent::title)
         .orElse("")
       );
-      model.status.set(work.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : work.getState().isConsumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
+      model.status.set(work.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : work.getState().consumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);
     }
     else if(item instanceof WorksGroup wg) {
       model.title.set(wg.getDetails().getTitle());
@@ -61,14 +61,14 @@ public class GenericCollectionSetup extends AbstractSetup<Work, Object, GenericC
   }
 
   private String createSequenceInfo(Sequence sequence) {
-    if(sequence.getType() == Type.SPECIAL) {
-      return "Special " + sequence.getNumber();
+    if(sequence.type() == Type.SPECIAL) {
+      return "Special " + sequence.number();
     }
-    if(sequence.getType() == Type.EXTRA) {
-      return "Extra " + sequence.getNumber();
+    if(sequence.type() == Type.EXTRA) {
+      return "Extra " + sequence.number();
     }
 
-    return "Ep. " + sequence.getNumber();
+    return "Ep. " + sequence.number();
   }
 
   private static String toYearRange(WorksGroup wg) {

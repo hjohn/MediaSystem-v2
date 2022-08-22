@@ -153,8 +153,8 @@ public class Details {
       return "Unknown";
     }
 
-    Stage stage = getClassification().getStage().orElse(null);
-    LocalDate lastAirDate = getSerie().flatMap(Serie::getLastAirDate).orElse(null);
+    Stage stage = getClassification().stage().orElse(null);
+    LocalDate lastAirDate = getSerie().flatMap(Serie::lastAirDate).orElse(null);
 
     if(stage == Stage.ENDED && lastAirDate != null && lastAirDate.getYear() != date.getYear()) {
       return date.getYear() + " - " + lastAirDate.getYear();

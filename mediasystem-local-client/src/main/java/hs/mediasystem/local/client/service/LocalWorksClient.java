@@ -75,7 +75,7 @@ public class LocalWorksClient implements WorksClient {
     return parent == null ? null : new Parent(
       parent.id(),
       parent.title(),
-      parent.backdrop().map(imageHandleFactory::fromURI).orElse(null)
+      parent.backdrop().map(imageHandleFactory::fromURI)
     );
   }
 
@@ -118,27 +118,27 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static ImageURI snapshotsToCover(MediaStream mediaStream) {
-    int id = mediaStream.getId().getContentId().asInt();
+    int id = mediaStream.id().getContentId().asInt();
 
-    return mediaStream.getMediaStructure()
+    return mediaStream.mediaStructure()
       .filter(ms -> !ms.videoTracks().isEmpty())
       .map(ms -> new ImageURI("multi:600,900;38,3,524,294;38,303,524,294;38,603,524,294:localdb://" + id + "/1|localdb://" + id + "/2|localdb://" + id + "/3", null))
       .orElse(null);
   }
 
   private static ImageURI snapshotsToSampleImage(MediaStream mediaStream) {
-    int id = mediaStream.getId().getContentId().asInt();
+    int id = mediaStream.id().getContentId().asInt();
 
-    return mediaStream.getMediaStructure()
+    return mediaStream.mediaStructure()
       .filter(ms -> !ms.videoTracks().isEmpty())
       .map(ms -> new ImageURI("localdb://" + id + "/1", null))
       .orElse(null);
   }
 
   private static ImageURI snapshotsToBackdrop(MediaStream mediaStream) {
-    int id = mediaStream.getId().getContentId().asInt();
+    int id = mediaStream.id().getContentId().asInt();
 
-    return mediaStream.getMediaStructure()
+    return mediaStream.mediaStructure()
       .filter(ms -> !ms.videoTracks().isEmpty())
       .map(ms -> new ImageURI("localdb://" + id + "/2", null))
       .orElse(null);
@@ -146,9 +146,9 @@ public class LocalWorksClient implements WorksClient {
 
   private static State toState(hs.mediasystem.domain.work.State state) {
     return new State(
-      state.getLastConsumptionTime().orElse(null),
-      state.isConsumed(),
-      state.getResumePosition()
+      state.lastConsumptionTime(),
+      state.consumed(),
+      state.resumePosition()
     );
   }
 
@@ -156,12 +156,12 @@ public class LocalWorksClient implements WorksClient {
     hs.mediasystem.ext.basicmediatypes.domain.Classification c = production.getClassification();
 
     return new Classification(
-      c.getKeywords().stream().map(Keyword::getText).collect(Collectors.toList()),
-      c.getGenres(),
-      c.getLanguages(),
-      c.getContentRatings(),
-      c.getPornographic(),
-      production instanceof Movie m ? toStage(m.getState()) : production instanceof Serie s ? toStage(s.getState()) : null
+      c.keywords().stream().map(Keyword::getText).collect(Collectors.toList()),
+      c.genres(),
+      c.languages(),
+      c.contentRatings(),
+      c.pornographic(),
+      Optional.ofNullable(production instanceof Movie m ? toStage(m.getState()) : production instanceof Serie s ? toStage(s.getState()) : null)
     );
   }
 
@@ -182,9 +182,9 @@ public class LocalWorksClient implements WorksClient {
     List<Season> seasons = serie.getSeasons();
 
     return new hs.mediasystem.ui.api.domain.Serie(
-      serie.getLastAirDate(),
-      seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).count(),
-      seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count()
+      Optional.ofNullable(serie.getLastAirDate()),
+      Optional.ofNullable(seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).count()),
+      Optional.ofNullable(seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count())
     );
   }
 
@@ -192,7 +192,7 @@ public class LocalWorksClient implements WorksClient {
     return new Sequence(
       episode.getSeasonNumber() == 0 ? Type.SPECIAL : Type.EPISODE,
       episode.getNumber(),
-      episode.getSeasonNumber() <= 0 ? null : episode.getSeasonNumber()
+      Optional.ofNullable(episode.getSeasonNumber() <= 0 ? null : episode.getSeasonNumber())
     );
   }
 
@@ -201,23 +201,23 @@ public class LocalWorksClient implements WorksClient {
       return createSequence(episode);
     }
 
-    return new Sequence(Type.EXTRA, 0, null);
+    return new Sequence(Type.EXTRA, 0, Optional.empty());
   }
 
   private static MediaStream toStream(hs.mediasystem.domain.work.MediaStream stream) {
     return new MediaStream(
-      stream.getId(),
-      stream.getParentId().orElse(null),
-      stream.getUri(),
-      stream.getDiscoveryTime(),
-      stream.getLastModificationTime(),
-      stream.getSize().orElse(null),
-      stream.getAttributes(),
-      toState(stream.getState()),
-      stream.getDuration().orElse(null),
-      stream.getMediaStructure().orElse(null),
-      stream.getSnapshots(),
-      stream.getMatch()
+      stream.id(),
+      stream.parentId(),
+      stream.uri(),
+      stream.discoveryTime(),
+      stream.lastModificationTime(),
+      stream.size(),
+      stream.attributes(),
+      toState(stream.state()),
+      stream.duration(),
+      stream.mediaStructure(),
+      stream.snapshots(),
+      stream.match()
     );
   }
 }

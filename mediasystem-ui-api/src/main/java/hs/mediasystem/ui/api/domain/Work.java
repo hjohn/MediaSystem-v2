@@ -15,7 +15,7 @@ public class Work {
   public static final Comparator<Work> BY_SUBTITLE = Comparator.comparing(Work::getDetails, Comparator.comparing(d -> d.getSubtitle().orElse(null), Comparator.nullsLast(NaturalLanguage.ALPHABETICAL)));
   public static final Comparator<Work> BY_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE);
   public static final Comparator<Work> BY_REVERSE_RELEASE_DATE = Comparator.comparing(Work::getDetails, Details.RELEASE_DATE_REVERSED);
-  public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.getLastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
+  public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.lastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
 
   private final WorkId id;
   private final MediaType type;
@@ -68,7 +68,7 @@ public class Work {
   }
 
   public State getState() {
-    return primaryStream.map(MediaStream::getState).orElse(State.EMPTY);
+    return primaryStream.map(MediaStream::state).orElse(State.EMPTY);
   }
 
   /**
@@ -80,13 +80,13 @@ public class Work {
    */
   public OptionalDouble getWatchedFraction() {
     return primaryStream
-      .map(s -> s.getDuration().map(d -> s.getState().getResumePosition().toSeconds() / (double)d.toSeconds()).orElse(0.0))
+      .map(s -> s.duration().map(d -> s.state().resumePosition().toSeconds() / (double)d.toSeconds()).orElse(0.0))
       .map(OptionalDouble::of)
       .orElse(OptionalDouble.empty());
   }
 
   public boolean isWatched() {
-    return getState().isConsumed();
+    return getState().consumed();
   }
 
   public List<MediaStream> getStreams() {
@@ -109,7 +109,7 @@ public class Work {
     MediaStream bestStream = null;
 
     for(MediaStream stream : streams) {
-      if(bestStream == null || stream.getState().getLastConsumptionTime().orElse(Instant.MIN).isAfter(bestStream.getState().getLastConsumptionTime().orElse(Instant.MIN))) {
+      if(bestStream == null || stream.state().lastConsumptionTime().orElse(Instant.MIN).isAfter(bestStream.state().lastConsumptionTime().orElse(Instant.MIN))) {
         bestStream = stream;
       }
     }

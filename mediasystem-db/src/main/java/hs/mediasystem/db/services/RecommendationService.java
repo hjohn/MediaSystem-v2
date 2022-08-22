@@ -43,8 +43,8 @@ public class RecommendationService {
     return streamStateProvider.map(stream -> stream
       .map(StreamState::getContentID)
       .flatMap(cid -> linkedResourcesService.findFirst(cid).map(mediaStreamService::toMediaStream).stream())
-      .filter(ms -> ms.getState().getLastConsumptionTime().isPresent())  // this check could be done earlier as stream state should have this information already
-      .sorted(Comparator.comparing((MediaStream ms) -> ms.getState().getLastConsumptionTime().orElseThrow()).reversed())
+      .filter(ms -> ms.state().lastConsumptionTime().isPresent())  // this check could be done earlier as stream state should have this information already
+      .sorted(Comparator.comparing((MediaStream ms) -> ms.state().lastConsumptionTime().orElseThrow()).reversed())
       .map(this::toPartiallyWatchedOrNextUnwatchedRecommendation)
       .flatMap(Optional::stream)
       .filter(r -> r.work().getType().isPlayable())  // doubtful this check does anything at this point
@@ -68,11 +68,11 @@ public class RecommendationService {
   private Recommendation toNewRecommendation(Work work) {
     MediaStream stream = work.getPrimaryStream().orElseThrow();
 
-    return new Recommendation(stream.getDiscoveryTime(), work);
+    return new Recommendation(stream.discoveryTime(), work);
   }
 
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(MediaStream stream) {
-    StreamID parentId = stream.getParentId().orElse(null);
+    StreamID parentId = stream.parentId().orElse(null);
 
     if(parentId == null) {
       return toProductionRecommendation(stream);
@@ -82,14 +82,14 @@ public class RecommendationService {
   }
 
   private Optional<Recommendation> toProductionRecommendation(MediaStream stream) {
-    State state = stream.getState();
-    Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
+    State state = stream.state();
+    Instant lastWatchedTime = state.lastConsumptionTime().orElseThrow();
 
-    if(state.isConsumed()) {
+    if(state.consumed()) {
       // TODO Must be a movie, find collection for "next"
     }
-    else if(!state.getResumePosition().isZero()) {  // Partially watched movie
-      return workService.findFirst(stream.getId())
+    else if(!state.resumePosition().isZero()) {  // Partially watched movie
+      return workService.findFirst(stream.id())
         .map(w -> new Recommendation(lastWatchedTime, w));
     }
 
@@ -97,22 +97,22 @@ public class RecommendationService {
   }
 
   private Optional<Recommendation> toEpisodeRecommendation(MediaStream stream) {
-    StreamID parentId = stream.getParentId().orElseThrow(() -> new IllegalArgumentException("stream must represent an episode: " + stream));
-    State state = stream.getState();
+    StreamID parentId = stream.parentId().orElseThrow(() -> new IllegalArgumentException("stream must represent an episode: " + stream));
+    State state = stream.state();
 
-    boolean watched = state.isConsumed();
-    Duration position = state.getResumePosition();
-    Instant lastWatchedTime = state.getLastConsumptionTime().orElseThrow();
+    boolean watched = state.consumed();
+    Duration position = state.resumePosition();
+    Instant lastWatchedTime = state.lastConsumptionTime().orElseThrow();
 
     return findBestDescriptor(parentId).filter(Serie.class::isInstance).map(Serie.class::cast).map(serie -> {
-      WorkDescriptor descriptor = findBestDescriptor(stream.getId()).orElse(null);
+      WorkDescriptor descriptor = findBestDescriptor(stream.id()).orElse(null);
 
       if(descriptor instanceof Episode episode && watched) {
         return serie.findNextEpisode(episode)
           .flatMap(nextEpisode -> linkedWorksService.find(nextEpisode.getId())  // Episode to Stream
             .map(mediaStreamService::toMediaStream)
-            .map(ms -> !ms.getState().isConsumed() && ms.getState().getResumePosition().isZero()
-              ? workService.findFirst(ms.getId()).map(w -> new Recommendation(lastWatchedTime, w)).orElse(null)
+            .map(ms -> !ms.state().consumed() && ms.state().resumePosition().isZero()
+              ? workService.findFirst(ms.id()).map(w -> new Recommendation(lastWatchedTime, w)).orElse(null)
               : null
             )
           )
@@ -120,7 +120,7 @@ public class RecommendationService {
       }
 
       if(!position.isZero()) {
-        return workService.findFirst(stream.getId())
+        return workService.findFirst(stream.id())
           .map(w -> new Recommendation(lastWatchedTime, w))
           .orElse(null);
       }

@@ -130,7 +130,7 @@ public class WorkService {
     query(id).stream()
       .map(Work::getStreams)
       .flatMap(Collection::stream)
-      .map(MediaStream::getId)
+      .map(MediaStream::id)
       .forEach(updateService::reidentifyStream);
   }
 

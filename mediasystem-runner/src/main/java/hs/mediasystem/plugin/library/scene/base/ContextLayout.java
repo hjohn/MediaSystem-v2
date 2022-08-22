@@ -57,21 +57,21 @@ public class ContextLayout {
     BasePanel panel = create(work.getDetails());
 
     if(work.getType().isComponent()) {
-      work.getParent().map(Parent::getName).ifPresent(panel.groupTitle::set);
+      work.getParent().map(Parent::title).ifPresent(panel.groupTitle::set);
     }
 
-    panel.subtitle.set(work.getDetails().getClassification().getGenres().stream().collect(Collectors.joining(" / ")));
+    panel.subtitle.set(work.getDetails().getClassification().genres().stream().collect(Collectors.joining(" / ")));
     work.getDetails().getReception().ifPresent(reception -> setReception(panel.rating, reception));
 
     // Add season and episode number:
-    Optional<Sequence> seq = work.getDetails().getSequence().filter(s -> s.getType().equals(Type.EPISODE));
+    Optional<Sequence> seq = work.getDetails().getSequence().filter(s -> s.type().equals(Type.EPISODE));
 
-    seq.map(Sequence::getNumber).map(Object::toString).ifPresent(panel.episodeNumber::set);
-    seq.flatMap(Sequence::getSeasonNumber).map(Object::toString).ifPresent(panel.season::set);
+    seq.map(Sequence::number).map(Object::toString).ifPresent(panel.episodeNumber::set);
+    seq.flatMap(Sequence::seasonNumber).map(Object::toString).ifPresent(panel.season::set);
 
     // Add total seasons and episodes:
-    work.getDetails().getSerie().flatMap(Serie::getTotalEpisodes).ifPresent(episodeCount -> {
-      panel.totalEpisodes.set("" + episodeCount + work.getDetails().getSerie().flatMap(Serie::getTotalSeasons).map(seasonCount -> " (" + seasonCount + " seasons)").orElse(""));
+    work.getDetails().getSerie().flatMap(Serie::totalEpisodes).ifPresent(episodeCount -> {
+      panel.totalEpisodes.set("" + episodeCount + work.getDetails().getSerie().flatMap(Serie::totalSeasons).map(seasonCount -> " (" + seasonCount + " seasons)").orElse(""));
     });
 
     return panel;
@@ -94,7 +94,7 @@ public class ContextLayout {
       Map<String, Long> genreCounts = wg.getChildren().stream()
         .map(Work::getDetails)
         .map(Details::getClassification)
-        .map(Classification::getGenres)
+        .map(Classification::genres)
         .flatMap(Collection::stream)
         .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 

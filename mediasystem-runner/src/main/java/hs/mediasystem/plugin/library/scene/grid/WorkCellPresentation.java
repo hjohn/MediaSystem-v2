@@ -30,7 +30,7 @@ public class WorkCellPresentation implements Presentation {
     Object obj = selectedItem.getValue();
 
     if(obj instanceof Work work && work.getType().isPlayable() && !work.getStreams().isEmpty()) {
-      ContentID contentId = work.getPrimaryStream().orElseThrow().getId().getContentId();
+      ContentID contentId = work.getPrimaryStream().orElseThrow().id().getContentId();
       BooleanProperty property = new SimpleBooleanProperty(streamStateClient.isConsumed(contentId));
 
       property.addListener((ov, old, current) -> {

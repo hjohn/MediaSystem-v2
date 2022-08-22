@@ -29,11 +29,11 @@ public class Production extends Release {
   }
 
   public List<String> getLanguages() {
-    return classification.getLanguages();
+    return classification.languages();
   }
 
   public List<String> getGenres() {
-    return classification.getGenres();
+    return classification.genres();
   }
 
   public Classification getClassification() {

@@ -79,8 +79,8 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
     AnnotatedImageCellFactory<Work> cellFactory = new AnnotatedImageCellFactory<>((work, model) -> {
       model.title.set(work.getDetails().getTitle());
       model.subtitle.set(work.getDetails().getSubtitle().orElse(null));
-      model.watchedFraction.set(work.getPrimaryStream().flatMap(MediaStream::getDuration).map(d -> {
-        if(work.getState().isConsumed()) {
+      model.watchedFraction.set(work.getPrimaryStream().flatMap(MediaStream::duration).map(d -> {
+        if(work.getState().consumed()) {
           return 1.0;
         }
 
@@ -88,7 +88,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
           return Double.NaN;
         }
 
-        double fraction = (double)work.getState().getResumePosition().toSeconds() / d.toSeconds();
+        double fraction = (double)work.getState().resumePosition().toSeconds() / d.toSeconds();
 
         if(fraction <= 0) {
           fraction = -1;

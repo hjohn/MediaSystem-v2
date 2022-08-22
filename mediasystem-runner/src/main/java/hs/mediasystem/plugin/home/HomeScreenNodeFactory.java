@@ -173,7 +173,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     ActionListView<Recommendation> mediaGridView = recommendationsNodeFactory.create(presentation);
 
     backdrop.bind(Val.wrap(presentation.selectedItem)
-      .map(r -> r.getWork().getParent().filter(p -> p.getType().isSerie()).flatMap(Parent::getBackdrop).or(() -> r.getWork().getDetails().getBackdrop()).orElse(null))
+      .map(r -> r.work().getParent().filter(p -> p.type().isSerie()).flatMap(Parent::backdrop).or(() -> r.work().getDetails().getBackdrop()).orElse(null))
     );
 
     return mediaGridView;
@@ -182,12 +182,12 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   private ActionListView<Collection> createCollectionView(ObjectProperty<ImageHandle> backdrop) {
     ActionListView<Collection> mediaGridView = new HorizontalCarousel<>(
       collectionClient.findCollections(),
-      e -> PresentationLoader.navigate(e, () -> collectionPresentationProvider.createPresentation(e.getItem().getDefinition().type(), e.getItem().getDefinition().tag())),
+      e -> PresentationLoader.navigate(e, () -> collectionPresentationProvider.createPresentation(e.getItem().definition().type(), e.getItem().definition().tag())),
       new AnnotatedImageCellFactory<>(this::fillCollectionModel)
     );
 
     backdrop.bind(Val.wrap(mediaGridView.getSelectionModel().selectedItemProperty())
-      .map(c -> c.getBackdrop().orElse(null))
+      .map(c -> c.backdrop().orElse(null))
       .map(imageHandleFactory::fromURI)
     );
 
@@ -199,7 +199,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     ActionListView<NewItemsPresentation.Item> mediaGridView = newItemsNodeFactory.create(presentation);
 
     backdrop.bind(Val.wrap(presentation.selectedItem)
-      .map(item -> item.recommendation.getWork().getParent().filter(p -> p.getType().isSerie()).flatMap(Parent::getBackdrop).or(() -> item.recommendation.getWork().getDetails().getBackdrop()).orElse(null))
+      .map(item -> item.recommendation.work().getParent().filter(p -> p.type().isSerie()).flatMap(Parent::backdrop).or(() -> item.recommendation.work().getDetails().getBackdrop()).orElse(null))
     );
 
     return mediaGridView;
@@ -294,10 +294,10 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
   private void fillCollectionModel(Collection collection, AnnotatedImageCellFactory.Model model) {
     model.parentTitle.set(null);
-    model.title.set(collection.getTitle());
+    model.title.set(collection.title());
     model.subtitle.set(null);
     model.sequence.set(null);
-    model.imageHandle.set(collection.getCover().map(imageHandleFactory::fromURI).orElse(null));
+    model.imageHandle.set(collection.cover().map(imageHandleFactory::fromURI).orElse(null));
     model.watchedFraction.set(-1);
     model.age.set(null);
   }

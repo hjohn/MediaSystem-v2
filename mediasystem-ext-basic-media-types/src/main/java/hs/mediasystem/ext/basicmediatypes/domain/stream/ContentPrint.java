@@ -23,10 +23,19 @@ import java.util.Objects;
 public class ContentPrint {
   private final ContentID id;  // an identifier that never changes for this particular ContentPrint
   private final Long size;
-  private final byte[] hash;
+  private final byte[] hash;  // be careful when converting this to a record, need frozen arrays or a wrapper
   private final long lastModificationTime;
   private final Instant signatureCreationTime;
 
+  /**
+   * Constructs a new instance.
+   *
+   * @param id an identifier that never changes for this particular ContentPrint, never {@code null}
+   * @param size a size, can be {@code null}
+   * @param lastModificationTime a last modification time in milliseconds
+   * @param hash a hash, never {@code null}
+   * @param signatureCreationTime an {@link Instant}, never {@code null}
+   */
   public ContentPrint(ContentID id, Long size, long lastModificationTime, byte[] hash, Instant signatureCreationTime) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");

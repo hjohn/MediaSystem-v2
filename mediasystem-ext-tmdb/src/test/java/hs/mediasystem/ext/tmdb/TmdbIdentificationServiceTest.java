@@ -44,8 +44,8 @@ public class TmdbIdentificationServiceTest {
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5")), null).get();
 
-    assertEquals(0.77, identification.getMatch().getAccuracy(), 0.01f);
-    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
+    assertEquals(0.77, identification.getMatch().accuracy(), 0.01f);
+    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().type());
     assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80000"), identification.getPrimaryWorkId());
   }
 
@@ -55,8 +55,8 @@ public class TmdbIdentificationServiceTest {
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")), null).get();
 
-    assertEquals(1.0, identification.getMatch().getAccuracy(), 0.01f);
-    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
+    assertEquals(1.0, identification.getMatch().accuracy(), 0.01f);
+    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().type());
     assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 
@@ -66,8 +66,8 @@ public class TmdbIdentificationServiceTest {
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")), null).get();
 
-    assertEquals(0.470, identification.getMatch().getAccuracy(), 0.01f);
-    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
+    assertEquals(0.470, identification.getMatch().accuracy(), 0.01f);
+    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().type());
     assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 
@@ -80,8 +80,8 @@ public class TmdbIdentificationServiceTest {
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.ALTERNATIVE_TITLE, "Admiral, The", Attribute.YEAR, "2015")), null).get();
 
-    assertEquals(1.0, identification.getMatch().getAccuracy(), 0.01f);
-    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().getType());
+    assertEquals(1.0, identification.getMatch().accuracy(), 0.01f);
+    assertEquals(Type.NAME_AND_RELEASE_DATE, identification.getMatch().type());
     assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 
@@ -91,8 +91,8 @@ public class TmdbIdentificationServiceTest {
 
     Identification identification = service.identify(streamable(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015", Attribute.ID_PREFIX + "IMDB", "12345")), null).get();
 
-    assertEquals(1.0, identification.getMatch().getAccuracy(), 0.01f);
-    assertEquals(Type.ID, identification.getMatch().getType());
+    assertEquals(1.0, identification.getMatch().accuracy(), 0.01f);
+    assertEquals(Type.ID, identification.getMatch().type());
     assertEquals(new WorkId(DataSources.TMDB, MediaType.MOVIE, "80001"), identification.getPrimaryWorkId());
   }
 

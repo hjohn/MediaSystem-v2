@@ -48,7 +48,7 @@ public class ProductionPresentationFactory {
     ProductionPresentation presentation = new ProductionPresentation();
 
     Work work = queryWork(id);
-    WorkId rootId = work.getType().isComponent() ? work.getParent().map(Parent::getId).orElse(id) : id;
+    WorkId rootId = work.getType().isComponent() ? work.getParent().map(Parent::id).orElse(id) : id;
     WorkId selectedChildId = rootId.equals(id) ? null : id;
     State state = rootId.equals(id) ? State.OVERVIEW : State.EPISODE;
 
@@ -96,7 +96,7 @@ public class ProductionPresentationFactory {
 
     private ProductionPresentation() {
       selectedChild.addListener((obs, old, current) ->
-        current.getParent().ifPresent(p -> settingsSource.storeSetting("last-selected:" + p.getId(), current.getId().toString()))
+        current.getParent().ifPresent(p -> settingsSource.storeSetting("last-selected:" + p.id(), current.getId().toString()))
       );
     }
 
@@ -188,7 +188,7 @@ public class ProductionPresentationFactory {
       Work rootItem = root.get();
 
       if(rootItem.getType().isPlayable() && !rootItem.getStreams().isEmpty()) {
-        ContentID contentId = rootItem.getPrimaryStream().orElseThrow().getId().getContentId();
+        ContentID contentId = rootItem.getPrimaryStream().orElseThrow().id().getContentId();
         BooleanProperty property = new SimpleBooleanProperty(streamStateClient.isConsumed(contentId));
 
         property.addListener((ov, old, current) -> streamStateClient.setConsumed(contentId, current));
@@ -204,7 +204,7 @@ public class ProductionPresentationFactory {
         Work work = selectedChild.getValue();
 
         if(work != null && !work.getStreams().isEmpty()) {
-          ContentID contentId = work.getPrimaryStream().orElseThrow().getId().getContentId();
+          ContentID contentId = work.getPrimaryStream().orElseThrow().id().getContentId();
           BooleanProperty property = new SimpleBooleanProperty(streamStateClient.isConsumed(contentId));
 
           property.addListener((ov, old, current) -> streamStateClient.setConsumed(contentId, current));
@@ -227,11 +227,11 @@ public class ProductionPresentationFactory {
       List<Work> initialWatchedEpisodes;
 
       seasonEpisodes = children.get().stream()
-        .filter(w -> w.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) == currentItem.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0))
+        .filter(w -> w.getDetails().getSequence().flatMap(Sequence::seasonNumber).orElse(0) == currentItem.getDetails().getSequence().flatMap(Sequence::seasonNumber).orElse(0))
         .collect(Collectors.toList());
 
       initialWatchedEpisodes = seasonEpisodes.stream()
-        .filter(w -> w.getState().isConsumed())
+        .filter(w -> w.getState().consumed())
         .collect(Collectors.toList());
 
       Property<Boolean> seasonWatchedProperty = new SimpleObjectProperty<>();
@@ -242,7 +242,7 @@ public class ProductionPresentationFactory {
       seasonWatchedProperty.addListener((obs, old, current) -> {
         for(Work episode : seasonEpisodes) {
           streamStateClient.setConsumed(
-            episode.getPrimaryStream().orElseThrow().getId().getContentId(),
+            episode.getPrimaryStream().orElseThrow().id().getContentId(),
             current == null ? initialWatchedEpisodes.contains(episode) : Boolean.TRUE.equals(current)
           );
         }
@@ -263,7 +263,7 @@ public class ProductionPresentationFactory {
    * @return a value indicating whether the item is watched, partially watched, unwatched or missing
    */
   private static double getWatchedFraction(Work rootItem, List<Work> episodeItems) {
-    boolean rootWatched = rootItem.getState().isConsumed();
+    boolean rootWatched = rootItem.getState().consumed();
     boolean rootMissing = rootItem.getStreams().isEmpty();
 
     if(rootWatched) {
@@ -276,20 +276,20 @@ public class ProductionPresentationFactory {
 
     if(rootItem.getType().isPlayable()) {
       Integer totalDuration = rootItem.getPrimaryStream()
-        .flatMap(ms -> ms.getDuration().map(d -> (int)d.toSeconds()))
+        .flatMap(ms -> ms.duration().map(d -> (int)d.toSeconds()))
         .orElse(null);
 
-      return totalDuration == null ? 0.0 : rootItem.getState().getResumePosition().toSeconds() / (double)totalDuration;
+      return totalDuration == null ? 0.0 : rootItem.getState().resumePosition().toSeconds() / (double)totalDuration;
     }
 
     if(rootItem.getType().isSerie()) {
       long totalWatched = episodeItems.stream()
-        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
-        .filter(i -> i.getState().isConsumed())
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::seasonNumber).orElse(0) > 0)
+        .filter(i -> i.getState().consumed())
         .count();
 
       long total = episodeItems.stream()
-        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::seasonNumber).orElse(0) > 0)
         .count();
 
       return totalWatched / (double)total;
@@ -299,17 +299,17 @@ public class ProductionPresentationFactory {
   }
 
   private static double getMissingFraction(Work rootItem, List<Work> episodeItems) {
-    boolean rootWatched = rootItem.getState().isConsumed();
+    boolean rootWatched = rootItem.getState().consumed();
     boolean rootMissing = rootItem.getStreams().isEmpty();
 
     if(rootItem.getType().isSerie() && !rootWatched && !rootMissing) {
       long totalMissingUnwatched = episodeItems.stream()
-        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
-        .filter(i -> i.getStreams().isEmpty() && !i.getState().isConsumed())
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::seasonNumber).orElse(0) > 0)
+        .filter(i -> i.getStreams().isEmpty() && !i.getState().consumed())
         .count();
 
       long total = episodeItems.stream()
-        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::getSeasonNumber).orElse(0) > 0)
+        .filter(i -> i.getDetails().getSequence().flatMap(Sequence::seasonNumber).orElse(0) > 0)
         .count();
 
       return totalMissingUnwatched / (double)total;

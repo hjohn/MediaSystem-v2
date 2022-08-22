@@ -56,36 +56,36 @@ public class NewItemsPresentation {
      */
 
     for(Recommendation recommendation : recommendations) {
-      Work work = recommendation.getWork();
+      Work work = recommendation.work();
       Sequence sequence = work.getDetails().getSequence().orElse(null);
       Parent parent = work.getParent().orElse(null);
-      boolean hasParent = recommendation.getWork().getType().isComponent();
+      boolean hasParent = recommendation.work().getType().isComponent();
 
       if(!hasParent || parent == null || sequence == null) {
         groupedMap.put(work.getId().toString(), new ConsolidatedNewItem(recommendation));
       }
       else {
-        ConsolidatedNewItem item = groupedMap.computeIfAbsent(parent.getId().toString(), k -> new ConsolidatedNewItem(recommendation));
+        ConsolidatedNewItem item = groupedMap.computeIfAbsent(parent.id().toString(), k -> new ConsolidatedNewItem(recommendation));
 
-        if(sequence.getType() == Type.EPISODE) {
+        if(sequence.type() == Type.EPISODE) {
           item.episodes++;
-          item.seasonCounts.merge(sequence.getSeasonNumber().orElse(0), 1, (a, b) -> a + b);
+          item.seasonCounts.merge(sequence.seasonNumber().orElse(0), 1, (a, b) -> a + b);
         }
-        else if(sequence.getType() == Type.SPECIAL) {
+        else if(sequence.type() == Type.SPECIAL) {
           item.specials++;
         }
         else {
           item.extras++;
         }
 
-        if(Sequence.COMPARATOR.compare(sequence, item.recommendation.getWork().getDetails().getSequence().orElseThrow()) < 0) {
+        if(Sequence.COMPARATOR.compare(sequence, item.recommendation.work().getDetails().getSequence().orElseThrow()) < 0) {
           item.recommendation = recommendation;
         }
       }
     }
 
     return groupedMap.values().stream()
-      .sorted(Comparator.comparing((ConsolidatedNewItem cni) -> cni.recommendation.getSampleTime()).reversed())
+      .sorted(Comparator.comparing((ConsolidatedNewItem cni) -> cni.recommendation.sampleTime()).reversed())
       .map(NewItemsPresentation::toItem)
       .collect(Collectors.toList());
   }
@@ -97,12 +97,12 @@ public class NewItemsPresentation {
       return toItem(recommendation);
     }
 
-    Work work = recommendation.getWork();
+    Work work = recommendation.work();
 
     return new Item(
       recommendation,
       null,
-      work.getParent().orElseThrow().getName(),
+      work.getParent().orElseThrow().title(),
       createSubtitle(item)
     );
   }
@@ -147,13 +147,13 @@ public class NewItemsPresentation {
   }
 
   private static Item toItem(Recommendation recommendation) {
-    boolean hasParent = recommendation.getWork().getType().isComponent();
+    boolean hasParent = recommendation.work().getType().isComponent();
 
     return new Item(
       recommendation,
-      hasParent ? recommendation.getWork().getParent().map(p -> p.getName()).orElse(null) : null,
-      recommendation.getWork().getDetails().getTitle(),
-      !hasParent ? recommendation.getWork().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null) : null
+      hasParent ? recommendation.work().getParent().map(Parent::title).orElse(null) : null,
+      recommendation.work().getDetails().getTitle(),
+      !hasParent ? recommendation.work().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null) : null
     );
   }
 
