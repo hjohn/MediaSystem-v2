@@ -135,8 +135,8 @@ public class ContextLayout {
   }
 
   private static void setReception(StringProperty rating, Reception reception) {
-    if(reception != null && reception.getVoteCount() > 0) {
-      rating.set(String.format("%.1f (%d votes)", reception.getRating(), reception.getVoteCount()));
+    if(reception != null && reception.voteCount() > 0) {
+      rating.set(String.format("%.1f (%d votes)", reception.rating(), reception.voteCount()));
     }
   }
 

@@ -47,7 +47,7 @@ public class RecommendationService {
       .sorted(Comparator.comparing((MediaStream ms) -> ms.getState().getLastConsumptionTime().orElseThrow()).reversed())
       .map(this::toPartiallyWatchedOrNextUnwatchedRecommendation)
       .flatMap(Optional::stream)
-      .filter(r -> r.getWork().getType().isPlayable())  // doubtful this check does anything at this point
+      .filter(r -> r.work().getType().isPlayable())  // doubtful this check does anything at this point
       .limit(maximum)
       .collect(Collectors.toList())
     );

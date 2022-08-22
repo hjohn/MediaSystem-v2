@@ -182,7 +182,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
   private ActionListView<Collection> createCollectionView(ObjectProperty<ImageHandle> backdrop) {
     ActionListView<Collection> mediaGridView = new HorizontalCarousel<>(
       collectionClient.findCollections(),
-      e -> PresentationLoader.navigate(e, () -> collectionPresentationProvider.createPresentation(e.getItem().getDefinition().getType(), e.getItem().getDefinition().getTag())),
+      e -> PresentationLoader.navigate(e, () -> collectionPresentationProvider.createPresentation(e.getItem().getDefinition().type(), e.getItem().getDefinition().tag())),
       new AnnotatedImageCellFactory<>(this::fillCollectionModel)
     );
 

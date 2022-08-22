@@ -69,7 +69,7 @@ public class RecommendationServiceIT extends DatabaseConfig {
 
     @Test
     void shouldReturnExpectedResults() {
-      assertThat(recommendationService.findRecommendations(10)).extracting(e -> e.getWork().getDetails().getTitle()).containsExactly(
+      assertThat(recommendationService.findRecommendations(10)).extracting(e -> e.work().getDetails().getTitle()).containsExactly(
         "Terminator",
         "Back to the Future"
       );

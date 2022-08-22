@@ -29,8 +29,8 @@ public class LocalRecommendationClient implements RecommendationClient {
 
   private Recommendation toRecommendation(hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation r) {
     return new Recommendation(
-      worksClient.toWork(r.getWork()),
-      r.getInstant()
+      worksClient.toWork(r.work()),
+      r.instant()
     );
   }
 }

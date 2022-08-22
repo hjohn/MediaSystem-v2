@@ -112,7 +112,7 @@ public class GenreGrouping implements Grouping<Work, Object> {
     LocalDate date = work.getDetails().getReleaseDate().orElse(null);
 
     if(reception != null && date != null && !Boolean.TRUE.equals(work.getDetails().getClassification().getPornographic())) {
-      return reception.getRating() + date.getYear() * 0.05;
+      return reception.rating() + date.getYear() * 0.05;
     }
 
     return Double.NEGATIVE_INFINITY;

@@ -105,7 +105,7 @@ public class CollectionLocationManager {
 
   public List<CollectionDefinition> getCollectionDefinitions(String type) {
     return collectionDefinitions.stream()
-      .filter(cd -> cd.getType().equals(type))
+      .filter(cd -> cd.type().equals(type))
       .collect(Collectors.toList());
   }
 

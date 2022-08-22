@@ -126,7 +126,7 @@ public class EpisodePane extends HBox {
     reception.addListener((obs, old, current) -> {
       starRating.setVisible(current != null);
       starRating.setManaged(current != null);
-      starRating.setRating(current == null ? 0.0 : current.getRating() / 10);
+      starRating.setRating(current == null ? 0.0 : current.rating() / 10);
     });
 
     return starRating;

@@ -33,8 +33,8 @@ public class CollectionService {
     List<Collection> collections = new ArrayList<>();
 
     for(CollectionDefinition collectionDefinition : manager.getCollectionDefinitions()) {
-      MediaType mediaType = MediaType.valueOf(collectionDefinition.getType().toUpperCase());
-      List<Work> works = worksService.findAllByType(mediaType, collectionDefinition.getTag());
+      MediaType mediaType = MediaType.valueOf(collectionDefinition.type().toUpperCase());
+      List<Work> works = worksService.findAllByType(mediaType, collectionDefinition.tag());
       Collections.sort(works, WEIGHTED_RATING_COMPARATOR);
 
       String uris = works.stream()
@@ -54,7 +54,7 @@ public class CollectionService {
         .findFirst();
 
       collections.add(new Collection(
-        collectionDefinition.getTitle(),
+        collectionDefinition.title(),
         uris.isEmpty() ? null : new ImageURI("multi:landscape:" + uris, null),
         backgroundImage.orElse(null),
         collectionDefinition
@@ -70,7 +70,7 @@ public class CollectionService {
       LocalDate date = production.getDetails().getDate().orElse(null);
 
       if(reception != null && date != null && !Boolean.TRUE.equals(production.getClassification().getPornographic())) {
-        return reception.getRating() + date.getYear() * 0.05;
+        return reception.rating() + date.getYear() * 0.05;
       }
     }
 

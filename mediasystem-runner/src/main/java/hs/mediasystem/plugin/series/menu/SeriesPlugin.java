@@ -26,8 +26,8 @@ public class SeriesPlugin implements Plugin {
     for(Collection collection : collectionClient.findCollections()) {
       CollectionDefinition collectionDefinition = collection.getDefinition();
 
-      if(collectionDefinition.getType().equalsIgnoreCase("serie")) {
-        menuItems.add(new MenuItem(collectionDefinition.getTitle(), null, () -> collectionType.createPresentation(collectionDefinition.getTag())));
+      if(collectionDefinition.type().equalsIgnoreCase("serie")) {
+        menuItems.add(new MenuItem(collectionDefinition.title(), null, () -> collectionType.createPresentation(collectionDefinition.tag())));
       }
     }
 

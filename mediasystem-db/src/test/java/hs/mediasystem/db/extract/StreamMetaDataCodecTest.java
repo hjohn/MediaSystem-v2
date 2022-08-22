@@ -54,10 +54,10 @@ public class StreamMetaDataCodecTest {
 
     assertEquals(new ContentID(120), metaData.getContentId());
     assertEquals(Optional.of(Duration.ofSeconds(999)), metaData.getLength());
-    assertEquals("title", metaData.getVideoTracks().get(0).getTitle());
-    assertEquals("mp3", metaData.getAudioTracks().get(0).getCodec());
-    assertEquals("srt", metaData.getSubtitleTracks().get(0).getCodec());
-    assertEquals(new ImageURI("localdb://12345/1", null), metaData.getSnapshots().get(0).getImageUri());
+    assertEquals("title", metaData.getVideoTracks().get(0).title());
+    assertEquals("mp3", metaData.getAudioTracks().get(0).codec());
+    assertEquals("srt", metaData.getSubtitleTracks().get(0).codec());
+    assertEquals(new ImageURI("localdb://12345/1", null), metaData.getSnapshots().get(0).imageUri());
   }
 
 }

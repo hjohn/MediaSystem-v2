@@ -1,15 +1,18 @@
 package hs.mediasystem.domain.work;
 
-public class VideoLink {
+/**
+ * Represents a link to a video.
+ *
+ * @param type the {@link Type}, can be {@code null} if unknown
+ * @param name a name, cannot be {@code null}
+ * @param site a site, cannot be {@code null}
+ * @param key a key, cannot be {@code null}
+ * @param size the size, always positive
+ */
+public record VideoLink(Type type, String name, String site, String key, int size) {
   public enum Type {TRAILER, CLIP, TEASER, FEATURETTE}
 
-  private final Type type;
-  private final String name;
-  private final String site;
-  private final String key;
-  private final int size;
-
-  public VideoLink(Type type, String name, String site, String key, int size) {
+  public VideoLink {
     if(name == null) {
       throw new IllegalArgumentException("name cannot be null");
     }
@@ -22,36 +25,5 @@ public class VideoLink {
     if(size <= 0) {
       throw new IllegalArgumentException("size must be positive");
     }
-
-    this.type = type;
-    this.name = name;
-    this.site = site;
-    this.key = key;
-    this.size = size;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Returns the type.
-   *
-   * @return the type, can be null if unknown
-   */
-  public Type getType() {
-    return type;
-  }
-
-  public String getSite() {
-    return site;
-  }
-
-  public String getKey() {
-    return key;
-  }
-
-  public Integer getSize() {
-    return size;
   }
 }

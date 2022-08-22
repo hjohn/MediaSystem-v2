@@ -106,7 +106,7 @@ public class ProductionOverviewPane extends HBox {
 
   {
     Values.of(model.work).subscribe(work -> {
-      double rating = Optional.ofNullable(work).map(Work::getDetails).flatMap(Details::getReception).map(Reception::getRating).orElse(0.0);
+      double rating = Optional.ofNullable(work).map(Work::getDetails).flatMap(Details::getReception).map(Reception::rating).orElse(0.0);
 
       starRating.setRating(rating * 0.1);  // convert rating to fraction
       starRating.setVisible(rating > 0);

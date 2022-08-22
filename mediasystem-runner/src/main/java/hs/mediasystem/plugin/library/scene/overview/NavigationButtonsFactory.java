@@ -186,7 +186,7 @@ public class NavigationButtonsFactory {
 
     String info = Stream.of(
         stream.getDuration().map(d -> SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds())).orElse(null),
-        stream.getMediaStructure().flatMap(ms -> ms.getVideoTracks().stream().findFirst()).map(VideoTrack::getResolution).map(r -> r.getWidth() + "✕" + r.getHeight()).orElse(null),
+        stream.getMediaStructure().flatMap(ms -> ms.videoTracks().stream().findFirst()).map(VideoTrack::resolution).map(r -> r.width() + "✕" + r.height()).orElse(null),
         stream.getSize().map(s -> SizeFormatter.BYTES_THREE_SIGNIFICANT.format(s)).orElse(null),
         DATE_TIME_FORMATTER.format(stream.getLastModificationTime())
       )
@@ -211,7 +211,7 @@ public class NavigationButtonsFactory {
   private HBox createSnapshotsBox(MediaStream stream) {
     HBox box = Containers.hbox("snapshots-box");
     List<ImageHandle> handles = stream.getSnapshots().stream()
-      .map(Snapshot::getImageUri)
+      .map(Snapshot::imageUri)
       .map(imageHandleFactory::fromURI)
       .limit(3)
       .collect(Collectors.toList());
@@ -236,7 +236,7 @@ public class NavigationButtonsFactory {
     AtomicReference<VideoLink> trailerVideoLink = new AtomicReference<>();
     CompletableFuture.supplyAsync(() -> workClient.findVideoLinks(work.getId()))
       .thenAccept(videoLinks -> {
-        videoLinks.stream().filter(vl -> vl.getType() == VideoLink.Type.TRAILER).findFirst().ifPresent(videoLink -> trailerVideoLink.set(videoLink));
+        videoLinks.stream().filter(vl -> vl.type() == VideoLink.Type.TRAILER).findFirst().ifPresent(videoLink -> trailerVideoLink.set(videoLink));
       });
 
     return Buttons.create(
@@ -252,7 +252,7 @@ public class NavigationButtonsFactory {
       Dialogs.show(event, Labels.create("description", "No trailer available"));
     }
     else {
-      PresentationLoader.navigate(event, factory.create(work, URI.create("https://www.youtube.com/watch?v=" + videoLink.getKey()), Duration.ZERO));
+      PresentationLoader.navigate(event, factory.create(work, URI.create("https://www.youtube.com/watch?v=" + videoLink.key()), Duration.ZERO));
     }
   }
 

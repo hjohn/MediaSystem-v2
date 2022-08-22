@@ -132,7 +132,7 @@ public class ShowInfoEventHandler {
       });
 
       stream.getMediaStructure().ifPresent(ms -> {
-        List<VideoTrack> videoTracks = ms.getVideoTracks();
+        List<VideoTrack> videoTracks = ms.videoTracks();
 
         for(int i = 0; i < videoTracks.size(); i++) {
           VideoTrack videoTrack = videoTracks.get(i);
@@ -140,18 +140,18 @@ public class ShowInfoEventHandler {
           gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Video Streams"));
           gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
 
-          if(videoTrack.getTitle() != null) {
+          if(videoTrack.title() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
-            gridPane.at(3).add(Labels.create("value", addLineFeeds(videoTrack.getTitle(), 80)));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(videoTrack.title(), 80)));
             gridPane.nextRow();
           }
 
           gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
-          gridPane.at(3).add(Labels.create("value", addLineFeeds(videoTrack.getCodec(), 80)));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(videoTrack.codec(), 80)));
           gridPane.nextRow();
         }
 
-        List<AudioTrack> audioTracks = ms.getAudioTracks();
+        List<AudioTrack> audioTracks = ms.audioTracks();
 
         for(int i = 0; i < audioTracks.size(); i++) {
           AudioTrack audioTrack = audioTracks.get(i);
@@ -159,29 +159,29 @@ public class ShowInfoEventHandler {
           gridPane.at(0).align(VPos.TOP).add(i != 0 ? null : Labels.create("title", "Audio Streams"));
           gridPane.at(1).align(VPos.TOP).add(Labels.create("title", "#" + (i + 1)));
 
-          if(audioTrack.getTitle() != null) {
+          if(audioTrack.title() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Title"));
-            gridPane.at(3).add(Labels.create("value", addLineFeeds(audioTrack.getTitle(), 80)));
+            gridPane.at(3).add(Labels.create("value", addLineFeeds(audioTrack.title(), 80)));
             gridPane.nextRow();
           }
 
           gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Format"));
-          gridPane.at(3).add(Labels.create("value", addLineFeeds(audioTrack.getCodec(), 80)));
+          gridPane.at(3).add(Labels.create("value", addLineFeeds(audioTrack.codec(), 80)));
           gridPane.nextRow();
 
-          if(audioTrack.getLanguage() != null) {
+          if(audioTrack.language() != null) {
             gridPane.at(2).align(VPos.TOP).add(Labels.create("title", "Language"));
-            gridPane.at(3).add(Labels.create("value", audioTrack.getLanguage()));
+            gridPane.at(3).add(Labels.create("value", audioTrack.language()));
             gridPane.nextRow();
           }
         }
 
-        List<SubtitleTrack> subtitleTracks = ms.getSubtitleTracks();
+        List<SubtitleTrack> subtitleTracks = ms.subtitleTracks();
 
         gridPane.at(0).align(VPos.TOP).add(Labels.create("title", "Subtitle Streams"));
         gridPane.at(1).spanning(3, 1).add(Labels.create("value", addLineFeeds(
           subtitleTracks.stream()
-            .map(s -> s.getTitle() == null ? s.getLanguage() : s.getLanguage() + " (" + s.getTitle() + ")")
+            .map(s -> s.title() == null ? s.language() : s.language() + " (" + s.title() + ")")
             .collect(Collectors.joining(", ")),
           100
         )));
@@ -190,7 +190,7 @@ public class ShowInfoEventHandler {
 
       GridPane snapshotsBox = Containers.grid("snapshots-box");
       List<ImageHandle> handles = stream.getSnapshots().stream()
-        .map(Snapshot::getImageUri)
+        .map(Snapshot::imageUri)
         .map(imageHandleFactory::fromURI)
         .collect(Collectors.toList());
 
