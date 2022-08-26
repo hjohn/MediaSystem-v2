@@ -118,7 +118,7 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static ImageURI snapshotsToCover(MediaStream mediaStream) {
-    int id = mediaStream.id().getContentId().asInt();
+    int id = mediaStream.contentId().asInt();
 
     return mediaStream.mediaStructure()
       .filter(ms -> !ms.videoTracks().isEmpty())
@@ -127,7 +127,7 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static ImageURI snapshotsToSampleImage(MediaStream mediaStream) {
-    int id = mediaStream.id().getContentId().asInt();
+    int id = mediaStream.contentId().asInt();
 
     return mediaStream.mediaStructure()
       .filter(ms -> !ms.videoTracks().isEmpty())
@@ -136,7 +136,7 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static ImageURI snapshotsToBackdrop(MediaStream mediaStream) {
-    int id = mediaStream.id().getContentId().asInt();
+    int id = mediaStream.contentId().asInt();
 
     return mediaStream.mediaStructure()
       .filter(ms -> !ms.videoTracks().isEmpty())
@@ -206,9 +206,8 @@ public class LocalWorksClient implements WorksClient {
 
   private static MediaStream toStream(hs.mediasystem.domain.work.MediaStream stream) {
     return new MediaStream(
-      stream.id(),
-      stream.parentId(),
       stream.uri(),
+      stream.id().getContentId(),
       stream.discoveryTime(),
       stream.lastModificationTime(),
       stream.size(),

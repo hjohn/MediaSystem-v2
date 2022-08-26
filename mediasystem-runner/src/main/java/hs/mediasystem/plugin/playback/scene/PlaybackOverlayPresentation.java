@@ -114,7 +114,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
     this.startPosition = startPosition;
     this.playerPresentation.set(playerPresentation);
 
-    ContentID contentId = stream == null ? null : stream.id().getContentId();
+    ContentID contentId = stream == null ? null : stream.contentId();
 
     this.consumptionUpdater = contentId == null ? null : new ConsumptionUpdater(streamStateClient, work, contentId);
 
