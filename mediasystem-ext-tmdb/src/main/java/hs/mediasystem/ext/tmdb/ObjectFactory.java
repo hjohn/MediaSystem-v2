@@ -41,6 +41,7 @@ public class ObjectFactory {
     return new Production(
       id,
       createDetails(node, id),
+      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       createReception(node),
       new Classification(
         node.path("genres").findValuesAsText("name"),
@@ -75,6 +76,7 @@ public class ObjectFactory {
     return new Movie(
       id,
       createDetails(node, id),
+      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       createReception(node),
       runtime == null ? null : Duration.ofMinutes(runtime.intValue()),
       new Classification(
@@ -85,7 +87,6 @@ public class ObjectFactory {
         node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
       ),
       node.path("popularity").doubleValue(),
-      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       toMovieState(node.path("status").textValue()),
       relatedWorks
     );
@@ -97,6 +98,7 @@ public class ObjectFactory {
     return new Serie(
       id,
       createDetails(node, id),
+      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       createReception(node),
       new Classification(
         node.path("genres").findValuesAsText("name"),

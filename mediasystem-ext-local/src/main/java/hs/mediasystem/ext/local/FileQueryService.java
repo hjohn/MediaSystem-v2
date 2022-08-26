@@ -44,6 +44,7 @@ public class FileQueryService extends AbstractQueryService {
         null
       ),
       null,
+      null,
       Classification.EMPTY,
       1.0,
       Set.of()

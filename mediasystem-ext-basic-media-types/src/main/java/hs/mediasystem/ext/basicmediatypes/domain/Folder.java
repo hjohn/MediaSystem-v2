@@ -16,6 +16,6 @@ public class Folder extends Production {
    * @param classification a {@link Classification}, cannot be null
    */
   public Folder(WorkId id, Details details, Reception reception, Classification classification) {
-    super(id, details, reception, classification, 1.0, Set.of());
+    super(id, details, null, reception, classification, 1.0, Set.of());
   }
 }

@@ -12,20 +12,26 @@ import java.util.Set;
  * Represents either a Movie, a TV Movie or an entire TV Series.
  */
 public class Production extends Release {
+  private final Optional<String> tagLine;
   private final Classification classification;
   private final double popularity;
   private final Set<WorkId> relatedWorks;
 
-  public Production(WorkId id, Details details, Reception reception, Classification classification, double popularity, Set<WorkId> relatedWorks) {
+  public Production(WorkId id, Details details, String tagLine, Reception reception, Classification classification, double popularity, Set<WorkId> relatedWorks) {
     super(id, details, reception);
 
     if(classification == null) {
       throw new IllegalArgumentException("classification cannot be null");
     }
 
+    this.tagLine = Optional.ofNullable(tagLine);
     this.popularity = popularity;
     this.classification = classification;
     this.relatedWorks = Set.copyOf(relatedWorks);
+  }
+
+  public Optional<String> getTagLine() {
+    return tagLine;
   }
 
   public List<String> getLanguages() {

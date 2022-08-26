@@ -31,6 +31,7 @@ public class Movies {
     return new Movie(
       id,
       new Details(title, "subtitle", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
+      "Skynet comes",
       new Reception(8, 12345),
       Duration.ofHours(2),
       new Classification(
@@ -41,7 +42,6 @@ public class Movies {
         false
       ),
       99.0,
-      "Skynet comes",
       State.RELEASED,
       Set.of()
     );

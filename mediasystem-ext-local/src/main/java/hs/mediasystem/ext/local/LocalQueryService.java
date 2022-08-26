@@ -106,6 +106,7 @@ public class LocalQueryService extends AbstractQueryService {
         descriptionService.getBackdrop(streamable).orElse(null)
       ),
       null,
+      null,
       new Classification(
         description.map(Description::getGenres).orElse(List.of()),
         Collections.emptyList(),

@@ -108,7 +108,7 @@ public class LocalWorksClient implements WorksClient {
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
         .map(imageHandleFactory::fromURI)
         .orElse(null),
-      descriptor instanceof Movie m ? m.getTagLine() : null,
+      descriptor instanceof Production m ? m.getTagLine().orElse(null) : null,
       descriptor instanceof Serie s ? createSerie(s) : null,
       parent != null && parent.getType() == MediaType.SERIE ? createSequence(descriptor) : null,
       descriptor instanceof Release r ? r.getReception() : null,

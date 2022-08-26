@@ -14,15 +14,13 @@ public class Movie extends Production {
   }
 
   private final Duration runtime;
-  private final String tagLine;
   private final State state;
 
-  public Movie(WorkId id, Details details, Reception reception, Duration runtime, Classification classification, double popularity, String tagLine, State state, Set<WorkId> relatedWorks) {
-    super(id, details, reception, classification, popularity, relatedWorks);
+  public Movie(WorkId id, Details details, String tagLine, Reception reception, Duration runtime, Classification classification, double popularity, State state, Set<WorkId> relatedWorks) {
+    super(id, details, tagLine, reception, classification, popularity, relatedWorks);
 
     this.runtime = runtime;
     this.state = state;
-    this.tagLine = tagLine;
   }
 
   public Duration getRuntime() {
@@ -31,9 +29,5 @@ public class Movie extends Production {
 
   public State getState() {
     return state;
-  }
-
-  public String getTagLine() {
-    return tagLine;
   }
 }

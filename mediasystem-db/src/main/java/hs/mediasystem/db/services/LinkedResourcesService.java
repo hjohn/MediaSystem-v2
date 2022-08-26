@@ -193,6 +193,7 @@ public class LinkedResourcesService {
       new WorkId(DataSource.instance(DEFAULT_DATA_SOURCE_NAME), streamable.getType(), "" + streamable.getId().asString()),
       createMinimalDetails(streamable),
       null,
+      null,
       Classification.EMPTY,
       0.0,
       Set.of()

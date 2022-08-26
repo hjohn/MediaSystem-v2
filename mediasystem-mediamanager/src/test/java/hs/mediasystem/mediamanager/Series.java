@@ -35,6 +35,7 @@ public class Series {
     return new Serie(
       id,
       new Details(title, "subtitle", "Power of 3", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
+      "Could they be witches?",
       new Reception(8, 12345),
       new Classification(
         Arrays.asList("Action", "Science-Fiction"),

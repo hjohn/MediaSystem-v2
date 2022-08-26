@@ -30,6 +30,7 @@ public class Serie extends Production {
    *
    * @param id a {@link WorkId}, cannot be null
    * @param details a {@link Details}, cannot be null
+   * @param tagLine a tag line, can be null
    * @param reception a {@link Reception}, can be null
    * @param classification a {@link Classification}, cannot be null
    * @param state a {@link State}, can be null if unknown
@@ -38,8 +39,8 @@ public class Serie extends Production {
    * @param seasons the seasons this serie consists of, can be null if unknown (due to partial information) and can be empty (if known there are no seasons)
    * @param relatedWorks a set of related {@link WorkId}s, cannot be {@code null}
    */
-  public Serie(WorkId id, Details details, Reception reception, Classification classification, State state, LocalDate lastAirDate, double popularity, List<Season> seasons, Set<WorkId> relatedWorks) {
-    super(id, details, reception, classification, popularity, relatedWorks);
+  public Serie(WorkId id, Details details, String tagLine, Reception reception, Classification classification, State state, LocalDate lastAirDate, double popularity, List<Season> seasons, Set<WorkId> relatedWorks) {
+    super(id, details, tagLine, reception, classification, popularity, relatedWorks);
 
     this.state = state;
     this.lastAirDate = lastAirDate;
