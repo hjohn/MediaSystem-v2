@@ -12,20 +12,21 @@ import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.WorkIdCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
+import hs.mediasystem.ext.basicmediatypes.domain.WorkIdCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
-import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.mediamanager.DescriptorStore;
+import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
+import hs.mediasystem.mediamanager.UnknownDataSourceException;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.checked.CheckedOptional;
 import hs.mediasystem.util.checked.CheckedStreams;
@@ -47,13 +48,13 @@ import javax.inject.Singleton;
 public class WorkService {
   @Inject private LinkedWorksService linkedWorksService;
   @Inject private DescriptorStore descriptorStore;
-  @Inject private List<QueryService> queryServices;
   @Inject private List<RolesQueryService> rolesQueryServices;
   @Inject private List<ProductionCollectionQueryService> productionCollectionQueryServices;
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
   @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
   @Inject private StreamCacheUpdateService updateService;
   @Inject private MediaStreamService mediaStreamService;
+  @Inject private LocalMediaIdentificationService identificationService;
 
   public Optional<Work> query(WorkId workId) throws IOException {
     Optional<Work> optionalWork = linkedWorksService.find(workId).map(this::toWork);
@@ -224,13 +225,12 @@ public class WorkService {
   }
 
   private CheckedOptional<WorkDescriptor> queryDescriptor(WorkId id) throws IOException {
-    for(QueryService queryService : queryServices) {
-      if(queryService.getDataSource().equals(id.getDataSource())) {
-        return CheckedOptional.of(queryService.query(id));
-      }
+    try {
+      return CheckedOptional.of(identificationService.query(id));
     }
-
-    return CheckedOptional.empty();
+    catch(UnknownDataSourceException e) {
+      return CheckedOptional.empty();
+    }
   }
 
   private CheckedOptional<ProductionCollection> queryProductionCollection(WorkId id) {
