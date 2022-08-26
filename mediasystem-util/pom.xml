@@ -22,11 +22,6 @@
       <version>2.0.1</version>
     </dependency>
     <dependency>
-      <groupId>org.reactfx</groupId>
-      <artifactId>reactfx</artifactId>
-      <version>2.0-M5</version>
-    </dependency>
-    <dependency>
       <groupId>hs.mediasystem</groupId>
       <artifactId>mediasystem-jfx</artifactId>
     </dependency>
@@ -34,7 +29,7 @@
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
     </dependency>
-    <dependency>
+    <dependency> <!-- required to convert a JavaFX WritableImage to AWT BufferedImage in order to use ImageIO to save as JPEG -->
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-swing</artifactId>
     </dependency>
