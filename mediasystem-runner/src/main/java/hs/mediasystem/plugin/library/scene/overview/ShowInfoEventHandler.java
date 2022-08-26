@@ -188,25 +188,28 @@ public class ShowInfoEventHandler {
         gridPane.nextRow();
       });
 
-      GridPane snapshotsBox = Containers.grid("snapshots-box");
       List<ImageHandle> handles = stream.snapshots().stream()
         .map(Snapshot::imageUri)
         .map(imageHandleFactory::fromURI)
         .collect(Collectors.toList());
 
-      for(int i = 0; i < handles.size(); i++) {
-        ImageHandle handle = handles.get(i);
-        BiasedImageView imageView = new BiasedImageView();
-        AsyncImageProperty property = new AsyncImageProperty(600, 400);
+      if(!handles.isEmpty()) {
+        GridPane snapshotsBox = Containers.grid("snapshots-box");
 
-        imageView.setOrientation(Orientation.HORIZONTAL);
-        imageView.imageProperty().bind(property);
-        property.imageHandleProperty().set(handle);
+        for(int i = 0; i < handles.size(); i++) {
+          ImageHandle handle = handles.get(i);
+          BiasedImageView imageView = new BiasedImageView();
+          AsyncImageProperty property = new AsyncImageProperty(600, 400);
 
-        snapshotsBox.at(i % 4, i / 4).add(imageView);
+          imageView.setOrientation(Orientation.HORIZONTAL);
+          imageView.imageProperty().bind(property);
+          property.imageHandleProperty().set(handle);
+
+          snapshotsBox.at(i % 4, i / 4).add(imageView);
+        }
+
+        gridPane.addRow(Labels.create("title", "Snapshots"), snapshotsBox, GridPane.FILL, GridPane.FILL);
       }
-
-      gridPane.addRow(Labels.create("title", "Snapshots"), snapshotsBox, GridPane.FILL, GridPane.FILL);
     }
 
     Presentations.showWindow(event, vbox);
