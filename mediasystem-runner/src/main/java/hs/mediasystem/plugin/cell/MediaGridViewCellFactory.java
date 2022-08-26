@@ -23,6 +23,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -92,7 +93,7 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
       private final Model model = new Model();
       private final BooleanProperty allowUpdates = new SimpleBooleanProperty(true);
 
-      private final Label placeHolderLabel = Labels.create("place-holder", "");
+      private final Label placeHolderLabel = Labels.create("place-holder", "?");
       private final Label name = Labels.create("name");
       private final Label detail = Labels.create("detail", Labels.HIDE_IF_EMPTY);
       private final StackPane indicatorPane = Containers.stack("indicator-pane", Labels.create("indicator-background"), Labels.create("indicator"));
@@ -119,6 +120,7 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
         imageView.setOrientation(orientation);
         imageView.setPreserveRatio(true);
         imageView.imageProperty().bind(asyncImageProperty);
+        imageView.setAlignment(Pos.CENTER);  // mainly to get placeholder to be in the center
 
         container = StylableContainers.vbox(
           "container",
