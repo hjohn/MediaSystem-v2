@@ -117,7 +117,6 @@ public class LinkedResourcesService {
       new Resource(
         cs.getStreamable().getId(),
         cs.getStreamable().getParentId(),
-        cs.getStreamable().getType(),
         cs.getStreamable().getUri(),
         cs.getStreamable().getAttributes(),
         cs.getDiscoveryTime(),

@@ -1,6 +1,5 @@
 package hs.mediasystem.db.services.domain;
 
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.mediamanager.StreamTags;
@@ -13,7 +12,6 @@ import java.util.Optional;
 public record Resource(
   StreamID id,
   Optional<StreamID> parentId,
-  MediaType type,
   URI uri,
   Attributes attributes,
   Instant discoveryTime,
@@ -27,9 +25,6 @@ public record Resource(
     }
     if(parentId == null) {
       throw new IllegalArgumentException("parentId cannot be null");
-    }
-    if(type == null) {
-      throw new IllegalArgumentException("type cannot be null");
     }
     if(uri == null) {
       throw new IllegalArgumentException("uri cannot be null");
