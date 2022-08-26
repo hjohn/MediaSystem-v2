@@ -7,13 +7,15 @@ public class Description {
   private final String title;
   private final String subtitle;
   private final String description;
+  private final String tagLine;
   private final List<String> genres;
   private final LocalDate date;
 
-  public Description(String title, String subtitle, String description, List<String> genres, LocalDate date) {
+  public Description(String title, String subtitle, String description, String tagLine, List<String> genres, LocalDate date) {
     this.title = title;
     this.subtitle = subtitle;
     this.description = description;
+    this.tagLine = tagLine;
     this.genres = genres;
     this.date = date;
   }
@@ -28,6 +30,10 @@ public class Description {
 
   public String getDescription() {
     return description;
+  }
+
+  public String getTagLine() {
+    return tagLine;
   }
 
   public List<String> getGenres() {

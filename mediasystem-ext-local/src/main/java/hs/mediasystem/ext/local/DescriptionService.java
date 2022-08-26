@@ -42,7 +42,7 @@ public class DescriptionService {
     try {
       DescriptionInternal d = OBJECT_MAPPER.readValue(new URL(urlText), DescriptionInternal.class);
 
-      return Optional.of(new Description(d.title, d.subtitle, d.description, d.genres, d.date));
+      return Optional.of(new Description(d.title, d.subtitle, d.description, d.tagLine, d.genres, d.date));
     }
     catch(ConnectException e) {
       // ignore, file just doesn't exist
@@ -72,6 +72,7 @@ public class DescriptionService {
     public String title;
     public String subtitle;
     public String description;
+    public String tagLine;
     public List<String> genres;
     public LocalDate date;
   }
