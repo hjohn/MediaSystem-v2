@@ -57,6 +57,20 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
           updateTitle("Playing Video...");
           updateMessage("Please wait...");
 
+          /*
+           * First check for available player:
+           */
+
+          PlayerPresentation playerPresentation = playerSetting.getConfigured();
+
+          if(playerPresentation == null) {
+            throw new MissingPlayerPresentationException(playerSetting.getConfiguredName(), playerSetting.getAvailablePlayerFactories());
+          }
+
+          /*
+           * Then see if stream is ready to be accessed (in case of files):
+           */
+
           if(uri.getScheme().equals("file")) {
             updateProgress(1, 10);
 
@@ -65,7 +79,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
               // Read some data from the first 10-20 MB, to make sure stream is "ready" (hard disk spinning up)
               for(int i = 0, j = 0; j < 10; i += 4096 + i * 2, j++) {
-                fc.read(buf);
+                fc.read(buf);  // reading beyond EOF simply returns -1, so this will work correctly for smaller files
                 fc.position(i);
 
                 buf.clear();
@@ -76,12 +90,6 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
             catch(IOException e) {
               throw new VideoUnavailableException(e, Paths.get(uri));
             }
-          }
-
-          PlayerPresentation playerPresentation = playerSetting.getConfigured();
-
-          if(playerPresentation == null) {
-            throw new MissingPlayerPresentationException(playerSetting.getConfiguredName(), playerSetting.getAvailablePlayerFactories());
           }
 
           return new PlaybackOverlayPresentation(streamStateClient, playerPresentation, work, stream, uri, startPosition);
