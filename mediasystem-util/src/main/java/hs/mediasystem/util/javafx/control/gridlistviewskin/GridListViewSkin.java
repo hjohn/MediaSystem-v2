@@ -473,9 +473,13 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   }
 
   private void handleKeyEvent(KeyEvent e) {
-    int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
-
     if(e.getCode().isNavigationKey()) {
+      int selectedIndex = getSkinnable().getSelectionModel().getSelectedIndex();
+
+      if(selectedIndex < 0) {  // was nothing selected? select first element then
+        selectedIndex = 0;
+      }
+
       int rowSize = vertical ? visibleColumns.get() : 1;
       int columnSize = vertical ? 1 : visibleRows.get();
 
