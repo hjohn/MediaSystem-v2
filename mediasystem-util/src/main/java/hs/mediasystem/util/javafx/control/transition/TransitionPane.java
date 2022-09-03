@@ -100,7 +100,39 @@ public class TransitionPane extends Region {
   }
 
   public void add(Node child) {
-    addAtEnd(child);
+    addAtStart(child);  // adds at start to avoid a focus issue
+
+    /*
+     * Focus Issue Bug:
+     *
+     * If the node is at added at the end, the TransitionPane will still give it the focus
+     * as expected. However, if during the animation the added node modifies its structure
+     * removing the node that has focus and re-adding a new node (that should have focus)
+     * special code in Scene kicks in -- this code detects that a removed node has the focus
+     * and will adjust the focus to a node that is actually part of the scene. The
+     * algorithm employed for this will find the TransitionPane, then traverse its children
+     * in order and the child with the lowest index will receive focus first. This results
+     * in the child that is being removed (after the transition completes) receiving focus
+     * again. Adding the new child at the start avoids this problem.
+     *
+     * Some transitions however determine the animation direction from the position the
+     * child is in the children list; these still suffer from this problem as for these
+     * transition the child is still added at the end sometimes. The Scroll transition would
+     * need to be rewritten to determine the direction differently (perhaps with a marker
+     * on the child).
+     *
+     * Other solutions that were considered:
+     *
+     * - Disable the children that are about to be removed
+     *    - The look of the child might change if disabled controls look differently
+     *    - The same child may be re-added, but it was permanently modified to be disabled
+     * - Disallow focus traversal for children that are about to removed
+     *    - The same child may be re-added, but it was permanently modified to not allow focus traversal
+     * - Hook into TraversalEngine; this is a private API but is sometimes used to solve similar problems
+     * - Fix the problem in Scene; perhaps the algorithm should not select a new node from
+     *   the root node, but from the closest parent that is still part of the scene; this information
+     *   may be unrecoverable though
+     */
   }
 
   public void add(boolean start, Node child) {
