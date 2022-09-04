@@ -6,6 +6,7 @@ import hs.mediasystem.util.javafx.SceneUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javafx.animation.Transition;
 import javafx.event.Event;
@@ -24,6 +25,7 @@ import javafx.util.Duration;
 
 public class DialogPane<R> extends StackPane {
   private final double delay;
+  private final Predicate<Event> closeHandler;
 
   private DialogGlass dialogGlass;
   private boolean synchronous;
@@ -31,8 +33,9 @@ public class DialogPane<R> extends StackPane {
   private boolean finished;
   private Object oldPresentation;
 
-  public DialogPane(String styleClass, double delay) {
+  public DialogPane(String styleClass, double delay, Predicate<Event> closeHandler) {
     this.delay = delay;
+    this.closeHandler = closeHandler;
 
     getStyleClass().add(styleClass);
 
@@ -41,7 +44,7 @@ public class DialogPane<R> extends StackPane {
   }
 
   public DialogPane(String styleClass) {
-    this(styleClass, 0);
+    this(styleClass, 0, e -> true);
   }
 
   public DialogPane() {
@@ -49,7 +52,7 @@ public class DialogPane<R> extends StackPane {
   }
 
   @SuppressWarnings("unchecked")
-  public synchronized R showDialog(Scene scene, boolean synchronous, boolean closable) {
+  public synchronized R showDialog(Scene scene, boolean synchronous) {
     if(finished) {
       return result;
     }
@@ -64,19 +67,11 @@ public class DialogPane<R> extends StackPane {
 
     dialogGlass = new DialogGlass(scene, this, delay);
 
-    oldPresentation = scene.getRoot().getProperties().put("presentation2", new NavigablePresentation(this, closable));
+    oldPresentation = scene.getRoot().getProperties().put("presentation2", new NavigablePresentation(this));
 
     requestFocus();
 
-    if(synchronous) {
-      return (R)SceneUtil.enterNestedEventLoop(this);
-    }
-
-    return null;
-  }
-
-  public synchronized R showDialog(Scene scene, boolean synchronous) {
-    return showDialog(scene, synchronous, true);
+    return synchronous ? (R)SceneUtil.enterNestedEventLoop(this) : null;
   }
 
   public synchronized void close(R result) {
@@ -197,34 +192,21 @@ public class DialogPane<R> extends StackPane {
         }
       };
 
-      fadeInAndRemove.setOnFinished(event -> {
-        root.getChildren().remove(DialogGlass.this);
-//        int size = root.getChildren().size();
-//
-//        if(root.getChildren().get(size - 1).equals(DialogGlass.this)) {
-//          root.getChildren().remove(size - 1);
-//        }
-//        else {
-//          System.out.println("+++++++++++++++++++ REMVOED NOTHING  +++++++++++++++++++");
-//        }
-      });
-
+      fadeInAndRemove.setOnFinished(event -> root.getChildren().remove(DialogGlass.this));
       fadeInAndRemove.play();
     }
   }
 
   public static class NavigablePresentation implements Presentation, Navigable {
     private final DialogPane<?> dialogPane;
-    private final boolean closable;
 
-    public NavigablePresentation(DialogPane<?> dialogPane, boolean closable) {
+    public NavigablePresentation(DialogPane<?> dialogPane) {
       this.dialogPane = dialogPane;
-      this.closable = closable;
     }
 
     @Override
     public void navigateBack(Event e) {
-      if(closable) {
+      if(dialogPane.closeHandler.test(e)) {
         dialogPane.close();
       }
     }

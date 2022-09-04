@@ -70,14 +70,14 @@ public class Dialogs {
     return show(event, null, options);
   }
 
-  public static <T> Optional<T> showProgressDialog(Event event, boolean closable, Task<T> task) {
-    return showProgressDialog(((Node)event.getTarget()).getScene(), closable, task);
+  public static <T> Optional<T> showProgressDialog(Event event, boolean cancellable, Task<T> task) {
+    return showProgressDialog(((Node)event.getTarget()).getScene(), cancellable, task);
   }
 
   /**
    * Shows a dialog with a progress bar controlled by the supplied {@link Task}.  Once the
    * task finishes the dialog closes automatically and returns the result of the task.  If
-   * the dialog is closable and it was closed before the task finishes or the task threw
+   * the task can be cancelled and it was cancelled before the task finishes or the task threw
    * an exception, an empty {@link Optional} is returned.<p>
    *
    * If the task finished exceptionally, another dialog is shown with an error message.<p>
@@ -89,12 +89,27 @@ public class Dialogs {
    *
    * @param <T> the result type of the {@link Task}
    * @param scene a {@link Scene} to show this dialog on
-   * @param closable whether or not the dialog is allowed to be closed
-   * @param task a {@link Task} to execute
-   * @return an Optional with the result of the {@link Task} or empty if the dialog was closed or the task exiting with an exception
+   * @param cancellable whether or not the task can be cancelled
+   * @param task a {@link Task} to execute, cannot be {@code null}
+   * @return an Optional with the result of the {@link Task} or empty if the task was cancelled or threw an exception
    */
-  public static <T> Optional<T> showProgressDialog(Scene scene, boolean closable, Task<T> task) {
-    DialogPane<T> dialogPane = new DialogPane<>("dialog", 1000);
+  public static <T> Optional<T> showProgressDialog(Scene scene, boolean cancellable, Task<T> task) {
+    if(task == null) {
+      throw new IllegalArgumentException("task cannot be null");
+    }
+
+    DialogPane<T> dialogPane = new DialogPane<>("dialog", 1000, e -> {
+      if(cancellable) {  // if task can be cancelled, then cancel it (which should close it)
+        task.cancel(true);
+      }
+
+      if(task.isDone()) {  // if task has completed, then navigating back should close it if it wasn't closed automatically (on failure it doesn't close automatically)
+        return true;
+      }
+
+      return false;
+    });
+
     ProgressBar pb = new ProgressBar();
 
     dialogPane.getStylesheets().add(STYLES_URL);
@@ -113,6 +128,8 @@ public class Dialogs {
       progressBox
     ));
 
+    task.onSucceededProperty().set(e -> dialogPane.close(task.getValue()));
+    task.onCancelledProperty().set(e -> dialogPane.close());
     task.onFailedProperty().set(e -> {
       task.getException().printStackTrace();
 
@@ -130,7 +147,6 @@ public class Dialogs {
         textView
       ));
     });
-    task.onSucceededProperty().set(e -> dialogPane.close(task.getValue()));
 
     Thread thread = new Thread(task);
 
@@ -138,7 +154,7 @@ public class Dialogs {
     thread.setDaemon(true);
     thread.start();  // If the task is really quick, it may close the dialog without ever showing it... Dialog allows this, and will just return whatever was provided when close methods are called
 
-    return Optional.ofNullable(dialogPane.showDialog(scene, true, closable));
+    return Optional.ofNullable(dialogPane.showDialog(scene, true));
   }
 
   public static <T> Optional<T> showProgressDialog(Event event, Task<T> task) {
