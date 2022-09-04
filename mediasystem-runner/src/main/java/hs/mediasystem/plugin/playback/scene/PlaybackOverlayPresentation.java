@@ -52,6 +52,8 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
     private Task<PlaybackOverlayPresentation> create(Work work, MediaStream stream, URI uri, Duration startPosition) {
       return new Task<>() {
+        private PlayerPresentation playerPresentation;
+
         @Override
         protected PlaybackOverlayPresentation call() {
           updateTitle("Playing Video...");
@@ -61,7 +63,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
            * First check for available player:
            */
 
-          PlayerPresentation playerPresentation = playerSetting.getConfigured();
+          playerPresentation = playerSetting.getConfigured();
 
           if(playerPresentation == null) {
             throw new MissingPlayerPresentationException(playerSetting.getConfiguredName(), playerSetting.getAvailablePlayerFactories());
@@ -88,11 +90,32 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
               }
             }
             catch(IOException e) {
+              if(isCancelled()) {
+                return null;
+              }
+
               throw new VideoUnavailableException(e, Paths.get(uri));
             }
           }
 
           return new PlaybackOverlayPresentation(streamStateClient, playerPresentation, work, stream, uri, startPosition);
+        }
+
+        @Override
+        protected void cancelled() {
+          dispose();
+        }
+
+        @Override
+        protected void failed() {
+          dispose();
+        }
+
+        private void dispose() {
+          if(playerPresentation != null) {
+            playerPresentation.dispose();
+            playerPresentation = null;
+          }
         }
       };
     }
