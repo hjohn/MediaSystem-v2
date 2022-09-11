@@ -27,6 +27,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.VPos;
 import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -99,10 +100,29 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   private GroupManager gm;
   private boolean vertical;
 
+  /*
+   * A pre-layout pulse listener is added to the current Scene to manage the
+   * cells before the CSS pass occurs (this could also be done with an AnimationTimer).
+   *
+   * If cells are not managed before the CSS pass, new cells will be rendered for
+   * one frame without CSS applied. This results in a visual artifact (a white flash
+   * for example if the background is supposed to be dark, while white is the default
+   * color without any CSS applied).
+   */
+  private final Runnable pulseListener = () -> {
+    int lines = vertical ? visibleColumns.get() : visibleRows.get();
+    int firstIndex = (int)(scrollPosition.get()) * lines;
+
+    content.manageCells(firstIndex);
+  };
+
   public GridListViewSkin(ListView<?> skinnable) {
     this.skinnable = skinnable;
     this.content = new Content();
 
+    updatePreLayoutPulseListener(null, skinnable.getScene());
+
+    skinnable.sceneProperty().addListener((obs, old, current) -> updatePreLayoutPulseListener(old, current));
     skinnable.addEventFilter(KeyEvent.KEY_PRESSED, this::handleKeyEvent);
     skinnable.getSelectionModel().selectedIndexProperty().addListener((obs, old, current) -> Platform.runLater(this::animateWhenSelectedChanges));  // Platform#runLater here solves the problem where the selection index rapidly changes 3 times (current, -1, 0, current) when all items are replaced
     skinnable.getSelectionModel().selectedItemProperty().addListener(obs -> skin.requestLayout());   // Calls layout when focused cell changes (to make sure it is at the top)
@@ -192,8 +212,6 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       int lines = vertical ? visibleColumns.get() : visibleRows.get();
       int firstIndex = (int)(scrollPosition.get()) * lines;
 
-      manageCells(firstIndex);
-
       Insets insets = getSkinnable().getInsets();
 
       double w = getSkinnable().getWidth() - insets.getLeft() - insets.getRight();
@@ -272,7 +290,7 @@ public class GridListViewSkin implements Skin<ListView<?>> {
        */
 
       if(cells.isEmpty()) {
-        GridListViewSkin.this.firstIndexInDeque = requiredFirstIndexInDeque;
+        firstIndexInDeque = requiredFirstIndexInDeque;
       }
 
       // Add cells to start of queue if needed
@@ -310,6 +328,15 @@ public class GridListViewSkin implements Skin<ListView<?>> {
       getChildren().add(cell);
 
       return cell;
+    }
+  }
+
+  private void updatePreLayoutPulseListener(Scene old, Scene current) {
+    if(old != null) {
+      old.removePreLayoutPulseListener(pulseListener);
+    }
+    if(current != null) {
+      current.addPreLayoutPulseListener(pulseListener);
     }
   }
 
@@ -548,6 +575,8 @@ public class GridListViewSkin implements Skin<ListView<?>> {
   @Override
   public void dispose() {
     this.animationTimer.stop();
+
+    updatePreLayoutPulseListener(skinnable.getScene(), null);
 
     this.skinnable = null;
     this.skin = null;
