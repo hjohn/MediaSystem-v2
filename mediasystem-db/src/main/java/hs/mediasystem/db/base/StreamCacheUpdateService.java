@@ -191,7 +191,7 @@ public class StreamCacheUpdateService {
   }
 
   private CompletableFuture<MediaIdentification> asyncEnrich(Type type, Streamable streamable) {
-    return streamCacheUpdater.asyncEnrich(type, streamable, (sid, pmi) -> enrichTask(sid, pmi, streamable.getParentId().isEmpty()));
+    return streamCacheUpdater.asyncEnrich(type, streamable, (sid, pmi) -> enrichTask(sid, pmi, streamable.getId()));
   }
 
   private void triggerInitialEnriches() {
@@ -231,7 +231,7 @@ public class StreamCacheUpdateService {
     reidentifyThread.start();
   }
 
-  private MediaIdentification enrichTask(StreamID streamId, MediaIdentification pmi, boolean markParentEnriched) {
+  private MediaIdentification enrichTask(StreamID streamId, MediaIdentification pmi, StreamID triggerStreamId) {
     WorkDescriptor parent = pmi == null ? null : pmi.getDescriptor();
 
     try(Key key = storeConsistencyLock.lock()) {
@@ -265,13 +265,13 @@ public class StreamCacheUpdateService {
         throw new EnrichmentException(streamable, dataSourceNames, cause);
       }
       finally {
-        if(markParentEnriched || streamable.getParentId().isPresent()) {
+        if(streamId.equals(triggerStreamId)) {
 
           /*
-           * Mark enriched if this streamable has a parent, or if the enrich was specifically triggered for an
-           * item without a parent. This means that if an enrich was triggered for a child, for which its parent
-           * would need to be fetched first, that the child would be marked enriched but the supporting parent
-           * would not be.
+           * Only mark enriched when the triggered stream matches the enriched stream. This is
+           * to prevent enriches of parents (which are required to enrich children) triggering
+           * enriches again for their children, as children must have a newer enrich time than
+           * their parent.
            */
 
           streamStore.markEnriched(streamable.getId());  // Prevent further enrich attempts, successful or not
