@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,12 +35,11 @@ class LinkedWorksService {
     .reversed();
 
   private final Map<WorkId, LinkedWork> linkedWorks = new HashMap<>();
+  private final Map<StreamID, Set<WorkId>> workIdsByStreamId = new HashMap<>();
 
   @Inject
   private LinkedWorksService(EventSource<LinkedResourceEvent> linkedResourceEvents) {
-    long time = System.currentTimeMillis();
     linkedResourceEvents.subscribeAndWait(this::processEvent);
-    System.out.println(">>> Took " + (System.currentTimeMillis() - time) + " ms");
   }
 
   private void processEvent(LinkedResourceEvent event) {
@@ -52,13 +52,13 @@ class LinkedWorksService {
         for(Work work : linkedResource.works()) {
           LinkedWork linkedWork = new LinkedWork(work, List.of(new MatchedResource(linkedResource.match(), linkedResource.resource())));
 
-          linkedWorks.merge(linkedWork.id(), linkedWork, (w1, w2) -> {
-            return new LinkedWork(
-              w2.work(),
-              Stream.concat(w1.matchedResources().stream(), w2.matchedResources().stream()).toList()
-            );
-          });
+          linkedWorks.merge(linkedWork.id(), linkedWork, (w1, w2) -> new LinkedWork(
+            w2.work(),
+            Stream.concat(w1.matchedResources().stream(), w2.matchedResources().stream()).toList()
+          ));
         }
+
+        workIdsByStreamId.put(linkedResource.id(), linkedResource.works().stream().map(Work::id).collect(Collectors.toSet()));
       }
       else if(event instanceof LinkedResourceEvent.Removed r) {
         removeStream(r.id());
@@ -66,22 +66,23 @@ class LinkedWorksService {
     }
   }
 
-  // TODO Removal iterates all entries, may need an index to improve performance
   private void removeStream(StreamID sid) {
     synchronized(linkedWorks) {
-      List<LinkedWork> affectedLinkedWorks = linkedWorks.values().stream()
-        .filter(w -> w.matchedResources().stream().anyMatch(mr -> mr.resource().id().equals(sid)))
-        .toList();
+      Set<WorkId> affectedWorkIds = workIdsByStreamId.remove(sid);
 
-      for(LinkedWork linkedWork : affectedLinkedWorks) {
-        if(linkedWork.matchedResources().size() == 1) {
-          linkedWorks.remove(linkedWork.id());
-        }
-        else {
-          linkedWorks.put(linkedWork.id(), new LinkedWork(
-            linkedWork.work(),
-            linkedWork.matchedResources().stream().filter(mr -> !mr.resource().id().equals(sid)).toList()
-          ));
+      if(affectedWorkIds != null) {
+        for(WorkId workId : affectedWorkIds) {
+          LinkedWork linkedWork = linkedWorks.get(workId);  // should never return null as index is always maintained
+
+          if(linkedWork.matchedResources().size() == 1) {
+            linkedWorks.remove(linkedWork.id());
+          }
+          else {
+            linkedWorks.put(linkedWork.id(), new LinkedWork(
+              linkedWork.work(),
+              linkedWork.matchedResources().stream().filter(mr -> !mr.resource().id().equals(sid)).toList()
+            ));
+          }
         }
       }
     }
@@ -171,8 +172,8 @@ class LinkedWorksService {
    */
   public List<LinkedWork> find(StreamID sid) {
     synchronized(linkedWorks) {
-      return linkedWorks.values().stream()
-        .filter(lw -> lw.matchedResources().stream().anyMatch(mr -> mr.resource().id().equals(sid)))
+      return workIdsByStreamId.getOrDefault(sid, Set.of()).stream()
+        .map(linkedWorks::get)
         .sorted(Comparator.comparing(lw -> lw.id().toString()))
         .collect(Collectors.toList());
     }
