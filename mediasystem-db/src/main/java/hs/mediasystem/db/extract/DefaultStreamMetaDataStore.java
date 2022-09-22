@@ -2,10 +2,15 @@ package hs.mediasystem.db.extract;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import hs.ddif.annotations.Produces;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.events.Event;
+import hs.mediasystem.util.events.EventSource;
+import hs.mediasystem.util.events.EventStream;
+import hs.mediasystem.util.events.InMemoryEventStream;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -28,7 +33,14 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Inject private StreamMetaDataDatabase database;
   @Inject private StreamMetaDataCodec codec;
 
+  private final EventStream<StreamMetaDataEvent> eventStream = new InMemoryEventStream<>();
+
   private final Map<ContentID, StreamMetaData> cache = new ConcurrentHashMap<>();
+
+  @Produces
+  EventSource<StreamMetaDataEvent> events() {
+    return eventStream;
+  }
 
   @PostConstruct
   private void postConstruct() {
@@ -37,6 +49,8 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     database.forEach(r -> {
       try {
         StreamMetaData smd = codec.decode(r.getJson());
+
+        eventStream.push(new Event<>(new StreamMetaDataEvent.Updated(smd)));
 
         cache.put(smd.getContentId(), smd);
       }
@@ -52,16 +66,19 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     LOGGER.fine("Loaded " + cache.size() + " StreamMetaDataRecords, deleted " + badIds.size() + " bad ones");
   }
 
-  public void store(StreamMetaData streamMetaData) {
+  void store(StreamMetaData streamMetaData) {
     database.store(toRecord(streamMetaData));
+
+    eventStream.push(new Event<>(new StreamMetaDataEvent.Updated(streamMetaData)));
+
     cache.put(streamMetaData.getContentId(), streamMetaData);
   }
 
-  public Stream<Integer> streamUnindexedContentIds() {
+  Stream<Integer> streamUnindexedContentIds() {
     return database.streamUnindexedContentIds();
   }
 
-  public void storeImage(ContentID contentId, int index, byte[] image) {
+  void storeImage(ContentID contentId, int index, byte[] image) {
     database.storeImage(contentId.asInt(), index, image);
   }
 
@@ -91,7 +108,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     return database.readSnapshot(contentId.asInt(), snapshotIndex);
   }
 
-  public boolean existsSnapshot(ContentID contentId, int snapshotIndex) {
+  boolean existsSnapshot(ContentID contentId, int snapshotIndex) {
     return database.existsSnapshot(contentId.asInt(), snapshotIndex);
   }
 }

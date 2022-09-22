@@ -9,15 +9,10 @@ import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStream;
-import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.State;
-import hs.mediasystem.domain.work.StreamMetaData;
-import hs.mediasystem.mediamanager.StreamMetaDataStore;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -26,7 +21,6 @@ import javax.inject.Singleton;
 @Singleton
 public class MediaStreamService {
   @Inject private StreamStateService stateService;
-  @Inject private StreamMetaDataStore metaDataStore;
 
   public MediaStream toMediaStream(LinkedResource linkedResource) {
     return toMediaStream(linkedResource.match(), linkedResource.resource());
@@ -43,12 +37,7 @@ public class MediaStreamService {
   private MediaStream toMediaStream(Match match, Resource resource) {
     StreamID id = resource.id();
     State state = toState(id.getContentId());
-    StreamMetaData md = metaDataStore.find(id.getContentId()).orElse(null);
     int totalDuration = stateService.getTotalDuration(id.getContentId());
-
-    if(md == null && totalDuration != -1) {
-      md = new StreamMetaData(id.getContentId(), Duration.ofSeconds(totalDuration), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-    }
 
     return new MediaStream(
       id,
@@ -59,9 +48,9 @@ public class MediaStreamService {
       resource.size(),
       resource.attributes(),
       state,
-      Optional.ofNullable(md == null ? (totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null) : md.getLength().orElse(null)),
-      Optional.ofNullable(md == null ? null : new MediaStructure(md.getVideoTracks(), md.getAudioTracks(), md.getSubtitleTracks())),
-      md == null ? List.of() : md.getSnapshots(),
+      resource.duration().or(() -> Optional.ofNullable(totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null)),
+      resource.mediaStructure(),
+      resource.snapshots(),
       match
     );
   }

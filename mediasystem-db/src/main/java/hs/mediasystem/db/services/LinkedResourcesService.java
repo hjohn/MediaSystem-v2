@@ -4,6 +4,7 @@ import hs.ddif.annotations.Produces;
 import hs.mediasystem.db.base.CachedStream;
 import hs.mediasystem.db.base.ImportSourceProvider;
 import hs.mediasystem.db.base.StreamableEvent;
+import hs.mediasystem.db.extract.StreamMetaDataEvent;
 import hs.mediasystem.db.services.domain.LinkedResource;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.db.services.domain.Work;
@@ -12,7 +13,9 @@ import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
+import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
@@ -39,12 +42,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-// TODO Could subscribe to StreamMetaData events and use it to enhance LocalResource
 
 @Singleton
 public class LinkedResourcesService {
@@ -60,10 +62,12 @@ public class LinkedResourcesService {
 
   @Inject private DescriptorStore descriptorStore;
   @Inject private EventSource<StreamableEvent> streamableEvents;
+  @Inject private EventSource<StreamMetaDataEvent> streamMetaDataEvents;
   @Inject private ImportSourceProvider importSourceProvider;
   @Inject private ContentPrintProvider contentPrintProvider;
 
   private final Map<ContentID, Object> linkedResourcesByContentId = new HashMap<>();
+  private final Map<ContentID, StreamMetaData> metaDataByContentId = new HashMap<>();
   private final EventStream<LinkedResourceEvent> eventStream = new InMemoryEventStream<>();
 
   @Inject
@@ -73,6 +77,7 @@ public class LinkedResourcesService {
   @PostConstruct
   private void postConstruct() {
     streamableEvents.subscribeAndWait(this::processEvent);
+    streamMetaDataEvents.subscribeAndWait(this::processStreamMetaDataEvent);
   }
 
   @Produces
@@ -110,22 +115,82 @@ public class LinkedResourcesService {
     }
   }
 
-  private LinkedResource toStream(CachedStream cs) {
-    ContentPrint contentPrint = contentPrintProvider.get(cs.getStreamable().getId().getContentId());
+  private void processStreamMetaDataEvent(StreamMetaDataEvent event) {
+    synchronized(linkedResourcesByContentId) {
+      if(event instanceof StreamMetaDataEvent.Updated u) {
+        ContentID contentId = u.streamMetaData().getContentId();
 
-    return new LinkedResource(
+        metaDataByContentId.put(contentId, u.streamMetaData());
+
+        updateLinkedResources(contentId, u.streamMetaData());
+      }
+      else if(event instanceof StreamMetaDataEvent.Removed r) {
+        ContentID contentId = r.id();
+
+        metaDataByContentId.remove(contentId);
+
+        updateLinkedResources(contentId, null);
+      }
+    }
+  }
+
+  private void updateLinkedResources(ContentID contentId, StreamMetaData streamMetaData) {
+    // No concurrent modification exception here because we are only updating keys
+    MAPPER.stream(linkedResourcesByContentId.get(contentId)).forEach(lr -> {
+      LinkedResource merged = merge(lr, streamMetaData);
+
+      linkedResourcesByContentId.compute(contentId, (k, v) -> MAPPER.put(v, merged));
+
+      eventStream.push(new Event<>(new LinkedResourceEvent.Updated(merged)));
+    });
+  }
+
+  private LinkedResource toStream(CachedStream cs) {
+    Streamable streamable = cs.getStreamable();
+    StreamID id = streamable.getId();
+    ContentID contentId = id.getContentId();
+    ContentPrint contentPrint = contentPrintProvider.get(contentId);
+
+    LinkedResource lr = new LinkedResource(
       new Resource(
-        cs.getStreamable().getId(),
-        cs.getStreamable().getParentId(),
-        cs.getStreamable().getUri(),
-        cs.getStreamable().getAttributes(),
+        id,
+        streamable.getParentId(),
+        streamable.getUri(),
+        streamable.getAttributes(),
         cs.getDiscoveryTime(),
         Instant.ofEpochMilli(contentPrint.getLastModificationTime()),
         Optional.ofNullable(contentPrint.getSize()),
-        importSourceProvider.getImportSource(cs.getStreamable().getId().getImportSourceId()).getStreamSource().getTags()
+        importSourceProvider.getImportSource(id.getImportSourceId()).getStreamSource().getTags(),
+        Optional.empty(),
+        Optional.empty(),
+        List.of()
       ),
       cs.getIdentification().map(Identification::getMatch).orElse(new Match(Type.NONE, 1.0f, cs.getDiscoveryTime())),
       createWorks(cs)
+    );
+
+    return Optional.ofNullable(metaDataByContentId.get(contentId)).map(md -> merge(lr, md)).orElse(lr);
+  }
+
+  private static LinkedResource merge(LinkedResource lr, StreamMetaData smd) {
+    Resource resource = lr.resource();
+
+    return new LinkedResource(
+      new Resource(
+        resource.id(),
+        resource.parentId(),
+        resource.uri(),
+        resource.attributes(),
+        resource.discoveryTime(),
+        resource.lastModificationTime(),
+        resource.size(),
+        resource.tags(),
+        smd == null ? Optional.empty() : smd.getLength(),
+        Optional.ofNullable(smd == null ? null : new MediaStructure(smd.getVideoTracks(), smd.getAudioTracks(), smd.getSubtitleTracks())),
+        smd == null ? List.of() : smd.getSnapshots()
+      ),
+      lr.match(),
+      lr.works()
     );
   }
 
@@ -268,6 +333,11 @@ public class LinkedResourcesService {
     @SuppressWarnings("unchecked")
     public Optional<V> findFirst(Object base) {
       return Optional.ofNullable(base == null ? null : base instanceof Map ? ((Map<K, V>)base).values().iterator().next() : (V)base);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Stream<V> stream(Object base) {
+      return base == null ? Stream.empty() : base instanceof Map ? ((Map<K, V>)base).values().stream() : Stream.of((V)base);
     }
 
     public Object put(Object base, V value) {

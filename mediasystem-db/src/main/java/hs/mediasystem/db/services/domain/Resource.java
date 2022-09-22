@@ -1,12 +1,16 @@
 package hs.mediasystem.db.services.domain;
 
 import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.work.MediaStructure;
+import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
 
 import java.net.URI;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public record Resource(
@@ -17,7 +21,10 @@ public record Resource(
   Instant discoveryTime,
   Instant lastModificationTime,
   Optional<Long> size,
-  StreamTags tags
+  StreamTags tags,
+  Optional<Duration> duration,
+  Optional<MediaStructure> mediaStructure,
+  List<Snapshot> snapshots
 ) {
   public Resource {
     if(id == null) {
@@ -49,6 +56,15 @@ public record Resource(
     }
     if(tags == null) {
       throw new IllegalArgumentException("tags cannot be null");
+    }
+    if(duration == null) {
+      throw new IllegalArgumentException("duration cannot be null");
+    }
+    if(mediaStructure == null) {
+      throw new IllegalArgumentException("mediaStructure cannot be null");
+    }
+    if(snapshots == null) {
+      throw new IllegalArgumentException("snapshots cannot be null");
     }
   }
 }

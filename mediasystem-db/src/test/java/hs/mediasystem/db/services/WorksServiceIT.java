@@ -7,6 +7,7 @@ import hs.mediasystem.db.base.ImportSource;
 import hs.mediasystem.db.base.ImportSourceProvider;
 import hs.mediasystem.db.base.StreamStateService;
 import hs.mediasystem.db.base.StreamableEvent;
+import hs.mediasystem.db.extract.StreamMetaDataEvent;
 import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.MatchedResource;
 import hs.mediasystem.domain.stream.ContentID;
@@ -25,7 +26,6 @@ import hs.mediasystem.mediamanager.DescriptorStore;
 import hs.mediasystem.mediamanager.Episodes;
 import hs.mediasystem.mediamanager.Movies;
 import hs.mediasystem.mediamanager.Series;
-import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
@@ -61,10 +61,12 @@ public class WorksServiceIT {
   }
 
   @Produces private static final DescriptorStore DESCRIPTOR_STORE = mock(DescriptorStore.class);
-  @Produces private static final StreamMetaDataStore META_DATA_STORE = mock(StreamMetaDataStore.class);
   @Produces private static final StreamStateService STREAM_STATE_SERVICE = mock(StreamStateService.class);
   @Produces private static final ContentPrintProvider CONTENT_PRINT_PROVIDER = mock(ContentPrintProvider.class);
   @Produces private static final ImportSourceProvider IMPORT_SOURCE_PROVIDER = mock(ImportSourceProvider.class);
+
+  @SuppressWarnings("unchecked")
+  @Produces private static final InMemoryEventStream<StreamMetaDataEvent> streamMetaDataEvents = mock(InMemoryEventStream.class);
 
   @Inject LinkedResourcesService linkedResourcesService;  // cannot be auto-discovered as not directly used, ensure it is present
 
