@@ -96,10 +96,7 @@ public class InMemoryEventStream<T> implements EventStream<T> {
         }
 
         tail.countDown();
-
-        if(!stop.get()) {
-          latch.await();
-        }
+        latch.await();
       }
       catch(InterruptedException e) {
         Thread.currentThread().interrupt();
