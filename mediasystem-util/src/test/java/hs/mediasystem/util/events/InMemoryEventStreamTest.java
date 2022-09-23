@@ -16,9 +16,9 @@ public class InMemoryEventStreamTest {
   void shouldSendAndReceiveEvents() {
     List<String> processed = new ArrayList<>();
 
-    stream.subscribeEvents(x -> processed.add(x.payload()));
+    stream.subscribe(x -> processed.add(x));
 
-    stream.push(new Event<>("A"));
+    stream.push("A");
 
     await().until(() -> processed.size() == 1);
 
@@ -26,13 +26,13 @@ public class InMemoryEventStreamTest {
 
     List<String> processed2 = new ArrayList<>();
 
-    stream.subscribeEvents(x -> processed2.add(x.payload()));
+    stream.subscribe(x -> processed2.add(x));
 
     await().until(() -> processed2.size() == 1);
 
     assertThat(processed2).containsExactly("A");
 
-    stream.push(new Event<>("B"));
+    stream.push("B");
 
     await().until(() -> processed.size() == 2 && processed2.size() == 2);
 
@@ -48,7 +48,7 @@ public class InMemoryEventStreamTest {
       List<String> list = new ArrayList<>();
 
       lists.add(list);
-      stream.subscribeEvents(x -> list.add(x.payload()));
+      stream.subscribe(x -> list.add(x));
     }
 
     new Thread(() -> createEvents(0, 1000)).start();
@@ -112,7 +112,7 @@ public class InMemoryEventStreamTest {
 
   void createEvents(int offset, int count) {
     for(int i = 0; i < count; i++) {
-      stream.push(new Event<>("" + (i + offset)));
+      stream.push("" + (i + offset));
     }
   }
 }

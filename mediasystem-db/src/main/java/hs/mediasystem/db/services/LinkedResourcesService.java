@@ -29,7 +29,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.mediamanager.DescriptorStore;
-import hs.mediasystem.util.events.Event;
 import hs.mediasystem.util.events.EventSource;
 import hs.mediasystem.util.events.EventStream;
 import hs.mediasystem.util.events.InMemoryEventStream;
@@ -105,12 +104,12 @@ public class LinkedResourcesService {
 
         linkedResourcesByContentId.compute(cs.getStreamable().getId().getContentId(), (k, v) -> MAPPER.put(v, resource));
 
-        eventStream.push(new Event<>(new LinkedResourceEvent.Updated(resource)));
+        eventStream.push(new LinkedResourceEvent.Updated(resource));
       }
       else if(event instanceof StreamableEvent.Removed r) {
         linkedResourcesByContentId.compute(r.id().getContentId(), (k, v) -> MAPPER.remove(v, r.id()));
 
-        eventStream.push(new Event<>(new LinkedResourceEvent.Removed(r.id())));
+        eventStream.push(new LinkedResourceEvent.Removed(r.id()));
       }
     }
   }
@@ -141,7 +140,7 @@ public class LinkedResourcesService {
 
       linkedResourcesByContentId.compute(contentId, (k, v) -> MAPPER.put(v, merged));
 
-      eventStream.push(new Event<>(new LinkedResourceEvent.Updated(merged)));
+      eventStream.push(new LinkedResourceEvent.Updated(merged));
     });
   }
 

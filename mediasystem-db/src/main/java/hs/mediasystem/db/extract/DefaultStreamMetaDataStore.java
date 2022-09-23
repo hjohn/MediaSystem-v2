@@ -7,7 +7,6 @@ import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.Throwables;
-import hs.mediasystem.util.events.Event;
 import hs.mediasystem.util.events.EventSource;
 import hs.mediasystem.util.events.EventStream;
 import hs.mediasystem.util.events.InMemoryEventStream;
@@ -50,7 +49,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
       try {
         StreamMetaData smd = codec.decode(r.getJson());
 
-        eventStream.push(new Event<>(new StreamMetaDataEvent.Updated(smd)));
+        eventStream.push(new StreamMetaDataEvent.Updated(smd));
 
         cache.put(smd.getContentId(), smd);
       }
@@ -69,7 +68,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   void store(StreamMetaData streamMetaData) {
     database.store(toRecord(streamMetaData));
 
-    eventStream.push(new Event<>(new StreamMetaDataEvent.Updated(streamMetaData)));
+    eventStream.push(new StreamMetaDataEvent.Updated(streamMetaData));
 
     cache.put(streamMetaData.getContentId(), streamMetaData);
   }

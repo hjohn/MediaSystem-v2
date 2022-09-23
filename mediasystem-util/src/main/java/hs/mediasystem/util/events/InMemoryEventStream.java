@@ -9,18 +9,18 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 public class InMemoryEventStream<T> implements EventStream<T> {
-  private final List<Event<T>> events = new ArrayList<>();
+  private final List<T> events = new ArrayList<>();
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   private volatile CountDownLatch latch = new CountDownLatch(1);
 
   @Override
-  public void push(Event<T> event) {
+  public void push(T event) {
     push(List.of(event));
   }
 
   @Override
-  public void push(List<Event<T>> events) {
+  public void push(List<T> events) {
     lock.writeLock().lock();
 
     try {
@@ -35,16 +35,16 @@ public class InMemoryEventStream<T> implements EventStream<T> {
   }
 
   @Override
-  public Subscription subscribeEvents(Consumer<Event<T>> consumer) {
+  public Subscription subscribe(Consumer<T> consumer) {
     return subscribe(consumer, false);
   }
 
   @Override
-  public Subscription subscribeEventsAndWait(Consumer<Event<T>> consumer) {
+  public Subscription subscribeAndWait(Consumer<T> consumer) {
     return subscribe(consumer, true);
   }
 
-  private Subscription subscribe(Consumer<Event<T>> consumer, boolean synchronous) {
+  private Subscription subscribe(Consumer<T> consumer, boolean synchronous) {
     AtomicBoolean stop = new AtomicBoolean();
     CountDownLatch tail = new CountDownLatch(1);
     Thread thread = new Thread(() -> consumer(consumer, stop, tail));
@@ -69,14 +69,14 @@ public class InMemoryEventStream<T> implements EventStream<T> {
     };
   }
 
-  private void consumer(Consumer<Event<T>> consumer, AtomicBoolean stop, CountDownLatch tail) {
+  private void consumer(Consumer<T> consumer, AtomicBoolean stop, CountDownLatch tail) {
     int pointer = 0;
     CountDownLatch latch = this.latch;
 
     while(!stop.get()) {
       try {
         while(!stop.get()) {
-          Event<T> event;
+          T event;
 
           lock.readLock().lockInterruptibly();
 

@@ -10,7 +10,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamableStore;
 import hs.mediasystem.util.Throwables;
-import hs.mediasystem.util.events.Event;
 import hs.mediasystem.util.events.EventSource;
 import hs.mediasystem.util.events.EventStream;
 import hs.mediasystem.util.events.InMemoryEventStream;
@@ -84,14 +83,14 @@ public class DatabaseStreamStore implements StreamableStore {
     // parents first:
     for(StreamID id : cache.keySet()) {
       if(childIndex.containsKey(id)) {
-        eventStream.push(new Event<>(new StreamableEvent.Updated(cache.get(id))));
+        eventStream.push(new StreamableEvent.Updated(cache.get(id)));
       }
     }
 
     // children:
     for(StreamID id : cache.keySet()) {
       if(!childIndex.containsKey(id)) {
-        eventStream.push(new Event<>(new StreamableEvent.Updated(cache.get(id))));
+        eventStream.push(new StreamableEvent.Updated(cache.get(id)));
       }
     }
 
@@ -214,9 +213,9 @@ public class DatabaseStreamStore implements StreamableStore {
     if(cachedStream != null) {
       StreamID id = cachedStream.getStreamable().getId();
 
-      eventStream.push(new Event<>(new StreamableEvent.Removed(streamId)));
+      eventStream.push(new StreamableEvent.Removed(streamId));
 
-      List.copyOf(childIndex.getOrDefault(streamId, List.of())).forEach(sid -> eventStream.push(new Event<>(new StreamableEvent.Removed(sid))));
+      List.copyOf(childIndex.getOrDefault(streamId, List.of())).forEach(sid -> eventStream.push(new StreamableEvent.Removed(sid)));
 
       database.delete(id.getImportSourceId(), id.getContentId().asInt(), id.getName());  // this cascade deletes children
       removeAllFromCache(streamId);
@@ -234,7 +233,7 @@ public class DatabaseStreamStore implements StreamableStore {
 
     database.store(codec.toRecord(updatedCachedStream));
 
-    eventStream.push(new Event<>(new StreamableEvent.Updated(updatedCachedStream)));
+    eventStream.push(new StreamableEvent.Updated(updatedCachedStream));
 
     removeFromCache(streamable.getId());
     putInCache(updatedCachedStream);
@@ -244,7 +243,7 @@ public class DatabaseStreamStore implements StreamableStore {
     toIdentifiedCachedStream(streamId, identification).ifPresent(ucs -> {
       database.store(codec.toRecord(ucs));
 
-      eventStream.push(new Event<>(new StreamableEvent.Updated(ucs)));
+      eventStream.push(new StreamableEvent.Updated(ucs));
 
       removeFromCache(streamId);
       putInCache(ucs);

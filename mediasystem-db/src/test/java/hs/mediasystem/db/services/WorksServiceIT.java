@@ -30,7 +30,6 @@ import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.events.Event;
 import hs.mediasystem.util.events.InMemoryEventStream;
 
 import java.net.URI;
@@ -95,13 +94,13 @@ public class WorksServiceIT {
       when(IMPORT_SOURCE_PROVIDER.getImportSource(anyInt())).thenReturn(new ImportSource(null, 1, null, new StreamSource(new StreamTags(Set.of("cartoon")), List.of())));
       when(CONTENT_PRINT_PROVIDER.get(new ContentID(2001))).thenReturn(new ContentPrint(new ContentID(2001), 4002L, 8004L, new byte[32], Instant.now()));
 
-      streamableEvents.push(new Event<>(new StreamableEvent.Updated(new CachedStream(
+      streamableEvents.push(new StreamableEvent.Updated(new CachedStream(
         new Streamable(MediaType.MOVIE, URI.create("http://here"), new StreamID(1, new ContentID(2001), "terminator.avi"), null, Attributes.of("title", "Terminator")),
         null,
         discoveryTime,
         Instant.now(),
         Instant.now()
-      ))));
+      )));
 
       sleep(100);
     }
@@ -139,13 +138,13 @@ public class WorksServiceIT {
       {
         when(DESCRIPTOR_STORE.find(id)).thenReturn(Optional.of(Movies.create(id, "The Terminator")));
 
-        streamableEvents.push(new Event<>(new StreamableEvent.Updated(new CachedStream(
+        streamableEvents.push(new StreamableEvent.Updated(new CachedStream(
           new Streamable(MediaType.MOVIE, URI.create("http://here"), new StreamID(1, new ContentID(2001), "terminator.avi"), null, Attributes.of("title", "Terminator")),
           new Identification(List.of(id), new Match(Type.NAME_AND_RELEASE_DATE, 0.99f, matchTime)),
           discoveryTime,
           Instant.now(),
           Instant.now()
-        ))));
+        )));
 
         sleep(100);
       }
@@ -207,29 +206,29 @@ public class WorksServiceIT {
       when(DESCRIPTOR_STORE.find(episodeId2)).thenReturn(Optional.of(episode2));
       when(DESCRIPTOR_STORE.find(episodeId3)).thenReturn(Optional.of(episode3));
 
-      streamableEvents.push(new Event<>(new StreamableEvent.Updated(new CachedStream(
+      streamableEvents.push(new StreamableEvent.Updated(new CachedStream(
         new Streamable(MediaType.SERIE, URI.create("http://serie"), serieStreamId, null, Attributes.of("title", "Star Trek")),
         new Identification(List.of(id), new Match(Type.NAME_AND_RELEASE_DATE, 0.99f, matchTime)),
         discoveryTime,
         Instant.now(),
         Instant.now()
-      ))));
+      )));
 
-      streamableEvents.push(new Event<>(new StreamableEvent.Updated(new CachedStream(
+      streamableEvents.push(new StreamableEvent.Updated(new CachedStream(
         new Streamable(MediaType.EPISODE, URI.create("http://serie/Star.Trek.-.S01E01-02.avi"), new StreamID(1, new ContentID(2011), "Star Trek - S01E01-02.avi"), serieStreamId, Attributes.of("title", "Star Trek")),
         new Identification(List.of(episodeId1, episodeId2), new Match(Type.DERIVED, 1.0f, matchTime)),
         discoveryTime,
         Instant.now(),
         Instant.now()
-      ))));
+      )));
 
-      streamableEvents.push(new Event<>(new StreamableEvent.Updated(new CachedStream(
+      streamableEvents.push(new StreamableEvent.Updated(new CachedStream(
         new Streamable(MediaType.EPISODE, URI.create("http://serie/Star.Trek.-.S01E03.avi"), new StreamID(1, new ContentID(2012), "Star Trek - S01E03.avi"), serieStreamId, Attributes.of("title", "Star Trek")),
         new Identification(List.of(episodeId3), new Match(Type.DERIVED, 1.0f, matchTime)),
         discoveryTime,
         Instant.now(),
         Instant.now()
-      ))));
+      )));
 
       await().until(() -> linkedWorksService.findChildren(new WorkId(EMDB, MediaType.SERIE, "SERIE-0001")).size() == 3);
     }
@@ -262,24 +261,24 @@ public class WorksServiceIT {
     @Nested
     class AndThenRenamedToMatchExternalDataSource {
       {
-        streamableEvents.push(new Event<>(new StreamableEvent.Updated(new CachedStream(
+        streamableEvents.push(new StreamableEvent.Updated(new CachedStream(
           new Streamable(MediaType.EPISODE, URI.create("http://serie/Star.Trek.-.S01E01.avi"), new StreamID(1, new ContentID(2011), "Star Trek - S01E01.avi"), serieStreamId, Attributes.of("title", "Star Trek")),
           new Identification(List.of(episodeId1), new Match(Type.DERIVED, 1.0f, matchTime)),
           discoveryTime,
           Instant.now(),
           Instant.now()
-        ))));
+        )));
 
-        streamableEvents.push(new Event<>(new StreamableEvent.Updated(new CachedStream(
+        streamableEvents.push(new StreamableEvent.Updated(new CachedStream(
           new Streamable(MediaType.EPISODE, URI.create("http://serie/Star.Trek.-.S01E02.avi"), new StreamID(1, new ContentID(2012), "Star Trek - S01E02.avi"), serieStreamId, Attributes.of("title", "Star Trek")),
           new Identification(List.of(episodeId2), new Match(Type.DERIVED, 1.0f, matchTime)),
           discoveryTime,
           Instant.now(),
           Instant.now()
-        ))));
+        )));
 
-        streamableEvents.push(new Event<>(new StreamableEvent.Removed(new StreamID(1, new ContentID(2011), "Star Trek - S01E01-02.avi"))));
-        streamableEvents.push(new Event<>(new StreamableEvent.Removed(new StreamID(1, new ContentID(2012), "Star Trek - S01E03.avi"))));
+        streamableEvents.push(new StreamableEvent.Removed(new StreamID(1, new ContentID(2011), "Star Trek - S01E01-02.avi")));
+        streamableEvents.push(new StreamableEvent.Removed(new StreamID(1, new ContentID(2012), "Star Trek - S01E03.avi")));
 
         sleep(100);
       }
