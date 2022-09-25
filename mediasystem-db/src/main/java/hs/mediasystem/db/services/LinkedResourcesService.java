@@ -159,7 +159,7 @@ public class LinkedResourcesService {
         cs.getDiscoveryTime(),
         Instant.ofEpochMilli(contentPrint.getLastModificationTime()),
         Optional.ofNullable(contentPrint.getSize()),
-        importSourceProvider.getImportSource(id.getImportSourceId()).getStreamSource().getTags(),
+        importSourceProvider.getImportSource(id.getImportSourceId()).getStreamSource().tags(),
         Optional.empty(),
         Optional.empty(),
         List.of()

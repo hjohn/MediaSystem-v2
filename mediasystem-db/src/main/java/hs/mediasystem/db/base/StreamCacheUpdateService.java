@@ -236,7 +236,7 @@ public class StreamCacheUpdateService {
 
     try(Key key = storeConsistencyLock.lock()) {
       Streamable streamable = streamStore.findStream(streamId).orElseThrow(() -> new IllegalStateException("Stream with id " + streamId + " no longer available"));   // As tasks can take a while before they start, fetch latest state from StreamStore first
-      List<String> dataSourceNames = parent == null ? streamStore.findStreamSource(streamId).getDataSourceNames() : List.of(parent.getId().getDataSource().getName());
+      List<String> dataSourceNames = parent == null ? streamStore.findStreamSource(streamId).dataSourceNames() : List.of(parent.getId().getDataSource().getName());
 
       key.earlyUnlock();
 
