@@ -20,6 +20,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
@@ -549,6 +550,68 @@ public class Database {
       return select(cls, null);
     }
 
+    /**
+     * Executes the given SQL as a query returning a result set, and returns the
+     * first result (if present) as a type T created by the given mapper function.
+     *
+     * @param <T> the type of the mapped results
+     * @param mapper a mapper to map the results, cannot be {@code null}
+     * @param sql a SQL string which results in a result set, cannot be {@code null}
+     * @param parameters optional parameters
+     * @return an optional mapped result, never {@code null}
+     * @throws DatabaseException when an I/O error occurs
+     */
+    public <T> Optional<T> mapOne(Mapper<T> mapper, String sql, Object... parameters) throws DatabaseException {
+      List<T> records = mapAll(
+        Objects.requireNonNull(mapper, "mapper"),
+        Objects.requireNonNull(sql, "sql"),
+        parameters
+      );
+
+      return records.isEmpty() ? Optional.empty() : Optional.of(records.get(0));
+    }
+
+    /**
+     * Executes the given SQL as a query returning a result set, and returns all
+     * results (if any) as a list of type T created by passing each result to
+     * the given mapper function.
+     *
+     * @param <T> the type of the mapped results
+     * @param mapper a mapper to map the results, cannot be {@code null}
+     * @param sql a SQL string which results in a result set, cannot be {@code null}
+     * @param parameters optional parameters
+     * @return a list of mapped results, never {@code null} but can be empty
+     * @throws DatabaseException when an I/O error occurs
+     */
+    public <T> List<T> mapAll(Mapper<T> mapper, String sql, Object... parameters) throws DatabaseException {
+      Objects.requireNonNull(mapper, "mapper");
+      Objects.requireNonNull(sql, "sql");
+
+      List<T> records = new ArrayList<>();
+
+      query(
+        (rs, metaData) -> {
+          Object[] data = new Object[metaData.getColumnCount()];
+
+          for(int i = 1; i <= metaData.getColumnCount(); i++) {
+            data[i - 1] = rs.getObject(i);
+          }
+
+          try {
+            records.add(mapper.map(data));
+          }
+          catch(Throwable e) {
+            throw new IllegalStateException("Mapping of result failed: " + Arrays.toString(data), e);
+          }
+        },
+        Function.identity(),
+        sql,
+        parameters
+      );
+
+      return records;
+    }
+
     private <T> void query(ResultSetConsumer<T> consumer, Function<ResultSetMetaData, T> metaDataConverter, String sql, Object... parameters) {
       ensureNotFinished();
 
@@ -586,6 +649,15 @@ public class Database {
       }
 
       return "SELECT " + fields + " FROM " + from + (whereCondition == null ? "" : " WHERE " + whereCondition);
+    }
+
+    public synchronized int execute(String sql) throws DatabaseException {
+      try(PreparedStatement statement = connection.prepareStatement(sql)) {
+        return statement.executeUpdate();
+      }
+      catch(SQLException e) {
+        throw new DatabaseException(this, sql, e);
+      }
     }
 
     /**

@@ -35,5 +35,11 @@
       <artifactId>mockito-junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.zonky.test</groupId>
+      <artifactId>embedded-postgres</artifactId>
+      <version>1.2.6</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
