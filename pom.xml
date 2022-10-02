@@ -11,7 +11,7 @@
   <properties>
     <revision>2.0.0-SNAPSHOT</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <version.jackson>2.9.9</version.jackson>
+    <version.jackson>2.13.4</version.jackson>
     <version.javafx>18.0.2</version.javafx>
     <version.ddif>4.0.0-alpha.6</version.ddif>
     <version.eventstream>0.3.0</version.eventstream>
@@ -208,8 +208,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.0</version>
         <configuration>
-          <source>16</source>
-          <target>16</target>
+          <source>17</source>
+          <target>17</target>
           <compilerArgument>-parameters</compilerArgument>
         </configuration>
       </plugin>
