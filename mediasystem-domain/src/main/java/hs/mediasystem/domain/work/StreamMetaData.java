@@ -12,14 +12,14 @@ import java.util.Optional;
 
 public class StreamMetaData {
   private final ContentID contentId;
-  private final Optional<Duration> duration;
+  private final Optional<Duration> length;
   @JsonAlias("videoStreams") private final List<VideoTrack> videoTracks;
   private final List<AudioTrack> audioTracks;
   private final List<SubtitleTrack> subtitleTracks;
   private final List<Snapshot> snapshots;
 
   // TODO remove aliases after a while -- think of a way to migrate; might be good to store JSON not as byte[]
-  public StreamMetaData(ContentID contentId, Duration duration, @JsonAlias("videoStreams") List<VideoTrack> videoTracks, @JsonAlias("audioStreams") List<AudioTrack> audioTracks, @JsonAlias("subtitleStreams") List<SubtitleTrack> subtitleTracks, List<Snapshot> snapshots) {
+  public StreamMetaData(ContentID contentId, @JsonAlias("duration") Duration length, @JsonAlias("videoStreams") List<VideoTrack> videoTracks, @JsonAlias("audioStreams") List<AudioTrack> audioTracks, @JsonAlias("subtitleStreams") List<SubtitleTrack> subtitleTracks, List<Snapshot> snapshots) {
     if(contentId == null) {
       throw new IllegalArgumentException("contentId cannot be null");
     }
@@ -40,7 +40,7 @@ public class StreamMetaData {
     }
 
     this.contentId = contentId;
-    this.duration = Optional.ofNullable(duration);
+    this.length = Optional.ofNullable(length);
     this.videoTracks = Collections.unmodifiableList(videoTracks);
     this.audioTracks = Collections.unmodifiableList(audioTracks);
     this.subtitleTracks = Collections.unmodifiableList(subtitleTracks);
@@ -58,7 +58,7 @@ public class StreamMetaData {
    * @return the duration, optional
    */
   public Optional<Duration> getLength() {
-    return duration;
+    return length;
   }
 
   public List<VideoTrack> getVideoTracks() {
