@@ -31,7 +31,8 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.mediamanager.DescriptorStore;
 import hs.mediasystem.util.events.EventSource;
 import hs.mediasystem.util.events.EventStream;
-import hs.mediasystem.util.events.InMemoryEventStream;
+import hs.mediasystem.util.events.InMemoryEventStore;
+import hs.mediasystem.util.events.SimpleEventStream;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -67,7 +68,7 @@ public class LinkedResourcesService {
 
   private final Map<ContentID, Object> linkedResourcesByContentId = new HashMap<>();
   private final Map<ContentID, StreamMetaData> metaDataByContentId = new HashMap<>();
-  private final EventStream<LinkedResourceEvent> eventStream = new InMemoryEventStream<>();
+  private final EventStream<LinkedResourceEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>());
 
   @Inject
   private LinkedResourcesService() {

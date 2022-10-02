@@ -9,7 +9,8 @@ import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.events.EventSource;
 import hs.mediasystem.util.events.EventStream;
-import hs.mediasystem.util.events.InMemoryEventStream;
+import hs.mediasystem.util.events.InMemoryEventStore;
+import hs.mediasystem.util.events.SimpleEventStream;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -32,7 +33,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Inject private StreamMetaDataDatabase database;
   @Inject private StreamMetaDataCodec codec;
 
-  private final EventStream<StreamMetaDataEvent> eventStream = new InMemoryEventStream<>();
+  private final EventStream<StreamMetaDataEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>());
 
   private final Map<ContentID, StreamMetaData> cache = new ConcurrentHashMap<>();
 

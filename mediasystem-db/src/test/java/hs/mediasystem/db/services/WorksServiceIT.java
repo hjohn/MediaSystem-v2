@@ -30,7 +30,9 @@ import hs.mediasystem.mediamanager.StreamSource;
 import hs.mediasystem.mediamanager.StreamTags;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.events.InMemoryEventStream;
+import hs.mediasystem.util.events.EventStream;
+import hs.mediasystem.util.events.InMemoryEventStore;
+import hs.mediasystem.util.events.SimpleEventStream;
 
 import java.net.URI;
 import java.time.Instant;
@@ -55,8 +57,8 @@ import static org.mockito.Mockito.when;
 public class WorksServiceIT {
   @Produces
   @Singleton
-  private static final InMemoryEventStream<StreamableEvent> createStream() {
-    return new InMemoryEventStream<>();
+  private static final EventStream<StreamableEvent> createStream() {
+    return new SimpleEventStream<>(new InMemoryEventStore<>());
   }
 
   @Produces private static final DescriptorStore DESCRIPTOR_STORE = mock(DescriptorStore.class);
@@ -65,12 +67,12 @@ public class WorksServiceIT {
   @Produces private static final ImportSourceProvider IMPORT_SOURCE_PROVIDER = mock(ImportSourceProvider.class);
 
   @SuppressWarnings("unchecked")
-  @Produces private static final InMemoryEventStream<StreamMetaDataEvent> streamMetaDataEvents = mock(InMemoryEventStream.class);
+  @Produces private static final EventStream<StreamMetaDataEvent> streamMetaDataEvents = mock(EventStream.class);
 
   @Inject LinkedResourcesService linkedResourcesService;  // cannot be auto-discovered as not directly used, ensure it is present
 
   @Inject private LinkedWorksService linkedWorksService;
-  @Inject private InMemoryEventStream<StreamableEvent> streamableEvents;
+  @Inject private EventStream<StreamableEvent> streamableEvents;
 
   private static final DataSource INTERNAL = DataSource.instance("@INTERNAL");
   private static final DataSource EMDB = DataSource.instance("EMDB");

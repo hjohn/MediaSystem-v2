@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-public class InMemoryEventStreamTest {
-  private EventStream<String> stream = new InMemoryEventStream<>();
+public class SimpleEventStreamTest {
+  private EventStream<String> stream = new SimpleEventStream<>(new InMemoryEventStore<>());
 
   @Test
   void shouldSendAndReceiveEvents() {

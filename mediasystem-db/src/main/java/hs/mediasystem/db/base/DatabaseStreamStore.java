@@ -12,7 +12,8 @@ import hs.mediasystem.mediamanager.StreamableStore;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.events.EventSource;
 import hs.mediasystem.util.events.EventStream;
-import hs.mediasystem.util.events.InMemoryEventStream;
+import hs.mediasystem.util.events.InMemoryEventStore;
+import hs.mediasystem.util.events.SimpleEventStream;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -36,7 +37,7 @@ import javax.inject.Singleton;
 public class DatabaseStreamStore implements StreamableStore {
   private static final Logger LOGGER = Logger.getLogger(DatabaseStreamStore.class.getName());
 
-  private final EventStream<StreamableEvent> eventStream = new InMemoryEventStream<>();
+  private final EventStream<StreamableEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>());
 
   // Data managed by this store
   private final Map<StreamID, CachedStream> cache = new HashMap<>();
