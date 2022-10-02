@@ -21,7 +21,7 @@ public class ContentPrintRecord extends DatabaseObject {
   private long lastModificationTime;  // in milliseconds since epoch
 
   @Column
-  private Long lastSeenTime;  // in milliseconds since epoch
+  private Long lastSeenTime;  // in milliseconds since epoch, if null was seen recently
 
   @Column(name = "creation_ms")
   private long creationMillis;  // signature creation millis
