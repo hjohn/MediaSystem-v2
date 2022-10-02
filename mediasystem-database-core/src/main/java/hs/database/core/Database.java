@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -245,6 +244,10 @@ public class Database {
   }
 
   public class Transaction implements AutoCloseable {
+    interface ResultSetConsumer<T> {
+      void accept(ResultSet resultSet, T metaData) throws SQLException;
+    }
+
     private final Transaction parent;
     private final Connection connection;
     private final Savepoint savepoint;
@@ -399,27 +402,22 @@ public class Database {
     public List<Record> select(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
       List<Record> records = new ArrayList<>();
 
-      BiConsumer<ResultSet, FieldMapper> consumer = new BiConsumer<>() {
+      ResultSetConsumer<FieldMapper> consumer = new ResultSetConsumer<>() {
         @Override
-        public void accept(ResultSet rs, FieldMapper fieldMapper) {
-          try {
-            Object[] values = new Object[fieldMapper.getColumnCount()];
+        public void accept(ResultSet rs, FieldMapper fieldMapper) throws SQLException {
+          Object[] values = new Object[fieldMapper.getColumnCount()];
 
-            for(int i = 1; i <= fieldMapper.getColumnCount(); i++) {
-              values[i - 1] = rs.getObject(i);
-            }
+          for(int i = 1; i <= fieldMapper.getColumnCount(); i++) {
+            values[i - 1] = rs.getObject(i);
+          }
 
-            records.add(new Record(values, fieldMapper));
-          }
-          catch(SQLException e) {
-            throw new IllegalStateException(e);
-          }
+          records.add(new Record(values, fieldMapper));
         }
       };
 
       String sql = "SELECT " + fields + " FROM " + tableName + (whereCondition == null ? "" : " WHERE " + whereCondition);
 
-      select(consumer, this::toFieldMapper, sql, parameters);
+      query(consumer, this::toFieldMapper, sql, parameters);
 
       return records;
     }
@@ -476,7 +474,7 @@ public class Database {
     public synchronized <T> void select(Consumer<T> consumer, Class<T> cls, String whereCondition, Object... parameters) throws DatabaseException {
       RecordMapper<T> recordMapper = getRecordMapper(cls);
 
-      BiConsumer<ResultSet, ResultSetMetaData> consumer2 = new BiConsumer<>() {
+      ResultSetConsumer<ResultSetMetaData> consumer2 = new ResultSetConsumer<>() {
         @Override
         public void accept(ResultSet rs, ResultSetMetaData metaData) {
           consumer.accept(toInstance(cls, recordMapper, rs, metaData));
@@ -485,15 +483,15 @@ public class Database {
 
       String sql = Database.buildSelect(cls, whereCondition);
 
-      select(consumer2, Function.identity(), sql, parameters);
+      query(consumer2, Function.identity(), sql, parameters);
     }
 
     public synchronized List<Object[]> select(Class<?>[] classes, String[] aliases, String from, String whereCondition, Object... parameters) throws DatabaseException {
       List<Object[]> records = new ArrayList<>();
 
-      BiConsumer<ResultSet, ResultSetMetaData> consumer = new BiConsumer<>() {
+      ResultSetConsumer<ResultSetMetaData> consumer = new ResultSetConsumer<>() {
         @Override
-        public void accept(ResultSet rs, ResultSetMetaData metaData) {
+        public void accept(ResultSet rs, ResultSetMetaData metaData) throws SQLException {
           try {
             Object[] tuple = new Object[classes.length];
 
@@ -533,15 +531,12 @@ public class Database {
           catch(IllegalAccessException | InstantiationException | InvocationTargetException | NoSuchMethodException e) {
             throw new DatabaseException(Transaction.this, "Unable to instantiate class", e);
           }
-          catch(SQLException e) {
-            throw new IllegalStateException(e);
-          }
         }
       };
 
       String sql = buildSelect(classes, aliases, from, whereCondition);
 
-      select(consumer, Function.identity(), sql, parameters);
+      query(consumer, Function.identity(), sql, parameters);
 
       return records;
     }
@@ -554,7 +549,7 @@ public class Database {
       return select(cls, null);
     }
 
-    private <T> void select(BiConsumer<ResultSet, T> consumer, Function<ResultSetMetaData, T> metaDataConverter, String sql, Object... parameters) {
+    private <T> void query(ResultSetConsumer<T> consumer, Function<ResultSetMetaData, T> metaDataConverter, String sql, Object... parameters) {
       ensureNotFinished();
 
       LOG.fine(this + ": " + sql + ": " + Arrays.toString(parameters));
