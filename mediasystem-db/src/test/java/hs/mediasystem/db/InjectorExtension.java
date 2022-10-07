@@ -4,6 +4,7 @@ import hs.ddif.core.Injector;
 import hs.ddif.jsr330.Injectors;
 
 import java.lang.reflect.Constructor;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstanceFactory;
@@ -23,11 +24,15 @@ public class InjectorExtension implements TestInstanceFactory {
       if(factoryContext.getOuterInstance().isPresent()) {
         Object outer = factoryContext.getOuterInstance().get();
 
-        Constructor<?> constructor = factoryContext.getTestClass().getDeclaredConstructor(outer.getClass());
+        Constructor<?>[] constructors = factoryContext.getTestClass().getDeclaredConstructors();
 
-        constructor.setAccessible(true);
+        if(constructors.length != 1 || constructors[0].getParameterCount() != 1) {
+          throw new IllegalArgumentException("Must have exactly one declared constructor without parameters: " + Arrays.toString(constructors));
+        }
 
-        return constructor.newInstance(outer);
+        constructors[0].setAccessible(true);
+
+        return constructors[0].newInstance(outer);
       }
 
       return injector.getInstance(factoryContext.getTestClass());
