@@ -12,6 +12,7 @@ import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
@@ -63,7 +64,7 @@ public class StreamMetaDataFactory {
         snapshots.add(new Snapshot(new ImageURI("localdb://" + contentId.asInt() + "/" + index, null), (int)offset));
       }
 
-      return new StreamMetaData(contentId, duration, grabber.getVideoTracks(), grabber.getAudioTracks(), grabber.getSubtitleTracks(), snapshots);
+      return new StreamMetaData(contentId, Optional.of(duration), grabber.getVideoTracks(), grabber.getAudioTracks(), grabber.getSubtitleTracks(), snapshots);
     }
     finally {
       grabber.stop();

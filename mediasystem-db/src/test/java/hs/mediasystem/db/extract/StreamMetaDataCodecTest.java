@@ -35,7 +35,7 @@ public class StreamMetaDataCodecTest {
   void test() throws IOException {
     byte[] data = codec.encode(new StreamMetaData(
       new ContentID(120),
-      Duration.ofSeconds(999),
+      Optional.of(Duration.ofSeconds(999)),
       List.of(
         new VideoTrack("title", "lang", "mp4", new Resolution(100, 200, 1.2f), 1234567L, 23.93f)
       ),
@@ -52,12 +52,12 @@ public class StreamMetaDataCodecTest {
 
     StreamMetaData metaData = codec.decode(data);
 
-    assertEquals(new ContentID(120), metaData.getContentId());
-    assertEquals(Optional.of(Duration.ofSeconds(999)), metaData.getLength());
-    assertEquals("title", metaData.getVideoTracks().get(0).title());
-    assertEquals("mp3", metaData.getAudioTracks().get(0).codec());
-    assertEquals("srt", metaData.getSubtitleTracks().get(0).codec());
-    assertEquals(new ImageURI("localdb://12345/1", null), metaData.getSnapshots().get(0).imageUri());
+    assertEquals(new ContentID(120), metaData.contentId());
+    assertEquals(Optional.of(Duration.ofSeconds(999)), metaData.length());
+    assertEquals("title", metaData.videoTracks().get(0).title());
+    assertEquals("mp3", metaData.audioTracks().get(0).codec());
+    assertEquals("srt", metaData.subtitleTracks().get(0).codec());
+    assertEquals(new ImageURI("localdb://12345/1", null), metaData.snapshots().get(0).imageUri());
   }
 
 }

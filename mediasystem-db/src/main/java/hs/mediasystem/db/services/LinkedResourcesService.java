@@ -118,7 +118,7 @@ public class LinkedResourcesService {
   private void processStreamMetaDataEvent(StreamMetaDataEvent event) {
     synchronized(linkedResourcesByContentId) {
       if(event instanceof StreamMetaDataEvent.Updated u) {
-        ContentID contentId = u.streamMetaData().getContentId();
+        ContentID contentId = u.streamMetaData().contentId();
 
         metaDataByContentId.put(contentId, u.streamMetaData());
 
@@ -185,9 +185,9 @@ public class LinkedResourcesService {
         resource.lastModificationTime(),
         resource.size(),
         resource.tags(),
-        smd == null ? Optional.empty() : smd.getLength(),
-        Optional.ofNullable(smd == null ? null : new MediaStructure(smd.getVideoTracks(), smd.getAudioTracks(), smd.getSubtitleTracks())),
-        smd == null ? List.of() : smd.getSnapshots()
+        smd == null ? Optional.empty() : smd.length(),
+        Optional.ofNullable(smd == null ? null : new MediaStructure(smd.videoTracks(), smd.audioTracks(), smd.subtitleTracks())),
+        smd == null ? List.of() : smd.snapshots()
       ),
       lr.match(),
       lr.works()

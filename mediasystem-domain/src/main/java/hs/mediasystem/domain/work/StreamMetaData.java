@@ -5,21 +5,20 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import hs.mediasystem.domain.stream.ContentID;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class StreamMetaData {
-  private final ContentID contentId;
-  private final Optional<Duration> length;
-  @JsonAlias("videoStreams") private final List<VideoTrack> videoTracks;
-  private final List<AudioTrack> audioTracks;
-  private final List<SubtitleTrack> subtitleTracks;
-  private final List<Snapshot> snapshots;
+public record StreamMetaData(
+  ContentID contentId,
+  @JsonAlias("duration") Optional<Duration> length,
+  @JsonAlias("videoStreams") List<VideoTrack> videoTracks,
+  @JsonAlias("audioStreams") List<AudioTrack> audioTracks,
+  @JsonAlias("subtitleStreams") List<SubtitleTrack> subtitleTracks,
+  List<Snapshot> snapshots) {
 
   // TODO remove aliases after a while -- think of a way to migrate; might be good to store JSON not as byte[]
-  public StreamMetaData(ContentID contentId, @JsonAlias("duration") Duration length, @JsonAlias("videoStreams") List<VideoTrack> videoTracks, @JsonAlias("audioStreams") List<AudioTrack> audioTracks, @JsonAlias("subtitleStreams") List<SubtitleTrack> subtitleTracks, List<Snapshot> snapshots) {
+  public StreamMetaData {
     if(contentId == null) {
       throw new IllegalArgumentException("contentId cannot be null");
     }
@@ -38,42 +37,5 @@ public class StreamMetaData {
     if(snapshots.stream().filter(Objects::isNull).findAny().isPresent()) {
       throw new IllegalArgumentException("snapshots cannot contain nulls");
     }
-
-    this.contentId = contentId;
-    this.length = Optional.ofNullable(length);
-    this.videoTracks = Collections.unmodifiableList(videoTracks);
-    this.audioTracks = Collections.unmodifiableList(audioTracks);
-    this.subtitleTracks = Collections.unmodifiableList(subtitleTracks);
-    this.snapshots = Collections.unmodifiableList(snapshots);
-  }
-
-  public ContentID getContentId() {
-    return contentId;
-  }
-
-  /**
-   * Returns the duration discovered as part of this metadata.  This
-   * is optional as not all streams have a duration (a directory for a example).
-   *
-   * @return the duration, optional
-   */
-  public Optional<Duration> getLength() {
-    return length;
-  }
-
-  public List<VideoTrack> getVideoTracks() {
-    return videoTracks;
-  }
-
-  public List<AudioTrack> getAudioTracks() {
-    return audioTracks;
-  }
-
-  public List<SubtitleTrack> getSubtitleTracks() {
-    return subtitleTracks;
-  }
-
-  public List<Snapshot> getSnapshots() {
-    return snapshots;
   }
 }

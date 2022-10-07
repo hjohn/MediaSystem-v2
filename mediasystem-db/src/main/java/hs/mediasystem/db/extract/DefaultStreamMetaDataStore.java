@@ -1,26 +1,21 @@
 package hs.mediasystem.db.extract;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
+import hs.database.core.Database;
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.db.events.PersistentEventStore;
+import hs.mediasystem.db.jackson.SealedTypeSerializer;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.events.EventSource;
 import hs.mediasystem.util.events.EventStream;
-import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.SimpleEventStream;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -33,9 +28,15 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Inject private StreamMetaDataDatabase database;
   @Inject private StreamMetaDataCodec codec;
 
-  private final EventStream<StreamMetaDataEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>());
+  private final PersistentEventStore<StreamMetaDataEvent> eventStore;
+  private final EventStream<StreamMetaDataEvent> eventStream;
+  private final Set<ContentID> metaDataAvailable = new HashSet<>();
 
-  private final Map<ContentID, StreamMetaData> cache = new ConcurrentHashMap<>();
+  @Inject
+  public DefaultStreamMetaDataStore(Database database) {
+    this.eventStore = new PersistentEventStore<>(database, "StreamMetaDataEvent", new SealedTypeSerializer<>(StreamMetaDataEvent.class));
+    this.eventStream = new SimpleEventStream<>(eventStore);
+  }
 
   @Produces
   EventSource<StreamMetaDataEvent> events() {
@@ -44,58 +45,40 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
 
   @PostConstruct
   private void postConstruct() {
-    List<Integer> badIds = new ArrayList<>();
+    if(!eventStore.hasEvents()) {
+      // Create events based on old database table:
+      database.forEach(r -> {
+        try {
+          StreamMetaData smd = codec.decode(r.getJson());
 
-    database.forEach(r -> {
-      try {
-        StreamMetaData smd = codec.decode(r.getJson());
+          eventStream.push(new StreamMetaDataEvent.Updated(smd));
+        }
+        catch(IOException e) {
+          LOGGER.warning("Exception decoding StreamMetaDataRecord: " + r + ": " + Throwables.formatAsOneLine(e));
+        }
+      });
+    }
 
-        eventStream.push(new StreamMetaDataEvent.Updated(smd));
-
-        cache.put(smd.getContentId(), smd);
+    this.eventStream.subscribeAndWait(e -> {
+      if(e instanceof StreamMetaDataEvent.Updated u) {
+        metaDataAvailable.add(u.streamMetaData().contentId());
       }
-      catch(IOException e) {
-        LOGGER.warning("Exception decoding StreamMetaDataRecord: " + r + ": " + Throwables.formatAsOneLine(e));
-
-        badIds.add(r.getContentId());
+      else if(e instanceof StreamMetaDataEvent.Removed r) {
+        metaDataAvailable.remove(r.id());
       }
     });
-
-    badIds.stream().forEach(database::delete);
-
-    LOGGER.fine("Loaded " + cache.size() + " StreamMetaDataRecords, deleted " + badIds.size() + " bad ones");
   }
 
   void store(StreamMetaData streamMetaData) {
-    database.store(toRecord(streamMetaData));
-
     eventStream.push(new StreamMetaDataEvent.Updated(streamMetaData));
-
-    cache.put(streamMetaData.getContentId(), streamMetaData);
   }
 
   boolean exists(ContentID contentId) {
-    return cache.containsKey(contentId);
+    return metaDataAvailable.contains(contentId);
   }
 
   void storeImage(ContentID contentId, int index, byte[] image) {
     database.storeImage(contentId.asInt(), index, image);
-  }
-
-  private StreamMetaDataRecord toRecord(StreamMetaData streamMetaData) {
-    try {
-      StreamMetaDataRecord record = new StreamMetaDataRecord();
-
-      record.setContentId(streamMetaData.getContentId().asInt());
-      record.setVersion(1);
-      record.setLastModificationTime(Instant.now().toEpochMilli());
-      record.setJson(codec.encode(streamMetaData));
-
-      return record;
-    }
-    catch(JsonProcessingException e) {
-      throw new IllegalStateException(e);
-    }
   }
 
   @Override
