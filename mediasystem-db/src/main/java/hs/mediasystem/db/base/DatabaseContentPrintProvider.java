@@ -23,8 +23,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -39,7 +41,7 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
   @Inject private ContentPrintDatabase contentPrintDatabase;
 
   private final AutoReentrantLock lock = new AutoReentrantLock();
-  private final Set<ContentID> seenIds = new HashSet<>();  // contains all id's that have are in database and have been seen recently
+  private final Set<ContentID> seenIds = ConcurrentHashMap.newKeySet();  // contains all id's that have are in database and have been seen recently
   private final Set<ContentID> markedIds = new HashSet<>();  // contains all id's that have been marked for deletion
   private final Map<ContentID, ContentPrint> contentPrints = new HashMap<>();
 
@@ -136,6 +138,10 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     try(Key key = lock.lock()) {
       return contentPrints.get(contentId);
     }
+  }
+
+  public Stream<ContentID> recentlySeen() {
+    return seenIds.stream();
   }
 
   /**

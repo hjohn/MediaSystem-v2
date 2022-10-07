@@ -2,6 +2,7 @@ package hs.mediasystem.db.extract;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
+import hs.mediasystem.db.base.DatabaseContentPrintProvider;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
@@ -22,9 +23,8 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -40,10 +40,11 @@ public class MediaMetaDataExtractor {
 
   @Inject private UriDatabase uriDatabase;
   @Inject private DefaultStreamMetaDataStore metaDataStore;
+  @Inject private DatabaseContentPrintProvider contentPrintProvider;
   @Inject private StreamMetaDataFactory factory;
   @Inject private Database database;
 
-  private final Set<Integer> recentFailures = new ConcurrentSkipListSet<>();
+  private final Set<ContentID> recentFailures = new ConcurrentSkipListSet<>();
 
   @PostConstruct
   private void postConstruct() {
@@ -54,33 +55,32 @@ public class MediaMetaDataExtractor {
   }
 
   private void extract() {
-    try(Stream<Integer> stream = metaDataStore.streamUnindexedContentIds()) {
-      List<Integer> contentIds = stream.filter(cid -> !recentFailures.contains(cid)).collect(Collectors.toList());
+    List<ContentID> contentIds = contentPrintProvider.recentlySeen()
+      .filter(Predicate.not(metaDataStore::exists))
+      .filter(Predicate.not(recentFailures::contains))
+      .toList();
 
-      stream.close();  // ends transaction
+    if(contentIds.size() > 0) {
+      WORKLOAD.start(contentIds.size());
 
-      if(contentIds.size() > 0) {
-        WORKLOAD.start(contentIds.size());
+      for(ContentID contentId : contentIds) {
+        try {
+          createMetaData(contentId);
+        }
+        catch(Throwable e) {
+          LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
 
-        for(int contentId : contentIds) {
-          try {
-            createMetaData(contentId);
-          }
-          catch(Throwable e) {
-            LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
-
-            recentFailures.add(contentId);
-          }
-          finally {
-            WORKLOAD.complete();
-          }
+          recentFailures.add(contentId);
+        }
+        finally {
+          WORKLOAD.complete();
         }
       }
     }
   }
 
-  private void createMetaData(int contentId) throws Exception {
-    File file = uriDatabase.findUris(contentId).stream()
+  private void createMetaData(ContentID contentId) throws Exception {
+    File file = uriDatabase.findUris(contentId.asInt()).stream()
       .map(URI::create)
       .map(Paths::get)
       .map(Path::toFile)
@@ -88,7 +88,7 @@ public class MediaMetaDataExtractor {
       .findFirst()
       .orElseThrow(() -> new FileNotFoundException("URI not available or pointed to a missing resource for given content id: " + contentId));
 
-    createMetaData(new ContentID(contentId), file);
+    createMetaData(contentId, file);
   }
 
   private void createMetaData(ContentID contentId, File file) throws Exception {

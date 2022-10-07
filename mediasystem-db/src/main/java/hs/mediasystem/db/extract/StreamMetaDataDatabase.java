@@ -2,10 +2,8 @@ package hs.mediasystem.db.extract;
 
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
-import hs.mediasystem.db.contentprints.ContentPrintRecord;
 
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -38,10 +36,6 @@ public class StreamMetaDataDatabase {
       tx.delete(StreamMetaDataRecord.class, id);
       tx.commit();
     }
-  }
-
-  public Stream<Integer> streamUnindexedContentIds() {
-    return database.stream(ContentPrintRecord.class, "lastseentime IS NULL AND id NOT IN (SELECT content_id FROM stream_metadata)").map(ContentPrintRecord::getId);
   }
 
   public byte[] readSnapshot(int id, int snapshotIndex) {

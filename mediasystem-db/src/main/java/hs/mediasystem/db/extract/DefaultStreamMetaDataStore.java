@@ -74,8 +74,8 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     cache.put(streamMetaData.getContentId(), streamMetaData);
   }
 
-  Stream<Integer> streamUnindexedContentIds() {
-    return database.streamUnindexedContentIds();
+  boolean exists(ContentID contentId) {
+    return cache.containsKey(contentId);
   }
 
   void storeImage(ContentID contentId, int index, byte[] image) {
@@ -96,11 +96,6 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     catch(JsonProcessingException e) {
       throw new IllegalStateException(e);
     }
-  }
-
-  @Override
-  public Optional<StreamMetaData> find(ContentID contentId) {
-    return Optional.ofNullable(cache.get(contentId));
   }
 
   @Override
