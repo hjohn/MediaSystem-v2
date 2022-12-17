@@ -11,8 +11,7 @@ public class NamedThreadFactory implements ThreadFactory {
   private final boolean daemon;
 
   public NamedThreadFactory(String groupName, int priority, boolean daemon) {
-    SecurityManager sm = System.getSecurityManager();
-    ThreadGroup parentGroup = sm != null ? sm.getThreadGroup() : Thread.currentThread().getThreadGroup();
+    ThreadGroup parentGroup = Thread.currentThread().getThreadGroup();
 
     this.group = new ThreadGroup(parentGroup, groupName);
     this.daemon = daemon;
