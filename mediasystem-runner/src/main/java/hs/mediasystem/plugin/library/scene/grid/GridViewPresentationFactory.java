@@ -3,6 +3,7 @@ package hs.mediasystem.plugin.library.scene.grid;
 import hs.jfx.eventstream.core.Changes;
 import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
+import hs.jfx.eventstream.core.Values;
 import hs.mediasystem.presentation.AbstractPresentation;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.grouping.Grouping;
@@ -80,7 +81,6 @@ public abstract class GridViewPresentationFactory {
 
     private final ObservableList<Grouping<T, U>> originalGroupings = FXCollections.observableArrayList();
     private final ObjectProperty<U> internalSelectedItem = new SimpleObjectProperty<>(null);
-    private final String lastSelectedId;  // Contains the last selected id for this view, or null if there was none stored
 
     public final ReadOnlyObjectProperty<U> selectedItem = internalSelectedItem;  // TODO this could be cast back, not as safe as wrapper
     public final ObservableList<U> items = FXCollections.observableArrayList();
@@ -108,7 +108,6 @@ public abstract class GridViewPresentationFactory {
       this.idProvider = Objects.requireNonNull(idProvider, "idProvider cannot be null");
 
       this.contextItem.bind(rootContextItem);  // initially bound, can be unbound when navigating to a child
-      this.lastSelectedId = settingsSource.getSetting("last-selected");
 
       this.availableSortOrders.setAll(viewOptions.sortOrders);
       this.availableFilters.setAll(viewOptions.filters);
@@ -167,7 +166,7 @@ public abstract class GridViewPresentationFactory {
      * @param newItems the new root items
      */
     private void setRootItems(List<U> newItems) {
-      this.rootItems = newItems;
+      this.rootItems = Objects.requireNonNull(newItems, "newItems");
 
       if(!contextItem.isBound()) {
 
@@ -327,7 +326,19 @@ public abstract class GridViewPresentationFactory {
     }
 
     private void setupSortingAndFiltering() {
-      Events.of(inputItems).subscribe(list -> setRootItems(grouping.getValue().group(list)));
+      Values.of(inputItems).subscribe(list -> {
+
+        /*
+         * When input items change, there should be no relation to whatever was part of
+         * this presentation previously. Reset the derived values so no attempt is made
+         * to select the closest item in the new set based on an unrelated previous set.
+         */
+
+        baseItems = null;
+        rawBaseItems = null;
+
+        setRootItems(grouping.getValue().group(list));
+      });
 
       // Changes in sortOrder, filter or stateFilter should update final items:
       Invalidations.of(sortOrder, filter, stateFilter)
@@ -370,6 +381,7 @@ public abstract class GridViewPresentationFactory {
     private U findBestItemToSelect() {
       Predicate<U> predicate = createFilterPredicate();
       U item = selectedItem.getValue();
+      String lastSelectedId = settingsSource.getSetting("last-selected");
 
       if(item == null && lastSelectedId != null) {
         item = rawBaseItems.stream()
@@ -378,7 +390,7 @@ public abstract class GridViewPresentationFactory {
           .orElse(null);
       }
 
-      if(item == null) {  // if previous item isn't available, then donot search for a nearest match
+      if(item == null) {  // if previous item isn't available, then do not search for a nearest match
         return null;
       }
 
