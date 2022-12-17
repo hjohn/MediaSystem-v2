@@ -3,6 +3,7 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import hs.ddif.annotations.Opt;
 import hs.mediasystem.util.CryptoUtil;
 import hs.mediasystem.util.HttpException;
 import hs.mediasystem.util.ImageURI;
@@ -18,6 +19,8 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Singleton
@@ -26,6 +29,8 @@ public class TheMovieDatabase {
 
   private final String apiKey = CryptoUtil.decrypt("8AF22323DB8C0F235B38F578B7E09A61DB6F971EED59DE131E4EF70003CE84B483A778EBD28200A031F035F4209B61A4", "-MediaSystem-"); // Yes, I know you can still get the key.
   private final ObjectMapper objectMapper = new ObjectMapper();
+
+  @Inject @Opt @Named("ext.tmdb.host") private String host = "http://api.themoviedb.org/";
 
   private JsonNode configuration;
 
@@ -54,7 +59,7 @@ public class TheMovieDatabase {
         sb.append(URLEncoder.encode(parameters.get(i + 1), "UTF-8"));
       }
 
-      return getURL(new URL("http://api.themoviedb.org/" + query + "?api_key=" + apiKey + sb.toString()), key);
+      return getURL(new URL(host + query + "?api_key=" + apiKey + sb.toString()), key);
     }
     catch(IOException e) {
       throw new IOException("While executing query: " + query + "; key=" + key + "; parameters=" + parameters, e);
