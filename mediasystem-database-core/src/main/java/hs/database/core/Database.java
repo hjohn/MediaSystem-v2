@@ -651,8 +651,10 @@ public class Database {
       return "SELECT " + fields + " FROM " + from + (whereCondition == null ? "" : " WHERE " + whereCondition);
     }
 
-    public synchronized int execute(String sql) throws DatabaseException {
+    public synchronized int execute(String sql, Object... parameters) throws DatabaseException {
       try(PreparedStatement statement = connection.prepareStatement(sql)) {
+        setParameters(Arrays.asList(parameters), statement);
+
         return statement.executeUpdate();
       }
       catch(SQLException e) {
