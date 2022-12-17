@@ -21,6 +21,10 @@ public class CheckedOptional<T> {
     return value == null ? empty() : of(value);
   }
 
+  public static <U> CheckedOptional<U> from(Optional<U> optional) {
+    return new CheckedOptional<>(optional.isPresent() ? optional.orElseThrow() : null);
+  }
+
   private final T value;
 
   private CheckedOptional(T value) {
@@ -52,6 +56,17 @@ public class CheckedOptional<T> {
     }
 
     return Objects.requireNonNull((CheckedOptional<U>)mapper.apply(value));
+  }
+
+  @SuppressWarnings("unchecked")
+  public <U, E1 extends Exception, E2 extends Exception, E3 extends Exception> CheckedOptional<U> flatMapOpt(ThrowingFunction<? super T, ? extends Optional<? extends U>, E1, E2, E3> mapper) throws E1, E2, E3 {
+    Objects.requireNonNull(mapper);
+
+    if(!isPresent()) {
+      return empty();
+    }
+
+    return CheckedOptional.from(Objects.requireNonNull((Optional<U>)mapper.apply(value)));
   }
 
   @SuppressWarnings("unchecked")
@@ -87,10 +102,6 @@ public class CheckedOptional<T> {
 
   public Optional<T> toOptional() {
     return Optional.ofNullable(value);
-  }
-
-  public static <U> CheckedOptional<U> from(Optional<U> optional) {
-    return new CheckedOptional<>(optional.isPresent() ? optional.orElseThrow() : null);
   }
 
   public boolean isPresent() {
