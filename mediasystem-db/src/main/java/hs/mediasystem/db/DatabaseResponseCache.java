@@ -66,6 +66,10 @@ public class DatabaseResponseCache extends ResponseCache {
     FORCE_CACHE_USE.set(forceCacheUse);
   }
 
+  public boolean isCurrentThreadForceCacheUse() {
+    return FORCE_CACHE_USE.get();
+  }
+
   @Override
   public CacheResponse get(URI uri, String method, Map<String, List<String>> requestHeaders) throws IOException {
     if(!method.equals("GET")) {
