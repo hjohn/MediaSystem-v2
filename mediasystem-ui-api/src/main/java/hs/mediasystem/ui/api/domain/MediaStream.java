@@ -15,7 +15,7 @@ import java.util.Optional;
 /**
  * Represents a stream.
  *
- * @param uri a {@link URI}, never {@code null}
+ * @param location a {@link URI}, never {@code null}
  * @param contentId a {@link ContentID}, never {@code null}
  * @param discoveryTime the time the item was first discovered, never {@code null}
  * @param lastModificationTime the time the item was last modified, never {@code null}
@@ -27,10 +27,10 @@ import java.util.Optional;
  * @param snapshots a list of {@link Snapshot}s for the item, never {@code null} but can be empty
  * @param match a {@link Match} for the item, never {@code null}
  */
-public record MediaStream(URI uri, ContentID contentId, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, Attributes attributes, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
+public record MediaStream(URI location, ContentID contentId, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, Attributes attributes, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
   public MediaStream {
-    if(uri == null) {
-      throw new IllegalArgumentException("uri cannot be null");
+    if(location == null) {
+      throw new IllegalArgumentException("location cannot be null");
     }
     if(contentId == null) {
       throw new IllegalArgumentException("contentId cannot be null");

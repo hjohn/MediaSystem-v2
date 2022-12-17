@@ -76,7 +76,7 @@ public class ShowInfoEventHandler {
 
       tabPane.getTabs().add(tab);
 
-      String path = URLDecoder.decode(stream.uri().toString().trim(), StandardCharsets.UTF_8);
+      String path = URLDecoder.decode(stream.location().toString().trim(), StandardCharsets.UTF_8);
 
       if(path.startsWith("file://")) {
         path = path.substring(5);

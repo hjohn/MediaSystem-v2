@@ -14,7 +14,7 @@ import java.util.Optional;
  *
  * @param id a {@link StreamID}, never {@code null}
  * @param parentId an optional parent {@link StreamID}, never {@code null} but can be empty
- * @param uri a {@link URI}, never {@code null}
+ * @param location a {@link URI}, never {@code null}
  * @param discoveryTime the time the item was first discovered, never {@code null}
  * @param lastModificationTime the time the item was last modified, never {@code null}
  * @param size the optional size of the item, never {@code null} or negative but can be empty
@@ -25,7 +25,7 @@ import java.util.Optional;
  * @param snapshots a list of {@link Snapshot}s for the item, never {@code null} but can be empty
  * @param match a {@link Match} for the item, never {@code null}
  */
-public record MediaStream(StreamID id, Optional<StreamID> parentId, URI uri, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, Attributes attributes, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
+public record MediaStream(StreamID id, Optional<StreamID> parentId, URI location, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, Attributes attributes, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
   public MediaStream {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
@@ -33,8 +33,8 @@ public record MediaStream(StreamID id, Optional<StreamID> parentId, URI uri, Ins
     if(parentId == null) {
       throw new IllegalArgumentException("parentId cannot be null");
     }
-    if(uri == null) {
-      throw new IllegalArgumentException("uri cannot be null");
+    if(location == null) {
+      throw new IllegalArgumentException("location cannot be null");
     }
     if(discoveryTime == null) {
       throw new IllegalArgumentException("discoveryTime cannot be null");
