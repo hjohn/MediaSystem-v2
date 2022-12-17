@@ -265,7 +265,6 @@ public class ActionTarget {
         throw new IllegalStateException("Bad path to property; \"" + pathMember.getName() + "\" does not have child properties; target: " + this);
       }
 
-      @SuppressWarnings("unchecked")
       Property<Object> property = ((AbstractExposedProperty<Object, Object>)pathMember).getProperty(parent);
 
       if(property == null) {
