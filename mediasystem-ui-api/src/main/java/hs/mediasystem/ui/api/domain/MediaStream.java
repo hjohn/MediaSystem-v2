@@ -4,7 +4,6 @@ import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.Snapshot;
-import hs.mediasystem.util.Attributes;
 
 import java.net.URI;
 import java.time.Duration;
@@ -20,14 +19,13 @@ import java.util.Optional;
  * @param discoveryTime the time the item was first discovered, never {@code null}
  * @param lastModificationTime the time the item was last modified, never {@code null}
  * @param size the optional size of the item, never {@code null} or negative but can be empty
- * @param attributes the {@link Attributes} for this item, never {@code null}
  * @param state the {@link State} of this item, never {@code null}
  * @param duration the optional {@link Duration} of the item, never {@code null} but can be empty
  * @param mediaStructure the optional {@link MediaStructure} of the item, never {@code null} but can be empty
  * @param snapshots a list of {@link Snapshot}s for the item, never {@code null} but can be empty
  * @param match a {@link Match} for the item, never {@code null}
  */
-public record MediaStream(URI location, ContentID contentId, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, Attributes attributes, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
+public record MediaStream(URI location, ContentID contentId, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
   public MediaStream {
     if(location == null) {
       throw new IllegalArgumentException("location cannot be null");
@@ -43,9 +41,6 @@ public record MediaStream(URI location, ContentID contentId, Instant discoveryTi
     }
     if(size == null) {
       throw new IllegalArgumentException("size cannot be null");
-    }
-    if(attributes == null) {
-      throw new IllegalArgumentException("attributes cannot be null");
     }
     if(state == null) {
       throw new IllegalArgumentException("state cannot be null");

@@ -46,7 +46,6 @@ public class MediaStreamService {
       resource.discoveryTime(),
       resource.lastModificationTime(),
       resource.size(),
-      resource.attributes(),
       state,
       resource.duration().or(() -> Optional.ofNullable(totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null)),
       resource.mediaStructure(),

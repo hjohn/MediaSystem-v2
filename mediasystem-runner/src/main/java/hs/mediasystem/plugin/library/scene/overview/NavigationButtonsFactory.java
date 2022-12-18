@@ -16,7 +16,6 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.ImageHandle;
 import hs.mediasystem.util.ImageHandleFactory;
 import hs.mediasystem.util.SizeFormatter;
@@ -175,27 +174,26 @@ public class NavigationButtonsFactory {
   }
 
   private Node streamToTitleButton(MediaStream stream, EventHandler<ActionEvent> eventHandler) {
-    Attributes attributes = stream.attributes();
-    String groupTitle = attributes.get("title");
-    String title = attributes.get("subtitle");
-
-    if(title == null || title.isBlank()) {
-      title = groupTitle;
-      groupTitle = null;
-    }
-
-    String info = Stream.of(
-        stream.duration().map(d -> SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds())).orElse(null),
-        stream.mediaStructure().flatMap(ms -> ms.videoTracks().stream().findFirst()).map(VideoTrack::resolution).map(r -> r.width() + "✕" + r.height()).orElse(null),
+    String groupTitle = "";  // For "cut" information if we ever get it
+    String title =
+      Stream.of(
         stream.size().map(s -> SizeFormatter.BYTES_THREE_SIGNIFICANT.format(s)).orElse(null),
         DATE_TIME_FORMATTER.format(stream.lastModificationTime())
       )
       .filter(Objects::nonNull)
       .collect(Collectors.joining(" • "));
 
+    String info =
+      Stream.of(
+        stream.duration().map(d -> SizeFormatter.SECONDS_AS_POSITION.format(d.toSeconds())).orElse(null),
+        stream.mediaStructure().flatMap(ms -> ms.videoTracks().stream().findFirst()).map(VideoTrack::resolution).map(r -> r.width() + "✕" + r.height()).orElse(null)
+      )
+      .filter(Objects::nonNull)
+      .collect(Collectors.joining(" • "));
+
     Button button = Buttons.create("stream-button", null, eventHandler);
 
-    VBox descriptionBox = Containers.vbox("description-box", Labels.create("group-title", groupTitle, Labels.HIDE_IF_EMPTY), Labels.create("title", title), Labels.create("info", info));
+    VBox descriptionBox = Containers.vbox("description-box", Labels.create("group-title", groupTitle, Labels.HIDE_IF_EMPTY), Labels.create("title", title), Labels.create("info", info, Labels.HIDE_IF_EMPTY));
     HBox snapshotsBox = createSnapshotsBox(stream);
 
     snapshotsBox.setMaxWidth(Region.USE_PREF_SIZE);

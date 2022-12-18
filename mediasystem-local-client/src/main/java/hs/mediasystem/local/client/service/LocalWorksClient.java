@@ -211,7 +211,6 @@ public class LocalWorksClient implements WorksClient {
       stream.discoveryTime(),
       stream.lastModificationTime(),
       stream.size(),
-      stream.attributes(),
       toState(stream.state()),
       stream.duration(),
       stream.mediaStructure(),
