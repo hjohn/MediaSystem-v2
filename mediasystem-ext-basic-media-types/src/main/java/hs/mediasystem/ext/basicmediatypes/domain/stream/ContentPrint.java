@@ -24,7 +24,7 @@ public class ContentPrint {
   private final ContentID id;  // an identifier that never changes for this particular ContentPrint
   private final Long size;
   private final byte[] hash;  // be careful when converting this to a record, need frozen arrays or a wrapper
-  private final long lastModificationTime;
+  private final long lastModificationTime;  // TODO convert to Instant
   private final Instant signatureCreationTime;
 
   /**
@@ -39,6 +39,9 @@ public class ContentPrint {
   public ContentPrint(ContentID id, Long size, long lastModificationTime, byte[] hash, Instant signatureCreationTime) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
+    }
+    if(size != null && size < 0) {
+      throw new IllegalArgumentException("size cannot be negative: " + size);
     }
     if(hash == null) {
       throw new IllegalArgumentException("hash cannot be null");

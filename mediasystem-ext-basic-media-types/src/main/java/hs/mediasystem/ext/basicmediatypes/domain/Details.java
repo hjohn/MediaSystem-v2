@@ -80,6 +80,6 @@ public class Details {
 
   @Override
   public String toString() {
-    return "Details[\"" + title + "\" @ " + date.orElse(null) + "]";
+    return "Details[\"" + title + "\" @ " + date.orElse(null) + (getCover().isPresent() ? "[cover]" : "") + (getSampleImage().isPresent() ? "[sample]" : "") + (getBackdrop().isPresent() ? "[backdrop]" : "") + "]";
   }
 }
