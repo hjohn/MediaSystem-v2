@@ -17,6 +17,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -24,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
@@ -44,7 +46,7 @@ public class MediaMetaDataExtractor {
   @Inject private StreamMetaDataFactory factory;
   @Inject private Database database;
 
-  private final Set<ContentID> recentFailures = new ConcurrentSkipListSet<>();
+  private final Set<ContentID> recentFailures = new ConcurrentSkipListSet<>(Comparator.comparingInt(ContentID::asInt));
 
   @PostConstruct
   private void postConstruct() {
@@ -55,27 +57,32 @@ public class MediaMetaDataExtractor {
   }
 
   private void extract() {
-    List<ContentID> contentIds = contentPrintProvider.recentlySeen()
-      .filter(Predicate.not(metaDataStore::exists))
-      .filter(Predicate.not(recentFailures::contains))
-      .toList();
+    try {
+      List<ContentID> contentIds = contentPrintProvider.recentlySeen()
+        .filter(Predicate.not(metaDataStore::exists))
+        .filter(Predicate.not(recentFailures::contains))
+        .toList();
 
-    if(contentIds.size() > 0) {
-      WORKLOAD.start(contentIds.size());
+      if(contentIds.size() > 0) {
+        WORKLOAD.start(contentIds.size());
 
-      for(ContentID contentId : contentIds) {
-        try {
-          createMetaData(contentId);
-        }
-        catch(Throwable e) {
-          LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
+        for(ContentID contentId : contentIds) {
+          try {
+            createMetaData(contentId);
+          }
+          catch(Throwable e) {
+            LOGGER.warning("Error while storing stream metadata in database for content id " + contentId + ": " + Throwables.formatAsOneLine(e));
 
-          recentFailures.add(contentId);
-        }
-        finally {
-          WORKLOAD.complete();
+            recentFailures.add(contentId);
+          }
+          finally {
+            WORKLOAD.complete();
+          }
         }
       }
+    }
+    catch(Throwable e) {
+      LOGGER.log(Level.SEVERE, "Exception in scheduled task", e);
     }
   }
 
