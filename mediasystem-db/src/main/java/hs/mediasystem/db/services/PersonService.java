@@ -8,7 +8,6 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Person.Gender;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
-import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.checked.CheckedOptional;
 import hs.mediasystem.util.checked.CheckedStreams;
 
@@ -26,7 +25,7 @@ public class PersonService {
   @Inject private List<PersonalProfileQueryService> personalProfileQueryServices;
 
   public Optional<Person> findPerson(PersonId id) throws IOException {
-    PersonalProfile personalProfile = Throwables.uncheck(() -> personalProfileQueryServices.get(0).query(id));
+    PersonalProfile personalProfile = personalProfileQueryServices.get(0).query(id);
 
     return CheckedOptional.ofNullable(personalProfile)
       .map(this::toPerson)
