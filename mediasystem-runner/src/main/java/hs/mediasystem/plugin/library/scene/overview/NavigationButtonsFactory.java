@@ -1,6 +1,8 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.MediaStructure;
+import hs.mediasystem.domain.work.Resolution;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.VideoTrack;
@@ -39,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -61,6 +64,19 @@ public class NavigationButtonsFactory {
   private static final String STYLES_URL = LessLoader.compile(NavigationButtonsFactory.class, "play-dialog.less");
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT).withZone(ZoneId.systemDefault());
   private static final Comparator<MediaStream> LAST_WATCHED = Comparator.comparing((MediaStream s) -> s.state().lastConsumptionTime().orElse(Instant.MIN)).reversed();
+
+  private static final Function<MediaStream, Resolution> RESOLUTION_EXTRACTOR =
+    ms -> ms.mediaStructure().stream()
+      .map(MediaStructure::videoTracks)
+      .flatMap(List::stream)
+      .findFirst()
+      .map(VideoTrack::resolution)
+      .orElse(null);
+
+  private static final Comparator<MediaStream> HIGHEST_RESOLUTION_AND_LATEST_FIRST =
+    Comparator.comparing(RESOLUTION_EXTRACTOR, Comparator.nullsLast(Comparator.naturalOrder()))
+      .thenComparing(MediaStream::lastModificationTime)
+      .reversed();
 
   @Inject private ProductionCollectionFactory productionCollectionFactory;
   @Inject private RecommendationsPresentationFactory recommendationsPresentationFactory;
@@ -163,6 +179,7 @@ public class NavigationButtonsFactory {
 
   private VBox createStreamButtons(List<MediaStream> streams, DialogPane<MediaStream> dialogPane) {
     VBox vbox = Containers.vbox().style("button-box").nodes(streams.stream()
+      .sorted(HIGHEST_RESOLUTION_AND_LATEST_FIRST)
       .map(s -> streamToTitleButton(s, e -> dialogPane.close(s)))
       .collect(Collectors.toList())
     );
