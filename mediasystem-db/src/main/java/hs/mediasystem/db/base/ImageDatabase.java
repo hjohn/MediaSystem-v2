@@ -3,7 +3,7 @@ package hs.mediasystem.db.base;
 import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
 
-import java.net.URL;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;
@@ -17,13 +17,13 @@ public class ImageDatabase {
 
   @Inject private Database database;
 
-  public byte[] findByURL(URL url) {
-    return findImageByURL(url).map(ImageRecord::getImage).orElse(null);
+  public byte[] findByURI(URI uri) {
+    return findImageByURI(uri).map(ImageRecord::getImage).orElse(null);
   }
 
-  public Optional<ImageRecord> findImageByURL(URL url) {
+  public Optional<ImageRecord> findImageByURI(URI uri) {
     try(Transaction tx = database.beginTransaction()) {
-      ImageRecord image = tx.selectUnique(ImageRecord.class, "url = ?", url.toExternalForm());
+      ImageRecord image = tx.selectUnique(ImageRecord.class, "url = ?", uri.toString());
 
       if(image == null) {
         return Optional.empty();
@@ -38,12 +38,13 @@ public class ImageDatabase {
     }
   }
 
-  public void store(URL url, String key, byte[] data) {
+  public void store(URI uri, String key, byte[] data) {
     try(Transaction tx = database.beginTransaction()) {
-      ImageRecord image = tx.selectUnique(ImageRecord.class, "url = ?", url.toExternalForm());
+      String uriString = uri.toString();
+      ImageRecord image = tx.selectUnique(ImageRecord.class, "url = ?", uriString);
 
       if(image == null) {
-        tx.insert(new ImageRecord(url.toExternalForm(), key, data));
+        tx.insert(new ImageRecord(uriString, key, data));
       }
       else {
         image.setCreationTime(LocalDateTime.now());

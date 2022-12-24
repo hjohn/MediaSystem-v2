@@ -76,9 +76,9 @@ public class DatabaseResponseCache extends ResponseCache {
       return null;
     }
 
-    ImageRecord image = store.findImageByURL(uri.toURL()).orElse(null);
+    ImageRecord image = store.findImageByURI(uri).orElse(null);
     int timeOut = Integer.parseInt(requestHeaders.getOrDefault("!time-out", DEFAULT_TIME_OUT).get(0));
-    String safeURL = Optional.ofNullable(requestHeaders.getOrDefault("!safe-url", DEFAULT_NULL).get(0)).orElse(uri.toURL().toString());
+    String safeURL = Optional.ofNullable(requestHeaders.getOrDefault("!safe-url", DEFAULT_NULL).get(0)).orElse(uri.toString());
     String key = requestHeaders.getOrDefault("!key", DEFAULT_NULL).get(0);
 
     if(image != null && (FORCE_CACHE_USE.get() || image.getCreationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now()))) {
@@ -124,11 +124,11 @@ public class DatabaseResponseCache extends ResponseCache {
       byte[] buf = baos.toByteArray();
 
       if(!(conn instanceof HttpURLConnection huc) || huc.getResponseCode() == 200) {
-        // Store the result, if it was succesful:
-        store.store(uri.toURL(), key, buf);
+        // Store the result, if it was successful:
+        store.store(uri, key, buf);
       }
       else if(image != null) {
-        // If unsuccesful, for whatever reason, and there is an (expired) cached response, return that:
+        // If unsuccessful, for whatever reason, and there is an (expired) cached response, return that:
         LOGGER.warning("Direct fetch failed, falling back to cache: " + safeURL);
 
         CacheResponse response = decodeCacheResponse(image.getImage(), safeURL);
