@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,7 +68,7 @@ public class Database {
   }
 
   @SuppressWarnings("resource")
-  void endTransaction() {
+  private static void endTransaction() {
     CURRENT_TRANSACTION.set(CURRENT_TRANSACTION.get().parent);
   }
 
@@ -256,6 +257,7 @@ public class Database {
     private final boolean readOnly;
 
     private final WeakValueMap<String, DatabaseObject> associatedObjects = new WeakValueMap<>();
+    private final List<Consumer<TransactionState>> completionHooks = new ArrayList<>();
 
     private int activeNestedTransactions;
     private boolean finished;
@@ -273,10 +275,10 @@ public class Database {
           connection.setAutoCommit(false);
         }
         else {
-          this.connection = parent.getConnection();
+          this.connection = parent.connection;
           this.savepoint = connection.setSavepoint();
 
-          parent.activeNestedTransactions++;
+          parent.incrementNestedTransactions();
         }
 
         LOG.finer("New Transaction " + this);
@@ -288,21 +290,28 @@ public class Database {
       assert (this.parent != null && this.savepoint != null) || (this.parent == null && this.savepoint == null);
     }
 
-    public Database getDatabase() {
+    Database getDatabase() {
       return Database.this;
     }
 
-    public Provider<Connection> getConnectionProvider() {
+    Provider<Connection> getConnectionProvider() {
       return connectionProvider;
     }
 
-    public Connection getConnection() {
-      return connection;
+    private synchronized void incrementNestedTransactions() {
+      activeNestedTransactions++;
+    }
+
+    private synchronized void decrementNestedTransactions() {
+      activeNestedTransactions--;
     }
 
     private void ensureNotFinished() {
       if(finished) {
         throw new IllegalStateException(this + ": Transaction already ended");
+      }
+      if(activeNestedTransactions != 0) {
+        throw new DatabaseException(this, "Using parent transaction while nested transactions are running is not supported");
       }
     }
 
@@ -950,12 +959,28 @@ public class Database {
       }
     }
 
+    public enum TransactionState {
+      COMMITTED, ROLLED_BACK;
+    }
+
+    /**
+     * Adds a completion hook which is called when the outer most transaction
+     * completes. The passed {@link TransactionState} is never {@code null} and
+     * indicates whether the transaction was committed or rolled back.
+     *
+     * @param consumer a consumer that is called after the outer most transaction completes, cannot be {@code null}
+     */
+    public synchronized void addCompletionHook(Consumer<TransactionState> consumer) {
+      if(parent == null) {
+        completionHooks.add(consumer);
+      }
+      else {
+        parent.addCompletionHook(consumer);
+      }
+    }
+
     private void finishTransaction(boolean commit) throws DatabaseException {
       ensureNotFinished();
-
-      if(activeNestedTransactions != 0) {
-        throw new DatabaseException(this, "Attempt at rollback/commit while there are uncommitted nested transactions");
-      }
 
       endTransaction();
 
@@ -963,9 +988,13 @@ public class Database {
 
       try {
         if(parent == null) {
+          boolean committed = false;
+
           try {
             if(commit) {
               connection.commit();
+
+              committed = true;
             }
             else {
               connection.rollback();
@@ -975,6 +1004,17 @@ public class Database {
             throw new DatabaseException(this, "Exception while committing/rolling back connection", e);
           }
           finally {
+            for(Consumer<TransactionState> consumer : completionHooks) {
+              try {
+                consumer.accept(committed ? TransactionState.COMMITTED : TransactionState.ROLLED_BACK);
+              }
+              catch(Exception e) {
+                LOG.log(Level.WARNING, "Commit hook for " + this + " threw exception: " + consumer, e);
+              }
+            }
+
+            completionHooks.clear();
+
             try {
               connection.close();
             }
@@ -996,7 +1036,7 @@ public class Database {
             throw new DatabaseException(this, "Exception while finishing nested transaction", e);
           }
           finally {
-            parent.activeNestedTransactions--;
+            parent.decrementNestedTransactions();
           }
         }
       }
