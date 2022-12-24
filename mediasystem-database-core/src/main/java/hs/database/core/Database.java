@@ -316,14 +316,14 @@ public class Database {
       return cls.getName() + ":" + Arrays.toString(ids);
     }
 
-    public void associate(DatabaseObject obj) {
+    void associate(DatabaseObject obj) {
       @SuppressWarnings("unchecked")
       RecordMapper<DatabaseObject> recordMapper = (RecordMapper<DatabaseObject>)getRecordMapper(obj.getClass());
 
       associatedObjects.put(createAssociatedObjectId(obj.getClass(), recordMapper.extractIds(obj).values().toArray()), obj);
     }
 
-    public DatabaseObject findAssociatedObject(Class<?> cls, Object[] ids) {
+    DatabaseObject findAssociatedObject(Class<?> cls, Object[] ids) {
       return associatedObjects.get(createAssociatedObjectId(cls, ids));
     }
 
@@ -347,13 +347,13 @@ public class Database {
       }
     }
 
-    public Record selectUnique(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
+    public synchronized Record selectUnique(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
       List<Record> result = select(fields, tableName, whereCondition, parameters);
 
       return result.isEmpty() ? null : result.get(0);
     }
 
-    public Record selectUnique(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
+    public synchronized Record selectUnique(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
       List<Record> result = select(fields, tableName, whereCondition, parameters);
 
       return result.isEmpty() ? null : result.get(0);
@@ -379,7 +379,7 @@ public class Database {
       return new QueryAndOrderedParameters(queryBuilder.toString(), orderedParameters.toArray(new Object[orderedParameters.size()]));
     }
 
-    public List<Record> select(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
+    public synchronized List<Record> select(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
       QueryAndOrderedParameters queryAndOrderedParameters = createQueryAndOrderedParameters(whereCondition, parameters);
 
       return select(fields, tableName, queryAndOrderedParameters.query, queryAndOrderedParameters.arrayParameters);
@@ -400,7 +400,7 @@ public class Database {
       }
     }
 
-    public List<Record> select(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
+    public synchronized List<Record> select(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
       List<Record> records = new ArrayList<>();
 
       ResultSetConsumer<FieldMapper> consumer = new ResultSetConsumer<>() {
@@ -430,7 +430,7 @@ public class Database {
     }
 
     @Nullable
-    public <T> T selectUnique(Class<T> cls, String whereCondition, Object... parameters) throws DatabaseException {
+    public synchronized <T> T selectUnique(Class<T> cls, String whereCondition, Object... parameters) throws DatabaseException {
       List<T> result = select(cls, whereCondition, parameters);
 
       return result.isEmpty() ? null : result.get(0);
@@ -542,11 +542,11 @@ public class Database {
       return records;
     }
 
-    public <T> void select(Consumer<T> consumer, Class<T> cls) throws DatabaseException {
+    public synchronized <T> void select(Consumer<T> consumer, Class<T> cls) throws DatabaseException {
       select(consumer, cls, null);
     }
 
-    public <T> List<T> select(Class<T> cls) throws DatabaseException {
+    public synchronized <T> List<T> select(Class<T> cls) throws DatabaseException {
       return select(cls, null);
     }
 
@@ -561,7 +561,7 @@ public class Database {
      * @return an optional mapped result, never {@code null}
      * @throws DatabaseException when an I/O error occurs
      */
-    public <T> Optional<T> mapOne(Mapper<T> mapper, String sql, Object... parameters) throws DatabaseException {
+    public synchronized <T> Optional<T> mapOne(Mapper<T> mapper, String sql, Object... parameters) throws DatabaseException {
       List<T> records = mapAll(
         Objects.requireNonNull(mapper, "mapper"),
         Objects.requireNonNull(sql, "sql"),
@@ -583,7 +583,7 @@ public class Database {
      * @return a list of mapped results, never {@code null} but can be empty
      * @throws DatabaseException when an I/O error occurs
      */
-    public <T> List<T> mapAll(Mapper<T> mapper, String sql, Object... parameters) throws DatabaseException {
+    public synchronized <T> List<T> mapAll(Mapper<T> mapper, String sql, Object... parameters) throws DatabaseException {
       Objects.requireNonNull(mapper, "mapper");
       Objects.requireNonNull(sql, "sql");
 
