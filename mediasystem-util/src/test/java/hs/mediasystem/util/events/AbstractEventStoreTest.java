@@ -1,5 +1,7 @@
 package hs.mediasystem.util.events;
 
+import hs.mediasystem.util.events.store.EventStore;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,13 +47,48 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class DatabaseResponseCache extends ResponseCache {
+
+  /**
+   * Options for how the response cache is used.
+   */
+  public enum CacheMode {
+
+    /**
+     * Fetches remote resource only if it is unavailable in the cache or
+     * if the cached copy is older than the given time out.
+     */
+    DEFAULT,
+
+    /**
+     * Fetches remote resource only if it is unavailable in the cache,
+     * regardless of how old it is.
+     */
+    PREFER_CACHED,
+
+    /**
+     * Returns resources which are available in the cache only. Never
+     * fetches remote resources but throws a {@link NotCachedException} instead.
+     */
+    ONLY_CACHED
+  }
+
+  /**
+   * Thrown when a resource was unavailable in the cache and {@link CacheMode#ONLY_CACHED}
+   * was active.
+   */
+  public static class NotCachedException extends IOException {
+    NotCachedException(String message) {
+      super(message);
+    }
+  }
+
   private static final Logger LOGGER = Logger.getLogger(DatabaseResponseCache.class.getName());
   private static final int ID = 0xCAC4EDA7;  // "CACHEDAT"
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final List<String> DEFAULT_TIME_OUT = List.of(Integer.toString(Integer.MAX_VALUE));
   private static final List<String> DEFAULT_NULL = Arrays.asList((String)null);
   private static final Map<String, PriorityRateLimiter> RATE_LIMITERS = new HashMap<>();
-  private static final ThreadLocal<Boolean> FORCE_CACHE_USE = ThreadLocal.withInitial(() -> false);
+  private static final ThreadLocal<CacheMode> CACHE_MODE = ThreadLocal.withInitial(() -> CacheMode.DEFAULT);
 
   @Inject private ImageDatabase store;
 
@@ -60,14 +96,14 @@ public class DatabaseResponseCache extends ResponseCache {
    * Allows per thread control to force the use of the cache, ignoring the <code>!time-out</code> set
    * on a request.
    *
-   * @param forceCacheUse <code>true</code> if this thread should always try use the cache, no matter how old
+   * @param cacheMode a {@link CacheMode} to use for this thread, cannot be {@code null}
    */
-  public void currentThreadForceCacheUse(boolean forceCacheUse) {
-    FORCE_CACHE_USE.set(forceCacheUse);
+  public void setCurrentThreadCacheMode(CacheMode cacheMode) {
+    CACHE_MODE.set(Objects.requireNonNull(cacheMode, "cacheMode"));
   }
 
-  public boolean isCurrentThreadForceCacheUse() {
-    return FORCE_CACHE_USE.get();
+  public CacheMode getCurrentThreadCacheMode() {
+    return CACHE_MODE.get();
   }
 
   @Override
@@ -80,9 +116,10 @@ public class DatabaseResponseCache extends ResponseCache {
     int timeOut = Integer.parseInt(requestHeaders.getOrDefault("!time-out", DEFAULT_TIME_OUT).get(0));
     String safeURL = Optional.ofNullable(requestHeaders.getOrDefault("!safe-url", DEFAULT_NULL).get(0)).orElse(uri.toString());
     String key = requestHeaders.getOrDefault("!key", DEFAULT_NULL).get(0);
+    CacheMode cacheMode = CACHE_MODE.get();
 
-    if(image != null && (FORCE_CACHE_USE.get() || image.getCreationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now()))) {
-      // fresh enough, return it
+    if(image != null && (cacheMode != CacheMode.DEFAULT || image.getCreationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now()))) {
+      // fresh enough or cache use forced, return it
       CacheResponse response = decodeCacheResponse(image.getImage(), safeURL);
 
       if(response != null) {
@@ -92,8 +129,13 @@ public class DatabaseResponseCache extends ResponseCache {
       image = null;  // Ensures that if decoding failed, it isn't tried again later.
     }
 
-    // Either entry was missing, wasn't fresh enough, or it couldn't be decoded.  Fetch from original source:
-    LOGGER.fine("Direct fetch (uncached): " + safeURL);
+    // Either entry was missing, wasn't fresh enough, or it couldn't be decoded.
+    if(cacheMode == CacheMode.ONLY_CACHED) {
+      throw new NotCachedException("URL was not available in cache and CacheMode.ONLY_CACHED was set: " + safeURL);
+    }
+
+    // Fetch from original source:
+    LOGGER.fine("Direct fetch (" + cacheMode + "): " + safeURL);
 
     PriorityRateLimiter rateLimiter = determineRateLimiter(requestHeaders.get("!rate-limit"));
 

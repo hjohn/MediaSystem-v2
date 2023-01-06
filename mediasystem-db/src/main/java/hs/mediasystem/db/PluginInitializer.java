@@ -5,7 +5,6 @@ import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
 import hs.ddif.plugins.ComponentScannerFactory;
 import hs.ddif.plugins.Plugin;
 import hs.ddif.plugins.PluginManager;
-import hs.mediasystem.db.base.ScannerController;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
 
@@ -77,7 +76,6 @@ public class PluginInitializer {
     LOGGER.info(plugins.size() + " plugins loaded from: " + root);
 
     instanceResolver.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
-    instanceResolver.getInstance(ScannerController.class);       // Triggers background thread
     instanceResolver.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
   }
 }

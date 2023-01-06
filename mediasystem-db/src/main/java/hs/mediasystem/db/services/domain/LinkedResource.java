@@ -1,8 +1,9 @@
 package hs.mediasystem.db.services.domain;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Match;
 
+import java.net.URI;
 import java.util.List;
 
 public record LinkedResource(Resource resource, Match match, List<Work> works) {
@@ -18,7 +19,11 @@ public record LinkedResource(Resource resource, Match match, List<Work> works) {
     }
   }
 
-  public StreamID id() {
-    return resource.id();
+  public URI location() {
+    return resource.location();
+  }
+
+  public ContentID contentId() {
+    return resource.contentId();
   }
 }

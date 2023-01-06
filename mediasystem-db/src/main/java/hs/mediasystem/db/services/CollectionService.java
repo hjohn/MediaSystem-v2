@@ -1,6 +1,8 @@
 package hs.mediasystem.db.services;
 
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
+import hs.mediasystem.db.services.domain.LinkedWork;
+import hs.mediasystem.db.services.domain.Work;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Collection;
 import hs.mediasystem.domain.work.CollectionDefinition;
@@ -8,7 +10,6 @@ import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.util.ImageURI;
 
 import java.time.LocalDate;
@@ -24,21 +25,22 @@ import javax.inject.Singleton;
 
 @Singleton
 public class CollectionService {
-  private static final Comparator<Work> WEIGHTED_RATING_COMPARATOR = Comparator.comparing(CollectionService::score).reversed();
+  private static final Comparator<LinkedWork> WEIGHTED_RATING_COMPARATOR = Comparator.comparing(CollectionService::score).reversed();
 
   @Inject private CollectionLocationManager manager;
-  @Inject private WorksService worksService;
+  @Inject private LinkedWorksService linkedWorksService;
 
   public List<Collection> findCollections() {
     List<Collection> collections = new ArrayList<>();
 
     for(CollectionDefinition collectionDefinition : manager.getCollectionDefinitions()) {
       MediaType mediaType = MediaType.valueOf(collectionDefinition.type().toUpperCase());
-      List<Work> works = worksService.findAllByType(mediaType, collectionDefinition.tag());
+      List<LinkedWork> works = linkedWorksService.findAllByType(mediaType, collectionDefinition.tag());
       Collections.sort(works, WEIGHTED_RATING_COMPARATOR);
 
       String uris = works.stream()
-        .map(Work::getDescriptor)
+        .map(LinkedWork::work)
+        .map(Work::descriptor)
         .map(WorkDescriptor::getDetails)
         .map(Details::getCover)
         .flatMap(Optional::stream)
@@ -47,7 +49,8 @@ public class CollectionService {
         .collect(Collectors.joining("|"));
 
       Optional<ImageURI> backgroundImage = works.stream()
-        .map(Work::getDescriptor)
+        .map(LinkedWork::work)
+        .map(Work::descriptor)
         .map(WorkDescriptor::getDetails)
         .map(Details::getBackdrop)
         .flatMap(Optional::stream)
@@ -64,8 +67,8 @@ public class CollectionService {
     return collections;
   }
 
-  private static double score(Work work) {
-    if(work.getDescriptor() instanceof Production production) {
+  private static double score(LinkedWork linkedWork) {
+    if(linkedWork.work().descriptor() instanceof Production production) {
       Reception reception = production.getReception();
       LocalDate date = production.getDetails().getDate().orElse(null);
 

@@ -1,6 +1,8 @@
 package hs.mediasystem.db.jackson;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonCreator.Mode;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -24,6 +26,8 @@ import java.util.Objects;
 public class SealedTypeSerializer<T> implements Serializer<T> {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    .setVisibility(PropertyAccessor.GETTER, Visibility.NONE)
+    .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
     .registerModule(new SealedClassesModule())
     .registerModule(new MediaSystemDomainModule())
     .registerModule(new BasicDataTypesModule())

@@ -2,16 +2,16 @@ package hs.mediasystem.db.services;
 
 import hs.mediasystem.db.base.StreamState;
 import hs.mediasystem.db.base.StreamStateProvider;
+import hs.mediasystem.db.services.domain.LinkedResource;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.State;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 
+import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
@@ -25,8 +25,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class RecommendationService {
-  @Inject private WorksService worksService;
-  @Inject private WorkService workService;
+  @Inject private LocalWorkService localWorkService;
   @Inject private LinkedResourcesService linkedResourcesService;
   @Inject private LinkedWorksService linkedWorksService;
   @Inject private StreamStateProvider streamStateProvider;
@@ -60,25 +59,15 @@ public class RecommendationService {
    * @return a {@link List} of {@link Recommendation}s, never null but can be empty
    */
   public List<Recommendation> findNew(Predicate<MediaType> filter) {
-    return worksService.findNewest(200, filter).stream()
-      .map(this::toNewRecommendation)
+    return linkedWorksService.findNewest(200, filter).stream()
+      .map(t -> new Recommendation(t.matchedResources().get(0).resource().discoveryTime(), localWorkService.toWork(t)))
       .collect(Collectors.toList());
   }
 
-  private Recommendation toNewRecommendation(Work work) {
-    MediaStream stream = work.getPrimaryStream().orElseThrow();
-
-    return new Recommendation(stream.discoveryTime(), work);
-  }
-
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(MediaStream stream) {
-    StreamID parentId = stream.parentId().orElse(null);
+    LinkedResource parent = linkedResourcesService.findParent(stream.location()).orElse(null);
 
-    if(parentId == null) {
-      return toProductionRecommendation(stream);
-    }
-
-    return toEpisodeRecommendation(stream);
+    return parent == null ? toProductionRecommendation(stream) : toEpisodeRecommendation(stream, parent);
   }
 
   private Optional<Recommendation> toProductionRecommendation(MediaStream stream) {
@@ -89,47 +78,44 @@ public class RecommendationService {
       // TODO Must be a movie, find collection for "next"
     }
     else if(!state.resumePosition().isZero()) {  // Partially watched movie
-      return workService.findFirst(stream.id())
+      return localWorkService.findFirst(stream.location())
         .map(w -> new Recommendation(lastWatchedTime, w));
     }
 
     return Optional.empty();
   }
 
-  private Optional<Recommendation> toEpisodeRecommendation(MediaStream stream) {
-    StreamID parentId = stream.parentId().orElseThrow(() -> new IllegalArgumentException("stream must represent an episode: " + stream));
+  private Optional<Recommendation> toEpisodeRecommendation(MediaStream stream, LinkedResource parent) {
     State state = stream.state();
 
     boolean watched = state.consumed();
     Duration position = state.resumePosition();
     Instant lastWatchedTime = state.lastConsumptionTime().orElseThrow();
 
-    return findBestDescriptor(parentId).filter(Serie.class::isInstance).map(Serie.class::cast).map(serie -> {
-      WorkDescriptor descriptor = findBestDescriptor(stream.id()).orElse(null);
+    if(parent.works().get(0).descriptor() instanceof Serie serie) {  // Parent could also be a folder
+      WorkDescriptor descriptor = findBestDescriptor(stream.location()).orElse(null);
 
       if(descriptor instanceof Episode episode && watched) {
         return serie.findNextEpisode(episode)
           .flatMap(nextEpisode -> linkedWorksService.find(nextEpisode.getId())  // Episode to Stream
             .map(mediaStreamService::toMediaStream)
             .map(ms -> !ms.state().consumed() && ms.state().resumePosition().isZero()
-              ? workService.findFirst(ms.id()).map(w -> new Recommendation(lastWatchedTime, w)).orElse(null)
+              ? localWorkService.findFirst(ms.location()).map(w -> new Recommendation(lastWatchedTime, w)).orElse(null)
               : null
             )
-          )
-          .orElse(null);
+          );
       }
 
       if(!position.isZero()) {
-        return workService.findFirst(stream.id())
-          .map(w -> new Recommendation(lastWatchedTime, w))
-          .orElse(null);
+        return localWorkService.findFirst(stream.location())
+          .map(w -> new Recommendation(lastWatchedTime, w));
       }
+    }
 
-      return null;
-    });
+    return Optional.empty();
   }
 
-  private Optional<WorkDescriptor> findBestDescriptor(StreamID id) {
-    return linkedWorksService.find(id).stream().map(lw -> lw.work().descriptor()).findFirst();
+  private Optional<WorkDescriptor> findBestDescriptor(URI location) {
+    return linkedWorksService.find(location).stream().map(lw -> lw.work().descriptor()).findFirst();
   }
 }

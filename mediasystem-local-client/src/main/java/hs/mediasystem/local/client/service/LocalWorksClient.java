@@ -207,7 +207,7 @@ public class LocalWorksClient implements WorksClient {
   private static MediaStream toStream(hs.mediasystem.domain.work.MediaStream stream) {
     return new MediaStream(
       stream.location(),
-      stream.id().getContentId(),
+      stream.contentId(),
       stream.discoveryTime(),
       stream.lastModificationTime(),
       stream.size(),

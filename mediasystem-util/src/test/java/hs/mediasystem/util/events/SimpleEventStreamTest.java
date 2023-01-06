@@ -1,5 +1,7 @@
 package hs.mediasystem.util.events;
 
+import hs.mediasystem.util.events.streams.EventStream;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 public class SimpleEventStreamTest {
-  private EventStream<String> stream = new SimpleEventStream<>(new InMemoryEventStore<>());
+  private EventStream<String> stream = new SimpleEventStream<>(new InMemoryEventStore<>(String.class));
 
   @Test
   void shouldSendAndReceiveEvents() {

@@ -6,7 +6,6 @@ import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.MatchedResource;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.State;
@@ -35,14 +34,12 @@ public class MediaStreamService {
   }
 
   private MediaStream toMediaStream(Match match, Resource resource) {
-    StreamID id = resource.id();
-    State state = toState(id.getContentId());
-    int totalDuration = stateService.getTotalDuration(id.getContentId());
+    State state = toState(resource.contentId());
+    int totalDuration = stateService.getTotalDuration(resource.contentId());
 
     return new MediaStream(
-      id,
-      resource.parentId(),
-      resource.uri(),
+      resource.location(),
+      resource.contentId(),
       resource.discoveryTime(),
       resource.lastModificationTime(),
       resource.size(),

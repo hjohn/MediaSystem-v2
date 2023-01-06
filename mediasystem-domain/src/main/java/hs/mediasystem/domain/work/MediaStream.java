@@ -1,6 +1,6 @@
 package hs.mediasystem.domain.work;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
 
 import java.net.URI;
 import java.time.Duration;
@@ -11,9 +11,8 @@ import java.util.Optional;
 /**
  * Represents a stream.
  *
- * @param id a {@link StreamID}, never {@code null}
- * @param parentId an optional parent {@link StreamID}, never {@code null} but can be empty
  * @param location a {@link URI}, never {@code null}
+ * @param contentId a {@link ContentID}, cannot be {@code null}
  * @param discoveryTime the time the item was first discovered, never {@code null}
  * @param lastModificationTime the time the item was last modified, never {@code null}
  * @param size the optional size of the item, never {@code null} or negative but can be empty
@@ -23,16 +22,13 @@ import java.util.Optional;
  * @param snapshots a list of {@link Snapshot}s for the item, never {@code null} but can be empty
  * @param match a {@link Match} for the item, never {@code null}
  */
-public record MediaStream(StreamID id, Optional<StreamID> parentId, URI location, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
+public record MediaStream(URI location, ContentID contentId, Instant discoveryTime, Instant lastModificationTime, Optional<Long> size, State state, Optional<Duration> duration, Optional<MediaStructure> mediaStructure, List<Snapshot> snapshots, Match match) {
   public MediaStream {
-    if(id == null) {
-      throw new IllegalArgumentException("id cannot be null");
-    }
-    if(parentId == null) {
-      throw new IllegalArgumentException("parentId cannot be null");
-    }
     if(location == null) {
       throw new IllegalArgumentException("location cannot be null");
+    }
+    if(contentId == null) {
+      throw new IllegalArgumentException("contentId cannot be null");
     }
     if(discoveryTime == null) {
       throw new IllegalArgumentException("discoveryTime cannot be null");

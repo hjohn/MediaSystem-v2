@@ -1,0 +1,395 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "adult": false,
+      "backdrop_path": "/g4a5YLWwi6OCp8TcvxsUNrXMbN5.jpg",
+      "genre_ids": [
+        878,
+        28,
+        53,
+        12
+      ],
+      "id": 87101,
+      "original_language": "en",
+      "original_title": "Terminator Genisys",
+      "overview": "The year is 2029. John Connor, leader of the resistance continues the war against the machines. At the Los Angeles offensive, John's fears of the unknown future begin to emerge when TECOM spies reveal a new plot by SkyNet that will attack him from both fronts; past and future, and will ultimately change warfare forever.",
+      "popularity": 98.206,
+      "poster_path": "/oZRVDpNtmHk8M1VYy1aeOWUXgbC.jpg",
+      "release_date": "2015-06-23",
+      "title": "Terminator Genisys",
+      "video": false,
+      "vote_average": 5.9,
+      "vote_count": 7407
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/5tKiuZvvV1lic7v65rdoGPmoOvf.jpg",
+      "genre_ids": [
+        28,
+        878,
+        53
+      ],
+      "id": 534,
+      "original_language": "en",
+      "original_title": "Terminator Salvation",
+      "overview": "All grown up in post-apocalyptic 2018, John Connor must lead the resistance of humans against the increasingly dominating militaristic robots. But when Marcus Wright appears, his existence confuses the mission as Connor tries to determine whether Wright has come from the future or the past -- and whether he's friend or foe.",
+      "popularity": 64.969,
+      "poster_path": "/gw6JhlekZgtKUFlDTezq3j5JEPK.jpg",
+      "release_date": "2009-05-20",
+      "title": "Terminator Salvation",
+      "video": false,
+      "vote_average": 6,
+      "vote_count": 5614
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/a6cDxdwaQIFjSkXf7uskg78ZyTq.jpg",
+      "genre_ids": [
+        878,
+        28,
+        12
+      ],
+      "id": 290859,
+      "original_language": "en",
+      "original_title": "Terminator: Dark Fate",
+      "overview": "Decades after Sarah Connor prevented Judgment Day, a lethal new Terminator is sent to eliminate the future leader of the resistance. In a fight to save mankind, battle-hardened Sarah Connor teams up with an unexpected ally and an enhanced super soldier to stop the deadliest Terminator yet.",
+      "popularity": 64.437,
+      "poster_path": "/vqzNJRH4YyquRiWxCCOH0aXggHI.jpg",
+      "release_date": "2019-10-23",
+      "title": "Terminator: Dark Fate",
+      "video": false,
+      "vote_average": 6.5,
+      "vote_count": 4238
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/ahUaAgnkFu7QlBh5h4LCNeaSurV.jpg",
+      "genre_ids": [
+        28,
+        53,
+        878
+      ],
+      "id": 218,
+      "original_language": "en",
+      "original_title": "The Terminator",
+      "overview": "In the post-apocalyptic future, reigning tyrannical supercomputers teleport a cyborg assassin known as the \"Terminator\" back to 1984 to kill Sarah Connor, whose unborn son is destined to lead insurgents against 21st century mechanical hegemony. Meanwhile, the human-resistance movement dispatches a lone warrior to safeguard Sarah. Can he stop the virtually indestructible killing machine?",
+      "popularity": 57.379,
+      "poster_path": "/qvktm0BHcnmDpul4Hz01GIazWPr.jpg",
+      "release_date": "1984-10-26",
+      "title": "The Terminator",
+      "video": false,
+      "vote_average": 7.6,
+      "vote_count": 10956
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/xKb6mtdfI5Qsggc44Hr9CCUDvaj.jpg",
+      "genre_ids": [
+        28,
+        53,
+        878
+      ],
+      "id": 280,
+      "original_language": "en",
+      "original_title": "Terminator 2: Judgment Day",
+      "overview": "Nearly 10 years have passed since Sarah Connor was targeted for termination by a cyborg from the future. Now her son, John, the future leader of the resistance, is the target for a newer, more deadly terminator. Once again, the resistance has managed to send a protector back to attempt to save John and his mother Sarah.",
+      "popularity": 72.808,
+      "poster_path": "/5M0j0B18abtBI5gi2RhfjjurTqb.jpg",
+      "release_date": "1991-07-03",
+      "title": "Terminator 2: Judgment Day",
+      "video": false,
+      "vote_average": 8.1,
+      "vote_count": 10832
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/kbXMOnz2RhTSAbLtHX5hy5AXtwv.jpg",
+      "genre_ids": [
+        28,
+        53,
+        878
+      ],
+      "id": 296,
+      "original_language": "en",
+      "original_title": "Terminator 3: Rise of the Machines",
+      "overview": "It's been 10 years since John Connor saved Earth from Judgment Day, and he's now living under the radar, steering clear of using anything Skynet can trace. That is, until he encounters T-X, a robotic assassin ordered to finish what T-1000 started. Good thing Connor's former nemesis, the Terminator, is back to aid the now-adult Connor … just like he promised.",
+      "popularity": 41.264,
+      "poster_path": "/qAnafzrd9Y5pVTWAP0tSDDMPzTR.jpg",
+      "release_date": "2003-07-02",
+      "title": "Terminator 3: Rise of the Machines",
+      "video": false,
+      "vote_average": 6.1,
+      "vote_count": 5662
+    },
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [
+        28,
+        12,
+        14
+      ],
+      "id": 576605,
+      "original_language": "en",
+      "original_title": "Mortal Kombat: Terminator",
+      "overview": "",
+      "popularity": 6.669,
+      "poster_path": "/6rUGUUVvA9U8V9JI5Vay8mkyMdJ.jpg",
+      "release_date": "1998-10-03",
+      "title": "Mortal Kombat: Terminator",
+      "video": false,
+      "vote_average": 6,
+      "vote_count": 11
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/2JNljYdphbMWX1Yq2JuusKvJyJc.jpg",
+      "genre_ids": [
+        16,
+        28,
+        12
+      ],
+      "id": 222148,
+      "original_language": "en",
+      "original_title": "Terminator: Salvation The Machinima Series",
+      "overview": "In the Year 2016, Resistance fighter Blair Williams embarks on a deadly mission to search for a threat that is weakening humanity's defense against the self-aware artificial intelligence called Skynet and it's lethal Terminators.",
+      "popularity": 10.597,
+      "poster_path": "/aWX62gBQVpCJ1zOkMgqGx9o8Sli.jpg",
+      "release_date": "2009-05-18",
+      "title": "Terminator: Salvation The Machinima Series",
+      "video": false,
+      "vote_average": 6.4,
+      "vote_count": 19
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/gdIcVTZj0cxLm0EWHOLTiqVLp9I.jpg",
+      "genre_ids": [
+        28
+      ],
+      "id": 40027,
+      "original_language": "en",
+      "original_title": "Ninja Terminator",
+      "overview": "Three martial-arts students search for the Golden Ninja Warrior, a statue reputed to have magic powers.",
+      "popularity": 3.576,
+      "poster_path": "/5YkYpKxTQVq4gna3qTztwwwo8YF.jpg",
+      "release_date": "1985-01-01",
+      "title": "Ninja Terminator",
+      "video": false,
+      "vote_average": 6,
+      "vote_count": 31
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/eNO76RvyKyzrEY4nhhtzM8feBng.jpg",
+      "genre_ids": [
+        35,
+        878,
+        28
+      ],
+      "id": 717823,
+      "original_language": "ru",
+      "original_title": "Terminator 5: Смерть Голливуда",
+      "overview": "An unofficial sequel to Kefir-Profit's unofficial Terminator sequel... This time featuring Superman, Rambo, Neo from the Matrix, Harry Potter and the evil Agent 007.",
+      "popularity": 2.764,
+      "poster_path": "/7K84p0Tgo9wnR7ReBwnOoVfmXTk.jpg",
+      "release_date": "2004-01-01",
+      "title": "Terminator 5: The Death of Hollywood",
+      "video": false,
+      "vote_average": 7.2,
+      "vote_count": 5
+    },
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [
+        28,
+        53
+      ],
+      "id": 55459,
+      "original_language": "en",
+      "original_title": "Terminator Woman",
+      "overview": "Two LA cops, Julie and Jay, must return Marsalas to Africa to stand trial as the chief state witness against international villain Alex Gatelee. Gatelee, into everything from gold smuggling to female slave trade, hijacks the party. In a vicious shoot out Julie and Jay overcome Gatelee's men. Gatelee then has Julie kidnapped from one of his nightclubs. He tries to use Julie as bait to get Jay to hand over Marsalas in exchange for Julie...",
+      "popularity": 2.132,
+      "poster_path": "/eGAxBO3RuDgkbxv9ul03SSjkiOO.jpg",
+      "release_date": "1992-06-30",
+      "title": "Terminator Woman",
+      "video": false,
+      "vote_average": 4.4,
+      "vote_count": 6
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/tLAYqqrkaQzi6JgaSLJvfTwil1J.jpg",
+      "genre_ids": [
+        99
+      ],
+      "id": 503718,
+      "original_language": "en",
+      "original_title": "T2: Reprogramming The Terminator",
+      "overview": "This retrospective documentary focuses on the cast and crew reminiscing about the making of the film and its legacy. It features new interviews James Cameron, William Wisher, Arnold Schwarzenegger, Robert Patrick, Joe Morton, Edward Furlong, Brad Fiedel, Mario Kassar, Stephanie Austin, Adam Greenberg and Dennis Muren.",
+      "popularity": 3.066,
+      "poster_path": "/vQUbuyFslWuRfCd44uaba9Qf0ev.jpg",
+      "release_date": "2017-11-23",
+      "title": "T2: Reprogramming The Terminator",
+      "video": false,
+      "vote_average": 7.9,
+      "vote_count": 10
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/9L21PeX8Sl79svpf0zgMhgLC3rV.jpg",
+      "genre_ids": [
+        878,
+        27
+      ],
+      "id": 133360,
+      "original_language": "en",
+      "original_title": "Alien Terminator",
+      "overview": "Five miles below the Earth's surface, a group of scientists is working in self-imposed isolation, perfecting a series of DNA experiments that could literally change the world. But when one of those experiments goes awry, it unleashes a nearly immortal organism--one capable of instant regeneration, and with an insatiable appetite for living flesh. Soon, nothing can contain the creature, and with the lab's life support systems quickly shutting down, the scientists grimly prepare for their final battle...  A small group of scientists are working in self-imposed isolation below the Earth's surface. They are all working to create DNA which could change the world, but one of the scientists have been given an secret assignment, and when the assignment goes wrong, all hell breaks lose. The new creation is now aboard the ship and will destroy anyone who gets in its way, as it moves towards the surface.",
+      "popularity": 2.045,
+      "poster_path": "/4LsdnTWNmgtuzPWyUGmmyBoRmf0.jpg",
+      "release_date": "1996-10-09",
+      "title": "Alien Terminator",
+      "video": false,
+      "vote_average": 4.3,
+      "vote_count": 18
+    },
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [
+        28,
+        878,
+        53
+      ],
+      "id": 233341,
+      "original_language": "en",
+      "original_title": "Terminator the Second",
+      "overview": "Terminator the Second is the premiere production of the Nashville performance collective, Husky Jackal Theater. A product of nearly a year of research and revision, the script tells the story of a boy and his cyborg protector entirely in lines and phrases taken from the plays of William Shakespeare. Each line and phrase is taken from original folios, with only proper nouns, pronouns and corresponding verb tenses subject to change. In doing so, the authors were able to accurately recreate the story of Terminator 2: Judgement Day, while remaining true to the words of Shakespeare in form, if less so in intent.",
+      "popularity": 1.074,
+      "poster_path": null,
+      "release_date": "2013-11-01",
+      "title": "Terminator the Second",
+      "video": false,
+      "vote_average": 4.8,
+      "vote_count": 7
+    },
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [
+        28,
+        35,
+        27
+      ],
+      "id": 965618,
+      "original_language": "fi",
+      "original_title": "Video Cop: Terminator Commando",
+      "overview": "Jake Crusher is a cop from the 80's who gets sucked into a VCR where he becomes Video Cop.",
+      "popularity": 0.913,
+      "poster_path": "/ge2YeTh5DpdxzS32u1eHPIGV36w.jpg",
+      "release_date": "2017-08-25",
+      "title": "Terminator Commando",
+      "video": false,
+      "vote_average": 0,
+      "vote_count": 0
+    },
+    {
+      "adult": true,
+      "backdrop_path": "/lMsqqzKt1boCsf3lPNONPZkXl13.jpg",
+      "genre_ids": [
+        35
+      ],
+      "id": 206880,
+      "original_language": "en",
+      "original_title": "This Ain't Terminator XXX",
+      "overview": "A horny cyborg is sent from the future to kill Sarah Connor, a young woman whose life will have a great impact on humanity in years to come. Thank fully, the terminator has one weakness: Pussy.",
+      "popularity": 1.824,
+      "poster_path": "/mozyZGwpHodOCNwwZjmyZRiGTWa.jpg",
+      "release_date": "2013-02-05",
+      "title": "This Ain't Terminator XXX",
+      "video": false,
+      "vote_average": 3.7,
+      "vote_count": 3
+    },
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [
+        28
+      ],
+      "id": 1017976,
+      "original_language": "nl",
+      "original_title": "Terminator Too – The Movie",
+      "overview": "Terminator Too – The Movie: A selfmade homage to blockbusters .",
+      "popularity": 1.515,
+      "poster_path": "/peLZNcEv0ouZ2MHOmgvpTWGWgWY.jpg",
+      "release_date": "2022-09-02",
+      "title": "Terminator Too – The Movie",
+      "video": false,
+      "vote_average": 0,
+      "vote_count": 0
+    },
+    {
+      "adult": false,
+      "backdrop_path": "/kWH43qHgNatlZ1DEpuxqNqiRbbO.jpg",
+      "genre_ids": [
+        99
+      ],
+      "id": 473793,
+      "original_language": "en",
+      "original_title": "The Making of 'Terminator 2: Judgment Day'",
+      "overview": "Documentary of the making of the sequel to the popular Schwarzenegger film, The Terminator.",
+      "popularity": 3.297,
+      "poster_path": "/m0k3vRqh4eVZONufDahNufHi8Em.jpg",
+      "release_date": "1991-01-01",
+      "title": "The Making of 'Terminator 2: Judgment Day'",
+      "video": false,
+      "vote_average": 6.8,
+      "vote_count": 14
+    },
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [
+        18,
+        28,
+        80
+      ],
+      "id": 353425,
+      "original_language": "en",
+      "original_title": "Boyong Mañalac: Hoodlum Terminator",
+      "overview": "He used to be an outlaw. Now, he is feared by the criminals.  Follow this action-filled chapter in the life of Boyong Manalac and witness how he terminates the notorious hoodlums one by one in cold blood.  Starring Eddie Garcia, as the hoodlum turned cop. Also stars Edu Manzano, John Regala, Marta Sonano and Pinky De Leon. Eddie Rodriguez directs.",
+      "popularity": 1.4,
+      "poster_path": "/hOgPV0cyrE2YvkovIIMYz1RVuDR.jpg",
+      "release_date": "1991-06-20",
+      "title": "Boyong Mañalac: Hoodlum Terminator",
+      "video": false,
+      "vote_average": 8.5,
+      "vote_count": 2
+    },
+    {
+      "adult": false,
+      "backdrop_path": null,
+      "genre_ids": [
+        28,
+        878
+      ],
+      "id": 616798,
+      "original_language": "he",
+      "original_title": "Farewell, Terminator",
+      "overview": "In futuristic Israel a special police force terminates criminals. The terminators who reach a certain killing qouta can leave the country for good. One cop discovers the truth behind this arangement, and now he has to fight for his life.",
+      "popularity": 0.6,
+      "poster_path": "/qdEyfnYU0O0DDuIURMP3hdrU1Mb.jpg",
+      "release_date": "1987-01-01",
+      "title": "Farewell, Terminator",
+      "video": false,
+      "vote_average": 1.5,
+      "vote_count": 1
+    }
+  ],
+  "total_pages": 4,
+  "total_results": 70
+}

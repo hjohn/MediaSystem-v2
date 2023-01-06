@@ -9,12 +9,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.Throwables;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,10 +36,11 @@ public class DescriptionService {
     .registerModule(new JavaTimeModule())
     .registerModule(new ParameterNamesModule(Mode.PROPERTIES));
 
-  public Optional<Description> loadDescription(Streamable streamable) {
-    String urlText = streamable.getUri().toString() + "/description.yaml";
+  public Optional<Description> loadDescription(URI uri) {
+    String urlText = uri.toString() + "/description.yaml";
 
     try {
+      // TODO this mapping takes up to 4 seconds to "Connect" to the URL, whether the file exists or not...
       DescriptionInternal d = OBJECT_MAPPER.readValue(new URL(urlText), DescriptionInternal.class);
 
       return Optional.of(new Description(d.title, d.subtitle, d.description, d.tagLine, d.genres, d.date));
@@ -54,15 +55,15 @@ public class DescriptionService {
     }
   }
 
-  public Optional<ImageURI> getCover(Streamable streamable) {
-    Path base = Paths.get(streamable.getUri());
+  public Optional<ImageURI> getCover(URI uri) {
+    Path base = Paths.get(uri);
     Path cover = base.resolve("cover.jpg");
 
     return Optional.ofNullable(Files.isRegularFile(cover) ? new ImageURI(cover.toUri().toString(), null) : null);
   }
 
-  public Optional<ImageURI> getBackdrop(Streamable streamable) {
-    Path base = Paths.get(streamable.getUri());
+  public Optional<ImageURI> getBackdrop(URI uri) {
+    Path base = Paths.get(uri);
     Path backdrop = base.resolve("backdrop.jpg");
 
     return Optional.ofNullable(Files.isRegularFile(backdrop) ? new ImageURI(backdrop.toUri().toString(), null) : null);

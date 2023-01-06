@@ -9,24 +9,23 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.db.base.ImportSource;
-import hs.mediasystem.db.base.ImportSourceProvider;
+import hs.ddif.annotations.Produces;
 import hs.mediasystem.domain.work.CollectionDefinition;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Scanner;
-import hs.mediasystem.mediamanager.StreamSource;
-import hs.mediasystem.mediamanager.StreamTags;
+import hs.mediasystem.ext.basicmediatypes.api.Discoverer;
+import hs.mediasystem.ext.basicmediatypes.api.ImportSource;
+import hs.mediasystem.ext.basicmediatypes.api.StreamTags;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
@@ -43,19 +42,54 @@ public class CollectionLocationManager {
     .setVisibility(PropertyAccessor.FIELD, Visibility.ANY)
     .registerModule(new ParameterNamesModule(Mode.PROPERTIES));
 
-  @Inject private List<Scanner> scanners;
-  @Inject private ImportSourceProvider importSourceProvider;
+  @Inject private List<Discoverer> discoverers;
   @Inject @Nullable @Named("general.basedir") private String baseDir = ".";
 
   private List<CollectionDefinition> collectionDefinitions = new ArrayList<>();
-  private List<ImportDefinition> importDefinitions = new ArrayList<>();
 
   @PostConstruct
-  public void postConstruct() {
-    reinstall();
+  void postConstruct() {
+    loadConfiguration();
   }
 
-  public void reinstall() {
+  public List<CollectionDefinition> getCollectionDefinitions() {
+    return List.copyOf(collectionDefinitions);
+  }
+
+  @Produces
+  Collection<ImportSource> importSources() {
+    File file = new File(baseDir, "mediasystem-imports.yaml");
+
+    try {
+      List<ImportDefinition> importDefinitions = OBJECT_MAPPER.readValue(file, new TypeReference<List<ImportDefinition>>() {});
+
+      List<ImportSource> sources = new ArrayList<>();
+
+      for(ImportDefinition definition : importDefinitions) {
+        String type = definition.type() + "Discoverer";
+
+        for(Discoverer discoverer : discoverers) {
+          if(discoverer.getClass().getSimpleName().equals(type)) {
+            Path root = Paths.get(definition.root());
+
+            sources.add(new ImportSource(
+              discoverer,
+              root.toUri(),
+              Optional.ofNullable(definition.identification),
+              new StreamTags(definition.tags())
+            ));
+          }
+        }
+      }
+
+      return Collections.unmodifiableCollection(sources);
+    }
+    catch(IOException e) {
+      throw new IllegalStateException("Error parsing " + file, e);
+    }
+  }
+
+  private void loadConfiguration() {
     File file = new File(baseDir, "mediasystem-collections.yaml");
 
     try {
@@ -66,86 +100,7 @@ public class CollectionLocationManager {
     }
 
     LOGGER.info("Loaded " + file);
-
-    file = new File(baseDir, "mediasystem-imports.yaml");
-
-    try {
-      importDefinitions = OBJECT_MAPPER.readValue(file, new TypeReference<List<ImportDefinition>>() {});
-    }
-    catch(IOException e) {
-      throw new IllegalStateException("Error parsing " + file, e);
-    }
-
-    LOGGER.info("Loaded " + file);
-
-    List<ImportSource> sources = new ArrayList<>();
-
-    for(ImportDefinition definition : importDefinitions) {
-      String type = definition.getType() + "Scanner";
-
-      for(Scanner scanner : scanners) {
-        if(scanner.getClass().getSimpleName().equals(type)) {
-          List<Path> paths = definition.getPaths().stream()
-            .map(Paths::get)
-            .collect(Collectors.toList());
-
-          for(int i = 0; i < paths.size(); i++) {
-            sources.add(new ImportSource(
-              scanner,
-              definition.getId() + i * 65536, paths.get(i),
-              new StreamSource(new StreamTags(definition.getTags()), definition.getIdentification() == null ? Collections.emptyList() : List.of(definition.getIdentification()))
-            ));
-          }
-        }
-      }
-    }
-
-    importSourceProvider.set(sources);
   }
 
-  public List<CollectionDefinition> getCollectionDefinitions(String type) {
-    return collectionDefinitions.stream()
-      .filter(cd -> cd.type().equals(type))
-      .collect(Collectors.toList());
-  }
-
-  public List<CollectionDefinition> getCollectionDefinitions() {
-    return List.copyOf(collectionDefinitions);
-  }
-
-  public static class ImportDefinition {
-    private final String type;
-    private final int id;
-    private final List<String> paths;
-    private final Set<String> tags;
-    private final String identification;
-
-    public ImportDefinition(String type, int id, Set<String> tags, List<String> paths, String identification) {
-      this.type = type;
-      this.id = id;
-      this.tags = Collections.unmodifiableSet(new HashSet<>(tags));
-      this.paths = Collections.unmodifiableList(new ArrayList<>(paths));
-      this.identification = identification;
-    }
-
-    public int getId() {
-      return id;
-    }
-
-    public List<String> getPaths() {
-      return paths;
-    }
-
-    public Set<String> getTags() {
-      return tags;
-    }
-
-    public String getType() {
-      return type;
-    }
-
-    public String getIdentification() {
-      return identification;
-    }
-  }
+  private static record ImportDefinition(String root, String type, Set<String> tags, String identification) {}
 }

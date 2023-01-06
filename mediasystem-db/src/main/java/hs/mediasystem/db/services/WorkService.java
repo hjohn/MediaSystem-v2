@@ -1,10 +1,10 @@
 package hs.mediasystem.db.services;
 
-import hs.mediasystem.db.base.StreamCacheUpdateService;
+import hs.mediasystem.db.core.DescriptorService;
+import hs.mediasystem.db.core.IdentifierService;
 import hs.mediasystem.db.services.domain.LinkedWork;
-import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.VideoLink;
@@ -13,26 +13,20 @@ import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.WorkIdCollection;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
-import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
-import hs.mediasystem.mediamanager.DescriptorStore;
-import hs.mediasystem.mediamanager.LocalMediaIdentificationService;
-import hs.mediasystem.mediamanager.UnknownDataSourceException;
 import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.checked.CheckedOptional;
 import hs.mediasystem.util.checked.CheckedStreams;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -47,17 +41,16 @@ import javax.inject.Singleton;
 @Singleton
 public class WorkService {
   @Inject private LinkedWorksService linkedWorksService;
-  @Inject private DescriptorStore descriptorStore;
+  @Inject private LinkedResourcesService linkedResourcesService;
+  @Inject private DescriptorService descriptorService;
   @Inject private List<RolesQueryService> rolesQueryServices;
-  @Inject private List<ProductionCollectionQueryService> productionCollectionQueryServices;
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
   @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
-  @Inject private StreamCacheUpdateService updateService;
   @Inject private MediaStreamService mediaStreamService;
-  @Inject private LocalMediaIdentificationService identificationService;
+  @Inject private IdentifierService identifierService;
 
   public Optional<Work> query(WorkId workId) throws IOException {
-    Optional<Work> optionalWork = linkedWorksService.find(workId).map(this::toWork);
+    Optional<Work> optionalWork = CheckedOptional.from(linkedWorksService.find(workId)).map(this::toWork).toOptional();
 
     if(optionalWork.isPresent()) {
       return optionalWork;
@@ -70,8 +63,7 @@ public class WorkService {
     }
 
     return queryEpisode(workId)
-      .or(() -> CheckedOptional.from(descriptorStore.find(workId))
-        .or(() -> queryDescriptor(workId))
+      .or(() -> CheckedOptional.from(descriptorService.find(workId))
         .map(this::toWork)
       )
       .toOptional();
@@ -93,13 +85,15 @@ public class WorkService {
 
       return querySerieChildren(workId);
     }
-    else if(type.equals(MediaType.COLLECTION)) {
+
+    if(type.equals(MediaType.COLLECTION)) {
       return CheckedStreams.forIOException(queryProductionCollection(workId).map(ProductionCollection::getItems).orElse(List.of()))
         .map(this::toWork)
         .collect(Collectors.toList());
     }
-    else if(type.equals(MediaType.FOLDER)) {
-      return linkedWorksService.findChildren(workId).stream().map(this::toWork).toList();
+
+    if(type.equals(MediaType.FOLDER)) {
+      return CheckedStreams.forIOException(linkedWorksService.findChildren(workId)).map(this::toWork).toList();
     }
 
     return List.of();
@@ -130,34 +124,9 @@ public class WorkService {
   public void reidentify(WorkId id) throws IOException {
     query(id).stream()
       .map(Work::getStreams)
-      .flatMap(Collection::stream)
-      .map(MediaStream::id)
-      .forEach(updateService::reidentifyStream);
-  }
-
-  Optional<Work> findFirst(StreamID streamId) {
-    return linkedWorksService.find(streamId).stream().map(this::toWork).findFirst();
-  }
-
-  /**
-   * Finds the first match for a given {@link ContentID}.  Although rare, it is
-   * possible that two streams have the same content.  As sometimes only the
-   * content id is known (for example watched state is tracked by content id only)
-   * this method does a best effort match.
-   *
-   * @param contentId a {@link ContentID}, cannot be null
-   * @return an optional {@link Work}, never null
-   */
-  Optional<Work> findFirst(ContentID contentId) {
-    return linkedWorksService.find(contentId).stream().map(this::toWork).findFirst();
-  }
-
-  Work toWork(LinkedWork linkedWork) {
-    return new Work(
-      linkedWork.work().descriptor(),
-      linkedWork.work().parent().map(p -> new Parent(p.id(), p.title(), p.backdrop())).orElse(null),
-      linkedWork.matchedResources().stream().map(mediaStreamService::toMediaStream).toList()
-    );
+      .flatMap(List::stream)
+      .map(MediaStream::location)
+      .forEach(identifierService::reidentify);
   }
 
   Work toWork(WorkDescriptor descriptor) throws IOException {
@@ -174,7 +143,7 @@ public class WorkService {
     }
 
     return Stream.concat(
-      children.stream().map(this::toWork),
+      CheckedStreams.forIOException(children).map(this::toWork).toList().stream(),
       CheckedOptional.of(parent.work().descriptor())
         .filter(Serie.class::isInstance)
         .map(Serie.class::cast)
@@ -183,7 +152,7 @@ public class WorkService {
         .flatMap(serie ->
           CheckedStreams.forIOException(serie.getSeasons())
             .map(Season::getEpisodes)
-            .flatMap(CheckedStreams::forIOException)
+            .flatMapStream(List::stream)
             .filter(ep -> !episodesWithStreams.containsKey(ep.getId()))
             .map(ep -> toRemoteWork(ep, serie))
         )
@@ -192,13 +161,21 @@ public class WorkService {
     ).toList();
   }
 
+  private Work toWork(LinkedWork linkedWork) throws IOException {
+    return new Work(
+      linkedWork.work().descriptor(),
+      findOrCreateParent(linkedWork).orElse(null),
+      linkedWork.matchedResources().stream().map(mediaStreamService::toMediaStream).toList()
+    );
+  }
+
   private List<Work> querySerieChildren(WorkId id) throws IOException {  // Only used for cases where there is no local serie
-    return queryDescriptor(id)
+    return CheckedOptional.from(descriptorService.find(id))
       .filter(Serie.class::isInstance)
       .map(Serie.class::cast)
       .map(serie -> CheckedStreams.forIOException(serie.getSeasons())
         .map(Season::getEpisodes)
-        .flatMap(CheckedStreams::forIOException)
+        .flatMapStream(List::stream)
         .map(ep -> toRemoteWork(ep, serie))
         .collect(Collectors.toList())
       )
@@ -212,43 +189,15 @@ public class WorkService {
       return CheckedOptional.empty();
     }
 
-    return CheckedOptional.from(descriptorStore.find(parentId))
-      .or(() -> queryDescriptor(parentId))
+    return CheckedOptional.from(descriptorService.find(parentId))
       .map(Serie.class::cast)
       .flatMap(serie -> CheckedStreams.forIOException(serie.getSeasons())
         .map(Season::getEpisodes)
-        .flatMap(CheckedStreams::forIOException)
+        .flatMapStream(List::stream)
         .filter(ep -> ep.getId().equals(id))
         .findFirst()
         .map(e -> toRemoteWork(e, serie))
       );
-  }
-
-  private CheckedOptional<WorkDescriptor> queryDescriptor(WorkId id) throws IOException {
-    try {
-      return CheckedOptional.of(identificationService.query(id));
-    }
-    catch(UnknownDataSourceException e) {
-      return CheckedOptional.empty();
-    }
-  }
-
-  private CheckedOptional<ProductionCollection> queryProductionCollection(WorkId id) {
-    WorkDescriptor workDescriptor = descriptorStore.find(id).orElse(null);
-
-    if(workDescriptor instanceof WorkIdCollection workIdCollection) {  // If cached, get it from cache instead
-      return CheckedOptional.of(new ProductionCollection(
-        workIdCollection.getCollectionDetails(),
-        workIdCollection.getItems().stream()
-          .map(descriptorStore::find)
-          .flatMap(Optional::stream)
-          .filter(Production.class::isInstance)
-          .map(Production.class::cast)
-          .collect(Collectors.toList())
-      ));
-    }
-
-    return CheckedOptional.ofNullable(Throwables.uncheck(() -> productionCollectionQueryServices.get(0).query(id)));
   }
 
   private Work toRemoteWork(WorkDescriptor descriptor, WorkDescriptor parentDescriptor) throws IOException {
@@ -259,20 +208,53 @@ public class WorkService {
     );
   }
 
+  private CheckedOptional<Parent> findOrCreateParent(LinkedWork linkedWork) throws IOException {
+
+    /*
+     * A LinkedWork is always a local resource, so its parent information is based on that.
+     * It can however be a Movie, in which case we should find the collection.
+     */
+
+    Resource resource = linkedWork.matchedResources().get(0).resource();
+
+    return CheckedOptional.from(resource.parentLocation())
+      .flatMapOpt(this::createParent)
+      .or(() -> findParentForLocal(linkedWork.work().descriptor()));
+  }
+
+  private CheckedOptional<Parent> findParentForLocal(WorkDescriptor descriptor) throws IOException {
+    // Only for collections, everything else should already be available for a local work
+    if(descriptor instanceof Movie movie) {
+      return queryParent(descriptor);
+    }
+
+    return CheckedOptional.empty();
+  }
+
   private CheckedOptional<Parent> queryParent(WorkDescriptor descriptor) throws IOException {
     if(descriptor instanceof Movie movie) {
       return CheckedOptional.from(movie.getCollectionId())
-        .flatMap(ci -> CheckedOptional.from(query(ci)))   // this can trigger a remote look-up
-        .map(Work::getDescriptor)
+        .flatMap(this::queryProductionCollection)
         .map(this::createParent);
     }
 
     if(descriptor instanceof Episode) {
-      return CheckedOptional.from(descriptor.getId().getParent().flatMap(descriptorStore::find))
+      return CheckedOptional.from(descriptor.getId().getParent()).flatMapOpt(descriptorService::find)
         .map(this::createParent);
     }
 
     return CheckedOptional.empty();
+  }
+
+  private CheckedOptional<ProductionCollection> queryProductionCollection(WorkId id) throws IOException {
+    return CheckedOptional.from(descriptorService.find(id))
+      .filter(ProductionCollection.class::isInstance)
+      .map(ProductionCollection.class::cast);
+  }
+
+  private Optional<Parent> createParent(URI parentUri) {
+    return linkedResourcesService.find(parentUri)
+      .map(lr -> createParent(lr.works().get(0).descriptor()));
   }
 
   private Parent createParent(WorkDescriptor descriptor) {

@@ -7,6 +7,16 @@ import hs.database.core.SimpleDatabaseStatementTranslator;
 import hs.database.schema.DatabaseStatementTranslator;
 import hs.database.schema.DatabaseUpdater;
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.db.core.IdentificationEvent;
+import hs.mediasystem.db.core.StreamableEvent;
+import hs.mediasystem.db.events.EventSerializer;
+import hs.mediasystem.db.events.PersistentEventStore;
+import hs.mediasystem.db.events.Serializer;
+import hs.mediasystem.db.events.SerializerException;
+import hs.mediasystem.db.jackson.RecordSerializer;
+import hs.mediasystem.db.jackson.SealedTypeSerializer;
+import hs.mediasystem.util.events.cache.CachingEventStore;
+import hs.mediasystem.util.events.store.EventStore;
 
 import java.sql.Connection;
 import java.util.Map;
@@ -40,21 +50,73 @@ public class DatabaseFactory {
     pool = new ConnectionPool(dataSource, 5);
   }
 
-  @Produces
-  Connection createConnection() {
-    try {
-      return pool.getConnection();
-    }
-    catch(InterruptedException e) {
-      Thread.currentThread().interrupt();
+  @Produces @Singleton
+  EventStore<StreamableEvent> createStreamableEventStore(Database database) {
+    Serializer<StreamableEvent> serializer = new SealedTypeSerializer<>(StreamableEvent.class);
 
-      throw new RuntimeException("Interrupted while getting connection from pool", e);
-    }
+    EventSerializer<StreamableEvent> eventSerializer = new EventSerializer<>() {
+      @Override
+      public byte[] serialize(StreamableEvent value) throws SerializerException {
+        return serializer.serialize(value);
+      }
+
+      @Override
+      public StreamableEvent unserialize(byte[] serialized) throws SerializerException {
+        return serializer.unserialize(serialized);
+      }
+
+      @Override
+      public Type extractType(StreamableEvent event) {
+        return switch(event.getClass().getSimpleName()) {
+          case "Updated" -> Type.FULL;
+          case "Removed" -> Type.DELETE;
+          default -> throw new IllegalStateException("Unknown case: " + event.getClass().getSimpleName());
+        };
+      }
+
+      @Override
+      public String extractAggregateId(StreamableEvent event) {
+        return "" + event.location().toString();
+      }
+    };
+
+    return new CachingEventStore<>(new PersistentEventStore<>(database, StreamableEvent.class, "Streamable", eventSerializer));
+  }
+
+  @Produces @Singleton
+  EventStore<IdentificationEvent> createIdentificationEventStore(Database database) {
+    Serializer<IdentificationEvent> serializer = new RecordSerializer<>(IdentificationEvent.class);
+
+    EventSerializer<IdentificationEvent> eventSerializer = new EventSerializer<>() {
+      @Override
+      public byte[] serialize(IdentificationEvent value) throws SerializerException {
+        return serializer.serialize(value);
+      }
+
+      @Override
+      public IdentificationEvent unserialize(byte[] serialized) throws SerializerException {
+        return serializer.unserialize(serialized);
+      }
+
+      @Override
+      public Type extractType(IdentificationEvent event) {
+        return Type.FULL;
+      }
+
+      @Override
+      public String extractAggregateId(IdentificationEvent event) {
+        return "" + event.location().toString();
+      }
+    };
+
+    return new CachingEventStore<>(new PersistentEventStore<>(database, IdentificationEvent.class, "Identification", eventSerializer));
   }
 
   @Produces
   @Singleton
-  Database createDatabase(DatabaseStatementTranslator translator, Provider<Connection> connectionProvider) {
+  Database createDatabase(DatabaseStatementTranslator translator) {
+    Provider<Connection> connectionProvider = () -> createConnection();
+
     new DatabaseUpdater(connectionProvider, translator).updateDatabase("db-scripts");
 
     return new Database(connectionProvider);
@@ -97,6 +159,17 @@ public class DatabaseFactory {
     }
     catch(ClassNotFoundException e) {
       throw new IllegalStateException(e);
+    }
+  }
+
+  private Connection createConnection() {
+    try {
+      return pool.getConnection();
+    }
+    catch(InterruptedException e) {
+      Thread.currentThread().interrupt();
+
+      throw new RuntimeException("Interrupted while getting connection from pool", e);
     }
   }
 

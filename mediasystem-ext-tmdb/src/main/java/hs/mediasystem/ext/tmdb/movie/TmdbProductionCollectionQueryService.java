@@ -8,7 +8,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
-import hs.mediasystem.ext.basicmediatypes.services.ProductionCollectionQueryService;
+import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
@@ -19,9 +19,13 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class TmdbProductionCollectionQueryService implements ProductionCollectionQueryService {
+public class TmdbProductionCollectionQueryService extends AbstractQueryService {
   @Inject private TheMovieDatabase tmdb;
   @Inject private ObjectFactory objectFactory;
+
+  public TmdbProductionCollectionQueryService() {
+    super(DataSources.TMDB, MediaType.COLLECTION);
+  }
 
   @Override
   public ProductionCollection query(WorkId id) throws IOException {

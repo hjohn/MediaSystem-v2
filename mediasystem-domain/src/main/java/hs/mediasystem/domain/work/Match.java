@@ -55,9 +55,4 @@ public record Match(Type type, float accuracy, Instant creationTime) {
       throw new IllegalArgumentException("creationTime cannot be null");
     }
   }
-
-  @Override
-  public String toString() {
-    return "Match[" + type + " @ " + accuracy * 100 + "%]";
-  }
 }

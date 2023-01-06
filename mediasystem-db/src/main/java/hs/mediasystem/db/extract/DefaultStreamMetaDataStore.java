@@ -2,15 +2,18 @@ package hs.mediasystem.db.extract;
 
 import hs.database.core.Database;
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.db.events.EventSerializer;
 import hs.mediasystem.db.events.PersistentEventStore;
+import hs.mediasystem.db.events.Serializer;
+import hs.mediasystem.db.events.SerializerException;
 import hs.mediasystem.db.jackson.SealedTypeSerializer;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.Throwables;
-import hs.mediasystem.util.events.EventSource;
-import hs.mediasystem.util.events.EventStream;
-import hs.mediasystem.util.events.SimpleEventStream;
+import hs.mediasystem.util.events.PersistentEventStream;
+import hs.mediasystem.util.events.cache.CachingEventStore;
+import hs.mediasystem.util.events.streams.Source;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -29,18 +32,46 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   @Inject private StreamMetaDataCodec codec;
 
   private final PersistentEventStore<StreamMetaDataEvent> eventStore;
-  private final EventStream<StreamMetaDataEvent> eventStream;
+  private final PersistentEventStream<StreamMetaDataEvent> persistentEventStream;
   private final Set<ContentID> metaDataAvailable = new HashSet<>();
 
   @Inject
   public DefaultStreamMetaDataStore(Database database) {
-    this.eventStore = new PersistentEventStore<>(database, "StreamMetaDataEvent", new SealedTypeSerializer<>(StreamMetaDataEvent.class));
-    this.eventStream = new SimpleEventStream<>(eventStore);
+    Serializer<StreamMetaDataEvent> serializer = new SealedTypeSerializer<>(StreamMetaDataEvent.class);
+
+    EventSerializer<StreamMetaDataEvent> eventSerializer = new EventSerializer<>() {
+      @Override
+      public byte[] serialize(StreamMetaDataEvent value) throws SerializerException {
+        return serializer.serialize(value);
+      }
+
+      @Override
+      public StreamMetaDataEvent unserialize(byte[] serialized) throws SerializerException {
+        return serializer.unserialize(serialized);
+      }
+
+      @Override
+      public Type extractType(StreamMetaDataEvent event) {
+        return switch(event.getClass().getSimpleName()) {
+          case "Updated" -> Type.FULL;
+          case "Removed" -> Type.DELETE;
+          default -> throw new IllegalStateException("Unknown case: " + event.getClass().getSimpleName());
+        };
+      }
+
+      @Override
+      public String extractAggregateId(StreamMetaDataEvent event) {
+        return "" + event.id().asInt();
+      }
+    };
+
+    this.eventStore = new PersistentEventStore<>(database, StreamMetaDataEvent.class, eventSerializer);
+    this.persistentEventStream = new PersistentEventStream<>(new CachingEventStore<>(eventStore));
   }
 
   @Produces
-  EventSource<StreamMetaDataEvent> events() {
-    return eventStream;
+  Source<StreamMetaDataEvent> events() {
+    return persistentEventStream.plain();
   }
 
   @PostConstruct
@@ -51,7 +82,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
         try {
           StreamMetaData smd = codec.decode(r.getJson());
 
-          eventStream.push(new StreamMetaDataEvent.Updated(smd));
+          persistentEventStream.push(new StreamMetaDataEvent.Updated(smd));
         }
         catch(IOException e) {
           LOGGER.warning("Exception decoding StreamMetaDataRecord: " + r + ": " + Throwables.formatAsOneLine(e));
@@ -59,7 +90,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
       });
     }
 
-    this.eventStream.subscribeAndWait(e -> {
+    this.persistentEventStream.plain().subscribe(getClass().getSimpleName(), e -> {
       if(e instanceof StreamMetaDataEvent.Updated u) {
         metaDataAvailable.add(u.streamMetaData().contentId());
       }
@@ -70,7 +101,7 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
   }
 
   void store(StreamMetaData streamMetaData) {
-    eventStream.push(new StreamMetaDataEvent.Updated(streamMetaData));
+    persistentEventStream.push(new StreamMetaDataEvent.Updated(streamMetaData));
   }
 
   boolean exists(ContentID contentId) {

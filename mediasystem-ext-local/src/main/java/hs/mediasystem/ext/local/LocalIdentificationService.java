@@ -5,27 +5,98 @@ import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
-import hs.mediasystem.ext.basicmediatypes.services.AbstractIdentificationService;
+import hs.mediasystem.ext.basicmediatypes.api.Discovery;
+import hs.mediasystem.ext.basicmediatypes.domain.Classification;
+import hs.mediasystem.ext.basicmediatypes.domain.Details;
+import hs.mediasystem.ext.basicmediatypes.domain.Folder;
+import hs.mediasystem.ext.basicmediatypes.domain.Production;
+import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
+import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
+import hs.mediasystem.util.Attributes;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class LocalIdentificationService extends AbstractIdentificationService {
+public class LocalIdentificationService implements IdentificationService {
   private static final DataSource LOCAL = DataSource.instance("LOCAL");
 
-  public LocalIdentificationService() {
-    super(LOCAL, MediaType.SERIE);
+  @Inject private DescriptionService descriptionService;
+
+  @Override
+  public String getName() {
+    return "LOCAL";
   }
 
   @Override
-  public Optional<Identification> identify(Streamable streamable, WorkDescriptor parent) {
-    return Optional.of(new Identification(List.of(new WorkId(LOCAL, MediaType.SERIE, streamable.getId().asString())), new Match(Type.MANUAL, 1.0f, Instant.now())));
+  public Optional<Identification> identify(Discovery discovery, WorkDescriptor parent) {
+    MediaType mediaType = discovery.mediaType();
+
+    if(mediaType == MediaType.FOLDER) {
+      return Optional.of(new Identification(List.of(queryFolder(discovery)), new Match(Type.MANUAL, 1.0f, Instant.now())));
+    }
+    if(mediaType == MediaType.FILE) {
+      return Optional.of(new Identification(List.of(queryFile(discovery)), new Match(Type.MANUAL, 1.0f, Instant.now())));
+    }
+
+    throw new IllegalArgumentException("Unsupported media type: " + mediaType);
+  }
+
+  private Folder queryFolder(Discovery discovery) {
+    URI location = discovery.location();
+    Optional<Description> description = descriptionService.loadDescription(location);
+    Attributes attributes = discovery.attributes();
+
+    return new Folder(
+      new WorkId(LOCAL, MediaType.FOLDER, location.toString()),
+      new Details(
+        description.map(Description::getTitle).orElse(attributes.get(Attribute.TITLE)),
+        description.map(Description::getSubtitle).orElse(attributes.get(Attribute.SUBTITLE)),
+        description.map(Description::getDescription).orElse(attributes.get(Attribute.DESCRIPTION)),
+        description.map(Description::getDate).orElse(null),
+        descriptionService.getCover(location).orElse(null),
+        null,
+        descriptionService.getBackdrop(location).orElse(null)
+      ),
+      null,
+      new Classification(
+        description.map(Description::getGenres).orElse(List.of()),
+        List.of(),
+        List.of(),
+        Map.of(),
+        null
+      )
+    );
+  }
+
+  private static Production queryFile(Discovery discovery) {
+    URI location = discovery.location();
+    Attributes attributes = discovery.attributes();
+
+    return new Production(
+      new WorkId(LOCAL, MediaType.FILE, location.toString()),
+      new Details(
+        attributes.get(Attribute.TITLE),
+        attributes.get(Attribute.SUBTITLE),
+        attributes.get(Attribute.ALTERNATIVE_TITLE),
+        null,
+        null,
+        null,
+        null
+      ),
+      null,
+      null,
+      Classification.EMPTY,
+      1.0,
+      Set.of()
+    );
   }
 }

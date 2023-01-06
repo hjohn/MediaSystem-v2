@@ -18,23 +18,24 @@ import javax.inject.Singleton;
 public class WorksService {
   @Inject private LinkedWorksService linkedWorksService;
   @Inject private WorkService workService;
+  @Inject private LocalWorkService localWorkService;
   @Inject private List<Top100QueryService> top100QueryServices;
 
   public List<Work> findNewest(int maximum, Predicate<MediaType> filter) {
     return linkedWorksService.findNewest(maximum, filter).stream()
-      .map(workService::toWork)
+      .map(localWorkService::toWork)
       .collect(Collectors.toCollection(ArrayList::new));
   }
 
   public List<Work> findAllByType(MediaType type, String tag) {
     return linkedWorksService.findAllByType(type, tag).stream()
-      .map(workService::toWork)
+      .map(localWorkService::toWork)
       .collect(Collectors.toCollection(ArrayList::new));
   }
 
   public List<Work> findRootsByTag(String tag) {
     return linkedWorksService.findRootsByTag(tag).stream()
-      .map(workService::toWork)
+      .map(localWorkService::toWork)
       .collect(Collectors.toCollection(ArrayList::new));
   }
 

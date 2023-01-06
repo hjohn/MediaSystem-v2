@@ -10,8 +10,6 @@ public class WorkId {
   private final MediaType type;
   private final String key;
 
-  private transient final Optional<WorkId> parent;
-
   public WorkId(DataSource dataSource, MediaType type, String key) {
     if(dataSource == null) {
       throw new IllegalArgumentException("dataSource cannot be null");
@@ -26,14 +24,14 @@ public class WorkId {
     this.dataSource = dataSource;
     this.type = type;
     this.key = key;
-
-    int slash = key.indexOf("/");
-
-    this.parent = slash == -1 ? Optional.empty() : Optional.of(new WorkId(dataSource, type.parent().orElseThrow(), key.substring(0, slash)));
   }
 
   public Optional<WorkId> getParent() {
-    return parent;
+    return type.parent().map(type -> {
+      int index = key.lastIndexOf('/');
+
+      return index == -1 ? null : new WorkId(dataSource, type, key.substring(0, index));
+    });
   }
 
   public final DataSource getDataSource() {

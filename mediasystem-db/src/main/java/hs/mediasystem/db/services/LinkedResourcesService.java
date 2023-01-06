@@ -1,48 +1,40 @@
 package hs.mediasystem.db.services;
 
 import hs.ddif.annotations.Produces;
-import hs.mediasystem.db.base.CachedStream;
-import hs.mediasystem.db.base.ImportSourceProvider;
-import hs.mediasystem.db.base.StreamableEvent;
-import hs.mediasystem.db.extract.StreamMetaDataEvent;
+import hs.mediasystem.db.core.IdentificationEvent;
+import hs.mediasystem.db.core.ResourceEvent;
 import hs.mediasystem.db.services.domain.LinkedResource;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.db.services.domain.Work;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.domain.stream.StreamID;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
-import hs.mediasystem.domain.work.MediaStructure;
-import hs.mediasystem.domain.work.Parent;
-import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.Identification;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
-import hs.mediasystem.mediamanager.DescriptorStore;
-import hs.mediasystem.util.events.EventSource;
-import hs.mediasystem.util.events.EventStream;
+import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
+import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.events.InMemoryEventStore;
+import hs.mediasystem.util.events.EventSelector;
 import hs.mediasystem.util.events.SimpleEventStream;
+import hs.mediasystem.util.events.streams.Source;
+import hs.mediasystem.util.events.streams.EventStream;
+import hs.mediasystem.util.events.streams.Subscription;
 
-import java.time.Instant;
+import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -52,23 +44,22 @@ import javax.inject.Singleton;
 public class LinkedResourcesService {
 
   /**
-   * DataSource which uses as key a StreamID.<p>
+   * DataSource which uses as key a {@link URI}.<p>
    *
    * This internal data source is used for items that are part of a serie but have
    * not been matched up to a known episode or special.
    */
   private static final String DEFAULT_DATA_SOURCE_NAME = "@INTERNAL";
-  private static final MultiMapper<StreamID, LinkedResource> MAPPER = new MultiMapper<>(LinkedResource::id);
 
-  @Inject private DescriptorStore descriptorStore;
-  @Inject private EventSource<StreamableEvent> streamableEvents;
-  @Inject private EventSource<StreamMetaDataEvent> streamMetaDataEvents;
-  @Inject private ImportSourceProvider importSourceProvider;
-  @Inject private ContentPrintProvider contentPrintProvider;
+  @Inject private Source<ResourceEvent> resourceEvents;
+  @Inject private EventSelector<IdentificationEvent> identificationEvents;
 
-  private final Map<ContentID, Object> linkedResourcesByContentId = new HashMap<>();
-  private final Map<ContentID, StreamMetaData> metaDataByContentId = new HashMap<>();
-  private final EventStream<LinkedResourceEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>());
+  private final NavigableMap<URI, LinkedResource> linkedResources = new TreeMap<>();
+  private final Map<URI, URI> parents = new HashMap<>();
+  private final Map<ContentID, Set<URI>> locationsByContentId = new HashMap<>();
+  private final EventStream<LinkedResourceEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>(LinkedResourceEvent.class));
+
+  private Subscription resourceSubscription;
 
   @Inject
   private LinkedResourcesService() {
@@ -76,12 +67,14 @@ public class LinkedResourcesService {
 
   @PostConstruct
   private void postConstruct() {
-    streamableEvents.subscribeAndWait(this::processEvent);
-    streamMetaDataEvents.subscribeAndWait(this::processStreamMetaDataEvent);
+    this.resourceSubscription = resourceEvents.subscribe("LinkedResourcesService", this::processEvent);
+    this.resourceSubscription.join();
+
+    identificationEvents.plain().subscribe("LinkedResourcesService", this::processEvent).join();
   }
 
   @Produces
-  private EventSource<LinkedResourceEvent> linkedResourceEvents() {
+  private Source<LinkedResourceEvent> linkedResourceEvents() {
     return eventStream;
   }
 
@@ -92,170 +85,116 @@ public class LinkedResourcesService {
    * @return an optional {@link LinkedResource}, never {@code null}
    */
   public Optional<LinkedResource> findFirst(ContentID cid) {
-    synchronized(linkedResourcesByContentId) {
-      return MAPPER.findFirst(linkedResourcesByContentId.get(cid));
+    synchronized(linkedResources) {
+      return locationsByContentId.getOrDefault(cid, Set.of()).stream().map(linkedResources::get).findFirst();
     }
   }
 
-  private void processEvent(StreamableEvent event) {
-    synchronized(linkedResourcesByContentId) {
-      if(event instanceof StreamableEvent.Updated u) {
-        CachedStream cs = u.cachedStream();
-        LinkedResource resource = toStream(cs);
+  public Optional<LinkedResource> findParent(URI uri) {
+    synchronized(linkedResources) {
+      return Optional.of(uri).map(parents::get).map(linkedResources::get);
+    }
+  }
 
-        linkedResourcesByContentId.compute(cs.getStreamable().getId().getContentId(), (k, v) -> MAPPER.put(v, resource));
+  public Optional<LinkedResource> find(URI uri) {
+    synchronized(linkedResources) {
+      return Optional.ofNullable(linkedResources.get(uri));
+    }
+  }
 
-        eventStream.push(new LinkedResourceEvent.Updated(resource));
+  private void processEvent(ResourceEvent event) {
+    synchronized(linkedResources) {
+      URI location = event.location();
+
+      if(event instanceof ResourceEvent.Updated u) {
+        Resource resource = u.resource();
+        LinkedResource existing = linkedResources.get(location);
+        LinkedResource linkedResource = existing == null ? create(resource) : merge(existing, create(resource));
+
+        locationsByContentId.computeIfAbsent(resource.contentId(), k -> new LinkedHashSet<>()).add(location); // TODO could use different structure than set if we check existing == null first
+
+        update(linkedResource);
       }
-      else if(event instanceof StreamableEvent.Removed r) {
-        linkedResourcesByContentId.compute(r.id().getContentId(), (k, v) -> MAPPER.remove(v, r.id()));
+      else if(event instanceof ResourceEvent.Removed r) {
+        LinkedResource existing = linkedResources.get(location);
 
-        eventStream.push(new LinkedResourceEvent.Removed(r.id()));
+        locationsByContentId.computeIfPresent(existing.contentId(), (k, v) -> v.remove(location) && v.isEmpty() ? null : v);
+        linkedResources.remove(location);
+        parents.remove(location);
+
+        eventStream.push(new LinkedResourceEvent.Removed(location));
       }
     }
   }
 
-  private void processStreamMetaDataEvent(StreamMetaDataEvent event) {
-    synchronized(linkedResourcesByContentId) {
-      if(event instanceof StreamMetaDataEvent.Updated u) {
-        ContentID contentId = u.streamMetaData().contentId();
+  private void processEvent(IdentificationEvent event) {
+    resourceSubscription.join();  // ensures identifications are never processed before its corresponding resource is known
 
-        metaDataByContentId.put(contentId, u.streamMetaData());
+    synchronized(linkedResources) {
+      LinkedResource existing = linkedResources.get(event.location());
 
-        updateLinkedResources(contentId, u.streamMetaData());
-      }
-      else if(event instanceof StreamMetaDataEvent.Removed r) {
-        ContentID contentId = r.id();
+      if(existing != null) {
+        LinkedResource resource = merge(existing, new IdentificationService.Identification(event.descriptors(), event.match()));
 
-        metaDataByContentId.remove(contentId);
-
-        updateLinkedResources(contentId, null);
+        update(resource);
       }
     }
   }
 
-  private void updateLinkedResources(ContentID contentId, StreamMetaData streamMetaData) {
-    // No concurrent modification exception here because we are only updating keys
-    MAPPER.stream(linkedResourcesByContentId.get(contentId)).forEach(lr -> {
-      LinkedResource merged = merge(lr, streamMetaData);
+  private void update(LinkedResource linkedResource) {
+    linkedResources.put(linkedResource.location(), linkedResource);
+    parents.remove(linkedResource.location());
+    linkedResource.resource().parentLocation().ifPresent(parentLocation -> parents.put(linkedResource.location(), parentLocation));
 
-      linkedResourcesByContentId.compute(contentId, (k, v) -> MAPPER.put(v, merged));
-
-      eventStream.push(new LinkedResourceEvent.Updated(merged));
-    });
+    eventStream.push(new LinkedResourceEvent.Updated(linkedResource));
   }
 
-  private LinkedResource toStream(CachedStream cs) {
-    Streamable streamable = cs.getStreamable();
-    StreamID id = streamable.getId();
-    ContentID contentId = id.getContentId();
-    ContentPrint contentPrint = contentPrintProvider.get(contentId);
-
-    LinkedResource lr = new LinkedResource(
-      new Resource(
-        id,
-        streamable.getParentId(),
-        streamable.getUri(),
-        streamable.getAttributes(),
-        cs.getDiscoveryTime(),
-        Instant.ofEpochMilli(contentPrint.getLastModificationTime()),
-        Optional.ofNullable(contentPrint.getSize()),
-        importSourceProvider.getImportSource(id.getImportSourceId()).getStreamSource().tags(),
-        Optional.empty(),
-        Optional.empty(),
-        List.of()
-      ),
-      cs.getIdentification().map(Identification::getMatch).orElse(new Match(Type.NONE, 1.0f, cs.getDiscoveryTime())),
-      createWorks(cs)
-    );
-
-    return Optional.ofNullable(metaDataByContentId.get(contentId)).map(md -> merge(lr, md)).orElse(lr);
-  }
-
-  private static LinkedResource merge(LinkedResource lr, StreamMetaData smd) {
-    Resource resource = lr.resource();
-
+  private static LinkedResource create(Resource resource) {
     return new LinkedResource(
-      new Resource(
-        resource.id(),
-        resource.parentId(),
-        resource.uri(),
-        resource.attributes(),
-        resource.discoveryTime(),
-        resource.lastModificationTime(),
-        resource.size(),
-        resource.tags(),
-        smd == null ? Optional.empty() : smd.length(),
-        Optional.ofNullable(smd == null ? null : new MediaStructure(smd.videoTracks(), smd.audioTracks(), smd.subtitleTracks())),
-        smd == null ? List.of() : smd.snapshots()
-      ),
+      resource,
+      new Match(Type.NONE, 1.0f, resource.discoveryTime()),
+      createWorks(resource, Optional.empty())
+    );
+  }
+
+  private static LinkedResource merge(LinkedResource lr, LinkedResource updated) {
+    return new LinkedResource(
+      updated.resource(),
       lr.match(),
       lr.works()
     );
   }
 
-  private List<Work> createWorks(CachedStream cs) {
-    cs.getStreamable().getParentId();
+  private static LinkedResource merge(LinkedResource lr, IdentificationService.Identification mi) {
+    Resource resource = lr.resource();
 
-    List<Work> works = cs.getIdentification()
-      .map(Identification::getWorkIds)
-      .stream()
-      .flatMap(Collection::stream)
-      .map(descriptorStore::find)
-      .flatMap(Optional::stream)
-      .map(d -> new Work(
-        d,
-        findParent(d).or(() -> cs.getStreamable().getParentId().flatMap(this::createParent))
-      ))
-      .toList();
-
-    return works.isEmpty() ? List.of(createMinimalWork(cs)) : works;
-  }
-
-  private Work createMinimalWork(CachedStream cs) {
-    WorkDescriptor descriptor = createMinimalDescriptor(cs.getStreamable());
-
-    return new Work(
-      descriptor,
-      cs.getStreamable().getParentId().flatMap(this::createParent)
+    return new LinkedResource(
+      resource,
+      mi.match(),
+      createWorks(resource, Optional.of(mi))
     );
   }
 
-  private Optional<Parent> findParent(WorkDescriptor descriptor) {
-    if(descriptor instanceof Movie movie) {
-      return movie.getCollectionId()
-        .flatMap(descriptorStore::find)
-        .map(this::createParent);
-    }
+  private static List<Work> createWorks(Resource resource, Optional<IdentificationService.Identification> mi) {
+    List<Work> works = mi.map(IdentificationService.Identification::descriptors)
+      .stream()
+      .flatMap(Collection::stream)
+      .map(Work::new)
+      .toList();
 
-    if(descriptor instanceof Episode) {
-      return descriptor.getId().getParent().flatMap(descriptorStore::find)
-        .map(this::createParent);
-    }
-
-    return Optional.empty();
+    return works.isEmpty() ? List.of(createMinimalWork(resource)) : works;
   }
 
-  private Optional<Parent> createParent(StreamID parentId) {
-    LinkedResource parent = MAPPER.get(linkedResourcesByContentId.get(parentId.getContentId()), parentId);
+  private static Work createMinimalWork(Resource resource) {
+    WorkDescriptor descriptor = createMinimalDescriptor(resource);
 
-    if(parent == null || parent.works().isEmpty()) {
-      return Optional.empty();
-    }
-
-    return Optional.of(createParent(parent.works().get(0).descriptor()));
+    return new Work(descriptor);
   }
 
-  private Parent createParent(WorkDescriptor descriptor) {
-    Details details = descriptor.getDetails();
-
-    return new Parent(descriptor.getId(), details.getTitle(), details.getBackdrop());
-  }
-
-  private static WorkDescriptor createMinimalDescriptor(Streamable streamable) {
+  private static WorkDescriptor createMinimalDescriptor(Resource resource) {
     return new Production(
-      new WorkId(DataSource.instance(DEFAULT_DATA_SOURCE_NAME), streamable.getType(), "" + streamable.getId().asString()),
-      createMinimalDetails(streamable),
+      new WorkId(DataSource.instance(DEFAULT_DATA_SOURCE_NAME), resource.mediaType(), resource.location().toString()),  // TODO slash not allowed in location.. there is a trick to determine parent there
+      createMinimalDetails(resource.attributes()),
       null,
       null,
       Classification.EMPTY,
@@ -264,9 +203,9 @@ public class LinkedResourcesService {
     );
   }
 
-  private static Details createMinimalDetails(Streamable streamable) {
-    String title = streamable.getAttributes().get(Attribute.TITLE);
-    String subtitle = streamable.getAttributes().get(Attribute.SUBTITLE);
+  private static Details createMinimalDetails(Attributes attributes) {
+    String title = attributes.get(Attribute.TITLE);
+    String subtitle = attributes.get(Attribute.SUBTITLE);
 
     if(title == null || title.isBlank()) {
       title = subtitle;
@@ -280,106 +219,11 @@ public class LinkedResourcesService {
     return new Details(
       title,
       subtitle,
-      streamable.getAttributes().get(Attribute.DESCRIPTION),
+      attributes.get(Attribute.DESCRIPTION),
       null,
       null,  // no images derived from stream image captures are provided, front-end should do appropriate fall backs
       null,
       null
     );
-  }
-
-  /**
-   * Helper class that simplifies tracking zero, one or more key value pairs with minimal overhead.
-   * The helper requires the current base value for all its functions. When modified the mapper
-   * returns the new base value, which can be {@code null} if there are no key value pairs, just
-   * a value if there is a single key value pair, or a {@code Map} if there are multiple pairs.
-   *
-   * @param <K> the type of the keys
-   * @param <V> the type of the values
-   */
-  static class MultiMapper<K, V> {
-    private final Function<V, K> keyExtractor;
-
-    public MultiMapper(Function<V, K> keyExtractor) {
-      this.keyExtractor = keyExtractor;
-    }
-
-    /**
-     * Returns the value associated with the given key, or {@code null} if there is none.
-     *
-     * @param base a base to examine, can be {@code null}
-     * @param key a key, can be {@code null}
-     * @return the value associated with the given key, or {@code null} if there is none
-     */
-    public V get(Object base, K key) {
-      if(base == null) {
-        return null;
-      }
-
-      if(base instanceof Map) {
-        @SuppressWarnings("unchecked")
-        Map<K, V> map = (Map<K, V>)base;
-
-        return map.get(key);
-      }
-
-      @SuppressWarnings("unchecked")
-      V baseValue = (V)base;
-      K baseKey = keyExtractor.apply(baseValue);
-
-      return baseKey.equals(key) ? baseValue : null;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Optional<V> findFirst(Object base) {
-      return Optional.ofNullable(base == null ? null : base instanceof Map ? ((Map<K, V>)base).values().iterator().next() : (V)base);
-    }
-
-    @SuppressWarnings("unchecked")
-    public Stream<V> stream(Object base) {
-      return base == null ? Stream.empty() : base instanceof Map ? ((Map<K, V>)base).values().stream() : Stream.of((V)base);
-    }
-
-    public Object put(Object base, V value) {
-      if(base == null) {
-        return value;
-      }
-
-      K key = keyExtractor.apply(value);
-
-      if(base instanceof Map) {
-        @SuppressWarnings("unchecked")
-        Map<K, V> map = (Map<K, V>)base;
-
-        map.put(key, value);
-
-        return base;
-      }
-
-      @SuppressWarnings("unchecked")
-      K baseKey = keyExtractor.apply((V)base);
-
-      return key.equals(baseKey) ? value : new HashMap<>(Map.of(baseKey, base, key, value));
-    }
-
-    public Object remove(Object base, K key) {
-      if(base == null) {
-        return null;
-      }
-
-      if(base instanceof Map) {
-        @SuppressWarnings("unchecked")
-        Map<K, V> map = (Map<K, V>)base;
-
-        map.remove(key);
-
-        return map.size() == 1 ? map.values().iterator().next() : map;
-      }
-
-      @SuppressWarnings("unchecked")
-      K baseKey = keyExtractor.apply((V)base);
-
-      return baseKey.equals(key) ? null : base;
-    }
   }
 }

@@ -1,10 +1,10 @@
 package hs.mediasystem.db.services.domain;
 
-import hs.mediasystem.domain.stream.StreamID;
+import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.MediaStructure;
 import hs.mediasystem.domain.work.Snapshot;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.mediamanager.StreamTags;
+import hs.mediasystem.ext.basicmediatypes.api.StreamTags;
 import hs.mediasystem.util.Attributes;
 
 import java.net.URI;
@@ -14,36 +14,32 @@ import java.util.List;
 import java.util.Optional;
 
 public record Resource(
-  StreamID id,
-  Optional<StreamID> parentId,
-  URI uri,
-  Attributes attributes,
-  Instant discoveryTime,
+  URI location,
+  Optional<URI> parentLocation,
+  MediaType mediaType,
+  ContentID contentId,
   Instant lastModificationTime,
   Optional<Long> size,
+  Instant discoveryTime,
   StreamTags tags,
   Optional<Duration> duration,
   Optional<MediaStructure> mediaStructure,
-  List<Snapshot> snapshots
+  List<Snapshot> snapshots,
+  Attributes attributes
 ) {
+
   public Resource {
-    if(id == null) {
-      throw new IllegalArgumentException("id cannot be null");
+    if(location == null) {
+      throw new IllegalArgumentException("location cannot be null");
     }
-    if(parentId == null) {
-      throw new IllegalArgumentException("parentId cannot be null");
+    if(parentLocation == null) {
+      throw new IllegalArgumentException("parentLocation cannot be null");
     }
-    if(uri == null) {
-      throw new IllegalArgumentException("uri cannot be null");
+    if(mediaType == null) {
+      throw new IllegalArgumentException("mediaType cannot be null");
     }
-    if(attributes == null) {
-      throw new IllegalArgumentException("attributes cannot be null");
-    }
-    if(!attributes.contains(Attribute.TITLE)) {
-      throw new IllegalArgumentException("attributes must contain Attribute.TITLE");
-    }
-    if(discoveryTime == null) {
-      throw new IllegalArgumentException("discoveryTime cannot be null");
+    if(contentId == null) {
+      throw new IllegalArgumentException("contentId cannot be null");
     }
     if(lastModificationTime == null) {
       throw new IllegalArgumentException("lastModificationTime cannot be null");
@@ -53,6 +49,9 @@ public record Resource(
     }
     if(size.filter(s -> s < 0).isPresent()) {
       throw new IllegalArgumentException("size cannot be negative: " + size);
+    }
+    if(discoveryTime == null) {
+      throw new IllegalArgumentException("discoveryTime cannot be null");
     }
     if(tags == null) {
       throw new IllegalArgumentException("tags cannot be null");
@@ -65,6 +64,13 @@ public record Resource(
     }
     if(snapshots == null) {
       throw new IllegalArgumentException("snapshots cannot be null");
+    }
+    if(attributes == null) {
+      throw new IllegalArgumentException("attributes cannot be null");
+    }
+
+    if(mediaType.parent().isPresent() && parentLocation.isEmpty()) {
+      throw new IllegalArgumentException("parentLocation must be present when media type is: " + mediaType);
     }
   }
 }
