@@ -6,10 +6,10 @@ import hs.mediasystem.plugin.library.scene.overview.SeasonBar.Entry;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.javafx.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.control.Containers;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
+import hs.mediasystem.util.javafx.ui.gridlistviewskin.Group;
+import hs.mediasystem.util.javafx.ui.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;

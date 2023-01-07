@@ -16,13 +16,13 @@ import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.SizeFormatter;
-import hs.mediasystem.util.javafx.Nodes;
+import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
-import hs.mediasystem.util.javafx.control.transition.TransitionPane;
-import hs.mediasystem.util.javafx.control.transition.multi.Scroll;
+import hs.mediasystem.util.javafx.ui.transition.StandardTransitions;
+import hs.mediasystem.util.javafx.ui.transition.TransitionPane;
+import hs.mediasystem.util.javafx.ui.transition.multi.Scroll;
+import hs.mediasystem.util.natural.SizeFormatter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

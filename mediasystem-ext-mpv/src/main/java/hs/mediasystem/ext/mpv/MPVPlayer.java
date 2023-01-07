@@ -8,12 +8,12 @@ import hs.mediasystem.ext.mpv.MPV.mpv_event;
 import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerEvent;
 import hs.mediasystem.ui.api.player.PlayerEvent.Type;
+import hs.mediasystem.util.javafx.base.Events;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.PlayerWindowIdSupplier;
 import hs.mediasystem.ui.api.player.StatOverlay;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.ui.api.player.SubtitlePresentation;
-import hs.mediasystem.util.javafx.Events;
 
 import java.net.URI;
 import java.nio.file.Path;

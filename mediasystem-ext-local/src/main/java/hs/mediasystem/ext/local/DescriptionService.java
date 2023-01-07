@@ -9,8 +9,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.io.IOException;
 import java.net.ConnectException;

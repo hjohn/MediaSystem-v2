@@ -10,7 +10,7 @@ import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

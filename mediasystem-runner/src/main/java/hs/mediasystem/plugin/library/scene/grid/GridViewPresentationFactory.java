@@ -10,7 +10,7 @@ import hs.mediasystem.runner.grouping.Grouping;
 import hs.mediasystem.runner.grouping.NoGrouping;
 import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.SettingsSource;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
+import hs.mediasystem.util.javafx.ui.gridlistviewskin.Group;
 
 import java.util.ArrayList;
 import java.util.Comparator;

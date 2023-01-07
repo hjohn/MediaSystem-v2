@@ -7,8 +7,8 @@ import hs.mediasystem.domain.work.RoleId;
 import hs.mediasystem.ext.basicmediatypes.domain.Person;
 import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
 import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.io.IOException;
 import java.util.ArrayList;

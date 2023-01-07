@@ -8,7 +8,7 @@ import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsPres
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role;
-import hs.mediasystem.util.javafx.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 
 import javafx.scene.Node;
 

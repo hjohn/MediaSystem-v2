@@ -10,7 +10,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie;
 import hs.mediasystem.ext.basicmediatypes.domain.Movie.State;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.time.Duration;
 import java.time.LocalDate;

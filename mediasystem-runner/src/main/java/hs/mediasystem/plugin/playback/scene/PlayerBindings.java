@@ -4,7 +4,7 @@ import hs.mediasystem.ui.api.player.AudioTrack;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
 import hs.mediasystem.ui.api.player.Subtitle;
 import hs.mediasystem.ui.api.player.SubtitlePresentation;
-import hs.mediasystem.util.SizeFormatter;
+import hs.mediasystem.util.natural.SizeFormatter;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;

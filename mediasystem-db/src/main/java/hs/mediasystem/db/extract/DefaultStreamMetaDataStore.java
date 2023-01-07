@@ -10,10 +10,10 @@ import hs.mediasystem.db.jackson.SealedTypeSerializer;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.mediamanager.StreamMetaDataStore;
-import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.events.PersistentEventStream;
 import hs.mediasystem.util.events.cache.CachingEventStore;
 import hs.mediasystem.util.events.streams.Source;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.util.HashSet;

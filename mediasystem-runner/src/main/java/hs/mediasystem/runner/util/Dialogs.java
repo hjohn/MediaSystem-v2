@@ -1,7 +1,7 @@
 package hs.mediasystem.runner.util;
 
 import hs.mediasystem.util.Localizable;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
 import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;

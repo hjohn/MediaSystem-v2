@@ -21,9 +21,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 import hs.mediasystem.ext.basicmediatypes.services.RecommendationQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.RolesQueryService;
 import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
-import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.checked.CheckedOptional;
 import hs.mediasystem.util.checked.CheckedStreams;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.net.URI;

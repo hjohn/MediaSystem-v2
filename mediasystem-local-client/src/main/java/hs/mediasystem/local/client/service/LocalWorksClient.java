@@ -20,9 +20,9 @@ import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Stage;
 import hs.mediasystem.ui.api.domain.State;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
+import hs.mediasystem.util.image.ImageHandleFactory;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.util.Collection;
 import java.util.List;

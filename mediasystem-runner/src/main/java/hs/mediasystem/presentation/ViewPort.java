@@ -1,8 +1,8 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.util.javafx.Nodes;
-import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
-import hs.mediasystem.util.javafx.control.transition.TransitionPane;
+import hs.mediasystem.util.javafx.base.Nodes;
+import hs.mediasystem.util.javafx.ui.transition.StandardTransitions;
+import hs.mediasystem.util.javafx.ui.transition.TransitionPane;
 
 import java.util.function.Consumer;
 

@@ -6,7 +6,7 @@ import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.time.Duration;
 import java.time.LocalDate;

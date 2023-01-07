@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.util.Localizable;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.nio.file.Path;
 

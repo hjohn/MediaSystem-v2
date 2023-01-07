@@ -10,9 +10,9 @@ import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.StarRating;
-import hs.mediasystem.util.javafx.control.status.StatusIndicator;
-import hs.mediasystem.util.javafx.control.transition.StandardTransitions;
-import hs.mediasystem.util.javafx.control.transition.TransitionPane;
+import hs.mediasystem.util.javafx.ui.status.StatusIndicator;
+import hs.mediasystem.util.javafx.ui.transition.StandardTransitions;
+import hs.mediasystem.util.javafx.ui.transition.TransitionPane;
 
 import java.util.Optional;
 import java.util.function.Supplier;

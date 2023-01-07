@@ -6,7 +6,7 @@ import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.util.List;
 import java.util.Optional;

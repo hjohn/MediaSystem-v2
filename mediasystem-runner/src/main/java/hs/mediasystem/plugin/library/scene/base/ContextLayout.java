@@ -12,7 +12,7 @@ import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Serie;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.BiasedImageView;

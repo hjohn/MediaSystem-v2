@@ -8,7 +8,7 @@ import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
 import hs.mediasystem.ui.api.domain.Role;
-import hs.mediasystem.util.NaturalLanguage;
+import hs.mediasystem.util.natural.NaturalLanguage;
 
 import java.util.ArrayList;
 import java.util.Comparator;

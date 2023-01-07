@@ -11,11 +11,11 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.javafx.ItemSelectedEvent;
-import hs.mediasystem.util.javafx.Nodes;
-import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
-import hs.mediasystem.util.javafx.control.csslayout.StylableVBox;
+import hs.mediasystem.util.image.ImageHandle;
+import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.base.Nodes;
+import hs.mediasystem.util.javafx.ui.csslayout.StylableContainers;
+import hs.mediasystem.util.javafx.ui.csslayout.StylableVBox;
 
 import java.util.Objects;
 import java.util.function.Function;

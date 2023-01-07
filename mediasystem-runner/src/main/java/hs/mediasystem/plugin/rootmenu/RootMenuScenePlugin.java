@@ -3,7 +3,7 @@ package hs.mediasystem.plugin.rootmenu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.util.FocusEvent;
+import hs.mediasystem.util.javafx.base.FocusEvent;
 import hs.mediasystem.util.javafx.control.Buttons;
 
 import javafx.application.Platform;

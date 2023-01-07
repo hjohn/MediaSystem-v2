@@ -1,6 +1,6 @@
 package hs.mediasystem.ext.basicmediatypes.api;
 
-import hs.mediasystem.util.URIs;
+import hs.mediasystem.util.domain.URIs;
 
 import java.net.URI;
 import java.util.List;

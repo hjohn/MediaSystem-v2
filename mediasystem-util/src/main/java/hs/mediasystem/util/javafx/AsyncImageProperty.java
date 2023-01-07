@@ -1,8 +1,8 @@
 package hs.mediasystem.util.javafx;
 
-import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.NamedThreadFactory;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.concurrent.NamedThreadFactory;
+import hs.mediasystem.util.exception.Throwables;
+import hs.mediasystem.util.image.ImageHandle;
 
 import java.lang.ref.WeakReference;
 import java.time.Duration;

@@ -11,8 +11,8 @@ import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
+import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.javafx.ItemSelectedEvent;
 
 import java.time.LocalDate;
 

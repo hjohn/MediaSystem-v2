@@ -3,7 +3,7 @@ package hs.mediasystem.ext.basicmediatypes.api;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.URIs;
+import hs.mediasystem.util.domain.URIs;
 
 import java.net.URI;
 import java.util.Optional;

@@ -4,14 +4,14 @@ import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.AutoVerticalScrollPane;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.StarRating;
-import hs.mediasystem.util.javafx.control.status.StatusIndicator;
+import hs.mediasystem.util.javafx.ui.status.StatusIndicator;
 
 import java.time.LocalDate;
 import java.util.Objects;

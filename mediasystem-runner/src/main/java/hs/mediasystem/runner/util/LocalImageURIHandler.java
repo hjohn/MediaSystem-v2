@@ -1,9 +1,9 @@
 package hs.mediasystem.runner.util;
 
 import hs.mediasystem.ui.api.ImageClient;
-import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.ImageURIHandler;
+import hs.mediasystem.util.image.ImageHandle;
+import hs.mediasystem.util.image.ImageURI;
+import hs.mediasystem.util.image.ImageURIHandler;
 
 import java.io.IOException;
 import java.util.Objects;

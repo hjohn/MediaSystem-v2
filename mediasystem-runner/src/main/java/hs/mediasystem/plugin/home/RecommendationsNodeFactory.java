@@ -5,7 +5,7 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Recommendation;
-import hs.mediasystem.util.javafx.Nodes;
+import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
 
 import java.time.LocalDate;

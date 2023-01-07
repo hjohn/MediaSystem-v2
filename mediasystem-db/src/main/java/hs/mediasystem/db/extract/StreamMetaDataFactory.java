@@ -4,7 +4,7 @@ import hs.mediasystem.db.extract.grabber.FFmpegFrameGrabber;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.StreamMetaData;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;

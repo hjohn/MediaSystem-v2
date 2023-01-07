@@ -19,9 +19,9 @@ import hs.mediasystem.ext.tmdb.PersonRoles;
 import hs.mediasystem.ext.tmdb.TextMatcher;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.checked.CheckedOptional;
 import hs.mediasystem.util.checked.CheckedStreams;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.time.Instant;

@@ -1,8 +1,8 @@
 package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.NaturalLanguage;
+import hs.mediasystem.util.image.ImageHandle;
+import hs.mediasystem.util.natural.NaturalLanguage;
 
 import java.time.LocalDate;
 import java.util.Comparator;

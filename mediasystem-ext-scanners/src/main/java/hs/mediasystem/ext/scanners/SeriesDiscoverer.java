@@ -10,9 +10,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.net.URI;

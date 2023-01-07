@@ -8,9 +8,9 @@ import hs.mediasystem.runner.util.ResourceManager;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageHandle;
+import hs.mediasystem.util.image.ImageHandleFactory;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

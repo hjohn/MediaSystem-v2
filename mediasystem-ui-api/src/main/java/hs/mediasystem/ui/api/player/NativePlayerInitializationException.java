@@ -1,7 +1,7 @@
 package hs.mediasystem.ui.api.player;
 
 import hs.mediasystem.util.Localizable;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
 
 public class NativePlayerInitializationException extends RuntimeException implements Localizable {
 

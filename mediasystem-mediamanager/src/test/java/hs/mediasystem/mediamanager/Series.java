@@ -12,7 +12,7 @@ import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
 import hs.mediasystem.ext.basicmediatypes.domain.Season;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ext.basicmediatypes.domain.Serie.State;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

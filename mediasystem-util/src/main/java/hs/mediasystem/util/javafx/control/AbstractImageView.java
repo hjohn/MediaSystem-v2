@@ -1,6 +1,6 @@
 package hs.mediasystem.util.javafx.control;
 
-import hs.mediasystem.util.javafx.Nodes;
+import hs.mediasystem.util.javafx.base.Nodes;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

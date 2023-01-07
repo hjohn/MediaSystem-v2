@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.base;
 
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.ZoomImageView;
 

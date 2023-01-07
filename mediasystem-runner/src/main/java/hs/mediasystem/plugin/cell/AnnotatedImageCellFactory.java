@@ -1,13 +1,13 @@
 package hs.mediasystem.plugin.cell;
 
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Labels;
-import hs.mediasystem.util.javafx.control.carousel.CarouselListCell;
-import hs.mediasystem.util.javafx.control.csslayout.StylableContainers;
-import hs.mediasystem.util.javafx.control.csslayout.StylableHBox;
-import hs.mediasystem.util.javafx.control.status.StatusIndicator;
+import hs.mediasystem.util.javafx.ui.carousel.CarouselListCell;
+import hs.mediasystem.util.javafx.ui.csslayout.StylableContainers;
+import hs.mediasystem.util.javafx.ui.csslayout.StylableHBox;
+import hs.mediasystem.util.javafx.ui.status.StatusIndicator;
 
 import java.util.Arrays;
 import java.util.List;

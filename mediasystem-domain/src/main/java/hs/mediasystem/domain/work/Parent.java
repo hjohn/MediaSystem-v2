@@ -1,7 +1,7 @@
 package hs.mediasystem.domain.work;
 
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.util.Objects;
 import java.util.Optional;

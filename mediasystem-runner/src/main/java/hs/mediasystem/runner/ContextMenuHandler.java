@@ -16,7 +16,7 @@ import hs.mediasystem.util.expose.ExposedLongProperty;
 import hs.mediasystem.util.expose.ExposedMethod;
 import hs.mediasystem.util.expose.Formatter;
 import hs.mediasystem.util.expose.Trigger;
-import hs.mediasystem.util.javafx.Nodes;
+import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;

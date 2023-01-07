@@ -9,7 +9,7 @@ import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.StreamMetaData;
 import hs.mediasystem.domain.work.SubtitleTrack;
 import hs.mediasystem.domain.work.VideoTrack;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.io.IOException;
 import java.time.Duration;

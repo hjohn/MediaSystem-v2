@@ -2,9 +2,9 @@ package hs.mediasystem.plugin.library.scene;
 
 import hs.mediasystem.runner.util.DebugFX;
 import hs.mediasystem.util.javafx.control.ActionListView;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
-import hs.mediasystem.util.javafx.control.gridlistviewskin.Group;
+import hs.mediasystem.util.javafx.ui.gridlistviewskin.GridListViewSkin;
+import hs.mediasystem.util.javafx.ui.gridlistviewskin.Group;
+import hs.mediasystem.util.javafx.ui.gridlistviewskin.GridListViewSkin.GroupDisplayMode;
 
 import java.util.List;
 

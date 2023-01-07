@@ -2,7 +2,7 @@ package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.util.NaturalLanguage;
+import hs.mediasystem.util.natural.NaturalLanguage;
 
 import java.time.Instant;
 import java.util.Comparator;

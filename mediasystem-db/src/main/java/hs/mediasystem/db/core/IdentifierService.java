@@ -9,12 +9,12 @@ import hs.mediasystem.ext.basicmediatypes.api.Discovery;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService.Identification;
-import hs.mediasystem.util.NamedThreadFactory;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.concurrent.NamedThreadFactory;
 import hs.mediasystem.util.events.EventSelector;
 import hs.mediasystem.util.events.PersistentEventStream;
 import hs.mediasystem.util.events.store.EventStore;
 import hs.mediasystem.util.events.streams.Subscription;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.net.URI;

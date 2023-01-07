@@ -3,7 +3,7 @@ package hs.mediasystem.runner.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import hs.mediasystem.util.Exceptional;
+import hs.mediasystem.util.exception.Exceptional;
 
 import java.io.IOException;
 import java.io.InputStream;

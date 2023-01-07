@@ -1,11 +1,11 @@
 package hs.mediasystem.util.javafx.control;
 
-import hs.mediasystem.util.javafx.control.transition.EffectList;
-import hs.mediasystem.util.javafx.control.transition.TransitionPane;
-import hs.mediasystem.util.javafx.control.transition.effects.Fade;
-import hs.mediasystem.util.javafx.control.transition.effects.Slide;
-import hs.mediasystem.util.javafx.control.transition.effects.Slide.Direction;
-import hs.mediasystem.util.javafx.control.transition.multi.Custom;
+import hs.mediasystem.util.javafx.ui.transition.TransitionPane;
+import hs.mediasystem.util.javafx.ui.transition.domain.EffectList;
+import hs.mediasystem.util.javafx.ui.transition.effects.Fade;
+import hs.mediasystem.util.javafx.ui.transition.effects.Slide;
+import hs.mediasystem.util.javafx.ui.transition.effects.Slide.Direction;
+import hs.mediasystem.util.javafx.ui.transition.multi.Custom;
 
 import java.util.List;
 

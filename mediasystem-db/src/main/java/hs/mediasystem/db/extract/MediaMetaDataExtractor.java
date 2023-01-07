@@ -6,10 +6,10 @@ import hs.mediasystem.db.base.DatabaseContentPrintProvider;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.StreamMetaData;
-import hs.mediasystem.util.NamedThreadFactory;
-import hs.mediasystem.util.Throwables;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
+import hs.mediasystem.util.concurrent.NamedThreadFactory;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.File;
 import java.io.FileNotFoundException;

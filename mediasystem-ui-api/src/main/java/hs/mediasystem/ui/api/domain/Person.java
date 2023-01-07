@@ -1,7 +1,7 @@
 package hs.mediasystem.ui.api.domain;
 
 import hs.mediasystem.domain.work.PersonId;
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
 
 import java.time.LocalDate;
 import java.util.List;

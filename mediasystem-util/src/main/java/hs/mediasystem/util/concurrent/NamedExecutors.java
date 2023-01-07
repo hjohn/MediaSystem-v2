@@ -1,7 +1,5 @@
 package hs.mediasystem.util.concurrent;
 
-import hs.mediasystem.util.NamedThreadFactory;
-
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;

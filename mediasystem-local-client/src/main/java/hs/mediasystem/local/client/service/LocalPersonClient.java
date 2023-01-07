@@ -6,8 +6,8 @@ import hs.mediasystem.ui.api.PersonClient;
 import hs.mediasystem.ui.api.domain.Participation;
 import hs.mediasystem.ui.api.domain.Person;
 import hs.mediasystem.ui.api.domain.Role;
-import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
+import hs.mediasystem.util.image.ImageHandleFactory;
 
 import java.util.List;
 import java.util.Optional;

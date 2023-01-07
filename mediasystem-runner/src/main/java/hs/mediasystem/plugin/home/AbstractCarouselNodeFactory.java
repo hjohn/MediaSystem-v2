@@ -6,7 +6,7 @@ import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactor
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.SizeFormatter;
+import hs.mediasystem.util.natural.SizeFormatter;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

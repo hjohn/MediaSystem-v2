@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hs.ddif.annotations.Opt;
 import hs.mediasystem.util.CryptoUtil;
-import hs.mediasystem.util.HttpException;
-import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.HttpException;
+import hs.mediasystem.util.exception.Throwables;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.io.IOException;
 import java.io.InputStream;

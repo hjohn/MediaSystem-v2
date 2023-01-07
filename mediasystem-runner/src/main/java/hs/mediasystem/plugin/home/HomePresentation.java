@@ -2,8 +2,8 @@ package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.StartupPresentationProvider.Plugin;
-import hs.mediasystem.util.Tuple;
-import hs.mediasystem.util.Tuple.Tuple2;
+import hs.mediasystem.util.domain.Tuple;
+import hs.mediasystem.util.domain.Tuple.Tuple2;
 
 import javax.inject.Singleton;
 

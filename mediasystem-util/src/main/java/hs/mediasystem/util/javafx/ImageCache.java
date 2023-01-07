@@ -1,7 +1,7 @@
 package hs.mediasystem.util.javafx;
 
-import hs.mediasystem.util.Cache;
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
+import hs.mediasystem.util.ref.Cache;
 
 import java.awt.Dimension;
 import java.io.ByteArrayInputStream;

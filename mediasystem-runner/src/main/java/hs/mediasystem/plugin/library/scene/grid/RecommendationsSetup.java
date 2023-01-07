@@ -9,7 +9,7 @@ import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactor
 import hs.mediasystem.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.javafx.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 
 import javafx.scene.Node;
 

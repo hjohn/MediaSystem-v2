@@ -1,7 +1,7 @@
 package hs.mediasystem.util.javafx.control;
 
-import hs.mediasystem.util.javafx.Events;
-import hs.mediasystem.util.javafx.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.base.Events;
+import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;

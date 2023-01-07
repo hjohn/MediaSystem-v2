@@ -7,7 +7,7 @@ import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.domain.Classification;
 import hs.mediasystem.ext.basicmediatypes.domain.Details;
 import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.time.LocalDate;
 import java.util.Arrays;

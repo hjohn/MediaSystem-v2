@@ -9,9 +9,9 @@ import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
 import hs.mediasystem.ext.basicmediatypes.services.IdentificationService.Identification;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.Tuple;
-import hs.mediasystem.util.Tuple.Tuple2;
-import hs.mediasystem.util.WeightedNgramDistance;
+import hs.mediasystem.util.domain.Tuple;
+import hs.mediasystem.util.domain.Tuple.Tuple2;
+import hs.mediasystem.util.natural.WeightedNgramDistance;
 
 import java.time.Instant;
 import java.util.ArrayList;

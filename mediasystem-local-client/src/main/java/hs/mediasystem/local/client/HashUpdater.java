@@ -6,7 +6,7 @@ import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.runner.config.BasicSetup;
 import hs.mediasystem.util.MediaHash;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.net.URI;

@@ -1,6 +1,6 @@
 package hs.mediasystem.domain.work;
 
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.util.Optional;
 

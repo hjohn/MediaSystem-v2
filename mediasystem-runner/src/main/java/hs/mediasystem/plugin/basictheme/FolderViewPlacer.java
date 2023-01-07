@@ -7,7 +7,7 @@ import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory.Folder
 import hs.mediasystem.plugin.library.scene.grid.FolderSetup;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
 
 import javax.inject.Singleton;
 

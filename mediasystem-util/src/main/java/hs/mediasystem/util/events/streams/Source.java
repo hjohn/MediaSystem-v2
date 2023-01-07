@@ -1,8 +1,5 @@
 package hs.mediasystem.util.events.streams;
 
-import hs.mediasystem.util.AbstractNamedConsumer;
-import hs.mediasystem.util.NamedConsumer;
-
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -34,7 +31,12 @@ public interface Source<T> {
    * @return a {@link Subscription}, never {@code null}
    */
   default Subscription subscribe(String name, Consumer<? super T> consumer) {
-    return subscribe(new NamedConsumer<>(name, consumer));
+    return subscribe(new AbstractNamedConsumer<>(name) {
+      @Override
+      public void accept(T t) {
+        consumer.accept(t);
+      }
+    });
   }
 
   /**
@@ -120,5 +122,18 @@ public interface Source<T> {
         };
       }
     };
+  }
+
+  static abstract class AbstractNamedConsumer<T> implements Consumer<T> {
+    private final String name;
+
+    public AbstractNamedConsumer(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public String toString() {
+      return name;
+    }
   }
 }

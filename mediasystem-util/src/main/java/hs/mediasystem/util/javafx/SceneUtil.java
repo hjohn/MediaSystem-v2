@@ -1,7 +1,7 @@
 package hs.mediasystem.util.javafx;
 
-import hs.mediasystem.util.FocusEvent;
-import hs.mediasystem.util.NamedThreadFactory;
+import hs.mediasystem.util.concurrent.NamedThreadFactory;
+import hs.mediasystem.util.javafx.base.FocusEvent;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

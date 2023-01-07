@@ -4,8 +4,8 @@ import hs.database.core.Database;
 import hs.database.core.Database.Transaction;
 import hs.database.core.DatabaseException;
 import hs.mediasystem.db.base.Setting.PersistLevel;
-import hs.mediasystem.util.NamedThreadFactory;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.concurrent.NamedThreadFactory;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.util.Date;
 import java.util.HashMap;

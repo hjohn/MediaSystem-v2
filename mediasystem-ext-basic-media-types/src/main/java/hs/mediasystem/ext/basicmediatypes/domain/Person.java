@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain;
 
 import hs.mediasystem.domain.work.PersonId;
-import hs.mediasystem.util.ImageURI;
+import hs.mediasystem.util.image.ImageURI;
 
 public class Person {
   private final PersonId id;

@@ -5,7 +5,7 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ViewPort;
 import hs.mediasystem.presentation.ViewPortFactory;
 import hs.mediasystem.runner.util.LessLoader;
-import hs.mediasystem.util.javafx.Nodes;
+import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
 
 import javafx.animation.KeyFrame;

@@ -21,11 +21,11 @@ import hs.mediasystem.mediamanager.Episodes;
 import hs.mediasystem.mediamanager.Movies;
 import hs.mediasystem.mediamanager.Series;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.ImageURI;
 import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.PersistentEventStream;
 import hs.mediasystem.util.events.SynchronousEventStream;
 import hs.mediasystem.util.events.streams.EventStream;
+import hs.mediasystem.util.image.ImageURI;
 
 import java.nio.file.Path;
 import java.time.Instant;

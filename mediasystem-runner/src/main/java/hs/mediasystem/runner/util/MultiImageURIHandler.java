@@ -1,9 +1,9 @@
 package hs.mediasystem.runner.util;
 
-import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.ImageURI;
-import hs.mediasystem.util.ImageURIHandler;
+import hs.mediasystem.util.image.ImageHandle;
+import hs.mediasystem.util.image.ImageHandleFactory;
+import hs.mediasystem.util.image.ImageURI;
+import hs.mediasystem.util.image.ImageURIHandler;
 import hs.mediasystem.util.javafx.ImageCache;
 
 import java.io.ByteArrayOutputStream;

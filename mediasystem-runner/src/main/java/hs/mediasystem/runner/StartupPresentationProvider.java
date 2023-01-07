@@ -3,7 +3,7 @@ package hs.mediasystem.runner;
 import hs.ddif.core.api.InstanceResolver;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation;
 import hs.mediasystem.presentation.Presentation;
-import hs.mediasystem.util.Throwables;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.util.function.Supplier;
 import java.util.logging.Logger;

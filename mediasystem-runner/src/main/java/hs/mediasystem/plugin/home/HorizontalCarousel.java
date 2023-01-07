@@ -1,9 +1,9 @@
 package hs.mediasystem.plugin.home;
 
-import hs.mediasystem.util.javafx.ItemSelectedEvent;
+import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.control.ActionListView;
-import hs.mediasystem.util.javafx.control.carousel.CarouselSkin;
-import hs.mediasystem.util.javafx.control.carousel.LinearLayout;
+import hs.mediasystem.util.javafx.ui.carousel.CarouselSkin;
+import hs.mediasystem.util.javafx.ui.carousel.LinearLayout;
 
 import java.util.List;
 import java.util.function.Consumer;

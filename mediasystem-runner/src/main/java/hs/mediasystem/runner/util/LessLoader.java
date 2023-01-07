@@ -5,7 +5,7 @@ import com.inet.lib.less.LessException;
 import com.inet.lib.less.ReaderFactory;
 import com.sun.jna.Platform;
 
-import hs.mediasystem.util.URLs;
+import hs.mediasystem.util.domain.URLs;
 
 import java.io.IOException;
 import java.io.InputStream;

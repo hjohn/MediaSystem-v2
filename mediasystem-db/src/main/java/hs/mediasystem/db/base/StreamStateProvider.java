@@ -1,7 +1,7 @@
 package hs.mediasystem.db.base;
 
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.util.NamedThreadFactory;
+import hs.mediasystem.util.concurrent.NamedThreadFactory;
 
 import java.util.HashMap;
 import java.util.Map;

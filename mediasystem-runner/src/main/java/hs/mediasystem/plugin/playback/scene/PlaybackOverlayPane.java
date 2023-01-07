@@ -4,7 +4,7 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.ui.api.player.PlayerPresentation;
-import hs.mediasystem.util.ImageHandle;
+import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.SpecialEffects;
 import hs.mediasystem.util.javafx.control.BiasedImageView;

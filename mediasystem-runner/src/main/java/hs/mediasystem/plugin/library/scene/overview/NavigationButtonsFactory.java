@@ -18,15 +18,15 @@ import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.ImageHandle;
-import hs.mediasystem.util.ImageHandleFactory;
-import hs.mediasystem.util.SizeFormatter;
+import hs.mediasystem.util.image.ImageHandle;
+import hs.mediasystem.util.image.ImageHandleFactory;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
 import hs.mediasystem.util.javafx.control.Buttons;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 import hs.mediasystem.util.javafx.control.MultiButton;
+import hs.mediasystem.util.natural.SizeFormatter;
 
 import java.net.URI;
 import java.time.Duration;
