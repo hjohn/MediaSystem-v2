@@ -3,14 +3,14 @@ package hs.mediasystem.db.core;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.services.QueryService;
 import hs.mediasystem.db.DatabaseResponseCache;
 import hs.mediasystem.db.DatabaseResponseCache.CacheMode;
 import hs.mediasystem.db.DatabaseResponseCache.NotCachedException;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.services.QueryService;
 
 import java.io.IOException;
 import java.util.HashMap;

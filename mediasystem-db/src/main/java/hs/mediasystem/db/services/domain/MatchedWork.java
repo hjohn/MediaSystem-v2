@@ -1,7 +1,7 @@
 package hs.mediasystem.db.services.domain;
 
+import hs.mediasystem.api.datasource.domain.stream.Work;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 
 public record MatchedWork(Match match, Work work) {
 }

@@ -1,9 +1,9 @@
 package hs.mediasystem.ext.tmdb;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.services.IdentificationService;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.api.Discovery;
-import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.ext.tmdb.identifier.EpisodeIdentifier;
 import hs.mediasystem.ext.tmdb.identifier.MovieIdentifier;
 import hs.mediasystem.ext.tmdb.identifier.SerieIdentifier;

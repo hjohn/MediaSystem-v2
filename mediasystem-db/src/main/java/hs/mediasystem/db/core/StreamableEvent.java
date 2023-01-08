@@ -1,7 +1,5 @@
 package hs.mediasystem.db.core;
 
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
-
 import java.net.URI;
 
 public sealed interface StreamableEvent {

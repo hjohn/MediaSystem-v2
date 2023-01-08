@@ -1,14 +1,13 @@
 package hs.mediasystem.db.core;
 
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.services.IdentificationService;
+import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.db.DatabaseResponseCache;
 import hs.mediasystem.db.DatabaseResponseCache.CacheMode;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.api.Discovery;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
-import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
-import hs.mediasystem.ext.basicmediatypes.services.IdentificationService.Identification;
 import hs.mediasystem.util.concurrent.NamedThreadFactory;
 import hs.mediasystem.util.events.EventSelector;
 import hs.mediasystem.util.events.PersistentEventStream;

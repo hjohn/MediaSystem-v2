@@ -1,13 +1,12 @@
 package hs.mediasystem.db.core;
 
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.api.discovery.ContentPrint;
 import hs.mediasystem.db.extract.StreamMetaDataEvent;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.media.MediaStructure;
 import hs.mediasystem.domain.media.StreamMetaData;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.events.EventSelector;
 import hs.mediasystem.util.events.streams.Source;
 

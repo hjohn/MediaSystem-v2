@@ -1,12 +1,9 @@
 package hs.mediasystem.db.core;
 
+import hs.mediasystem.api.discovery.ContentPrint;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.api.DiscoverEvent;
-import hs.mediasystem.ext.basicmediatypes.api.Discovery;
-import hs.mediasystem.ext.basicmediatypes.api.StreamTags;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.SynchronousEventStream;

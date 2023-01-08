@@ -1,11 +1,11 @@
 package hs.mediasystem.ext.scanners;
 
+import hs.mediasystem.api.discovery.Attribute;
+import hs.mediasystem.api.discovery.ContentPrint;
+import hs.mediasystem.api.discovery.ContentPrintProvider;
+import hs.mediasystem.api.discovery.Discoverer;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.api.Discoverer;
-import hs.mediasystem.ext.basicmediatypes.api.Discovery;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrintProvider;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
 import hs.mediasystem.util.Attributes;

@@ -51,7 +51,7 @@ public class LocalWorkClient implements WorkClient {
     Throwables.uncheck(() -> workService.reidentify(id));
   }
 
-  private Contribution toContribution(hs.mediasystem.ext.basicmediatypes.domain.stream.Contribution c) {
+  private Contribution toContribution(hs.mediasystem.api.datasource.domain.stream.Contribution c) {
     return new Contribution(
       personClient.toPerson(c.getPerson()),
       LocalPersonClient.toRole(c.getRole()),

@@ -1,5 +1,8 @@
 package hs.mediasystem.db.services;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Production;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
 import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.Work;
@@ -7,9 +10,6 @@ import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Collection;
 import hs.mediasystem.domain.work.CollectionDefinition;
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
 import hs.mediasystem.util.image.ImageURI;
 
 import java.time.LocalDate;

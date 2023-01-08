@@ -4,15 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.api.datasource.domain.Movie;
+import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
+import hs.mediasystem.api.discovery.Attribute;
+import hs.mediasystem.api.discovery.ContentPrint;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.db.InjectorExtension;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match.Type;
-import hs.mediasystem.ext.basicmediatypes.api.Discovery;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
-import hs.mediasystem.ext.basicmediatypes.services.IdentificationService.Identification;
 import hs.mediasystem.util.Attributes;
 
 import java.io.IOException;

@@ -1,18 +1,18 @@
 package hs.mediasystem.ext.local;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Classification;
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Folder;
+import hs.mediasystem.api.datasource.domain.Production;
+import hs.mediasystem.api.datasource.services.IdentificationService;
+import hs.mediasystem.api.discovery.Attribute;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.api.Discovery;
-import hs.mediasystem.ext.basicmediatypes.domain.Classification;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Folder;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.services.IdentificationService;
 import hs.mediasystem.util.Attributes;
 
 import java.net.URI;

@@ -1,8 +1,8 @@
 package hs.mediasystem.db.services;
 
+import hs.mediasystem.api.datasource.domain.stream.Work;
+import hs.mediasystem.api.datasource.services.Top100QueryService;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
-import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
 import hs.mediasystem.util.checked.CheckedStreams;
 
 import java.io.IOException;

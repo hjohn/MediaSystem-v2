@@ -1,11 +1,11 @@
 package hs.mediasystem.db;
 
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Episode;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.util.image.ImageURI;
 
 import java.time.Duration;

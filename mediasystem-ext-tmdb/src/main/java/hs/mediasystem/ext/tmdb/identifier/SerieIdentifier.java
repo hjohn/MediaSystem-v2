@@ -2,17 +2,17 @@ package hs.mediasystem.ext.tmdb.identifier;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Episode;
+import hs.mediasystem.api.datasource.domain.Season;
+import hs.mediasystem.api.datasource.domain.Serie;
+import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
+import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Season;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.services.IdentificationService.Identification;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.PersonRoles;

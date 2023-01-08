@@ -1,10 +1,7 @@
 package hs.mediasystem.db.core;
 
 import hs.ddif.annotations.Produces;
-import hs.mediasystem.ext.basicmediatypes.api.DiscoverEvent;
-import hs.mediasystem.ext.basicmediatypes.api.Discovery;
-import hs.mediasystem.ext.basicmediatypes.api.StreamTags;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Streamable;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.util.events.EventSelector;
 import hs.mediasystem.util.events.PersistentEventStream;
 import hs.mediasystem.util.events.store.EventStore;

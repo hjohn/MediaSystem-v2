@@ -27,7 +27,7 @@ public class LocalRecommendationClient implements RecommendationClient {
     return service.findNew(filter).stream().map(this::toRecommendation).collect(Collectors.toList());
   }
 
-  private Recommendation toRecommendation(hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation r) {
+  private Recommendation toRecommendation(hs.mediasystem.api.datasource.domain.stream.Recommendation r) {
     return new Recommendation(
       worksClient.toWork(r.work()),
       r.instant()

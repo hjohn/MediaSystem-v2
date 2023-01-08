@@ -19,7 +19,7 @@
     </dependency>
     <dependency>
       <groupId>hs.mediasystem</groupId>
-      <artifactId>mediasystem-ext-basic-media-types</artifactId>
+      <artifactId>mediasystem-api-datasource</artifactId>
       <version>${revision}</version>
     </dependency>
 

@@ -1,13 +1,13 @@
 package hs.mediasystem.db.services;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Movie;
+import hs.mediasystem.api.datasource.domain.stream.Work;
 import hs.mediasystem.db.core.DescriptorService;
 import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.work.Parent;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
 
 import java.net.URI;
 import java.util.Optional;

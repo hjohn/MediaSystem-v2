@@ -1,10 +1,10 @@
 package hs.mediasystem.db.services.domain;
 
+import hs.mediasystem.db.core.StreamTags;
 import hs.mediasystem.domain.media.MediaStructure;
 import hs.mediasystem.domain.media.Snapshot;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.api.StreamTags;
 import hs.mediasystem.util.Attributes;
 
 import java.net.URI;

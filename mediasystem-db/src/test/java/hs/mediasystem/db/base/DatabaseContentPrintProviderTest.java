@@ -1,10 +1,10 @@
 package hs.mediasystem.db.base;
 
+import hs.mediasystem.api.discovery.ContentPrint;
 import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.contentprints.ContentPrintRecord;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.ContentPrint;
 import hs.mediasystem.util.MediaHash;
 import hs.mediasystem.util.PostConstructCaller;
 

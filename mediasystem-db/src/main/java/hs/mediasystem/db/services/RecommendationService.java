@@ -1,15 +1,15 @@
 package hs.mediasystem.db.services;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Episode;
+import hs.mediasystem.api.datasource.domain.Serie;
+import hs.mediasystem.api.datasource.domain.stream.Recommendation;
 import hs.mediasystem.db.base.StreamState;
 import hs.mediasystem.db.base.StreamStateProvider;
 import hs.mediasystem.db.services.domain.LinkedResource;
 import hs.mediasystem.domain.media.MediaStream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.State;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Recommendation;
 
 import java.net.URI;
 import java.time.Duration;

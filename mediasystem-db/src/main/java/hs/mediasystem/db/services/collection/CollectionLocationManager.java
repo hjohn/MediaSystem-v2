@@ -10,10 +10,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.api.discovery.Discoverer;
+import hs.mediasystem.db.core.ImportSource;
+import hs.mediasystem.db.core.StreamTags;
 import hs.mediasystem.domain.work.CollectionDefinition;
-import hs.mediasystem.ext.basicmediatypes.api.Discoverer;
-import hs.mediasystem.ext.basicmediatypes.api.ImportSource;
-import hs.mediasystem.ext.basicmediatypes.api.StreamTags;
 
 import java.io.File;
 import java.io.IOException;

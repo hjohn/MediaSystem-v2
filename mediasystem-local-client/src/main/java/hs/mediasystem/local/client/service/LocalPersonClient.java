@@ -27,7 +27,7 @@ public class LocalPersonClient implements PersonClient {
     return Throwables.uncheck(() -> personService.findPerson(id)).map(this::toPerson);
   }
 
-  private Person toPerson(hs.mediasystem.ext.basicmediatypes.domain.stream.Person p) {
+  private Person toPerson(hs.mediasystem.api.datasource.domain.stream.Person p) {
     return new Person(
       p.getId(),
       p.getName(),
@@ -42,7 +42,7 @@ public class LocalPersonClient implements PersonClient {
     );
   }
 
-  private Participation toParticipation(hs.mediasystem.ext.basicmediatypes.domain.stream.Participation p) {
+  private Participation toParticipation(hs.mediasystem.api.datasource.domain.stream.Participation p) {
     return new Participation(
       toRole(p.getRole()),
       worksClient.toWork(p.getWork()),
@@ -51,7 +51,7 @@ public class LocalPersonClient implements PersonClient {
     );
   }
 
-  Person toPerson(hs.mediasystem.ext.basicmediatypes.domain.Person p) {
+  Person toPerson(hs.mediasystem.api.datasource.domain.Person p) {
     return new Person(
       p.getId(),
       p.getName(),
@@ -66,7 +66,7 @@ public class LocalPersonClient implements PersonClient {
     );
   }
 
-  static Role toRole(hs.mediasystem.ext.basicmediatypes.domain.Role r) {
+  static Role toRole(hs.mediasystem.api.datasource.domain.Role r) {
     return new Role(
       Role.Type.valueOf(r.getType().toString()),
       r.getCharacter(),

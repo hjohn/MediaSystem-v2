@@ -2,10 +2,10 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.api.datasource.services.VideoLinksQueryService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.services.VideoLinksQueryService;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import hs.mediasystem.ext.tmdb.VideoLinks;
 

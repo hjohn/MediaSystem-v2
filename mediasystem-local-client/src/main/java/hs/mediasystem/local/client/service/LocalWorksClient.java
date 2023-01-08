@@ -1,15 +1,15 @@
 package hs.mediasystem.local.client.service;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Episode;
+import hs.mediasystem.api.datasource.domain.Keyword;
+import hs.mediasystem.api.datasource.domain.Movie;
+import hs.mediasystem.api.datasource.domain.Production;
+import hs.mediasystem.api.datasource.domain.Release;
+import hs.mediasystem.api.datasource.domain.Season;
+import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.Release;
-import hs.mediasystem.ext.basicmediatypes.domain.Season;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.ui.api.WorksClient;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
@@ -58,7 +58,7 @@ public class LocalWorksClient implements WorksClient {
     return Throwables.uncheck(() -> worksService.findTop100()).stream().map(this::toWork).collect(Collectors.toList());
   }
 
-  Work toWork(hs.mediasystem.ext.basicmediatypes.domain.stream.Work work) {
+  Work toWork(hs.mediasystem.api.datasource.domain.stream.Work work) {
     List<MediaStream> streams = work.getStreams().stream().map(LocalWorksClient::toStream).collect(Collectors.toList());
     MediaStream primary = streams.isEmpty() ? null : streams.get(0);
 
@@ -153,7 +153,7 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static Classification createClassification(Production production) {
-    hs.mediasystem.ext.basicmediatypes.domain.Classification c = production.getClassification();
+    hs.mediasystem.api.datasource.domain.Classification c = production.getClassification();
 
     return new Classification(
       c.keywords().stream().map(Keyword::getText).collect(Collectors.toList()),

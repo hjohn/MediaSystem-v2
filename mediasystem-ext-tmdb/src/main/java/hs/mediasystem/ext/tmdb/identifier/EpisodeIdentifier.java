@@ -1,13 +1,13 @@
 package hs.mediasystem.ext.tmdb.identifier;
 
+import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Episode;
+import hs.mediasystem.api.datasource.domain.Serie;
+import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
+import hs.mediasystem.api.discovery.Attribute;
+import hs.mediasystem.api.discovery.Attribute.ChildType;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
-import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
-import hs.mediasystem.ext.basicmediatypes.domain.Episode;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute.ChildType;
-import hs.mediasystem.ext.basicmediatypes.services.IdentificationService.Identification;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.domain.Tuple;
 import hs.mediasystem.util.domain.Tuple.Tuple2;

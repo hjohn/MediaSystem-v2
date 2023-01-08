@@ -1,13 +1,13 @@
 package hs.mediasystem.db.services;
 
+import hs.mediasystem.api.datasource.domain.PersonalProfile;
+import hs.mediasystem.api.datasource.domain.ProductionRole;
+import hs.mediasystem.api.datasource.domain.stream.Participation;
+import hs.mediasystem.api.datasource.domain.stream.Person;
+import hs.mediasystem.api.datasource.domain.stream.Work;
+import hs.mediasystem.api.datasource.domain.stream.Person.Gender;
+import hs.mediasystem.api.datasource.services.PersonalProfileQueryService;
 import hs.mediasystem.domain.work.PersonId;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Participation;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Person;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Person.Gender;
-import hs.mediasystem.ext.basicmediatypes.domain.stream.Work;
-import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
 import hs.mediasystem.util.checked.CheckedOptional;
 import hs.mediasystem.util.checked.CheckedStreams;
 

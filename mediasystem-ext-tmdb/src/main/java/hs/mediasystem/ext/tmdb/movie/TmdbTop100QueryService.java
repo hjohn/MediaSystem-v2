@@ -2,8 +2,8 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.services.Top100QueryService;
+import hs.mediasystem.api.datasource.domain.Production;
+import hs.mediasystem.api.datasource.services.Top100QueryService;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 

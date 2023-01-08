@@ -2,18 +2,18 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.api.datasource.domain.Classification;
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Keyword;
+import hs.mediasystem.api.datasource.domain.Movie;
+import hs.mediasystem.api.datasource.domain.Production;
+import hs.mediasystem.api.datasource.domain.Season;
+import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.KeywordId;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.domain.Classification;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Keyword;
-import hs.mediasystem.ext.basicmediatypes.domain.Movie;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.Season;
-import hs.mediasystem.ext.basicmediatypes.domain.Serie;
 import hs.mediasystem.util.image.ImageURI;
 
 import java.io.IOException;

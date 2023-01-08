@@ -2,20 +2,20 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.api.datasource.domain.Classification;
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Person;
+import hs.mediasystem.api.datasource.domain.PersonalProfile;
+import hs.mediasystem.api.datasource.domain.Production;
+import hs.mediasystem.api.datasource.domain.ProductionRole;
+import hs.mediasystem.api.datasource.domain.Role;
+import hs.mediasystem.api.datasource.domain.PersonalProfile.Gender;
+import hs.mediasystem.api.datasource.services.PersonalProfileQueryService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.PersonId;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.RoleId;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.domain.Classification;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Person;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonalProfile.Gender;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionRole;
-import hs.mediasystem.ext.basicmediatypes.domain.Role;
-import hs.mediasystem.ext.basicmediatypes.services.PersonalProfileQueryService;
 import hs.mediasystem.util.exception.Throwables;
 import hs.mediasystem.util.image.ImageURI;
 

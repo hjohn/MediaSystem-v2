@@ -24,7 +24,8 @@
     <module>mediasystem-domain</module>
     <module>mediasystem-util</module>
     <module>mediasystem-db</module>
-    <module>mediasystem-ext-basic-media-types</module>
+    <module>mediasystem-api-datasource</module>
+    <module>mediasystem-api-discovery</module>
     <module>mediasystem-ui-api</module>
     <module>mediasystem-local-client</module>
     <module>mediasystem-jfx</module>

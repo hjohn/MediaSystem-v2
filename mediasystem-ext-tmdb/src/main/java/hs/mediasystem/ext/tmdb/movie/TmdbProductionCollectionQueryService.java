@@ -2,13 +2,13 @@ package hs.mediasystem.ext.tmdb.movie;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.api.datasource.domain.CollectionDetails;
+import hs.mediasystem.api.datasource.domain.Details;
+import hs.mediasystem.api.datasource.domain.Production;
+import hs.mediasystem.api.datasource.domain.ProductionCollection;
+import hs.mediasystem.api.datasource.services.AbstractQueryService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.ext.basicmediatypes.domain.CollectionDetails;
-import hs.mediasystem.ext.basicmediatypes.domain.Details;
-import hs.mediasystem.ext.basicmediatypes.domain.Production;
-import hs.mediasystem.ext.basicmediatypes.domain.ProductionCollection;
-import hs.mediasystem.ext.basicmediatypes.services.AbstractQueryService;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.ObjectFactory;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;

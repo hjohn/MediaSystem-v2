@@ -2,11 +2,11 @@ package hs.mediasystem.ext.tmdb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import hs.mediasystem.api.datasource.domain.Person;
+import hs.mediasystem.api.datasource.domain.PersonRole;
+import hs.mediasystem.api.datasource.domain.Role;
 import hs.mediasystem.domain.work.PersonId;
 import hs.mediasystem.domain.work.RoleId;
-import hs.mediasystem.ext.basicmediatypes.domain.Person;
-import hs.mediasystem.ext.basicmediatypes.domain.PersonRole;
-import hs.mediasystem.ext.basicmediatypes.domain.Role;
 import hs.mediasystem.util.exception.Throwables;
 import hs.mediasystem.util.image.ImageURI;
 
