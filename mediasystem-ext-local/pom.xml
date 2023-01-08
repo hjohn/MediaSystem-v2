@@ -14,7 +14,7 @@
   <dependencies>
     <dependency>
       <groupId>hs.mediasystem</groupId>
-      <artifactId>mediasystem-mediamanager</artifactId>
+      <artifactId>mediasystem-ext-basic-media-types</artifactId>
       <version>${revision}</version>
     </dependency>
 
@@ -36,13 +36,6 @@
     </dependency>
 
     <!-- Test Dependencies -->
-    <dependency>
-      <groupId>hs.mediasystem</groupId>
-      <artifactId>mediasystem-mediamanager</artifactId>
-      <version>${revision}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

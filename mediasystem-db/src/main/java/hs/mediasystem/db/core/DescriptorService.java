@@ -6,10 +6,11 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import hs.mediasystem.db.DatabaseResponseCache;
 import hs.mediasystem.db.DatabaseResponseCache.CacheMode;
 import hs.mediasystem.db.DatabaseResponseCache.NotCachedException;
+import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;
 import hs.mediasystem.ext.basicmediatypes.services.QueryService;
-import hs.mediasystem.mediamanager.TypedDataSource;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -103,4 +104,6 @@ public class DescriptorService {
 
     return Optional.of(descriptor);
   }
+
+  private static record TypedDataSource(DataSource dataSource, MediaType mediaType) {}
 }

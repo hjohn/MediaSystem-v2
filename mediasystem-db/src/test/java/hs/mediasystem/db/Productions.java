@@ -1,4 +1,4 @@
-package hs.mediasystem.mediamanager;
+package hs.mediasystem.db;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;

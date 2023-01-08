@@ -9,7 +9,6 @@ import hs.mediasystem.db.events.SerializerException;
 import hs.mediasystem.db.jackson.SealedTypeSerializer;
 import hs.mediasystem.domain.media.StreamMetaData;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.mediamanager.StreamMetaDataStore;
 import hs.mediasystem.util.events.PersistentEventStream;
 import hs.mediasystem.util.events.cache.CachingEventStore;
 import hs.mediasystem.util.events.streams.Source;
@@ -25,7 +24,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
+public class DefaultStreamMetaDataStore {
   private static final Logger LOGGER = Logger.getLogger(DefaultStreamMetaDataStore.class.getName());
 
   @Inject private StreamMetaDataDatabase database;
@@ -112,7 +111,6 @@ public class DefaultStreamMetaDataStore implements StreamMetaDataStore {
     database.storeImage(contentId.asInt(), index, image);
   }
 
-  @Override
   public byte[] readSnapshot(ContentID contentId, int snapshotIndex) {
     return database.readSnapshot(contentId.asInt(), snapshotIndex);
   }

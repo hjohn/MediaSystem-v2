@@ -1,7 +1,7 @@
 package hs.mediasystem.db.services;
 
+import hs.mediasystem.db.extract.DefaultStreamMetaDataStore;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.mediamanager.StreamMetaDataStore;
 
 import java.util.Optional;
 
@@ -10,7 +10,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ImageService {
-  @Inject private StreamMetaDataStore store;
+  @Inject private DefaultStreamMetaDataStore store;
 
   public Optional<byte[]> findImage(String id) {
     String[] parts = id.split(":");

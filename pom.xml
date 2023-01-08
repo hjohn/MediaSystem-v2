@@ -23,7 +23,6 @@
     <module>mediasystem-runner</module>
     <module>mediasystem-domain</module>
     <module>mediasystem-util</module>
-    <module>mediasystem-mediamanager</module>
     <module>mediasystem-db</module>
     <module>mediasystem-ext-basic-media-types</module>
     <module>mediasystem-ui-api</module>

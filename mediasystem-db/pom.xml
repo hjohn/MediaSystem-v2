@@ -17,8 +17,12 @@
       <artifactId>ddif-jsr330</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.github.hjohn.ddif</groupId>
+      <artifactId>ddif-plugins</artifactId>
+    </dependency>
+    <dependency>
       <groupId>hs.mediasystem</groupId>
-      <artifactId>mediasystem-mediamanager</artifactId>
+      <artifactId>mediasystem-ext-basic-media-types</artifactId>
       <version>${revision}</version>
     </dependency>
     <dependency>
@@ -89,13 +93,6 @@
     </dependency>
 
     <!-- Test Dependencies -->
-    <dependency>
-      <groupId>hs.mediasystem</groupId>
-      <artifactId>mediasystem-mediamanager</artifactId>
-      <version>${revision}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
     <dependency>
       <groupId>hs.mediasystem</groupId>
       <artifactId>mediasystem-util</artifactId>

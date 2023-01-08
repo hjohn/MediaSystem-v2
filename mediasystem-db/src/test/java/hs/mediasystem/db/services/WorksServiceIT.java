@@ -1,7 +1,10 @@
 package hs.mediasystem.db.services;
 
 import hs.ddif.annotations.Produces;
+import hs.mediasystem.db.Episodes;
 import hs.mediasystem.db.InjectorExtension;
+import hs.mediasystem.db.Movies;
+import hs.mediasystem.db.Series;
 import hs.mediasystem.db.base.StreamStateService;
 import hs.mediasystem.db.core.IdentificationEvent;
 import hs.mediasystem.db.core.ResourceEvent;
@@ -17,9 +20,6 @@ import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.api.StreamTags;
 import hs.mediasystem.ext.basicmediatypes.domain.Episode;
 import hs.mediasystem.ext.basicmediatypes.domain.stream.Attribute;
-import hs.mediasystem.mediamanager.Episodes;
-import hs.mediasystem.mediamanager.Movies;
-import hs.mediasystem.mediamanager.Series;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.PersistentEventStream;
