@@ -1,9 +1,9 @@
 package hs.mediasystem.ui.api.domain;
 
+import hs.mediasystem.domain.media.MediaStructure;
+import hs.mediasystem.domain.media.Snapshot;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.MediaStructure;
-import hs.mediasystem.domain.work.Snapshot;
 
 import java.net.URI;
 import java.time.Duration;

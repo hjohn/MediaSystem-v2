@@ -49,10 +49,10 @@
 
 package hs.mediasystem.db.extract.grabber;
 
-import hs.mediasystem.domain.work.AudioTrack;
-import hs.mediasystem.domain.work.Resolution;
-import hs.mediasystem.domain.work.SubtitleTrack;
-import hs.mediasystem.domain.work.VideoTrack;
+import hs.mediasystem.domain.media.AudioTrack;
+import hs.mediasystem.domain.media.Resolution;
+import hs.mediasystem.domain.media.SubtitleTrack;
+import hs.mediasystem.domain.media.VideoTrack;
 
 import java.io.BufferedInputStream;
 import java.io.File;

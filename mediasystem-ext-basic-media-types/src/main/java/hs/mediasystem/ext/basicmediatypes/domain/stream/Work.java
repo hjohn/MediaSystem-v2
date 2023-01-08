@@ -1,7 +1,7 @@
 package hs.mediasystem.ext.basicmediatypes.domain.stream;
 
+import hs.mediasystem.domain.media.MediaStream;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.basicmediatypes.WorkDescriptor;

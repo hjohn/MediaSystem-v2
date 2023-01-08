@@ -1,11 +1,11 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.mediasystem.domain.media.MediaStructure;
+import hs.mediasystem.domain.media.Resolution;
+import hs.mediasystem.domain.media.Snapshot;
+import hs.mediasystem.domain.media.VideoTrack;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.MediaStructure;
-import hs.mediasystem.domain.work.Resolution;
-import hs.mediasystem.domain.work.Snapshot;
 import hs.mediasystem.domain.work.VideoLink;
-import hs.mediasystem.domain.work.VideoTrack;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.plugin.library.scene.grid.ProductionCollectionFactory;
 import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentationFactory;

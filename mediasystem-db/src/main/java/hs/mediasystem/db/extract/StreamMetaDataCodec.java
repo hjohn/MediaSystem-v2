@@ -13,7 +13,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.mediasystem.db.base.BasicDataTypesModule;
-import hs.mediasystem.domain.work.StreamMetaData;
+import hs.mediasystem.domain.media.StreamMetaData;
 
 import java.io.IOException;
 

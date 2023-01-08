@@ -5,9 +5,9 @@ import hs.mediasystem.db.services.domain.LinkedResource;
 import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.MatchedResource;
 import hs.mediasystem.db.services.domain.Resource;
+import hs.mediasystem.domain.media.MediaStream;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Match;
-import hs.mediasystem.domain.work.MediaStream;
 import hs.mediasystem.domain.work.State;
 
 import java.time.Duration;

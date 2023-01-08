@@ -1,7 +1,7 @@
 package hs.mediasystem.db.extract;
 
+import hs.mediasystem.domain.media.StreamMetaData;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.domain.work.StreamMetaData;
 
 public sealed interface StreamMetaDataEvent {
   ContentID id();

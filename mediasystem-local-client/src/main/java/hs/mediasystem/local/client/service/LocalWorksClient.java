@@ -204,7 +204,7 @@ public class LocalWorksClient implements WorksClient {
     return new Sequence(Type.EXTRA, 0, Optional.empty());
   }
 
-  private static MediaStream toStream(hs.mediasystem.domain.work.MediaStream stream) {
+  private static MediaStream toStream(hs.mediasystem.domain.media.MediaStream stream) {
     return new MediaStream(
       stream.location(),
       stream.contentId(),

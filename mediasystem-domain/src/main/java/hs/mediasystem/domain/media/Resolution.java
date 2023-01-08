@@ -1,4 +1,4 @@
-package hs.mediasystem.domain.work;
+package hs.mediasystem.domain.media;
 
 public record Resolution(int width, int height, Float pixelAspectRatio) implements Comparable<Resolution> {
 

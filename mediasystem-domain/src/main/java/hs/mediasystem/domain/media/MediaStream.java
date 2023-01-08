@@ -1,6 +1,8 @@
-package hs.mediasystem.domain.work;
+package hs.mediasystem.domain.media;
 
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.work.Match;
+import hs.mediasystem.domain.work.State;
 
 import java.net.URI;
 import java.time.Duration;

@@ -1,4 +1,4 @@
-package hs.mediasystem.domain.work;
+package hs.mediasystem.domain.media;
 
 import java.util.List;
 

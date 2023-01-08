@@ -1,11 +1,11 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.domain.work.AudioTrack;
+import hs.mediasystem.domain.media.AudioTrack;
+import hs.mediasystem.domain.media.Snapshot;
+import hs.mediasystem.domain.media.SubtitleTrack;
+import hs.mediasystem.domain.media.VideoTrack;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
-import hs.mediasystem.domain.work.Snapshot;
-import hs.mediasystem.domain.work.SubtitleTrack;
-import hs.mediasystem.domain.work.VideoTrack;
 import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.MediaStream;

@@ -2,13 +2,13 @@ package hs.mediasystem.db.extract;
 
 import hs.ddif.core.Injector;
 import hs.ddif.jsr330.Injectors;
+import hs.mediasystem.domain.media.AudioTrack;
+import hs.mediasystem.domain.media.Resolution;
+import hs.mediasystem.domain.media.Snapshot;
+import hs.mediasystem.domain.media.StreamMetaData;
+import hs.mediasystem.domain.media.SubtitleTrack;
+import hs.mediasystem.domain.media.VideoTrack;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.domain.work.AudioTrack;
-import hs.mediasystem.domain.work.Resolution;
-import hs.mediasystem.domain.work.Snapshot;
-import hs.mediasystem.domain.work.StreamMetaData;
-import hs.mediasystem.domain.work.SubtitleTrack;
-import hs.mediasystem.domain.work.VideoTrack;
 import hs.mediasystem.util.image.ImageURI;
 
 import java.io.IOException;
