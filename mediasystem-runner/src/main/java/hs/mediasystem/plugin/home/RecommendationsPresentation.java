@@ -27,6 +27,7 @@ public class RecommendationsPresentation {
 
   public RecommendationsPresentation(List<Recommendation> recommendations) {
     this.recommendations = recommendations;
+    this.selectedItem.set(recommendations.isEmpty() ? null : recommendations.get(0));
   }
 
   public List<Recommendation> getRecommendations() {

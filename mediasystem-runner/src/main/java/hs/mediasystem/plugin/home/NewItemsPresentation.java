@@ -42,6 +42,7 @@ public class NewItemsPresentation {
 
   public NewItemsPresentation(List<Item> newItems) {
     this.newItems = newItems;
+    this.selectedItem.set(newItems.isEmpty() ? null : newItems.get(0));
   }
 
   public List<Item> getNewItems() {
