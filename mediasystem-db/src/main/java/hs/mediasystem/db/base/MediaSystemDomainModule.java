@@ -1,6 +1,8 @@
 package hs.mediasystem.db.base;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -12,6 +14,11 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Episode;
+import hs.mediasystem.api.datasource.domain.Folder;
+import hs.mediasystem.api.datasource.domain.Movie;
+import hs.mediasystem.api.datasource.domain.Production;
+import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.KeywordId;
@@ -103,7 +110,14 @@ public class MediaSystemDomainModule extends SimpleModule {
     }
   }
 
-  @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)  // adds a "@type" field containing names below
+  @JsonSubTypes({
+    @Type(value = Movie.class, name = "Movie"),
+    @Type(value = Serie.class, name = "Serie"),
+    @Type(value = Episode.class, name = "Episode"),
+    @Type(value = Folder.class, name = "Folder"),
+    @Type(value = Production.class, name = "Production")
+  })
   static class MediaDescriptorMixIn {
   }
 
