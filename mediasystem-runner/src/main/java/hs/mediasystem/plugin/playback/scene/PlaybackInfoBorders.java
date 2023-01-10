@@ -61,7 +61,7 @@ public class PlaybackInfoBorders extends StackPane {
 
     final GridPane grid = GridPaneUtil.create(new double[] {0.5, 3, 26, 7.5, 26, 7.5, 26, 3, 0.5}, new double[] {50, 45, 4.5, 0.5});
 
-    // Prevent GridPane from becoming bigger than its container when children donot fit in the allocated grid slots:
+    // Prevent GridPane from becoming bigger than its container when children do not fit in the allocated grid slots:
     grid.setMinSize(1, 1);
     grid.setPrefSize(1, 1);
 
