@@ -266,7 +266,7 @@ public interface ObservableValue<T> extends Observable {
      *     {@code ObservableValue} when {@code condition} became {@code false},
      *     never null
      */
-    default ObservableValue<T> conditionOn(ObservableValue<Boolean> condition) {
+    default ObservableValue<T> when(ObservableValue<Boolean> condition) {
         return new ConditionalBinding<>(this, condition);
     }
 

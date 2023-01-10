@@ -136,7 +136,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     });
 
     presentation.selectedItem
-      .conditionOn(Nodes.showing(menuListView))
+      .when(Nodes.showing(menuListView))
       .subscribe(t -> {
         menuListView.getSelectionModel().select(t.a);
         activeListView.get().getSelectionModel().select(t.b);

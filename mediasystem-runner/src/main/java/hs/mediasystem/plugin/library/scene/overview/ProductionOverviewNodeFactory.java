@@ -61,12 +61,12 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
     ObservableValue<Boolean> showing = Nodes.showing(pane);
 
-    pane.model.work.bind(presentation.root.conditionOn(showing));
-    pane.model.missingFraction.bind(presentation.missingFraction.conditionOn(showing));
-    pane.model.watchedFraction.bind(presentation.watchedFraction.conditionOn(showing));
+    pane.model.work.bind(presentation.root.when(showing));
+    pane.model.missingFraction.bind(presentation.missingFraction.when(showing));
+    pane.model.watchedFraction.bind(presentation.watchedFraction.when(showing));
 
     presentation.state
-      .conditionOn(showing)
+      .when(showing)
       .subscribe(state -> pane.model.dynamicPanel.set(() -> createDynamicBox(presentation)));
 
     presentation.showInfo
@@ -93,7 +93,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     pane.getStyleClass().add("overview-panel");
 
     ObservableValue<Details> details = presentation.root
-      .conditionOn(Nodes.showing(pane))
+      .when(Nodes.showing(pane))
       .map(Work::getDetails);
 
     pane.model.tagline.bind(
@@ -116,7 +116,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     borderPane.getStyleClass().add("overview-dynamic-panel");
 
     presentation.root
-      .conditionOn(Nodes.showing(pane))
+      .when(Nodes.showing(pane))
       .subscribe(current -> {
         CompletableFuture.supplyAsync(() -> workClient.findContributions(current.getId()))
           .thenAcceptAsync(contributors -> pane.model.contributors.set(contributors), Platform::runLater)
@@ -214,7 +214,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         TransitionPane streamInfoPane = new TransitionPane(StandardTransitions.fade(250, 500));
 
         presentation.selectedChild
-          .conditionOn(Nodes.showing(this))
+          .when(Nodes.showing(this))
           .addListener((obs, old, current) -> {
             List<Work> episodes = presentation.children.get();
 
@@ -261,7 +261,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         pane.getStyleClass().add("episode-panel");
 
         childTransitionPanelSubscription = selectedChild
-          .conditionOn(Nodes.showing(pane))
+          .when(Nodes.showing(pane))
           .subscribe(work -> {
             Details details = work.getDetails();
 

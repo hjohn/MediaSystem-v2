@@ -21,7 +21,7 @@ public class ViewPort extends TransitionPane {
 
     ChangeListener<? super Presentation> listener = (obs, old, current) -> updateChildNode(theme, current);
 
-    parentPresentation.childPresentation.conditionOn(Nodes.showing(this)).addListener(listener);
+    parentPresentation.childPresentation.when(Nodes.showing(this)).addListener(listener);
 
     updateChildNode(theme, parentPresentation.childPresentation.get());
   }

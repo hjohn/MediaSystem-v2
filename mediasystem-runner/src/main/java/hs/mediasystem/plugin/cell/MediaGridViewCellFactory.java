@@ -166,12 +166,12 @@ public class MediaGridViewCellFactory<T> implements Callback<ListView<T>, ListCe
         indicatorPane.managedProperty().bind(sideBarVisible);
         indicatorPane.visibleProperty().bind(sideBarVisible);
 
-        name.textProperty().bind(model.title.conditionOn(allowUpdates));
-        detail.textProperty().bind(model.subtitle.conditionOn(allowUpdates));
-        asyncImageProperty.imageHandleProperty().bind(model.imageHandle.conditionOn(allowUpdates));
-        sideBarTopLeftText.bind(model.annotation1.conditionOn(allowUpdates));
-        sideBarCenterText.bind(model.annotation2.conditionOn(allowUpdates));
-        mediaStatusProperty.bind(model.status.conditionOn(allowUpdates));
+        name.textProperty().bind(model.title.when(allowUpdates));
+        detail.textProperty().bind(model.subtitle.when(allowUpdates));
+        asyncImageProperty.imageHandleProperty().bind(model.imageHandle.when(allowUpdates));
+        sideBarTopLeftText.bind(model.annotation1.when(allowUpdates));
+        sideBarCenterText.bind(model.annotation2.when(allowUpdates));
+        mediaStatusProperty.bind(model.status.when(allowUpdates));
       }
 
       private void updateMediaStateStyles() {

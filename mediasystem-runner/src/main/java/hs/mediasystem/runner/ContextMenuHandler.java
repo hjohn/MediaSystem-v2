@@ -227,7 +227,7 @@ public class ContextMenuHandler {
     }
 
     // Bidirectional mapping binding:
-    value.conditionOn(Nodes.showing(slider)).map(toNumber).subscribe(slider.valueProperty()::setValue);
+    value.when(Nodes.showing(slider)).map(toNumber).subscribe(slider.valueProperty()::setValue);
     slider.valueProperty().map(fromNumber).subscribe(value::setValue);
 
     slider.setBlockIncrement(step);

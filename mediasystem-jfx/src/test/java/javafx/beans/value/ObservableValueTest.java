@@ -376,14 +376,14 @@ public class ObservableValueTest {
     class WithNull {
       @Test
       void shouldThrowNullPointerException() {
-        assertThrows(NullPointerException.class, () -> property.conditionOn(null));
+        assertThrows(NullPointerException.class, () -> property.when(null));
       }
     }
 
     @Nested
     class WithNotNullReturns_ObservableValue_Which {
       private Property<Boolean> active = new SimpleObjectProperty<>(true);
-      private ObservableValue<String> observableValue = property.conditionOn(active);
+      private ObservableValue<String> observableValue = property.when(active);
 
       @Test
       void shouldNotBeNull() {
