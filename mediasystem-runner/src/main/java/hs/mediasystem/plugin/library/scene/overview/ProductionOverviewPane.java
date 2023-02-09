@@ -15,7 +15,6 @@ import hs.mediasystem.util.javafx.ui.transition.StandardTransitions;
 import hs.mediasystem.util.javafx.ui.transition.TransitionPane;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.DoubleProperty;
@@ -39,7 +38,7 @@ public class ProductionOverviewPane extends HBox {
     public final ObjectProperty<Work> work = new SimpleObjectProperty<>();
     public final DoubleProperty watchedFraction = new SimpleDoubleProperty();
     public final DoubleProperty missingFraction = new SimpleDoubleProperty();
-    public final ObjectProperty<Supplier<Node>> dynamicPanel = new SimpleObjectProperty<>();
+    public final ObjectProperty<Node> dynamicPanel = new SimpleObjectProperty<>();
   }
 
   private final AsyncImageProperty imageProperty = new AsyncImageProperty(840, 840);
@@ -83,12 +82,12 @@ public class ProductionOverviewPane extends HBox {
   {
     VBox.setVgrow(dynamicBoxContainer, Priority.ALWAYS);
 
-    Values.of(model.dynamicPanel).subscribe(panel -> {
+    model.dynamicPanel.subscribe(panel -> {
       if(panel == null) {
         dynamicBoxContainer.clear();
       }
       else {
-        dynamicBoxContainer.add(panel.get());
+        dynamicBoxContainer.add(panel);
       }
     });
   }

@@ -64,27 +64,21 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
     pane.model.work.bind(presentation.root.when(showing));
     pane.model.missingFraction.bind(presentation.missingFraction.when(showing));
     pane.model.watchedFraction.bind(presentation.watchedFraction.when(showing));
-
-    presentation.state
-      .when(showing)
-      .subscribe(state -> pane.model.dynamicPanel.set(() -> createDynamicBox(presentation)));
+    pane.model.dynamicPanel.bind(presentation.state.when(showing).map(s -> createDynamicBox(presentation)));
 
     presentation.showInfo
-      .conditionOnShowing(pane)
+      .conditionOn(showing)
       .subscribe(e -> showInfoEventHandler.handle(e, presentation.state.get() == State.OVERVIEW ? presentation.root.get() : presentation.selectedChild.getValue()));
 
     return pane;
   }
 
   private Pane createDynamicBox(ProductionPresentation presentation) {
-    switch(presentation.state.get()) {
-    case LIST:
-      return buildEpisodeListUI(presentation);
-    case EPISODE:
-      return buildEpisodeDynamicUI(presentation);
-    default:
-      return buildOverviewUI(presentation);
-    }
+    return switch(presentation.state.get()) {
+      case LIST -> buildEpisodeListUI(presentation);
+      case EPISODE -> buildEpisodeDynamicUI(presentation);
+      default -> buildOverviewUI(presentation);
+    };
   }
 
   private Pane buildOverviewUI(ProductionPresentation presentation) {

@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
+import hs.jfx.eventstream.core.EventSource;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.presentation.AbstractPresentation;
@@ -30,8 +31,6 @@ import javafx.event.Event;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-import org.reactfx.EventSource;
 
 @Singleton
 public class ProductionPresentationFactory {
