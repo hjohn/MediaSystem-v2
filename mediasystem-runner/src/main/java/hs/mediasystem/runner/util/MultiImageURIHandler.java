@@ -179,16 +179,14 @@ public class MultiImageURIHandler implements ImageURIHandler {
       }
 
       CompletableFuture<WritableImage> writableImageFuture = new CompletableFuture<>();
-      Platform.runLater(() -> writableImageFuture.complete(c.snapshot(null, null)));
+      Platform.runLater(() -> writableImageFuture.complete(scene.snapshot(null)));
 
       java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(width, height, java.awt.image.BufferedImage.TYPE_INT_RGB);
 
       try {
         SwingFXUtils.fromFXImage(writableImageFuture.get(), bufferedImage);
-
-        scene.disposePeer();
       }
-      catch(InterruptedException | ExecutionException e1) {
+      catch(InterruptedException | ExecutionException e) {
         return null;
       }
 
