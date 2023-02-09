@@ -1,6 +1,5 @@
 package hs.mediasystem.db.core;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.util.events.EventSelector;
 import hs.mediasystem.util.events.PersistentEventStream;
@@ -19,6 +18,8 @@ import java.util.TreeMap;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class StreamableService {

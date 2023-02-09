@@ -6,7 +6,6 @@ import hs.database.core.SimpleConnectionPoolDataSource;
 import hs.database.core.SimpleDatabaseStatementTranslator;
 import hs.database.schema.DatabaseStatementTranslator;
 import hs.database.schema.DatabaseUpdater;
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.db.core.IdentificationEvent;
 import hs.mediasystem.db.core.StreamableEvent;
 import hs.mediasystem.db.events.EventSerializer;
@@ -30,6 +29,8 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.sql.ConnectionPoolDataSource;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class DatabaseFactory {

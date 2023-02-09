@@ -5,14 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import hs.ddif.annotations.Assisted;
-import hs.ddif.annotations.Produces;
-import hs.ddif.core.Injector;
-import hs.ddif.core.api.CandidateRegistry;
-import hs.ddif.core.util.Annotations;
-import hs.ddif.jsr330.Injectors;
-import hs.ddif.plugins.ComponentScannerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -25,6 +17,14 @@ import java.util.Map.Entry;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Assisted;
+import org.int4.dirk.annotations.Produces;
+import org.int4.dirk.api.CandidateRegistry;
+import org.int4.dirk.api.Injector;
+import org.int4.dirk.jsr330.Injectors;
+import org.int4.dirk.plugins.ComponentScannerFactory;
+import org.int4.dirk.util.Annotations;
 
 public class BasicSetup {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper(new YAMLFactory());

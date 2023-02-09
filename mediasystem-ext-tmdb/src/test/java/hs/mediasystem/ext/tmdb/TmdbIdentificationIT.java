@@ -6,7 +6,6 @@ import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.ContentPrint;
 import hs.mediasystem.api.discovery.Discovery;
@@ -43,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.int4.dirk.annotations.Produces;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 

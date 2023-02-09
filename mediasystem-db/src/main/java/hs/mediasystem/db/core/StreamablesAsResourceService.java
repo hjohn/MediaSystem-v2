@@ -1,6 +1,5 @@
 package hs.mediasystem.db.core;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.discovery.ContentPrint;
 import hs.mediasystem.db.extract.StreamMetaDataEvent;
 import hs.mediasystem.db.services.domain.Resource;
@@ -23,6 +22,8 @@ import java.util.function.Consumer;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class StreamablesAsResourceService {

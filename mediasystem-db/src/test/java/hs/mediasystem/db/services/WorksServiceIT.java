@@ -1,6 +1,5 @@
 package hs.mediasystem.db.services;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.datasource.domain.Episode;
 import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.db.Episodes;
@@ -35,6 +34,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.int4.dirk.annotations.Produces;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

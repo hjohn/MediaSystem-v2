@@ -1,9 +1,9 @@
 package hs.mediasystem.db;
 
-import hs.ddif.core.Injector;
-import hs.ddif.core.api.CandidateRegistry;
-import hs.ddif.plugins.ComponentScanner;
-import hs.ddif.plugins.ComponentScannerFactory;
+import org.int4.dirk.api.CandidateRegistry;
+import org.int4.dirk.api.Injector;
+import org.int4.dirk.plugins.ComponentScanner;
+import org.int4.dirk.plugins.ComponentScannerFactory;
 
 public class ServiceRunner {
 

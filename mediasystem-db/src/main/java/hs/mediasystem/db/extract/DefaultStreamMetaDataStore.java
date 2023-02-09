@@ -1,7 +1,6 @@
 package hs.mediasystem.db.extract;
 
 import hs.database.core.Database;
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.db.events.EventSerializer;
 import hs.mediasystem.db.events.PersistentEventStore;
 import hs.mediasystem.db.events.Serializer;
@@ -22,6 +21,8 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class DefaultStreamMetaDataStore {

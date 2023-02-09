@@ -24,8 +24,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.github.hjohn.ddif</groupId>
-      <artifactId>ddif-jsr330</artifactId>
+      <groupId>org.int4.dirk</groupId>
+      <artifactId>dirk-jsr330</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

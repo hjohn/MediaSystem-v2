@@ -1,6 +1,5 @@
 package hs.mediasystem.runner;
 
-import hs.ddif.core.api.InstanceResolver;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.util.exception.Throwables;
@@ -12,6 +11,8 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import org.int4.dirk.api.InstanceResolver;
 
 @Singleton
 public class StartupPresentationProvider implements Supplier<Presentation> {

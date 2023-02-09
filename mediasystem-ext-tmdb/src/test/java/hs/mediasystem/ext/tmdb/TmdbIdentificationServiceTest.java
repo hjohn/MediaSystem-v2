@@ -3,7 +3,6 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.datasource.domain.Movie;
 import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
 import hs.mediasystem.api.discovery.Attribute;
@@ -24,6 +23,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.int4.dirk.annotations.Produces;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

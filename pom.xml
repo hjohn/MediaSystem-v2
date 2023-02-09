@@ -13,7 +13,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.jackson>2.13.4</version.jackson>
     <version.javafx>19.0.2.1</version.javafx>
-    <version.ddif>4.0.0-alpha.6</version.ddif>
+    <version.dirk>1.0.0-beta1</version.dirk>
     <version.eventstream>0.3.0</version.eventstream>
     <version.junit5>5.6.0</version.junit5>
     <version.mockito>3.12.4</version.mockito>
@@ -50,24 +50,24 @@
         <version>${revision}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.hjohn.ddif</groupId>
-        <artifactId>ddif-jsr330</artifactId>
-        <version>${version.ddif}</version>
+        <groupId>org.int4.dirk</groupId>
+        <artifactId>dirk-jsr330</artifactId>
+        <version>${version.dirk}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.hjohn.ddif</groupId>
-        <artifactId>ddif-core</artifactId>
-        <version>${version.ddif}</version>
+        <groupId>org.int4.dirk</groupId>
+        <artifactId>dirk-core</artifactId>
+        <version>${version.dirk}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.hjohn.ddif</groupId>
-        <artifactId>ddif-plugins</artifactId>
-        <version>${version.ddif}</version>
+        <groupId>org.int4.dirk</groupId>
+        <artifactId>dirk-plugins</artifactId>
+        <version>${version.dirk}</version>
       </dependency>
       <dependency>
-        <groupId>com.github.hjohn.ddif.extensions</groupId>
+        <groupId>org.int4.dirk.extensions</groupId>
         <artifactId>extensions-assisted</artifactId>
-        <version>${version.ddif}</version>
+        <version>${version.dirk}</version>
       </dependency>
       <dependency>
         <groupId>com.github.hjohn.jfx.eventstream</groupId>

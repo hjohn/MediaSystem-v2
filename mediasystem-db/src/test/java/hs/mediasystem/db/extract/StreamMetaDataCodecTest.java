@@ -1,7 +1,5 @@
 package hs.mediasystem.db.extract;
 
-import hs.ddif.core.Injector;
-import hs.ddif.jsr330.Injectors;
 import hs.mediasystem.domain.media.AudioTrack;
 import hs.mediasystem.domain.media.Resolution;
 import hs.mediasystem.domain.media.Snapshot;
@@ -16,6 +14,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
+import org.int4.dirk.api.Injector;
+import org.int4.dirk.jsr330.Injectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +27,8 @@ public class StreamMetaDataCodecTest {
   @BeforeEach
   void beforeEach() {
     Injector injector = Injectors.autoDiscovering();
+
+    injector.register(StreamMetaDataCodec.class);
 
     codec = injector.getInstance(StreamMetaDataCodec.class);
   }

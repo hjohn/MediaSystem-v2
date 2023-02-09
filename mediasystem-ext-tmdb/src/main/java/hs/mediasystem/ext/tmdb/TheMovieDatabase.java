@@ -3,7 +3,6 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import hs.ddif.annotations.Opt;
 import hs.mediasystem.util.CryptoUtil;
 import hs.mediasystem.util.exception.HttpException;
 import hs.mediasystem.util.exception.Throwables;
@@ -22,6 +21,8 @@ import java.util.logging.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Opt;
 
 @Singleton
 public class TheMovieDatabase {

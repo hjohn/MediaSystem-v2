@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.discovery.Discoverer;
 import hs.mediasystem.db.core.ImportSource;
 import hs.mediasystem.db.core.StreamTags;
@@ -32,6 +31,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class CollectionLocationManager {

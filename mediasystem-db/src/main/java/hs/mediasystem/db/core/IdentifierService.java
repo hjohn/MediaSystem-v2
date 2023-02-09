@@ -1,6 +1,5 @@
 package hs.mediasystem.db.core;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.services.IdentificationService;
 import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
@@ -36,6 +35,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class IdentifierService {

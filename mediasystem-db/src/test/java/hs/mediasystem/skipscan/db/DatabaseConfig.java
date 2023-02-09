@@ -1,6 +1,5 @@
 package hs.mediasystem.skipscan.db;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.db.DatabaseFactory;
 import hs.mediasystem.db.base.DatabaseContentPrintProvider;
 
@@ -13,6 +12,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
+
+import org.int4.dirk.annotations.Produces;
 
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres;
 

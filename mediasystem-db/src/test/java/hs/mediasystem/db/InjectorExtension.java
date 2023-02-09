@@ -1,11 +1,10 @@
 package hs.mediasystem.db;
 
-import hs.ddif.core.Injector;
-import hs.ddif.jsr330.Injectors;
-
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
+import org.int4.dirk.api.Injector;
+import org.int4.dirk.jsr330.Injectors;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstanceFactory;
 import org.junit.jupiter.api.extension.TestInstanceFactoryContext;
@@ -34,6 +33,8 @@ public class InjectorExtension implements TestInstanceFactory {
 
         return constructors[0].newInstance(outer);
       }
+
+      injector.register(factoryContext.getTestClass());
 
       return injector.getInstance(factoryContext.getTestClass());
     }

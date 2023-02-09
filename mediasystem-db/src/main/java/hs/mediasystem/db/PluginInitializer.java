@@ -1,10 +1,5 @@
 package hs.mediasystem.db;
 
-import hs.ddif.core.api.InstanceResolver;
-import hs.ddif.core.config.standard.InjectableStoreCandidateRegistry;
-import hs.ddif.plugins.ComponentScannerFactory;
-import hs.ddif.plugins.Plugin;
-import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
 
@@ -25,6 +20,12 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.int4.dirk.api.CandidateRegistry;
+import org.int4.dirk.api.InstanceResolver;
+import org.int4.dirk.plugins.ComponentScannerFactory;
+import org.int4.dirk.plugins.Plugin;
+import org.int4.dirk.plugins.PluginManager;
+
 /**
  * Configures and runs the back-end services.
  */
@@ -32,7 +33,7 @@ public class PluginInitializer {
   private static final Logger LOGGER = Logger.getLogger(PluginInitializer.class.getName());
 
   @Inject private InstanceResolver instanceResolver;
-  @Inject private InjectableStoreCandidateRegistry store;
+  @Inject private CandidateRegistry store;
   @Inject private ComponentScannerFactory componentScannerFactory;
   @Inject @Nullable @Named("general.basedir") private String baseDir = ".";
 

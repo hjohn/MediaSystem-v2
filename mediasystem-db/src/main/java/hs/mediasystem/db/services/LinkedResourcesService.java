@@ -1,6 +1,5 @@
 package hs.mediasystem.db.services;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Classification;
 import hs.mediasystem.api.datasource.domain.Details;
@@ -18,11 +17,11 @@ import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.EventSelector;
+import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.SimpleEventStream;
-import hs.mediasystem.util.events.streams.Source;
 import hs.mediasystem.util.events.streams.EventStream;
+import hs.mediasystem.util.events.streams.Source;
 import hs.mediasystem.util.events.streams.Subscription;
 
 import java.net.URI;
@@ -39,6 +38,8 @@ import java.util.TreeMap;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class LinkedResourcesService {

@@ -1,11 +1,5 @@
 package hs.mediasystem.local.client;
 
-import hs.ddif.core.Injector;
-import hs.ddif.core.api.CandidateRegistry;
-import hs.ddif.plugins.ComponentScanner;
-import hs.ddif.plugins.ComponentScannerFactory;
-import hs.ddif.plugins.Plugin;
-import hs.ddif.plugins.PluginManager;
 import hs.mediasystem.db.ServiceRunner;
 import hs.mediasystem.plugin.playback.scene.PlayerSetting;
 import hs.mediasystem.runner.NavigateEvent;
@@ -37,6 +31,13 @@ import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+
+import org.int4.dirk.api.CandidateRegistry;
+import org.int4.dirk.api.Injector;
+import org.int4.dirk.plugins.ComponentScanner;
+import org.int4.dirk.plugins.ComponentScannerFactory;
+import org.int4.dirk.plugins.Plugin;
+import org.int4.dirk.plugins.PluginManager;
 
 public class FrontEndRunner extends Application {
   private static final Logger LOGGER = Logger.getLogger(FrontEndRunner.class.getName());

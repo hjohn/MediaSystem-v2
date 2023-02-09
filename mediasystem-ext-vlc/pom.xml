@@ -28,8 +28,8 @@
       <version>1.0.2</version>
     </dependency>
     <dependency>
-      <groupId>com.github.hjohn.ddif</groupId>
-      <artifactId>ddif-jsr330</artifactId>
+      <groupId>org.int4.dirk</groupId>
+      <artifactId>dirk-jsr330</artifactId>
     </dependency>
 
     <!-- Test Dependencies -->

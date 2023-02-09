@@ -1,8 +1,5 @@
 package hs.mediasystem.plugin.basictheme;
 
-import hs.ddif.core.api.InstanceResolutionException;
-import hs.ddif.core.api.InstanceResolver;
-import hs.ddif.core.util.Annotations;
 import hs.mediasystem.plugin.home.HomePresentation;
 import hs.mediasystem.plugin.home.HomeScreenNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
@@ -39,6 +36,10 @@ import javafx.scene.Node;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+
+import org.int4.dirk.api.InstanceResolver;
+import org.int4.dirk.api.instantiation.InjectionException;
+import org.int4.dirk.util.Annotations;
 
 @Singleton
 public class BasicTheme implements Theme {
@@ -149,7 +150,7 @@ public class BasicTheme implements Theme {
 
         return instance;
       }
-      catch(InstanceResolutionException e) {
+      catch(InjectionException e) {
         // Fall-through
       }
     }

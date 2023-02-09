@@ -1,6 +1,5 @@
 package hs.mediasystem.local.client;
 
-import hs.ddif.core.Injector;
 import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
@@ -16,6 +15,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.int4.dirk.api.Injector;
 
 /**
  * Mini program to update all hash values in the database, by re-reading all

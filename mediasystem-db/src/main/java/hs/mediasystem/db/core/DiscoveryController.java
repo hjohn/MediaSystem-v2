@@ -1,12 +1,10 @@
 package hs.mediasystem.db.core;
 
-import hs.ddif.annotations.Opt;
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.util.concurrent.NamedThreadFactory;
 import hs.mediasystem.util.events.SynchronousEventStream;
+import hs.mediasystem.util.events.streams.EventStream;
 import hs.mediasystem.util.events.streams.Source;
 import hs.mediasystem.util.exception.Throwables;
-import hs.mediasystem.util.events.streams.EventStream;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -18,6 +16,9 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Opt;
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class DiscoveryController {

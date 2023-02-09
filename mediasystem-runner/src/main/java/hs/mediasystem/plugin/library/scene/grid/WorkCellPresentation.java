@@ -1,7 +1,5 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
-import hs.ddif.annotations.Argument;
-import hs.ddif.annotations.Assisted;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.plugin.library.scene.overview.ShowInfoEventHandler;
 import hs.mediasystem.presentation.Presentation;
@@ -17,6 +15,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 
 import javax.inject.Inject;
+
+import org.int4.dirk.annotations.Argument;
+import org.int4.dirk.annotations.Assisted;
 
 @Assisted
 public class WorkCellPresentation implements Presentation {

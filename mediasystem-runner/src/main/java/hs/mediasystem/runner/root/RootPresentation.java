@@ -6,6 +6,9 @@ import hs.mediasystem.runner.util.DebugFX;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 
+import javax.inject.Singleton;
+
+@Singleton
 public class RootPresentation extends ParentPresentation {
   public final BooleanProperty clockVisible = new SimpleBooleanProperty(true);
   public final BooleanProperty hiddenItemsVisible = new SimpleBooleanProperty(false);

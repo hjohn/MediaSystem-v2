@@ -1,6 +1,5 @@
 package hs.mediasystem.runner;
 
-import hs.ddif.annotations.Produces;
 import hs.mediasystem.runner.util.DebugSceneFX;
 import hs.mediasystem.runner.util.FXSceneManager;
 import hs.mediasystem.runner.util.SceneManager;
@@ -9,6 +8,8 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+
+import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class Configuration {
