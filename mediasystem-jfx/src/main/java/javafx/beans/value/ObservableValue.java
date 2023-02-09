@@ -25,6 +25,11 @@
 
 package javafx.beans.value;
 
+import com.sun.javafx.binding.ConditionalBinding;
+import com.sun.javafx.binding.FilteredBinding;
+import com.sun.javafx.binding.FlatMappedBinding;
+import com.sun.javafx.binding.MappedBinding;
+import com.sun.javafx.binding.OrElseBinding;
 import com.sun.javafx.binding.Subscription;
 
 import java.util.function.Consumer;

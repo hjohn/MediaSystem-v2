@@ -1,11 +1,11 @@
-package javafx.beans.value;
-
-import com.sun.javafx.binding.Subscription;
+package com.sun.javafx.binding;
 
 import java.util.Objects;
 import java.util.function.Predicate;
 
-class FilteredBinding<T> extends LazyObjectBinding<T> {
+import javafx.beans.value.ObservableValue;
+
+public class FilteredBinding<T> extends LazyObjectBinding<T> {
 
     private final ObservableValue<T> source;
     private final Predicate<? super T> predicate;
@@ -16,7 +16,7 @@ class FilteredBinding<T> extends LazyObjectBinding<T> {
     }
 
     @Override
-    protected Subscription observeInputs() {
+    protected Subscription observeSources() {
         return Subscription.subscribeInvalidations(source, this::invalidate); // start observing source
     }
 

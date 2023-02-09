@@ -1,8 +1,7 @@
-package javafx.beans.value;
-
-import com.sun.javafx.binding.Subscription;
+package com.sun.javafx.binding;
 
 import javafx.beans.InvalidationListener;
+import javafx.beans.value.ChangeListener;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,7 @@ public class LazyObjectBindingTest {
     }
 
     @Override
-    protected Subscription observeInputs() {
+    protected Subscription observeSources() {
       startObservingCalls++;
 
       return () -> {

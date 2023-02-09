@@ -1,8 +1,8 @@
-package javafx.beans.value;
-
-import com.sun.javafx.binding.Subscription;
+package com.sun.javafx.binding;
 
 import java.util.Objects;
+
+import javafx.beans.value.ObservableValue;
 
 public class ConditionalBinding<T> extends LazyObjectBinding<T> {
   private final ObservableValue<Boolean> condition;
@@ -43,7 +43,7 @@ public class ConditionalBinding<T> extends LazyObjectBinding<T> {
   }
 
   @Override
-  protected Subscription observeInputs() {
+  protected Subscription observeSources() {
     return this::unsubscribe;  // condition is always observed and never unsubscribed
   }
 

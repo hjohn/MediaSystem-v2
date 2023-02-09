@@ -679,7 +679,7 @@ public class Text extends Shape {
                         TextLayout layout = getTextLayout();
                         if (layout.setWrapWidth((float)get())) {
 //                            needsTextLayout();
-                            needsFullTextLayout();  // JH: Adding this fixes my super-rare issue
+                            needsFullTextLayout();  // WORKAROUND JOHN/JH: Adding this fixes my super-rare issue
                         } else {
                             NodeHelper.geomChanged(Text.this);
                         }
