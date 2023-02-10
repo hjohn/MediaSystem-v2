@@ -52,6 +52,8 @@ public interface Subscription {
      * immediately provides its current value to the given {@code subscriber},
      * followed by any subsequent changes in value.
      *
+     * @param <T> the type of values
+     * @param observableValue an {@link ObservableValue}, cannot be {@code null}
      * @param subscriber a {@link Consumer} to supply with the values of this
      *     {@link ObservableValue}, cannot be null
      * @return a {@link Subscription} which can be used to cancel this
@@ -71,6 +73,7 @@ public interface Subscription {
      * calls the given {@code runnable} whenever this {@code ObservableValue}
      * becomes invalid.
      *
+     * @param observableValue an {@link ObservableValue}, cannot be {@code null}
      * @param runnable a {@link Runnable} to call whenever this
      *     {@link ObservableValue} becomes invalid, cannot be null
      * @return a {@link Subscription} which can be used to cancel this
