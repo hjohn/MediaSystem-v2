@@ -11,6 +11,15 @@ public class ExposedNumberProperty extends AbstractExposedNumericProperty<Number
     super(function);
   }
 
+  @Override
+  protected Number add(Number v1, Number v2) {
+    if(v1 instanceof Long l1 && v2 instanceof Long l2) {
+      return l1 + l2;
+    }
+
+    return v1.doubleValue() + v2.doubleValue();
+  }
+
   public class ParentBuilder<O> {
     public RangeBuilder of(Class<O> cls) {
       ExposedNumberProperty.this.cls = cls;

@@ -13,6 +13,12 @@ public class ExposedBooleanProperty extends AbstractExposedProperty<Boolean> {
     super(function);
   }
 
+  public void toggle(Object ownerInstance) {
+    Property<Boolean> property = getProperty(ownerInstance);
+
+    property.setValue(!property.getValue());
+  }
+
   public boolean isTriState() {
     return isTriState;
   }

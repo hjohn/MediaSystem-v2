@@ -14,6 +14,11 @@ public class ExposedLongProperty extends AbstractExposedNumericProperty<Long> {
     super(cast(function));
   }
 
+  @Override
+  public Long add(Long v1, Long v2) {
+    return v1 + v2;
+  }
+
   public class ParentBuilder<O> {
     public RangeBuilder<O> of(Class<O> cls) {
       ExposedLongProperty.this.cls = cls;

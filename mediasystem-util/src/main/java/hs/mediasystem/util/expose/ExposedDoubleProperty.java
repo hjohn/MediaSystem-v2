@@ -12,6 +12,11 @@ public class ExposedDoubleProperty extends AbstractExposedNumericProperty<Double
     super(cast(function));
   }
 
+  @Override
+  protected Double add(Double v1, Double v2) {
+    return v1 + v2;
+  }
+
   public class ParentBuilder<O> {
     public RangeBuilder of(Class<O> cls) {
       ExposedDoubleProperty.this.cls = cls;
