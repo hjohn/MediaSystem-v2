@@ -116,10 +116,10 @@ public class InputActionHandler {
     }
   }
 
-  private static String createPath(List<ExposedControl<?>> path) {
+  private static String createPath(List<ExposedControl> path) {
     StringBuilder sb = new StringBuilder();
 
-    for(ExposedControl<?> member : path) {
+    for(ExposedControl member : path) {
       if(sb.length() == 0) {
         sb.append(member.getDeclaringClass().getName());
       }

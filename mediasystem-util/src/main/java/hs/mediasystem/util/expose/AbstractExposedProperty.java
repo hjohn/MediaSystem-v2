@@ -5,17 +5,17 @@ import java.util.function.Function;
 
 import javafx.beans.property.Property;
 
-public abstract class AbstractExposedProperty<P, T> extends AbstractExposedControl<P> {
+public abstract class AbstractExposedProperty<T> extends AbstractExposedControl {
   protected Formatter<T> formatter;
 
-  private final Function<P, Property<T>> function;
+  private final Function<Object, Property<T>> function;
 
-  AbstractExposedProperty(Function<P, Property<T>> function) {
+  AbstractExposedProperty(Function<Object, Property<T>> function) {
     this.function = function;
   }
 
-  public Property<T> getProperty(P parent) {
-    return function.apply(parent);
+  public Property<T> getProperty(Object ownerInstance) {
+    return function.apply(ownerInstance);
   }
 
   public Formatter<T> getFormatter() {

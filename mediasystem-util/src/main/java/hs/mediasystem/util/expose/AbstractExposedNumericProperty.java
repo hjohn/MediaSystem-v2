@@ -5,26 +5,26 @@ import java.util.function.Function;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
 
-public abstract class AbstractExposedNumericProperty<P, T extends Number> extends AbstractExposedProperty<P, T> {
-  protected Function<P, ObservableValue<T>> min;
-  protected Function<P, ObservableValue<T>> max;
+public abstract class AbstractExposedNumericProperty<T extends Number> extends AbstractExposedProperty<T> {
+  protected Function<Object, ObservableValue<T>> min;
+  protected Function<Object, ObservableValue<T>> max;
   protected T step;
 
-  AbstractExposedNumericProperty(Function<P, Property<T>> function) {
+  AbstractExposedNumericProperty(Function<Object, Property<T>> function) {
     super(function);
   }
 
   @SuppressWarnings("unchecked")
-  protected static <P, T> Function<P, Property<T>> cast(Function<P, ? extends Property<?>> function) {
-    return (Function<P, Property<T>>)(Function<?, ?>)function;
+  protected static <T> Function<Object, Property<T>> cast(Function<Object, ? extends Property<?>> function) {
+    return (Function<Object, Property<T>>)function;
   }
 
-  public ObservableValue<T> getMin(P parent) {
-    return min.apply(parent);
+  public ObservableValue<T> getMin(Object ownerInstance) {
+    return min.apply(ownerInstance);
   }
 
-  public ObservableValue<T> getMax(P parent) {
-    return max.apply(parent);
+  public ObservableValue<T> getMax(Object ownerInstance) {
+    return max.apply(ownerInstance);
   }
 
   public T getStep() {

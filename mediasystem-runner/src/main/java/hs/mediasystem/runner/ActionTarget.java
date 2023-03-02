@@ -33,28 +33,28 @@ public class ActionTarget {
 
   private static final Map<Class<?>, Map<String, TaskHandler<?>>> TASK_HANDLERS = Map.of(
     ExposedMethod.class, Map.of(
-      "trigger", (ActionEvent<ExposedMethod<Object, Object>> e) -> e.exposedProperty.getTrigger(e.parent)
+      "trigger", (ActionEvent<ExposedMethod<Object>> e) -> e.exposedProperty.getTrigger(e.parent)
     )
   );
 
   private static final Map<Class<?>, Map<String, VoidHandler<?, ?>>> VOID_HANDLERS = Map.of(
     ExposedLongProperty.class, Map.of(
-      "add", (ActionEvent<ExposedLongProperty<Object>> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() + Long.parseLong(e.parameter))),
-      "subtract", (ActionEvent<ExposedLongProperty<Object>> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() - Long.parseLong(e.parameter)))
+      "add", (ActionEvent<ExposedLongProperty> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() + Long.parseLong(e.parameter))),
+      "subtract", (ActionEvent<ExposedLongProperty> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() - Long.parseLong(e.parameter)))
     ),
     ExposedDoubleProperty.class, Map.of(
-      "add", (ActionEvent<ExposedDoubleProperty<Object>> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() + Double.parseDouble(e.parameter))),
-      "subtract", (ActionEvent<ExposedDoubleProperty<Object>> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() - Double.parseDouble(e.parameter)))
+      "add", (ActionEvent<ExposedDoubleProperty> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() + Double.parseDouble(e.parameter))),
+      "subtract", (ActionEvent<ExposedDoubleProperty> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() - Double.parseDouble(e.parameter)))
     ),
     ExposedNumberProperty.class, Map.of(
-      "add", (ActionEvent<ExposedNumberProperty<Object>> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() + Double.parseDouble(e.parameter))),
-      "subtract", (ActionEvent<ExposedNumberProperty<Object>> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() - Double.parseDouble(e.parameter)))
+      "add", (ActionEvent<ExposedNumberProperty> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() + Double.parseDouble(e.parameter))),
+      "subtract", (ActionEvent<ExposedNumberProperty> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() - Double.parseDouble(e.parameter)))
     ),
     ExposedBooleanProperty.class, Map.of(
-      "toggle", (ActionEvent<ExposedBooleanProperty<Object>> e, Property<Boolean> p) -> p.setValue(!p.getValue())
+      "toggle", (ActionEvent<ExposedBooleanProperty> e, Property<Boolean> p) -> p.setValue(!p.getValue())
     ),
     ExposedListProperty.class, Map.of(
-      "next", (ActionEvent<ExposedListProperty<Object, Object>> e, Property<Object> p) -> {
+      "next", (ActionEvent<ExposedListProperty<Object>> e, Property<Object> p) -> {
         List<Object> list = e.exposedProperty.getAllowedValues(e.parent);
 
         if(!list.isEmpty()) {
@@ -70,11 +70,11 @@ public class ActionTarget {
     )
   );
 
-  private final List<ExposedControl<?>> path;
+  private final List<ExposedControl> path;
   private final Map<String, TaskHandler<?>> taskHandlersByAction;
   private final Map<String, VoidHandler<?, ?>> voidHandlersByAction;
 
-  public ActionTarget(List<ExposedControl<?>> path) {
+  public ActionTarget(List<ExposedControl> path) {
     if(path == null || path.isEmpty()) {
       throw new IllegalArgumentException("path cannot be null or empty");
     }
@@ -88,7 +88,7 @@ public class ActionTarget {
     }
   }
 
-  private static long clamp(ActionEvent<ExposedLongProperty<Object>> event, long newValue) {
+  private static long clamp(ActionEvent<ExposedLongProperty> event, long newValue) {
     long minValue = event.exposedProperty.getMin(event.parent).getValue();
     long maxValue = event.exposedProperty.getMax(event.parent).getValue();
 
@@ -102,7 +102,7 @@ public class ActionTarget {
     return newValue;
   }
 
-  private static double clamp(ActionEvent<ExposedDoubleProperty<Object>> event, double newValue) {
+  private static double clamp(ActionEvent<ExposedDoubleProperty> event, double newValue) {
     double minValue = event.exposedProperty.getMin(event.parent).getValue();
     double maxValue = event.exposedProperty.getMax(event.parent).getValue();
 
@@ -116,7 +116,7 @@ public class ActionTarget {
     return newValue;
   }
 
-  private static double clampNumber(ActionEvent<ExposedNumberProperty<Object>> event, double newValue) {
+  private static double clampNumber(ActionEvent<ExposedNumberProperty> event, double newValue) {
     double minValue = event.exposedProperty.getMin(event.parent).getValue().doubleValue();
     double maxValue = event.exposedProperty.getMax(event.parent).getValue().doubleValue();
 
@@ -130,7 +130,7 @@ public class ActionTarget {
     return newValue;
   }
 
-  public List<ExposedControl<?>> getPath() {
+  public List<ExposedControl> getPath() {
     return path;
   }
 
@@ -175,19 +175,19 @@ public class ActionTarget {
    * @return a {@link Trigger} or <code>null</code> if action was completed already or unavailable
    */
   public Trigger<Object> doAction(String action, Object root, Event event) {
-    Object parent = findDirectParentFromRoot(root);
-    ExposedControl<?> exposedControl = getExposedControl();
+    Object ownerInstance = findDirectOwnerInstanceFromRoot(root);
+    ExposedControl exposedControl = getExposedControl();
 
-    if(parent == null) {
+    if(ownerInstance == null) {
       return null;
     }
 
-    LOGGER.fine("Doing '" + action + "' for '" + exposedControl.getName() + "' of " + parent);
+    LOGGER.fine("Doing '" + action + "' for '" + exposedControl.getName() + "' of " + ownerInstance);
 
     Matcher matcher = NUMERIC_PROPERTY_PATTERN.matcher(action);
 
     if(matcher.matches()) {
-      ActionEvent<Object> actionEvent = new ActionEvent<>(parent, event, matcher.group(2), exposedControl);
+      ActionEvent<Object> actionEvent = new ActionEvent<>(ownerInstance, event, matcher.group(2), exposedControl);
 
       if(taskHandlersByAction != null) {
         @SuppressWarnings("unchecked")
@@ -205,8 +205,8 @@ public class ActionTarget {
         if(handler != null) {
           if(exposedControl instanceof AbstractExposedProperty) {
             @SuppressWarnings("unchecked")
-            AbstractExposedProperty<Object, Object> abstractExposedProperty = (AbstractExposedProperty<Object, Object>)exposedControl;
-            Property<Object> property = abstractExposedProperty.getProperty(parent);
+            AbstractExposedProperty<Object> abstractExposedProperty = (AbstractExposedProperty<Object>)exposedControl;
+            Property<Object> property = abstractExposedProperty.getProperty(ownerInstance);
 
             handler.handle(actionEvent, property);
           }
@@ -231,11 +231,11 @@ public class ActionTarget {
    * @return a {@link Trigger} which can be used to run the action, or <code>null</code> if action is currently unavailable
    */
   public <V> Trigger<V> getTrigger(Object root) {
-    ExposedControl<?> exposedControl = getExposedControl();
+    ExposedControl exposedControl = getExposedControl();
 
     if(exposedControl instanceof ExposedMethod) {
       @SuppressWarnings("unchecked")
-      ExposedMethod<Object, V> exposedMethod = (ExposedMethod<Object, V>)exposedControl;
+      ExposedMethod<V> exposedMethod = (ExposedMethod<V>)exposedControl;
 
       return exposedMethod.getTrigger(root);
     }
@@ -245,27 +245,27 @@ public class ActionTarget {
 
   @SuppressWarnings("unchecked")
   public <T> Property<T> getProperty(Object root) {
-    Object parent = findDirectParentFromRoot(root);
+    Object ownerInstance = findDirectOwnerInstanceFromRoot(root);
 
-    return ((AbstractExposedProperty<Object, T>)getExposedControl()).getProperty(parent);
+    return ((AbstractExposedProperty<T>)getExposedControl()).getProperty(ownerInstance);
   }
 
-  public ExposedControl<?> getExposedControl() {
+  public ExposedControl getExposedControl() {
     return path.get(path.size() - 1);
   }
 
-  public Object findDirectParentFromRoot(Object root) {
+  public Object findDirectOwnerInstanceFromRoot(Object root) {
     Object parent = root;
 
     for(int i = 0; i < path.size() - 1; i++) {
-      @SuppressWarnings("unchecked")
-      ExposedControl<Object> pathMember = (ExposedControl<Object>)path.get(i);
+      ExposedControl pathMember = path.get(i);
 
       if(!(pathMember instanceof ExposedNode)) {
         throw new IllegalStateException("Bad path to property; \"" + pathMember.getName() + "\" does not have child properties; target: " + this);
       }
 
-      Property<Object> property = ((AbstractExposedProperty<Object, Object>)pathMember).getProperty(parent);
+      @SuppressWarnings("unchecked")
+      Property<Object> property = ((AbstractExposedProperty<Object>)pathMember).getProperty(parent);
 
       if(property == null) {
         throw new IllegalStateException("\"" + pathMember.getName() + "\" was not set; target: " + this);

@@ -66,7 +66,7 @@ public class Annotations {
 
     Expose.longProperty(PlayerPresentation::positionProperty)
       .of(PlayerPresentation.class)
-      .range((PlayerPresentation p) -> new SimpleLongProperty(0), (PlayerPresentation p) -> p.lengthProperty(), 3)
+      .range(p -> new SimpleLongProperty(0), PlayerPresentation::lengthProperty, 3)
       .as("position");
 
     Expose.longProperty(PlayerPresentation::volumeProperty)
@@ -86,7 +86,8 @@ public class Annotations {
       .of(SubtitlePresentation.class)
       .range(-60000, 60000, 100)
       .format(v -> v == 0 ? "None" :
-            v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0))
+            v % 1000 == 0 ? String.format("%+d s", v / 1000) : String.format("%+.1f s", v / 1000.0)
+      )
       .as("subtitleDelay");
 
     Expose.doubleProperty(PlayerPresentation::rateProperty)

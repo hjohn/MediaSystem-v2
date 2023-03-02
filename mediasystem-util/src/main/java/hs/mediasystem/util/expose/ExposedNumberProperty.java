@@ -5,14 +5,14 @@ import java.util.function.Function;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleDoubleProperty;
 
-public class ExposedNumberProperty<P> extends AbstractExposedNumericProperty<P, Number> {
+public class ExposedNumberProperty extends AbstractExposedNumericProperty<Number> {
 
-  ExposedNumberProperty(Function<P, Property<Number>> function) {
+  ExposedNumberProperty(Function<Object, Property<Number>> function) {
     super(function);
   }
 
-  public class ParentBuilder {
-    public RangeBuilder of(Class<P> cls) {
+  public class ParentBuilder<O> {
+    public RangeBuilder of(Class<O> cls) {
       ExposedNumberProperty.this.cls = cls;
 
       return new RangeBuilder();

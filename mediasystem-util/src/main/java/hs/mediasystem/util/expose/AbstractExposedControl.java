@@ -1,18 +1,17 @@
 package hs.mediasystem.util.expose;
 
-public abstract class AbstractExposedControl<P> implements ExposedControl<P> {
+public abstract class AbstractExposedControl implements ExposedControl {
   protected String name;
-  protected Class<? super P> cls;
+  protected Class<?> cls;
 
   @Override
   public String getName() {
     return name;
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<P> getDeclaringClass() {
-    return (Class<P>)cls;
+  public Class<?> getDeclaringClass() {
+    return cls;
   }
 }
 

@@ -6,39 +6,40 @@ import java.util.function.Function;
 import javafx.beans.property.Property;
 import javafx.collections.ObservableList;
 
-public class ExposedListProperty<P, T> extends AbstractExposedProperty<P, T> {
-  private Function<P, ObservableList<T>>allowedValues;
+public class ExposedListProperty<T> extends AbstractExposedProperty<T> {
+  private Function<Object, ObservableList<T>> allowedValues;
 
-  ExposedListProperty(Function<P, Property<T>> function) {
+  ExposedListProperty(Function<Object, Property<T>> function) {
     super(function);
   }
 
-  public ObservableList<T> getAllowedValues(P parent) {
-    return allowedValues.apply(parent);
+  public ObservableList<T> getAllowedValues(Object ownerInstance) {
+    return allowedValues.apply(ownerInstance);
   }
 
-  public class ParentBuilder {
-    public ListBuilder of(Class<? super P> cls) {
+  public class ParentBuilder<O> {
+    public ListBuilder<O> of(Class<? super O> cls) {
       ExposedListProperty.this.cls = cls;
 
-      return new ListBuilder();
+      return new ListBuilder<>();
     }
   }
 
-  public class ListBuilder {
-    public ListBuilder allowedValues(Function<P, ObservableList<T>> allowedValues) {
-      ExposedListProperty.this.allowedValues = allowedValues;
+  public class ListBuilder<O> {
+    @SuppressWarnings("unchecked")
+    public ListBuilder<O> allowedValues(Function<O, ObservableList<T>> allowedValues) {
+      ExposedListProperty.this.allowedValues = (Function<Object, ObservableList<T>>)allowedValues;
 
       return this;
     }
 
-    public ListBuilder allowedValues(ObservableList<T> allowedValues) {
+    public ListBuilder<O> allowedValues(ObservableList<T> allowedValues) {
       ExposedListProperty.this.allowedValues = p -> allowedValues;
 
       return this;
     }
 
-    public ListBuilder format(Formatter<T> formatter) {
+    public ListBuilder<O> format(Formatter<T> formatter) {
       ExposedListProperty.this.formatter = formatter;
 
       return this;

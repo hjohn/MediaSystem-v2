@@ -8,22 +8,22 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableLongValue;
 import javafx.beans.value.ObservableValue;
 
-public class ExposedLongProperty<P> extends AbstractExposedNumericProperty<P, Long> {
+public class ExposedLongProperty extends AbstractExposedNumericProperty<Long> {
 
-  ExposedLongProperty(Function<P, LongProperty> function) {
+  ExposedLongProperty(Function<Object, LongProperty> function) {
     super(cast(function));
   }
 
-  public class ParentBuilder {
-    public RangeBuilder of(Class<P> cls) {
+  public class ParentBuilder<O> {
+    public RangeBuilder<O> of(Class<O> cls) {
       ExposedLongProperty.this.cls = cls;
 
-      return new RangeBuilder();
+      return new RangeBuilder<>();
     }
   }
 
-  public class RangeBuilder {
-    public RangeBuilder range(long min, long max, long step) {
+  public class RangeBuilder<O> {
+    public RangeBuilder<O> range(long min, long max, long step) {
       ExposedLongProperty.this.min = p -> new SimpleObjectProperty<>(min);
       ExposedLongProperty.this.max = p -> new SimpleObjectProperty<>(max);
       ExposedLongProperty.this.step = Long.valueOf(step);
@@ -32,15 +32,15 @@ public class ExposedLongProperty<P> extends AbstractExposedNumericProperty<P, Lo
     }
 
     @SuppressWarnings("unchecked")
-    public RangeBuilder range(Function<P, ObservableLongValue> min, Function<P, ObservableLongValue> max, long step) {
-      ExposedLongProperty.this.min = (Function<P, ObservableValue<Long>>)(Function<?, ?>)min;
-      ExposedLongProperty.this.max = (Function<P, ObservableValue<Long>>)(Function<?, ?>)max;
+    public RangeBuilder<O> range(Function<O, ObservableLongValue> min, Function<O, ObservableLongValue> max, long step) {
+      ExposedLongProperty.this.min = (Function<Object, ObservableValue<Long>>)(Function<?, ?>)min;
+      ExposedLongProperty.this.max = (Function<Object, ObservableValue<Long>>)(Function<?, ?>)max;
       ExposedLongProperty.this.step = Long.valueOf(step);
 
       return this;
     }
 
-    public RangeBuilder format(Formatter<Long> formatter) {
+    public RangeBuilder<O> format(Formatter<Long> formatter) {
       ExposedLongProperty.this.formatter = formatter;
 
       return this;

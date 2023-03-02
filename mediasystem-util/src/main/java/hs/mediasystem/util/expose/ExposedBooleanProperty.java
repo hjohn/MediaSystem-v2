@@ -5,11 +5,11 @@ import java.util.function.Function;
 
 import javafx.beans.property.Property;
 
-public class ExposedBooleanProperty<P> extends AbstractExposedProperty<P, Boolean> {
+public class ExposedBooleanProperty extends AbstractExposedProperty<Boolean> {
   private boolean isTriState;
   private boolean allowSelectTriState;
 
-  ExposedBooleanProperty(Function<P, Property<Boolean>> function) {
+  ExposedBooleanProperty(Function<Object, Property<Boolean>> function) {
     super(function);
   }
 
@@ -21,8 +21,8 @@ public class ExposedBooleanProperty<P> extends AbstractExposedProperty<P, Boolea
     return allowSelectTriState;
   }
 
-  public class ParentBuilder {
-    public RangeBuilder of(Class<? super P> cls) {
+  public class ParentBuilder<O> {
+    public RangeBuilder of(Class<O> cls) {
       ExposedBooleanProperty.this.cls = cls;
 
       return new RangeBuilder();

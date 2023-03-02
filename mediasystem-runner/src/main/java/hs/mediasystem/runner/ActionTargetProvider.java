@@ -17,15 +17,15 @@ public class ActionTargetProvider {
     return createActionTargets(rootClass, new ArrayList<>());
   }
 
-  private List<ActionTarget> createActionTargets(Class<?> rootClass, List<ExposedControl<?>> currentPath) {
+  private List<ActionTarget> createActionTargets(Class<?> rootClass, List<ExposedControl> currentPath) {
     List<ActionTarget> actionTargets = new ArrayList<>();
 
     while(rootClass != null) {
-      for(ExposedControl<?> exposedControl : ExposedControl.find(rootClass)) {
+      for(ExposedControl exposedControl : ExposedControl.find(rootClass)) {
         currentPath.add(exposedControl);
 
         if(exposedControl instanceof AbstractExposedProperty) {
-          if(exposedControl instanceof ExposedNode<?, ?> en) {
+          if(exposedControl instanceof ExposedNode<?> en) {
             actionTargets.addAll(createActionTargets(en.getProvidedType(), currentPath));
           }
           else {

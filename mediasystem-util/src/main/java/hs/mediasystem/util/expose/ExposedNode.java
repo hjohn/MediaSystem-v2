@@ -4,10 +4,10 @@ import java.util.function.Function;
 
 import javafx.beans.property.Property;
 
-public class ExposedNode<P, T> extends AbstractExposedProperty<P, T> {
+public class ExposedNode<T> extends AbstractExposedProperty<T> {
   private Class<T> providedType;
 
-  ExposedNode(Function<P, Property<T>> function) {
+  ExposedNode(Function<Object, Property<T>> function) {
     super(function);
   }
 
@@ -15,8 +15,8 @@ public class ExposedNode<P, T> extends AbstractExposedProperty<P, T> {
     return providedType;
   }
 
-  public class ParentBuilder {
-    public ProvidesBuilder of(Class<P> cls) {
+  public class ParentBuilder<O> {
+    public ProvidesBuilder of(Class<O> cls) {
       ExposedNode.this.cls = cls;
 
       return new ProvidesBuilder();

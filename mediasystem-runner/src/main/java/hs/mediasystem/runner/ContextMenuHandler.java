@@ -88,20 +88,19 @@ public class ContextMenuHandler {
     }
   }
 
-  private static <P> Node toControl(ActionTarget actionTarget, Object root) {
-    @SuppressWarnings("unchecked")
-    P parent = (P)actionTarget.findDirectParentFromRoot(root);
-    ExposedControl<?> control = actionTarget.getExposedControl();
+  private static Node toControl(ActionTarget actionTarget, Object root) {
+    Object ownerInstance = actionTarget.findDirectOwnerInstanceFromRoot(root);
+    ExposedControl control = actionTarget.getExposedControl();
 
-    if(parent == null) {
+    if(ownerInstance == null) {
       return null;
     }
 
     if(control instanceof AbstractExposedProperty) {
       if(control instanceof ExposedListProperty) {
         @SuppressWarnings("unchecked")
-        ExposedListProperty<P, Object> exposedControl = (ExposedListProperty<P, Object>)actionTarget.getExposedControl();
-        ObservableList<Object> allowedValues = exposedControl.getAllowedValues(parent);
+        ExposedListProperty<Object> exposedControl = (ExposedListProperty<Object>)control;
+        ObservableList<Object> allowedValues = exposedControl.getAllowedValues(ownerInstance);
 
         if(allowedValues.size() < 2) {
           return null;  // Do not show control if there are only 0 or 1 options to choose from
@@ -125,7 +124,7 @@ public class ContextMenuHandler {
           }
         });
 
-        valueFactory.valueProperty().bindBidirectional(exposedControl.getProperty(parent));
+        valueFactory.valueProperty().bindBidirectional(exposedControl.getProperty(ownerInstance));
 
         Spinner<Object> spinner = new Spinner<>(valueFactory);
 
@@ -140,7 +139,7 @@ public class ContextMenuHandler {
         if(control instanceof ExposedLongProperty) {
           return createSlider(
             actionTarget,
-            parent,
+            ownerInstance,
             Number::longValue,
             l -> (Number)l.doubleValue()
           );
@@ -149,20 +148,17 @@ public class ContextMenuHandler {
         if(control instanceof ExposedDoubleProperty) {
           return createSlider(
             actionTarget,
-            parent,
+            ownerInstance,
             Number::doubleValue,
             d -> d
           );
         }
       }
 
-      if(control instanceof ExposedBooleanProperty) {
-        @SuppressWarnings("unchecked")
-        ExposedBooleanProperty<P> exposedControl = (ExposedBooleanProperty<P>)actionTarget.getExposedControl();
-
+      if(control instanceof ExposedBooleanProperty exposedControl) {
         CheckBox checkBox = new CheckBox();
 
-        Property<Boolean> property = exposedControl.getProperty(parent);
+        Property<Boolean> property = exposedControl.getProperty(ownerInstance);
 
         if(property == null) {
           return null;
@@ -211,16 +207,16 @@ public class ContextMenuHandler {
     return new Label(actionTarget.getLabel());
   }
 
-  private static <P, T extends Number> Node createSlider(ActionTarget actionTarget, P parent, Function<Number, T> fromNumber, Function<T, Number> toNumber) {
+  private static <T extends Number> Node createSlider(ActionTarget actionTarget, Object ownerInstance, Function<Number, T> fromNumber, Function<T, Number> toNumber) {
     @SuppressWarnings("unchecked")
-    AbstractExposedNumericProperty<P, T> exposedProperty = (AbstractExposedNumericProperty<P, T>)actionTarget.getExposedControl();
-    ObservableValue<? extends Number> min = exposedProperty.getMin(parent);
-    ObservableValue<? extends Number> max = exposedProperty.getMax(parent);
+    AbstractExposedNumericProperty<T> exposedProperty = (AbstractExposedNumericProperty<T>)actionTarget.getExposedControl();
+    ObservableValue<? extends Number> min = exposedProperty.getMin(ownerInstance);
+    ObservableValue<? extends Number> max = exposedProperty.getMax(ownerInstance);
     double step = exposedProperty.getStep().doubleValue();
 
     Slider slider = new Slider();
 
-    Property<T> value = exposedProperty.getProperty(parent);  // model
+    Property<T> value = exposedProperty.getProperty(ownerInstance);  // model
 
     if(value == null) {
       return null;
