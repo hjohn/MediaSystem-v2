@@ -95,16 +95,14 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
 
     vbox.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-    StackPane clockPane = new StackPane(vbox);
+    StackPane clockPane = Containers.stack("clock-pane", vbox);
 
     clockPane.visibleProperty().bind(presentation.clockVisible);
-    clockPane.getStyleClass().add("clock-pane");
     clockPane.getStylesheets().add(CLOCK_STYLES_URL);
 
-    StackPane logoPane = new StackPane(createLogo());
+    StackPane logoPane = Containers.stack("logo-pane", createLogo());
 
     logoPane.visibleProperty().bind(presentation.clockVisible);
-    logoPane.getStyleClass().add("logo-pane");
     logoPane.getStylesheets().add(LOGO_STYLES_URL);
 
     StackPane fpsLayer = showFPS ? Containers.stack("fps-layer", createFrameRateMeter()) : null;

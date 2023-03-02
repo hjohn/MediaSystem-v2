@@ -122,6 +122,10 @@ public class RootPresentationHandler implements EventRoot {
     }
   }
 
+  private void handleNavigateBackEvent(NavigateEvent event) {
+    handleEvent(event, List.of(backAction));
+  }
+
   private void handleKeyEvent(KeyEvent event, boolean longPress) {
     List<Action> actions = inputActionHandler.findActions(InputActionHandler.keyEventToKeyCodeCombination(event, longPress));
 
@@ -156,11 +160,7 @@ public class RootPresentationHandler implements EventRoot {
       .collect(Collectors.toList());
   }
 
-  public void handleNavigateBackEvent(NavigateEvent event) {
-    handleEvent(event, List.of(backAction));
-  }
-
-  public void handleNavigateEvent(NavigateEvent e) {
+  private void handleNavigateEvent(NavigateEvent event) {
     // Find out hierarchy, including RootPresentation and create it all
     // Since this is the top level, it includes creating a Node.. normally it won't bubble up all the way to here because it is handled earlier (by RootPResentation for example) and no new node needs to be created, just the child changed
     // - In theory, we could have each presentation level handle this event, making it unnecessary to reverse look for the highest matching presentation, since the level that can handle the navigation is the correct level
@@ -170,7 +170,7 @@ public class RootPresentationHandler implements EventRoot {
      * Create map of active presentations:
      */
 
-    Node target = (Node)e.getTarget();
+    Node target = (Node)event.getTarget();
 
     Map<Class<? extends ParentPresentation>, ParentPresentation> activePresentations = Stream.iterate(target, s -> s.getParent() != null, Node::getParent)
       .map(s -> s.getProperties().get("presentation2"))
@@ -182,7 +182,7 @@ public class RootPresentationHandler implements EventRoot {
      * Loop through target presentation and its parents to find nearest existing parent or create a new hierarchy:
      */
 
-    Presentation targetPresentation = e.getPresentation();  // The new presentation to use
+    Presentation targetPresentation = event.getPresentation();  // The new presentation to use
 
     for(Class<? extends Presentation> parentCls; (parentCls = theme.findParent(targetPresentation.getClass())) != null;) {
       ParentPresentation activePresentation = activePresentations.get(parentCls);  // See if we have intended parent already in current hierarchy

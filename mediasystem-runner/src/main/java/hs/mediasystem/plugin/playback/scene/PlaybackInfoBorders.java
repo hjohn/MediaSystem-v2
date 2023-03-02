@@ -93,14 +93,14 @@ public class PlaybackInfoBorders extends StackPane {
     centerOSDPane.setUserData(createOSDTimeLine(centerOSDPane));
     rightOSDPane.setUserData(createOSDTimeLine(rightOSDPane));
 
-    final Node volume = createOSDItem("Volume", playerBindings.volume, playerBindings.formattedVolume, 0.0, 100.0, 0.0);
-    final Node position = createOSDItem("Position", playerBindings.position.map(v -> playerBindings.length.getValue() == 0 ? 0 : v * 100 / playerBindings.length.getValue()), playerBindings.formattedPosition, 0.0, 100.0, 0.0);
-    final Node rate = createOSDItem("Playback Speed", playerBindings.rate, playerBindings.formattedRate, 0.0, 4.0, 0.0);
-    final Node audioDelay = createOSDItem("Audio Delay", playerBindings.audioDelay.map(v -> v / 1000.0), playerBindings.formattedAudioDelay, -120.0, 120.0, 0.0);
-    final Node subtitleDelay = createOSDItem("Subtitle Delay", playerBindings.subtitleDelay.map(v -> v / 1000.0), playerBindings.formattedSubtitleDelay, -120.0, 120.0, 0.0);
-    final Node brightness = createOSDItem("Brightness Adjustment", playerBindings.brightness.map(v -> (v - 1.0) * 100), playerBindings.formattedBrightness, -100.0, 100.0, 0.0);
-    final Node audioTrack = createOSDItem("Audio Track", playerBindings.formattedAudioTrack);
-    final Node subtitle = createOSDItem("Subtitle", playerBindings.formattedSubtitle);
+    Node volume = createOSDItem("Volume", playerBindings.volume, playerBindings.formattedVolume, 0.0, 100.0, 0.0);
+    Node position = createOSDItem("Position", playerBindings.position.map(v -> playerBindings.length.getValue() == 0 ? 0 : v * 100 / playerBindings.length.getValue()), playerBindings.formattedPosition, 0.0, 100.0, 0.0);
+    Node rate = createOSDItem("Playback Speed", playerBindings.rate, playerBindings.formattedRate, 0.0, 4.0, 0.0);
+    Node audioDelay = createOSDItem("Audio Delay", playerBindings.audioDelay.map(v -> v / 1000.0), playerBindings.formattedAudioDelay, -120.0, 120.0, 0.0);
+    Node subtitleDelay = createOSDItem("Subtitle Delay", playerBindings.subtitleDelay.map(v -> v / 1000.0), playerBindings.formattedSubtitleDelay, -120.0, 120.0, 0.0);
+    Node brightness = createOSDItem("Brightness Adjustment", playerBindings.brightness.map(v -> (v - 1.0) * 100), playerBindings.formattedBrightness, -100.0, 100.0, 0.0);
+    Node audioTrack = createOSDItem("Audio Track", playerBindings.formattedAudioTrack);
+    Node subtitle = createOSDItem("Subtitle", playerBindings.formattedSubtitle);
 
     leftOSDPane.getChildren().add(volume);
     centerOSDPane.getChildren().addAll(rate, audioDelay, subtitleDelay, brightness, audioTrack, subtitle);

@@ -77,9 +77,6 @@ public class BasicTheme implements Theme {
     if(cls == HomePresentation.class) {
       return RootPresentation.class;
     }
-    if(cls == PlaybackOverlayPresentation.class) {
-      return RootPresentation.class;
-    }
 
     return null;
   }

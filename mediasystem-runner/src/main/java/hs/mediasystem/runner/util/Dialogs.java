@@ -103,11 +103,7 @@ public class Dialogs {
         task.cancel(true);
       }
 
-      if(task.isDone()) {  // if task has completed, then navigating back should close it if it wasn't closed automatically (on failure it doesn't close automatically)
-        return true;
-      }
-
-      return false;
+      return task.isDone();  // if task has completed, then navigating back should close it if it wasn't closed automatically (on failure it doesn't close automatically)
     });
 
     ProgressBar pb = new ProgressBar();
