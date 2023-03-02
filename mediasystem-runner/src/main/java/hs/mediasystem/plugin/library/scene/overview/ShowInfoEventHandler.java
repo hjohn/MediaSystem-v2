@@ -213,6 +213,8 @@ public class ShowInfoEventHandler {
     }
 
     Presentations.showWindow(event, vbox);
+
+    event.consume();
   }
 
   private static String addLineFeeds(String text, int max) {

@@ -51,6 +51,7 @@ public class WorkCellPresentation implements Presentation {
     if(obj instanceof Work work && !work.getStreams().isEmpty()) {
       return Trigger.asynchronous(event -> {
         workClient.reidentify(work.getId());
+        event.consume();
       });
     }
 
