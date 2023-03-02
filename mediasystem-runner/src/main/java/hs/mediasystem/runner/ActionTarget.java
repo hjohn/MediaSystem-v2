@@ -1,28 +1,23 @@
 package hs.mediasystem.runner;
 
 import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.util.expose.AbstractExposedNumericProperty;
 import hs.mediasystem.util.expose.AbstractExposedProperty;
 import hs.mediasystem.util.expose.ExposedBooleanProperty;
 import hs.mediasystem.util.expose.ExposedControl;
-import hs.mediasystem.util.expose.ExposedDoubleProperty;
 import hs.mediasystem.util.expose.ExposedListProperty;
 import hs.mediasystem.util.expose.ExposedLongProperty;
 import hs.mediasystem.util.expose.ExposedMethod;
 import hs.mediasystem.util.expose.ExposedNode;
-import hs.mediasystem.util.expose.ExposedNumberProperty;
 import hs.mediasystem.util.expose.Trigger;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javafx.beans.property.Property;
-import javafx.event.Event;
 
 /**
  * A (static) target for potential actions.
@@ -31,103 +26,14 @@ public class ActionTarget {
   private static final Logger LOGGER = Logger.getLogger(ActionTarget.class.getName());
   private static final Pattern NUMERIC_PROPERTY_PATTERN = Pattern.compile("([a-zA-Z]+)\\s*(?:\\((.+)\\))?");
 
-  private static final Map<Class<?>, Map<String, TaskHandler<?>>> TASK_HANDLERS = Map.of(
-    ExposedMethod.class, Map.of(
-      "trigger", (ActionEvent<ExposedMethod<Object>> e) -> e.exposedProperty.getTrigger(e.parent)
-    )
-  );
-
-  private static final Map<Class<?>, Map<String, VoidHandler<?, ?>>> VOID_HANDLERS = Map.of(
-    ExposedLongProperty.class, Map.of(
-      "add", (ActionEvent<ExposedLongProperty> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() + Long.parseLong(e.parameter))),
-      "subtract", (ActionEvent<ExposedLongProperty> e, Property<Long> p) -> p.setValue(clamp(e, p.getValue() - Long.parseLong(e.parameter)))
-    ),
-    ExposedDoubleProperty.class, Map.of(
-      "add", (ActionEvent<ExposedDoubleProperty> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() + Double.parseDouble(e.parameter))),
-      "subtract", (ActionEvent<ExposedDoubleProperty> e, Property<Double> p) -> p.setValue(clamp(e, p.getValue() - Double.parseDouble(e.parameter)))
-    ),
-    ExposedNumberProperty.class, Map.of(
-      "add", (ActionEvent<ExposedNumberProperty> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() + Double.parseDouble(e.parameter))),
-      "subtract", (ActionEvent<ExposedNumberProperty> e, Property<Number> p) -> p.setValue(clampNumber(e, p.getValue().doubleValue() - Double.parseDouble(e.parameter)))
-    ),
-    ExposedBooleanProperty.class, Map.of(
-      "toggle", (ActionEvent<ExposedBooleanProperty> e, Property<Boolean> p) -> p.setValue(!p.getValue())
-    ),
-    ExposedListProperty.class, Map.of(
-      "next", (ActionEvent<ExposedListProperty<Object>> e, Property<Object> p) -> {
-        List<Object> list = e.exposedProperty.getAllowedValues(e.parent);
-
-        if(!list.isEmpty()) {
-          int currentIndex = list.indexOf(p.getValue()) + 1;
-
-          if(currentIndex >= list.size()) {
-            currentIndex = 0;
-          }
-
-          p.setValue(list.get(currentIndex));
-        }
-      }
-    )
-  );
-
   private final List<ExposedControl> path;
-  private final Map<String, TaskHandler<?>> taskHandlersByAction;
-  private final Map<String, VoidHandler<?, ?>> voidHandlersByAction;
 
   public ActionTarget(List<ExposedControl> path) {
     if(path == null || path.isEmpty()) {
       throw new IllegalArgumentException("path cannot be null or empty");
     }
 
-    this.path = Collections.unmodifiableList(new ArrayList<>(path));
-    this.taskHandlersByAction = TASK_HANDLERS.get(getExposedControl().getClass());
-    this.voidHandlersByAction = VOID_HANDLERS.get(getExposedControl().getClass());
-
-    if(taskHandlersByAction == null && voidHandlersByAction == null) {
-      throw new IllegalStateException("Unhandled target type: " + getExposedControl() + "; for: " + this);
-    }
-  }
-
-  private static long clamp(ActionEvent<ExposedLongProperty> event, long newValue) {
-    long minValue = event.exposedProperty.getMin(event.parent).getValue();
-    long maxValue = event.exposedProperty.getMax(event.parent).getValue();
-
-    if(newValue < minValue) {
-      newValue = minValue;
-    }
-    else if(newValue > maxValue) {
-      newValue = maxValue;
-    }
-
-    return newValue;
-  }
-
-  private static double clamp(ActionEvent<ExposedDoubleProperty> event, double newValue) {
-    double minValue = event.exposedProperty.getMin(event.parent).getValue();
-    double maxValue = event.exposedProperty.getMax(event.parent).getValue();
-
-    if(newValue < minValue) {
-      newValue = minValue;
-    }
-    else if(newValue > maxValue) {
-      newValue = maxValue;
-    }
-
-    return newValue;
-  }
-
-  private static double clampNumber(ActionEvent<ExposedNumberProperty> event, double newValue) {
-    double minValue = event.exposedProperty.getMin(event.parent).getValue().doubleValue();
-    double maxValue = event.exposedProperty.getMax(event.parent).getValue().doubleValue();
-
-    if(newValue < minValue) {
-      newValue = minValue;
-    }
-    else if(newValue > maxValue) {
-      newValue = maxValue;
-    }
-
-    return newValue;
+    this.path = List.copyOf(path);
   }
 
   public List<ExposedControl> getPath() {
@@ -165,16 +71,16 @@ public class ActionTarget {
   }
 
   /**
-   * Starts the given action and returns a {@link Trigger} to complete the action or <code>null</code>
-   * if action was completed.  If a {@link Trigger} is returned, it must be executed to complete the
-   * action.
+   * Creates a {@link Trigger} to run an action, or {@code null} if the action was unavailable.
+   * If a {@link Trigger} is returned, it must be executed to complete the action.
    *
-   * @param action the action to trigger
-   * @param root the root object this actionTarget is nested under via its path
-   * @param event an {@link Event}
-   * @return a {@link Trigger} or <code>null</code> if action was completed already or unavailable
+   * @param action the action to create, cannot be {@code null}
+   * @param root the root object this {@code ActionTarget} is nested under via its path, cannot be {@code null}
+   * @return a {@link Trigger} to complete the action, or {@code null} if the action was unavailable
+   * @throws IllegalArgumentException when action does not conform to the action pattern, or when the action is unknown
+   * @throws UnsupportedOperationException when an action is attempted on a target that doesn't support the action type
    */
-  public Trigger<Object> doAction(String action, Object root, Event event) {
+  public Trigger<Object> createTrigger(String action, Object root) {
     Object ownerInstance = findDirectOwnerInstanceFromRoot(root);
     ExposedControl exposedControl = getExposedControl();
 
@@ -186,40 +92,18 @@ public class ActionTarget {
 
     Matcher matcher = NUMERIC_PROPERTY_PATTERN.matcher(action);
 
-    if(matcher.matches()) {
-      ActionEvent<Object> actionEvent = new ActionEvent<>(ownerInstance, event, matcher.group(2), exposedControl);
-
-      if(taskHandlersByAction != null) {
-        @SuppressWarnings("unchecked")
-        TaskHandler<Object> handler = (TaskHandler<Object>)taskHandlersByAction.get(matcher.group(1));
-
-        if(handler != null) {
-          return handler.handle(actionEvent);
-        }
-      }
-
-      if(voidHandlersByAction != null) {
-        @SuppressWarnings("unchecked")
-        VoidHandler<Object, Object> handler = (VoidHandler<Object, Object>)voidHandlersByAction.get(matcher.group(1));
-
-        if(handler != null) {
-          if(exposedControl instanceof AbstractExposedProperty) {
-            @SuppressWarnings("unchecked")
-            AbstractExposedProperty<Object> abstractExposedProperty = (AbstractExposedProperty<Object>)exposedControl;
-            Property<Object> property = abstractExposedProperty.getProperty(ownerInstance);
-
-            handler.handle(actionEvent, property);
-          }
-          else {
-            handler.handle(actionEvent, null);
-          }
-
-          return null;
-        }
-      }
+    if(!matcher.matches()) {
+      throw new IllegalArgumentException("Action must conform to " + NUMERIC_PROPERTY_PATTERN + ": " + action);
     }
 
-    throw new IllegalStateException("Unknown action '" + action + "' for: " + this);
+    return switch(matcher.group(1)) {
+      case "add" -> add(ownerInstance, matcher.group(2));
+      case "subtract" -> subtract(ownerInstance, matcher.group(2));
+      case "toggle" -> toggle(ownerInstance);
+      case "next" -> next(ownerInstance);
+      case "trigger" -> trigger(ownerInstance);
+      default -> throw new IllegalArgumentException("Unknown action '" + action + "' for: " + this);
+    };
   }
 
   /**
@@ -277,30 +161,112 @@ public class ActionTarget {
     return parent;
   }
 
+  private <V> Trigger<V> add(Object ownerInstance, String parameter) {
+    ExposedControl exposedControl = getExposedControl();
+
+    if(!(exposedControl instanceof AbstractExposedNumericProperty)) {
+      throw new UnsupportedOperationException(exposedControl + " does not support 'add'");
+    }
+
+    @SuppressWarnings("unchecked")
+    AbstractExposedNumericProperty<Number> property = (AbstractExposedNumericProperty<Number>)exposedControl;
+    Number number = parseNumber(parameter);
+
+    return Trigger.synchronous(
+      e -> {
+        property.add(ownerInstance, number);
+        e.consume();
+      }
+    );
+  }
+
+  private <V> Trigger<V> subtract(Object ownerInstance, String parameter) {
+    ExposedControl exposedControl = getExposedControl();
+
+    if(!(exposedControl instanceof AbstractExposedNumericProperty)) {
+      throw new UnsupportedOperationException(exposedControl + " does not support 'subtract'");
+    }
+
+    @SuppressWarnings("unchecked")
+    AbstractExposedNumericProperty<Number> property = (AbstractExposedNumericProperty<Number>)exposedControl;
+    Number number = parseNumber(parameter.startsWith("-") ? parameter.substring(1) : "-" + parameter);
+
+    return Trigger.synchronous(
+      e -> {
+        property.add(ownerInstance, number);
+        e.consume();
+      }
+    );
+  }
+
+  private <V> Trigger<V> toggle(Object ownerInstance) {
+    ExposedControl exposedControl = getExposedControl();
+
+    if(!(exposedControl instanceof ExposedBooleanProperty property)) {
+      throw new UnsupportedOperationException(exposedControl + " does not support 'toggle'");
+    }
+
+    return Trigger.synchronous(
+      e -> {
+        property.toggle(ownerInstance);
+        e.consume();
+      }
+    );
+  }
+
+  private <V> Trigger<V> trigger(Object ownerInstance) {
+    ExposedControl exposedControl = getExposedControl();
+
+    if(!(exposedControl instanceof ExposedMethod)) {
+      throw new UnsupportedOperationException(exposedControl + " does not support 'trigger'");
+    }
+
+    @SuppressWarnings("unchecked")
+    ExposedMethod<V> exposedMethod = (ExposedMethod<V>)exposedControl;
+
+    return exposedMethod.getTrigger(ownerInstance);
+  }
+
+  private <V> Trigger<V> next(Object ownerInstance) {
+    ExposedControl exposedControl = getExposedControl();
+
+    if(!(exposedControl instanceof ExposedListProperty)) {
+      throw new UnsupportedOperationException(exposedControl + " does not support 'next'");
+    }
+
+    @SuppressWarnings("unchecked")
+    ExposedListProperty<Object> exposedProperty = (ExposedListProperty<Object>)exposedControl;
+    Property<Object> property = exposedProperty.getProperty(ownerInstance);
+
+    return Trigger.synchronous(
+      e -> {
+        List<Object> list = exposedProperty.getAllowedValues(ownerInstance);
+
+        if(!list.isEmpty()) {
+          int currentIndex = list.indexOf(property.getValue()) + 1;
+
+          if(currentIndex >= list.size()) {
+            currentIndex = 0;
+          }
+
+          property.setValue(list.get(currentIndex));
+        }
+
+        e.consume();
+      }
+    );
+  }
+
+  private Number parseNumber(String parameter) {
+    if(getExposedControl() instanceof ExposedLongProperty) {  // don't rewrite as conditional, the long maybe cast to double before it is boxed
+      return Long.parseLong(parameter);
+    }
+
+    return Double.parseDouble(parameter);
+  }
+
   @Override
   public String toString() {
     return path.get(0).getDeclaringClass().getName() + "::" + path.stream().map(ExposedControl::getName).collect(Collectors.joining("::"));
-  }
-
-  private interface VoidHandler<T, U> {
-    void handle(ActionEvent<T> event, Property<U> property);
-  }
-
-  private interface TaskHandler<T> {
-    Trigger<Object> handle(ActionEvent<T> event);
-  }
-
-  class ActionEvent<T> {
-    Object parent;
-    Event event;
-    String parameter;
-    T exposedProperty;
-
-    ActionEvent(Object parent, Event event, String parameter, T exposedProperty) {
-      this.parent = parent;
-      this.event = event;
-      this.parameter = parameter;
-      this.exposedProperty = exposedProperty;
-    }
   }
 }

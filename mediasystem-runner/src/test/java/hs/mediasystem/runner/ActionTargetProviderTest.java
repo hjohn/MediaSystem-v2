@@ -105,11 +105,11 @@ public class ActionTargetProviderTest {
 
     TestRoot root = new TestRoot();
 
-    stopActionTarget.doAction("trigger", root, new Event(Event.ANY)).run(new Event(Event.ANY), null);
+    stopActionTarget.createTrigger("trigger", root).run(new Event(Event.ANY), null);
 
     assertTrue(root.stopCalled.get());
 
-    stop2ActionTarget.doAction("trigger", root, new Event(Event.ANY)).run(new Event(Event.ANY), null);
+    stop2ActionTarget.createTrigger("trigger", root).run(new Event(Event.ANY), null);
 
     assertTrue(root.stop2Called.get());
   }
@@ -124,15 +124,15 @@ public class ActionTargetProviderTest {
 
     TestRoot root = new TestRoot();
 
-    volumeActionTarget.doAction("subtract(5)", root, new Event(Event.ANY));
+    volumeActionTarget.createTrigger("subtract(5)", root).run(new Event(Event.ANY), null);
 
     assertEquals(95L, volumeActionTarget.getProperty(root).getValue());
 
-    brightnessActionTarget.doAction("subtract(0.1)", root, new Event(Event.ANY));
+    brightnessActionTarget.createTrigger("subtract(0.1)", root).run(new Event(Event.ANY), null);
 
     assertEquals(0.4, brightnessActionTarget.getProperty(root).getValue());
 
-    positionActionTarget.doAction("add(11)", root, new Event(Event.ANY));
+    positionActionTarget.createTrigger("add(11)", root).run(new Event(Event.ANY), null);
 
     assertEquals(12L, positionActionTarget.getProperty(root).getValue());
   }
@@ -146,20 +146,20 @@ public class ActionTargetProviderTest {
 
     TestRoot root = new TestRoot();
 
-    volumeActionTarget.doAction("add(1)", root, new Event(Event.ANY));
-    brightnessActionTarget.doAction("add(3.0)", root, new Event(Event.ANY));
+    volumeActionTarget.createTrigger("add(1)", root).run(new Event(Event.ANY), null);
+    brightnessActionTarget.createTrigger("add(3.0)", root).run(new Event(Event.ANY), null);
 
     assertEquals(100L, volumeActionTarget.getProperty(root).getValue());
     assertEquals(2.0, brightnessActionTarget.getProperty(root).getValue());
 
-    volumeActionTarget.doAction("add(-50)", root, new Event(Event.ANY));
-    brightnessActionTarget.doAction("add(-1.0)", root, new Event(Event.ANY));
+    volumeActionTarget.createTrigger("add(-50)", root).run(new Event(Event.ANY), null);
+    brightnessActionTarget.createTrigger("add(-1.0)", root).run(new Event(Event.ANY), null);
 
     assertEquals(50L, volumeActionTarget.getProperty(root).getValue());
     assertEquals(1.0, brightnessActionTarget.getProperty(root).getValue());
 
-    volumeActionTarget.doAction("subtract(60)", root, new Event(Event.ANY));
-    brightnessActionTarget.doAction("subtract(3.0)", root, new Event(Event.ANY));
+    volumeActionTarget.createTrigger("subtract(60)", root).run(new Event(Event.ANY), null);
+    brightnessActionTarget.createTrigger("subtract(3.0)", root).run(new Event(Event.ANY), null);
 
     assertEquals(0L, volumeActionTarget.getProperty(root).getValue());
     assertEquals(0.0, brightnessActionTarget.getProperty(root).getValue());

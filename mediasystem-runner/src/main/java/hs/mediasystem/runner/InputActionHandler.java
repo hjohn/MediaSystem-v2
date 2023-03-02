@@ -49,7 +49,7 @@ public class InputActionHandler {
       ActionTarget actionTarget = action.getActionTarget();
 
       if(actionTarget.getActionClass().isAssignableFrom(root.getClass())) {
-        Trigger<Object> trigger = actionTarget.doAction(action.getAction(), root, event);
+        Trigger<Object> trigger = actionTarget.createTrigger(action.getAction(), root);
 
         if(trigger != null) {
           trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
