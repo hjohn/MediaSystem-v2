@@ -20,7 +20,8 @@ import java.util.stream.Collectors;
 import javafx.beans.property.Property;
 
 /**
- * A (static) target for potential actions.
+ * A (static) target for potential actions. An {@code ActionTarget} can have
+ * multiple possible actions available to it.
  */
 public class ActionTarget {
   private static final Logger LOGGER = Logger.getLogger(ActionTarget.class.getName());

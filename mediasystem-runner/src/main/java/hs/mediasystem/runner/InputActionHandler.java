@@ -22,6 +22,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+/**
+ * Responsible for parsing key to action mappings, and converting {@link KeyCombination}s
+ * to {@link Action}s.
+ */
 @Singleton
 public class InputActionHandler {
   private static final Logger LOGGER = Logger.getLogger(InputActionHandler.class.getName());
@@ -49,7 +53,7 @@ public class InputActionHandler {
       ActionTarget actionTarget = action.getActionTarget();
 
       if(actionTarget.getActionClass().isAssignableFrom(root.getClass())) {
-        Trigger<Object> trigger = actionTarget.createTrigger(action.getAction(), root);
+        Trigger<Object> trigger = actionTarget.createTrigger(action.getDescriptor(), root);
 
         if(trigger != null) {
           trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
@@ -128,29 +132,5 @@ public class InputActionHandler {
     }
 
     return sb.toString();
-  }
-
-
-  public static class Action {
-    private final ActionTarget actionTarget;
-    private final String action;
-
-    public Action(ActionTarget actionTarget, String action) {
-      this.actionTarget = actionTarget;
-      this.action = action;
-    }
-
-    public ActionTarget getActionTarget() {
-      return actionTarget;
-    }
-
-    public String getAction() {
-      return action;
-    }
-
-    @Override
-    public String toString() {
-      return actionTarget + "#" + action;
-    }
   }
 }
