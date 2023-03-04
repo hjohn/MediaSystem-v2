@@ -105,7 +105,9 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
     logoPane.visibleProperty().bind(presentation.clockVisible);
     logoPane.getStylesheets().add(LOGO_STYLES_URL);
 
-    StackPane fpsLayer = showFPS ? Containers.stack("fps-layer", createFrameRateMeter()) : null;
+    StackPane fpsLayer = Containers.stack("fps-layer", createFrameRateMeter());
+
+    fpsLayer.visibleProperty().bind(presentation.fpsGraphVisible);
 
     StackPane progressPane = createProgressPane(presentation);
 

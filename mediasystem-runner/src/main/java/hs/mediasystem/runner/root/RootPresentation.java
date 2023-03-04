@@ -12,6 +12,7 @@ import javax.inject.Singleton;
 public class RootPresentation extends ParentPresentation {
   public final BooleanProperty clockVisible = new SimpleBooleanProperty(true);
   public final BooleanProperty hiddenItemsVisible = new SimpleBooleanProperty(false);
+  public final BooleanProperty fpsGraphVisible = new SimpleBooleanProperty(false);
 
   public void toggleDebug() {
     boolean enabled = !DebugFX.getEnabled();

@@ -2,3 +2,5 @@ action-target:
   debugOnce:
     label: Debug Once
     visible: false
+  fpsGraphVisible:
+    label: Show FPS graph
