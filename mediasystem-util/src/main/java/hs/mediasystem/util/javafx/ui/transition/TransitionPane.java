@@ -6,10 +6,18 @@ import hs.mediasystem.util.javafx.ui.transition.domain.MultiNodeTransition;
 import hs.mediasystem.util.javafx.ui.transition.effects.Fade;
 import hs.mediasystem.util.javafx.ui.transition.multi.Custom;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.css.CssMetaData;
+import javafx.css.SimpleStyleableObjectProperty;
+import javafx.css.Styleable;
+import javafx.css.StyleableObjectProperty;
+import javafx.css.StyleableProperty;
+import javafx.css.converter.EnumConverter;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -148,6 +156,9 @@ public class TransitionPane extends Region {
   @Override
   protected void layoutChildren() {
     List<Node> managed = getManagedChildren();
+    Pos align = getAlignmentInternal();
+    HPos alignHpos = align.getHpos();
+    VPos alignVpos = align.getVpos();
     Insets insets = getInsets();
     double top = insets.getTop();
     double left = insets.getLeft();
@@ -157,7 +168,76 @@ public class TransitionPane extends Region {
     for(Node child : managed) {
       Pos childAlignment = StackPane.getAlignment(child);
 
-      layoutInArea(child, left, top, w, h, 0, StackPane.getMargin(child), childAlignment != null ? childAlignment.getHpos() : HPos.CENTER, childAlignment != null ? childAlignment.getVpos() : VPos.CENTER);
+      layoutInArea(child, left, top, w, h, 0, StackPane.getMargin(child), childAlignment != null ? childAlignment.getHpos() : alignHpos, childAlignment != null ? childAlignment.getVpos() : alignVpos);
     }
+  }
+
+  /**
+   * The default alignment of children within this pane's width and height.
+   * This may be overridden on individual children by setting the child's
+   * alignment constraint.
+   *
+   * @return the alignment of children within this pane
+   */
+  public final StyleableObjectProperty<Pos> alignmentProperty() {
+    if(alignment == null) {
+      alignment = new SimpleStyleableObjectProperty<>(StyleableProperties.ALIGNMENT, TransitionPane.this, "alignment", Pos.CENTER) {
+        @Override
+        public void invalidated() {
+          requestLayout();
+        }
+      };
+    }
+
+    return alignment;
+  }
+
+  private StyleableObjectProperty<Pos> alignment;
+
+  public final void setAlignment(Pos value) {
+    alignmentProperty().set(value);
+  }
+
+  public final Pos getAlignment() {
+    return alignment == null ? Pos.CENTER : alignment.get();
+  }
+
+  private Pos getAlignmentInternal() {
+    Pos localPos = getAlignment();
+
+    return localPos == null ? Pos.CENTER : localPos;
+  }
+
+  private static class StyleableProperties {
+    private static final CssMetaData<TransitionPane, Pos> ALIGNMENT = new CssMetaData<>("-fx-alignment", new EnumConverter<>(Pos.class), Pos.CENTER) {
+      @Override
+      public boolean isSettable(TransitionPane node) {
+        return node.alignment == null || !node.alignment.isBound();
+      }
+
+      @Override
+      public StyleableProperty<Pos> getStyleableProperty(TransitionPane node) {
+        return node.alignmentProperty();
+      }
+    };
+
+    private static final List<CssMetaData<? extends Styleable, ?>> STYLEABLES;
+
+    static {
+      List<CssMetaData<? extends Styleable, ?>> styleables = new ArrayList<>(Region.getClassCssMetaData());
+
+      styleables.add(ALIGNMENT);
+
+      STYLEABLES = Collections.unmodifiableList(styleables);
+    }
+  }
+
+  public static List<CssMetaData<? extends Styleable, ?>> getClassCssMetaData() {
+    return StyleableProperties.STYLEABLES;
+  }
+
+  @Override
+  public List<CssMetaData<? extends Styleable, ?>> getCssMetaData() {
+    return getClassCssMetaData();
   }
 }
