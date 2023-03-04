@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.event.Event;
+import javafx.event.EventTarget;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
@@ -90,7 +91,7 @@ public class RootPresentationHandler implements EventRoot {
     if(event.getCode().isFunctionKey()) {
       // Special handling of Context Menu key
       if(event.getCode() == KeyCode.F10) {
-        contextMenuHandler.handle(event, createPresentationStack(event));
+        contextMenuHandler.handle(event, createPresentationStack(event.getTarget()));
 
         return;
       }
@@ -136,7 +137,7 @@ public class RootPresentationHandler implements EventRoot {
   }
 
   private void handleEvent(Event event, List<Action> actions) {
-    List<Presentation> activePresentations = createPresentationStack(event);
+    List<Presentation> activePresentations = createPresentationStack(event.getTarget());
 
     LOGGER.fine("Possible Actions: " + actions + ", active presentations: " + activePresentations + ", for event: " + event);
 
@@ -149,8 +150,8 @@ public class RootPresentationHandler implements EventRoot {
     }
   }
 
-  private static List<Presentation> createPresentationStack(Event event) {
-    Node target = event.getTarget() instanceof Scene s ? s.getRoot() : (Node)event.getTarget();
+  private static List<Presentation> createPresentationStack(EventTarget eventTarget) {
+    Node target = eventTarget instanceof Scene s ? s.getRoot() : (Node)eventTarget;
 
     return Stream.iterate(target, Objects::nonNull, Node::getParent)
       .map(s -> s.getProperties().get("presentation2"))
