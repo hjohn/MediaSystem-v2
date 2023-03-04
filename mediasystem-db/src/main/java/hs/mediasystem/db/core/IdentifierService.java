@@ -114,12 +114,14 @@ public class IdentifierService {
      */
 
     if(mediaType.isComponent()) {  // Must have a parent identification?
-      WorkDescriptor parent = parentDescriptors.get(discovery.parentLocation().orElseThrow()).descriptors().get(0);  // TODO get(0) ain't nice, for parents it should be the only one
+      IdentificationEvent parentIdentificationEvent = parentDescriptors.get(discovery.parentLocation().orElseThrow());
 
-      if(parent == null) {
+      if(parentIdentificationEvent == null) {
         LOGGER.warning("Identification skipped (missing parent identification) for: " + discovery.location());
       }
       else {
+        WorkDescriptor parent = parentIdentificationEvent.descriptors().get(0);  // TODO get(0) ain't nice, for parents it should be the only one
+
         identify(serviceName, discovery, parent);
       }
     }
