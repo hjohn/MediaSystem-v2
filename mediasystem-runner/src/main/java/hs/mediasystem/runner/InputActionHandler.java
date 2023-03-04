@@ -1,8 +1,6 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.util.expose.ExposedControl;
-import hs.mediasystem.util.expose.Trigger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,12 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import javafx.event.Event;
 import javafx.scene.input.KeyCharacterCombination;
-import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.input.KeyCombination.Modifier;
-import javafx.scene.input.KeyEvent;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -46,39 +40,6 @@ public class InputActionHandler {
     LOGGER.fine("Findactions for " + combination + " -> " + list);
 
     return list;
-  }
-
-  public void keyPressed(Event event, Object root, List<Action> actions) {
-    for(Action action : actions) {
-      ActionTarget actionTarget = action.getActionTarget();
-
-      if(actionTarget.getActionClass().isAssignableFrom(root.getClass())) {
-        Trigger<Object> trigger = actionTarget.createTrigger(action.getDescriptor(), root);
-
-        if(trigger != null) {
-          trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
-        }
-      }
-    }
-  }
-
-  public static KeyCodeCombination keyEventToKeyCodeCombination(KeyEvent event, boolean longPress) {
-    List<Modifier> modifiers = new ArrayList<>();
-
-    if(event.isControlDown()) {
-      modifiers.add(KeyCombination.CONTROL_DOWN);
-    }
-    if(event.isAltDown() || longPress) {
-      modifiers.add(KeyCombination.ALT_DOWN);
-    }
-    if(event.isShiftDown()) {
-      modifiers.add(KeyCombination.SHIFT_DOWN);
-    }
-    if(event.isMetaDown()) {
-      modifiers.add(KeyCombination.META_DOWN);
-    }
-
-    return new KeyCodeCombination(event.getCode(), modifiers.toArray(new Modifier[modifiers.size()]));
   }
 
   private void createMappings() {

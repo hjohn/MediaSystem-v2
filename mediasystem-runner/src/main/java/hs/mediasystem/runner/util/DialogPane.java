@@ -1,7 +1,10 @@
 package hs.mediasystem.runner.util;
 
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.runner.ActionTarget;
+import hs.mediasystem.runner.ExposedActionEvent;
 import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.util.expose.Trigger;
 import hs.mediasystem.util.javafx.SceneUtil;
 
 import java.util.ArrayList;
@@ -67,7 +70,21 @@ public class DialogPane<R> extends StackPane {
 
     dialogGlass = new DialogGlass(scene, this, delay);
 
-    oldPresentation = scene.getRoot().getProperties().put("presentation2", new NavigablePresentation(this));
+    NavigablePresentation navigablePresentation = new NavigablePresentation(this);
+
+    oldPresentation = scene.getRoot().getProperties().put("presentation2", navigablePresentation);
+
+    addEventHandler(ExposedActionEvent.ACTION_PROPOSED, e -> {
+      ActionTarget actionTarget = e.getAction().getActionTarget();
+
+      if(actionTarget.getActionClass().isAssignableFrom(navigablePresentation.getClass())) {
+        Trigger<Object> trigger = actionTarget.createTrigger(e.getAction().getDescriptor(), navigablePresentation);
+
+        if(trigger != null) {
+          trigger.run(e, task -> Dialogs.showProgressDialog(e, task));
+        }
+      }
+    });
 
     requestFocus();
 

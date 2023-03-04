@@ -3,14 +3,17 @@ package hs.mediasystem.runner;
 import hs.mediasystem.presentation.ParentPresentation;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.Theme;
+import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.util.expose.ExposedControl;
+import hs.mediasystem.util.expose.Trigger;
+import hs.mediasystem.util.javafx.base.Events;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,6 +22,9 @@ import javafx.event.EventTarget;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -29,8 +35,6 @@ import javax.inject.Singleton;
 
 @Singleton
 public class RootPresentationHandler implements EventRoot {
-  private static final Logger LOGGER = Logger.getLogger(RootPresentationHandler.class.getName());
-
   @Inject private Theme theme;
   @Inject private SceneManager sceneManager;
   @Inject private InputActionHandler inputActionHandler;
@@ -123,29 +127,43 @@ public class RootPresentationHandler implements EventRoot {
   }
 
   private void handleNavigateBackEvent(NavigateEvent event) {
-    handleEvent(event, List.of(backAction));
+    fireActionProposals(event, List.of(backAction));
   }
 
   private void handleKeyEvent(KeyEvent event, boolean longPress) {
-    List<Action> actions = inputActionHandler.findActions(InputActionHandler.keyEventToKeyCodeCombination(event, longPress));
+    List<Action> actions = inputActionHandler.findActions(keyEventToKeyCodeCombination(event, longPress));
 
     if(actions.isEmpty()) {
       return;
     }
 
-    handleEvent(event, actions);
+    fireActionProposals(event, actions);
   }
 
-  private void handleEvent(Event event, List<Action> actions) {
-    List<Presentation> activePresentations = createPresentationStack(event.getTarget());
+  private static KeyCodeCombination keyEventToKeyCodeCombination(KeyEvent event, boolean longPress) {
+    List<Modifier> modifiers = new ArrayList<>();
 
-    LOGGER.fine("Possible Actions: " + actions + ", active presentations: " + activePresentations + ", for event: " + event);
+    if(event.isControlDown()) {
+      modifiers.add(KeyCombination.CONTROL_DOWN);
+    }
+    if(event.isAltDown() || longPress) {
+      modifiers.add(KeyCombination.ALT_DOWN);
+    }
+    if(event.isShiftDown()) {
+      modifiers.add(KeyCombination.SHIFT_DOWN);
+    }
+    if(event.isMetaDown()) {
+      modifiers.add(KeyCombination.META_DOWN);
+    }
 
-    for(Presentation presentation : activePresentations) {
-      inputActionHandler.keyPressed(event, presentation, actions);
+    return new KeyCodeCombination(event.getCode(), modifiers.toArray(new Modifier[modifiers.size()]));
+  }
 
-      if(event.isConsumed()) {
-        return;
+  private static void fireActionProposals(Event event, List<Action> actions) {
+    for(Action action : actions) {
+      if(Events.dispatchEvent(event.getTarget(), ExposedActionEvent.createActionProposal(action))) {
+        event.consume();
+        break;  // action was consumed, don't process potential other actions
       }
     }
   }
@@ -210,7 +228,26 @@ public class RootPresentationHandler implements EventRoot {
     Node node = theme.findPlacer(null, targetPresentation).place(null, targetPresentation);
 
     node.getProperties().put("presentation2", targetPresentation);
+    node.addEventHandler(ExposedActionEvent.ACTION_PROPOSED, this::handleActionProposal);
 
     sceneManager.getRootPane().getChildren().setAll(node);
+  }
+
+  private void handleActionProposal(ExposedActionEvent event) {
+    ActionTarget actionTarget = event.getAction().getActionTarget();
+
+    for(Presentation presentation : createPresentationStack(event.getTarget())) {
+      if(actionTarget.getActionClass().isAssignableFrom(presentation.getClass())) {
+        Trigger<Object> trigger = actionTarget.createTrigger(event.getAction().getDescriptor(), presentation);
+
+        if(trigger != null) {
+          trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
+
+          if(event.isConsumed()) {
+            break;
+          }
+        }
+      }
+    }
   }
 }
