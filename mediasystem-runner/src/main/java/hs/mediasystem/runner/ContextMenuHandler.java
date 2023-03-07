@@ -62,15 +62,27 @@ public class ContextMenuHandler {
 
     for(Presentation presentation : activePresentations) {
       List<ActionTarget> actionTargets = actionTargetProvider.getActionTargets(presentation.getClass());
-      List<ActionTarget> sortedAndFilteredActionTargets = actionTargets.stream()
+      List<Node> sortedAndFilteredControls = actionTargets.stream()
         .filter(ActionTarget::isVisible)
         .sorted(Comparator.comparing(ActionTarget::getOrder))
+        .map(target -> toControl(target, presentation))
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
 
-      for(ActionTarget actionTarget : sortedAndFilteredActionTargets) {
-        Node control = toControl(actionTarget, presentation);
+      if(!sortedAndFilteredControls.isEmpty()) {
+        Class<?> cls = presentation.getClass();
 
-        if(control != null) {
+        while(cls.getDeclaringClass() != null) {
+          cls = cls.getDeclaringClass();
+        }
+
+        Label sectionLabel = Labels.create("section", ResourceManager.getText(cls, "section.label").toUpperCase());
+
+        gridPane.addRow(row++, sectionLabel);
+
+        GridPane.setColumnSpan(sectionLabel, 2);
+
+        for(Node control : sortedAndFilteredControls) {
           String label = (String)control.getProperties().get("label");
 
           gridPane.addRow(row++, label == null ? new Label() : Labels.create("header", label), control);

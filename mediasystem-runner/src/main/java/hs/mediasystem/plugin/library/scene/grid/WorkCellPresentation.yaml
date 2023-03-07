@@ -1,3 +1,6 @@
+section:
+  label: Selected Item
+
 action-target:
   watched:
     order: 5

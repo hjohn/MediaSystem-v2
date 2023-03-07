@@ -1,3 +1,6 @@
+section:
+  label: Production Details
+
 action-target:
   watched:
     order: 1

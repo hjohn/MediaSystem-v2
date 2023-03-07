@@ -1,3 +1,6 @@
+section:
+  label: Playback Overlay
+
 action-target:
   overlayVisible:
     order: 101

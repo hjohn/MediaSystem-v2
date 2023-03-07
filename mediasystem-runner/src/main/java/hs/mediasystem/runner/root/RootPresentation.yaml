@@ -1,3 +1,6 @@
+section:
+  label: General
+
 action-target:
   debugOnce:
     label: Debug Once
