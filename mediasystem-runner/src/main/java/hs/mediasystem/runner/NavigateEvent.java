@@ -28,8 +28,8 @@ public class NavigateEvent extends Event {
 
   private final Presentation presentation;
 
-  private NavigateEvent(EventType<NavigateEvent> navigationEvent, Presentation presentation) {
-    super(navigationEvent);
+  private NavigateEvent(EventType<NavigateEvent> type, Presentation presentation) {
+    super(type);
 
     this.presentation = presentation;
   }
