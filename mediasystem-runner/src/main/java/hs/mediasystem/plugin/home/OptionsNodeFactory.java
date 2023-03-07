@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
-import hs.mediasystem.runner.NavigateEvent;
-import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.presentation.NavigateEvent;
+import hs.mediasystem.runner.dialog.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.MarkdownTextView;
 import hs.mediasystem.util.image.ImageHandle;

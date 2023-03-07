@@ -5,9 +5,10 @@ import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
 import hs.jfx.eventstream.core.Values;
 import hs.mediasystem.presentation.AbstractPresentation;
-import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.presentation.Navigable;
 import hs.mediasystem.runner.grouping.Grouping;
 import hs.mediasystem.runner.grouping.NoGrouping;
+import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.SettingsSource;
 import hs.mediasystem.util.javafx.ui.gridlistviewskin.Group;
@@ -39,10 +40,6 @@ public abstract class GridViewPresentationFactory {
   private static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
 
   @Inject private SettingsClient settingsClient;
-
-  public interface Parent<T> {
-    List<T> getChildren();
-  }
 
   /**
    * A presentation of a list of items, with support for sorting, filtering and
@@ -203,7 +200,7 @@ public abstract class GridViewPresentationFactory {
       }
       else {
         @SuppressWarnings("unchecked")
-        List<U> children = (List<U>)((Parent<T>)contextItem.getValue()).getChildren();
+        List<U> children = (List<U>)((WorksGroup)contextItem.getValue()).getChildren();
 
         availableGroupings.clear();
         setRawBaseItems(children);

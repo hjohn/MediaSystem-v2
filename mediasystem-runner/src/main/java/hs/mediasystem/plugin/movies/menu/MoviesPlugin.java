@@ -3,7 +3,7 @@ package hs.mediasystem.plugin.movies.menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
-import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.runner.util.resource.ResourceManager;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.util.action;
 
-import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.runner.util.resource.ResourceManager;
 import hs.mediasystem.util.expose.AbstractExposedNumericProperty;
 import hs.mediasystem.util.expose.AbstractExposedProperty;
 import hs.mediasystem.util.expose.ExposedBooleanProperty;

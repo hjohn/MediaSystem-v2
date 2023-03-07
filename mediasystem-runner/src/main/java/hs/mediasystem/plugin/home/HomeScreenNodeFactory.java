@@ -5,7 +5,7 @@ import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
 import hs.mediasystem.plugin.home.OptionsNodeFactory.Option;
 import hs.mediasystem.plugin.library.scene.base.BackgroundPane;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.presentation.PresentationLoader;
+import hs.mediasystem.runner.presentation.PresentationLoader;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.CollectionClient;
 import hs.mediasystem.ui.api.domain.Parent;

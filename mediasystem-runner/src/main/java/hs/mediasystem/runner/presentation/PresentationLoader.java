@@ -1,7 +1,8 @@
-package hs.mediasystem.presentation;
+package hs.mediasystem.runner.presentation;
 
-import hs.mediasystem.runner.NavigateEvent;
-import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.presentation.NavigateEvent;
+import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.runner.dialog.Dialogs;
 
 import java.util.function.Supplier;
 

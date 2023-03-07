@@ -5,7 +5,7 @@ import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.AbstractSetup;
 import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory.ContributionsPresentation;
 import hs.mediasystem.plugin.library.scene.grid.participation.ParticipationsPresentationFactory;
-import hs.mediasystem.presentation.PresentationLoader;
+import hs.mediasystem.runner.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role;
 import hs.mediasystem.util.javafx.base.ItemSelectedEvent;

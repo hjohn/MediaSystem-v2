@@ -1,7 +1,10 @@
-package hs.mediasystem.presentation;
+package hs.mediasystem.runner.presentation;
 
-import hs.mediasystem.runner.Navigable;
-import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.presentation.Navigable;
+import hs.mediasystem.presentation.NavigateEvent;
+import hs.mediasystem.presentation.ParentPresentation;
+import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.ui.transition.StandardTransitions;
 import hs.mediasystem.util.javafx.ui.transition.TransitionPane;

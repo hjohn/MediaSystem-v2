@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
 import hs.mediasystem.runner.util.LessLoader;
-import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.runner.util.resource.ResourceManager;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.Labels;

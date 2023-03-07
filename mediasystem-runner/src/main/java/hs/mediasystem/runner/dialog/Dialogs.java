@@ -1,5 +1,7 @@
-package hs.mediasystem.runner.util;
+package hs.mediasystem.runner.dialog;
 
+import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.runner.util.MarkdownTextView;
 import hs.mediasystem.util.Localizable;
 import hs.mediasystem.util.exception.Throwables;
 import hs.mediasystem.util.javafx.control.Buttons;

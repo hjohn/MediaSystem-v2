@@ -1,8 +1,12 @@
-package hs.mediasystem.presentation;
+package hs.mediasystem.runner.presentation;
 
-import hs.mediasystem.runner.ActionTarget;
-import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.PresentationActionEvent;
+import hs.mediasystem.presentation.PresentationEvent;
+import hs.mediasystem.runner.dialog.Dialogs;
+import hs.mediasystem.runner.util.action.ActionTarget;
 import hs.mediasystem.util.expose.Trigger;
+import hs.mediasystem.util.javafx.base.Events;
 
 import java.util.List;
 import java.util.logging.Logger;

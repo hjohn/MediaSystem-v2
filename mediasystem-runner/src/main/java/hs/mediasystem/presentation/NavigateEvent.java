@@ -1,6 +1,4 @@
-package hs.mediasystem.runner;
-
-import hs.mediasystem.presentation.Presentation;
+package hs.mediasystem.presentation;
 
 import javafx.event.Event;
 import javafx.event.EventType;

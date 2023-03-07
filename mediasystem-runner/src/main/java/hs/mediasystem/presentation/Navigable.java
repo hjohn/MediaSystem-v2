@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.presentation;
 
 import javafx.event.Event;
 

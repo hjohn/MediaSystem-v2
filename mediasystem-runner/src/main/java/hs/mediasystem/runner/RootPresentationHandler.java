@@ -1,9 +1,11 @@
 package hs.mediasystem.runner;
 
+import hs.mediasystem.presentation.NavigateEvent;
 import hs.mediasystem.presentation.PresentationActionEvent;
 import hs.mediasystem.presentation.PresentationEvent;
-import hs.mediasystem.presentation.Presentations;
+import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.SceneManager;
+import hs.mediasystem.runner.util.action.Action;
 import hs.mediasystem.util.javafx.base.Events;
 
 import java.util.ArrayList;

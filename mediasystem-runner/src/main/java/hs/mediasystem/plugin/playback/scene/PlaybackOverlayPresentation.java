@@ -1,9 +1,9 @@
 package hs.mediasystem.plugin.playback.scene;
 
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.presentation.Navigable;
 import hs.mediasystem.presentation.Presentation;
-import hs.mediasystem.runner.Navigable;
-import hs.mediasystem.runner.util.Dialogs;
+import hs.mediasystem.runner.dialog.Dialogs;
 import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;

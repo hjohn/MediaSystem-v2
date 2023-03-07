@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.presentation.PresentationLoader;
+import hs.mediasystem.runner.presentation.PresentationLoader;
 import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
 

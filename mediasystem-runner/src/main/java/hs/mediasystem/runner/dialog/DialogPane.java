@@ -1,9 +1,9 @@
-package hs.mediasystem.runner.util;
+package hs.mediasystem.runner.dialog;
 
+import hs.mediasystem.presentation.Navigable;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.PresentationActionEvent;
-import hs.mediasystem.runner.ActionTarget;
-import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.runner.util.action.ActionTarget;
 import hs.mediasystem.util.expose.Trigger;
 import hs.mediasystem.util.javafx.SceneUtil;
 

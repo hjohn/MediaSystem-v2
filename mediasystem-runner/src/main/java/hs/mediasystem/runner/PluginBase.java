@@ -1,6 +1,6 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.runner.util.resource.ResourceManager;
 
 import javafx.scene.image.Image;
 

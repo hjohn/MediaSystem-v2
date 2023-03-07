@@ -7,7 +7,7 @@ import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.View
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
-import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.runner.util.resource.ResourceManager;
 import hs.mediasystem.ui.api.WorksClient;
 import hs.mediasystem.ui.api.domain.Work;
 

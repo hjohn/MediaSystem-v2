@@ -6,7 +6,7 @@ import hs.mediasystem.domain.media.SubtitleTrack;
 import hs.mediasystem.domain.media.VideoTrack;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
-import hs.mediasystem.presentation.Presentations;
+import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Parent;

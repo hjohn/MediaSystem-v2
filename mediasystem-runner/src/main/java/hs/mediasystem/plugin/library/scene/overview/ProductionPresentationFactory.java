@@ -4,7 +4,7 @@ import hs.jfx.eventstream.core.EventSource;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.presentation.AbstractPresentation;
-import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.presentation.Navigable;
 import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.SettingsSource;
 import hs.mediasystem.ui.api.StreamStateClient;

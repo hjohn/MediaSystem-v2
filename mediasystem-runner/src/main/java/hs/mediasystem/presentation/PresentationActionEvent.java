@@ -1,6 +1,6 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.runner.Action;
+import hs.mediasystem.runner.util.action.Action;
 
 import java.util.function.Supplier;
 

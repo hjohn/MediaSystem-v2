@@ -5,7 +5,7 @@ import hs.mediasystem.domain.work.CollectionDefinition;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Menu;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.MenuItem;
 import hs.mediasystem.plugin.rootmenu.MenuPresentation.Plugin;
-import hs.mediasystem.runner.util.ResourceManager;
+import hs.mediasystem.runner.util.resource.ResourceManager;
 import hs.mediasystem.ui.api.CollectionClient;
 
 import java.util.ArrayList;

@@ -4,9 +4,9 @@ import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Parent;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.presentation.Presentations;
+import hs.mediasystem.runner.grouping.WorksGroup;
+import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.ConsumedStateChanged;
 import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
@@ -75,7 +75,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     listView.getStyleClass().add("glass-pane");
     listView.onItemSelected.set(e -> {
-      if(!(e.getItem() instanceof Parent) || ((Parent<?>)e.getItem()).getChildren().isEmpty()) {
+      if(!(e.getItem() instanceof WorksGroup wg) || wg.getChildren().isEmpty()) {
         @SuppressWarnings("unchecked")
         ItemSelectedEvent<T> itemSelectedEvent = (ItemSelectedEvent<T>)e;
 

@@ -42,7 +42,8 @@ public class PresentationEvent extends Event {
     super(type);
   }
 
-  void addPresentation(Presentation presentation) {
+  // for internal use
+  public void addPresentation(Presentation presentation) {
     this.presentations.add(presentation);
   }
 

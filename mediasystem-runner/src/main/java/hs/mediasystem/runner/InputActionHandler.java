@@ -1,5 +1,7 @@
 package hs.mediasystem.runner;
 
+import hs.mediasystem.runner.util.action.Action;
+import hs.mediasystem.runner.util.action.ActionTarget;
 import hs.mediasystem.util.expose.ExposedControl;
 
 import java.util.ArrayList;
