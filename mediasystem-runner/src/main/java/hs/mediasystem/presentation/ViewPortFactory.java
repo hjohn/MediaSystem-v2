@@ -12,7 +12,7 @@ public class ViewPortFactory {
   @Inject private Theme theme;
 
   public ViewPort create(ParentPresentation presentation, Consumer<Node> nodeAdjuster) {
-    return new ViewPort(theme, presentation, nodeAdjuster);
+    return ViewPort.ofPresentation(theme, presentation, nodeAdjuster);
   }
 
   public ViewPort create(ParentPresentation presentation) {

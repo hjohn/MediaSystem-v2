@@ -1,5 +1,7 @@
 package hs.mediasystem.presentation;
 
+import hs.mediasystem.runner.Navigable;
+import hs.mediasystem.runner.NavigateEvent;
 import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.ui.transition.StandardTransitions;
 import hs.mediasystem.util.javafx.ui.transition.TransitionPane;
@@ -10,30 +12,55 @@ import javafx.beans.value.ChangeListener;
 import javafx.scene.Node;
 
 public class ViewPort extends TransitionPane {
-  private final ParentPresentation parentPresentation;
+  private final Theme theme;
   private final Consumer<Node> nodeAdjuster;
 
-  public ViewPort(Theme theme, ParentPresentation parentPresentation, Consumer<Node> nodeAdjuster) {
+  public static ViewPort ofPresentation(Theme theme, ParentPresentation presentation, Consumer<Node> nodeAdjuster) {
+    return new ViewPort(theme, presentation, nodeAdjuster);
+  }
+
+  public static ViewPort fixed(Theme theme, Presentation presentation, Consumer<Node> nodeAdjuster) {
+    return new ViewPort(theme, presentation, nodeAdjuster);
+  }
+
+  private ViewPort(Theme theme, Consumer<Node> nodeAdjuster) {
     super(StandardTransitions.fade());
 
-    this.parentPresentation = parentPresentation;
+    this.theme = theme;
     this.nodeAdjuster = nodeAdjuster;
+  }
 
-    ChangeListener<? super Presentation> listener = (obs, old, current) -> updateChildNode(theme, current);
+  private ViewPort(Theme theme, ParentPresentation parentPresentation, Consumer<Node> nodeAdjuster) {
+    this(theme, nodeAdjuster);
+
+    ChangeListener<? super Presentation> listener = (obs, old, current) -> updateChildNode(theme, parentPresentation, current);
 
     parentPresentation.childPresentation.when(Nodes.showing(this)).addListener(listener);
 
-    updateChildNode(theme, parentPresentation.childPresentation.get());
+    updateChildNode(theme, parentPresentation, parentPresentation.childPresentation.get());
   }
 
-  protected Node updateChildNode(Theme theme, Presentation current) {
+  private ViewPort(Theme theme, Presentation presentation, Consumer<Node> nodeAdjuster) {
+    this(theme, nodeAdjuster);
+
+    updateChildNode(theme, null, presentation);
+  }
+
+  private Node updateChildNode(Theme theme, ParentPresentation parentPresentation, Presentation current) {
     if(current == null) {
       return null;
     }
 
     Node node = theme.findPlacer(parentPresentation, current).place(parentPresentation, current);
 
-    node.getProperties().put("presentation2", current);
+    if(current instanceof ParentPresentation pp) {
+      node.addEventHandler(NavigateEvent.NAVIGATION_TO, e -> handleNavigateEvent(e, pp));
+    }
+    if(current instanceof Navigable n) {
+      node.addEventHandler(NavigateEvent.NAVIGATION_BACK, n::navigateBack);
+    }
+
+    Presentations.associate(node, current);
 
     add(node);  // after transition ends, node will be the single visible node
 
@@ -42,5 +69,11 @@ public class ViewPort extends TransitionPane {
     }
 
     return node;
+  }
+
+  private void handleNavigateEvent(NavigateEvent event, ParentPresentation ancestor) {
+    if(theme.nestPresentation(ancestor, event.getPresentation())) {
+      event.consume();
+    }
   }
 }

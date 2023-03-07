@@ -30,6 +30,8 @@ import hs.mediasystem.runner.root.RootNodeFactory;
 import hs.mediasystem.runner.root.RootPresentation;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javafx.scene.Node;
@@ -46,83 +48,28 @@ public class BasicTheme implements Theme {
   @Inject private InstanceResolver instanceResolver;
 
   @Override
-  public Class<? extends Presentation> findParent(Class<? extends Presentation> cls) {
-    if(cls == GenericCollectionPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == FolderPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == ParticipationsPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == ContributionsPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == ProductionPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == RecommendationsPresentation.class) {
-      return LibraryPresentation.class;
-    }
-    if(cls == PlaybackOverlayPresentation.class) {
-      return RootPresentation.class;
-    }
-    if(cls == LibraryPresentation.class) {
-      return RootPresentation.class;
-    }
-    if(cls == MenuPresentation.class) {
-      return RootPresentation.class;
-    }
-    if(cls == HomePresentation.class) {
-      return RootPresentation.class;
+  public boolean nestPresentation(ParentPresentation ancestor, Presentation descendant) {
+    List<Class<? extends Presentation>> hierarchy = new ArrayList<>();
+
+    for(Class<? extends Presentation> cls = descendant.getClass(); (cls = findParent(cls)) != ancestor.getClass();) {
+      if(cls == null) {
+        return false;  // given ancestor presentation can not be an ancestor for the given descendant
+      }
+
+      hierarchy.add(0, cls);
     }
 
-    return null;
-  }
+    ParentPresentation presentation = ancestor;
 
-  @SuppressWarnings("unchecked")
-  private <P extends Presentation, T extends NodeFactory<P>> Class<T> findNodeFactory(Class<P> cls) {
-    if(cls == GenericCollectionPresentation.class) {
-      return (Class<T>)GenericCollectionSetup.class;
-    }
-    if(cls == FolderPresentation.class) {
-      return (Class<T>)FolderSetup.class;
-    }
-    if(cls == LibraryPresentation.class) {
-      return (Class<T>)LibraryNodeFactory.class;
-    }
-    if(cls == MenuPresentation.class) {
-      return (Class<T>)RootMenuScenePlugin.class;
-    }
-    if(cls == HomePresentation.class) {
-      return (Class<T>)HomeScreenNodeFactory.class;
-    }
-    if(cls == ParticipationsPresentation.class) {
-      return (Class<T>)ParticipationsSetup.class;
-    }
-    if(cls == ContributionsPresentation.class) {
-      return (Class<T>)ContributionsSetup.class;
-    }
-    if(cls == ProductionPresentation.class) {
-      return (Class<T>)ProductionOverviewNodeFactory.class;
-    }
-    if(cls == RecommendationsPresentation.class) {
-      return (Class<T>)RecommendationsSetup.class;
-    }
-    if(cls == PlaybackOverlayPresentation.class) {
-      return (Class<T>)PlaybackLayout.class;
-    }
-    if(cls == RootPresentation.class) {
-      return (Class<T>)RootNodeFactory.class;
+    for(Class<? extends Presentation> parentClass : hierarchy) {
+      presentation.childPresentation.set(instanceResolver.getInstance(parentClass));
+
+      presentation = (ParentPresentation)presentation.childPresentation.get();
     }
 
-    throw new IllegalStateException(this + " missing node factory for " + cls);
-  }
+    presentation.childPresentation.set(descendant);  // presentation is now the direct parent for descendant
 
-  @Override
-  public <P extends Presentation> P createPresentation(Class<P> presentationClass) {
-    return instanceResolver.getInstance(presentationClass);
+    return true;
   }
 
   @Override
@@ -160,5 +107,79 @@ public class BasicTheme implements Theme {
         return nodeFactory.create(presentation);
       }
     };
+  }
+
+  private static Class<? extends Presentation> findParent(Class<? extends Presentation> cls) {
+    if(cls == GenericCollectionPresentation.class) {
+      return LibraryPresentation.class;
+    }
+    if(cls == FolderPresentation.class) {
+      return LibraryPresentation.class;
+    }
+    if(cls == ParticipationsPresentation.class) {
+      return LibraryPresentation.class;
+    }
+    if(cls == ContributionsPresentation.class) {
+      return LibraryPresentation.class;
+    }
+    if(cls == ProductionPresentation.class) {
+      return LibraryPresentation.class;
+    }
+    if(cls == RecommendationsPresentation.class) {
+      return LibraryPresentation.class;
+    }
+    if(cls == PlaybackOverlayPresentation.class) {
+      return RootPresentation.class;
+    }
+    if(cls == LibraryPresentation.class) {
+      return RootPresentation.class;
+    }
+    if(cls == MenuPresentation.class) {
+      return RootPresentation.class;
+    }
+    if(cls == HomePresentation.class) {
+      return RootPresentation.class;
+    }
+
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <P extends Presentation, T extends NodeFactory<P>> Class<T> findNodeFactory(Class<P> cls) {
+    if(cls == GenericCollectionPresentation.class) {
+      return (Class<T>)GenericCollectionSetup.class;
+    }
+    if(cls == FolderPresentation.class) {
+      return (Class<T>)FolderSetup.class;
+    }
+    if(cls == LibraryPresentation.class) {
+      return (Class<T>)LibraryNodeFactory.class;
+    }
+    if(cls == MenuPresentation.class) {
+      return (Class<T>)RootMenuScenePlugin.class;
+    }
+    if(cls == HomePresentation.class) {
+      return (Class<T>)HomeScreenNodeFactory.class;
+    }
+    if(cls == ParticipationsPresentation.class) {
+      return (Class<T>)ParticipationsSetup.class;
+    }
+    if(cls == ContributionsPresentation.class) {
+      return (Class<T>)ContributionsSetup.class;
+    }
+    if(cls == ProductionPresentation.class) {
+      return (Class<T>)ProductionOverviewNodeFactory.class;
+    }
+    if(cls == RecommendationsPresentation.class) {
+      return (Class<T>)RecommendationsSetup.class;
+    }
+    if(cls == PlaybackOverlayPresentation.class) {
+      return (Class<T>)PlaybackLayout.class;
+    }
+    if(cls == RootPresentation.class) {
+      return (Class<T>)RootNodeFactory.class;
+    }
+
+    throw new IllegalStateException(BasicTheme.class + " missing node factory for " + cls);
   }
 }

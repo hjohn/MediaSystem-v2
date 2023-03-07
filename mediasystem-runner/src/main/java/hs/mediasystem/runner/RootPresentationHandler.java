@@ -1,28 +1,15 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.presentation.ParentPresentation;
-import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.PresentationActionEvent;
 import hs.mediasystem.presentation.PresentationEvent;
 import hs.mediasystem.presentation.Presentations;
-import hs.mediasystem.presentation.Theme;
-import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.SceneManager;
-import hs.mediasystem.util.expose.ExposedControl;
-import hs.mediasystem.util.expose.Trigger;
 import hs.mediasystem.util.javafx.base.Events;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.event.Event;
-import javafx.event.EventTarget;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -38,12 +25,10 @@ import javax.inject.Singleton;
 
 @Singleton
 public class RootPresentationHandler implements EventRoot {
-  @Inject private Theme theme;
   @Inject private SceneManager sceneManager;
   @Inject private InputActionHandler inputActionHandler;
   @Inject private ContextMenuHandler contextMenuHandler;
 
-  private Action backAction;
   private KeyCode keyPressedCode;
   private long keyPressedStartTime;
 
@@ -51,8 +36,6 @@ public class RootPresentationHandler implements EventRoot {
   private void postConstruct() {
     Scene scene = sceneManager.getScene();
 
-    scene.addEventHandler(NavigateEvent.NAVIGATION_TO, e -> handleNavigateEvent(e));
-    scene.addEventHandler(NavigateEvent.NAVIGATION_BACK, e -> handleNavigateBackEvent(e));
     scene.setOnKeyPressed(this::onKeyPressed);
     scene.setOnKeyReleased(this::onKeyReleased);
     scene.setOnMouseClicked(this::onMouseClicked);
@@ -61,8 +44,6 @@ public class RootPresentationHandler implements EventRoot {
     scene.addEventHandler(PresentationEvent.REFRESH, Presentations::refresh);
 
     sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
-
-    backAction = new Action(new ActionTarget(List.of(ExposedControl.find(Navigable.class, "navigateBack"))), "trigger");
   }
 
   @Override
@@ -87,13 +68,6 @@ public class RootPresentationHandler implements EventRoot {
   }
 
   private void onKeyPressed(KeyEvent event) {
-
-    /*
-     * Handling of user defined key combinations:
-     * - Check up the chain from the event target to find relevant presentations
-     * - Check each presentation in turn for potential actions
-     */
-
     if(event.getCode().isModifierKey()) {
       return;
     }
@@ -130,22 +104,20 @@ public class RootPresentationHandler implements EventRoot {
   private void onMouseClicked(MouseEvent event) {
     if(event.getButton() == MouseButton.SECONDARY) {
       Event.fireEvent(event.getTarget(), NavigateEvent.back());
+
       event.consume();
     }
-  }
-
-  private void handleNavigateBackEvent(NavigateEvent event) {
-    fireActionProposals(event, List.of(backAction));
   }
 
   private void handleKeyEvent(KeyEvent event, boolean longPress) {
     List<Action> actions = inputActionHandler.findActions(keyEventToKeyCodeCombination(event, longPress));
 
-    if(actions.isEmpty()) {
-      return;
+    for(Action action : actions) {
+      if(Events.dispatchEvent(event.getTarget(), PresentationActionEvent.createActionProposal(action))) {
+        event.consume();
+        break;  // action was consumed, don't process potential other actions
+      }
     }
-
-    fireActionProposals(event, actions);
   }
 
   private static KeyCodeCombination keyEventToKeyCodeCombination(KeyEvent event, boolean longPress) {
@@ -165,97 +137,5 @@ public class RootPresentationHandler implements EventRoot {
     }
 
     return new KeyCodeCombination(event.getCode(), modifiers.toArray(new Modifier[modifiers.size()]));
-  }
-
-  private static void fireActionProposals(Event event, List<Action> actions) {
-    for(Action action : actions) {
-      if(Events.dispatchEvent(event.getTarget(), PresentationActionEvent.createActionProposal(action))) {
-        event.consume();
-        break;  // action was consumed, don't process potential other actions
-      }
-    }
-  }
-
-  private static List<Presentation> createPresentationStack(EventTarget eventTarget) {
-    Node target = eventTarget instanceof Scene s ? s.getRoot() : (Node)eventTarget;
-
-    return Stream.iterate(target, Objects::nonNull, Node::getParent)
-      .map(s -> s.getProperties().get("presentation2"))
-      .filter(Objects::nonNull)
-      .map(Presentation.class::cast)
-      .collect(Collectors.toList());
-  }
-
-  private void handleNavigateEvent(NavigateEvent event) {
-    // Find out hierarchy, including RootPresentation and create it all
-    // Since this is the top level, it includes creating a Node.. normally it won't bubble up all the way to here because it is handled earlier (by RootPResentation for example) and no new node needs to be created, just the child changed
-    // - In theory, we could have each presentation level handle this event, making it unnecessary to reverse look for the highest matching presentation, since the level that can handle the navigation is the correct level
-    // - WHether or not a level can handle a presentation depends on whether the given presentation's hierarchy contains the current presentation or not.
-
-    /*
-     * Create map of active presentations:
-     */
-
-    Node target = (Node)event.getTarget();
-
-    Map<Class<? extends ParentPresentation>, ParentPresentation> activePresentations = Stream.iterate(target, s -> s.getParent() != null, Node::getParent)
-      .map(s -> s.getProperties().get("presentation2"))
-      .filter(ParentPresentation.class::isInstance)
-      .map(ParentPresentation.class::cast)
-      .collect(Collectors.toMap(ParentPresentation::getClass, Function.identity()));
-
-    /*
-     * Loop through target presentation and its parents to find nearest existing parent or create a new hierarchy:
-     */
-
-    Presentation targetPresentation = event.getPresentation();  // The new presentation to use
-
-    for(Class<? extends Presentation> parentCls; (parentCls = theme.findParent(targetPresentation.getClass())) != null;) {
-      ParentPresentation activePresentation = activePresentations.get(parentCls);  // See if we have intended parent already in current hierarchy
-
-      if(activePresentation != null) {  // If intended parent already existed, just switch its child
-        activePresentation.childPresentation.set(targetPresentation);
-
-        return;
-      }
-
-      // Create the intended parent and set its child
-      activePresentation = (ParentPresentation)theme.createPresentation(parentCls);
-
-      activePresentation.childPresentation.set(targetPresentation);
-      targetPresentation = activePresentation;
-    }
-
-    /*
-     * Create a new root node as the target presentation required a new root presentation (not
-     * necessarily the target presentation itself, it could also be one of its intended parents),
-     * hence why "presentations.getFirst()" is used here.  The child hierarchy towards the target
-     * presentation is already set up at this point.
-     */
-
-    Node node = theme.findPlacer(null, targetPresentation).place(null, targetPresentation);
-
-    node.getProperties().put("presentation2", targetPresentation);
-    node.addEventHandler(PresentationActionEvent.PROPOSED, this::handleActionProposal);
-
-    sceneManager.getRootPane().getChildren().setAll(node);
-  }
-
-  private void handleActionProposal(PresentationActionEvent event) {
-    ActionTarget actionTarget = event.getAction().getActionTarget();
-
-    for(Presentation presentation : createPresentationStack(event.getTarget())) {
-      if(actionTarget.getActionClass().isAssignableFrom(presentation.getClass())) {
-        Trigger<Object> trigger = actionTarget.createTrigger(event.getAction().getDescriptor(), presentation);
-
-        if(trigger != null) {
-          trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
-
-          if(event.isConsumed()) {
-            break;
-          }
-        }
-      }
-    }
   }
 }

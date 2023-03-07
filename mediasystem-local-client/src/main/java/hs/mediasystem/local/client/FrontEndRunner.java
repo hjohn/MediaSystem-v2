@@ -2,12 +2,14 @@ package hs.mediasystem.local.client;
 
 import hs.mediasystem.db.ServiceRunner;
 import hs.mediasystem.plugin.playback.scene.PlayerSetting;
-import hs.mediasystem.runner.NavigateEvent;
+import hs.mediasystem.presentation.Theme;
+import hs.mediasystem.presentation.ViewPort;
 import hs.mediasystem.runner.RootPresentationHandler;
 import hs.mediasystem.runner.StartupPresentationProvider;
 import hs.mediasystem.runner.config.BasicSetup;
 import hs.mediasystem.runner.config.LoggingConfigurer;
 import hs.mediasystem.runner.expose.Annotations;
+import hs.mediasystem.runner.root.RootPresentation;
 import hs.mediasystem.runner.util.FXSceneManager.SceneLayout;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.ui.api.player.PlayerFactory;
@@ -104,7 +106,12 @@ public class FrontEndRunner extends Application {
 
     sceneManager.setSceneLayout(sceneLayout);
     sceneManager.display();
-    sceneManager.getRootPane().fireEvent(NavigateEvent.to(provider.get()));
+
+    RootPresentation rootPresentation = new RootPresentation();
+
+    rootPresentation.childPresentation.set(provider.get());
+
+    sceneManager.getRootPane().getChildren().setAll(ViewPort.fixed(injector.getInstance(Theme.class), rootPresentation, null));
 
     logDisplayStats(sceneManager);
   }
