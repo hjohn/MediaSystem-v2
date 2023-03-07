@@ -2,6 +2,9 @@ package hs.mediasystem.runner;
 
 import hs.mediasystem.presentation.ParentPresentation;
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.PresentationActionEvent;
+import hs.mediasystem.presentation.PresentationEvent;
+import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.SceneManager;
@@ -54,6 +57,9 @@ public class RootPresentationHandler implements EventRoot {
     scene.setOnKeyReleased(this::onKeyReleased);
     scene.setOnMouseClicked(this::onMouseClicked);
 
+    scene.addEventHandler(PresentationEvent.CONTEXT_MENU, contextMenuHandler::handle);
+    scene.addEventHandler(PresentationEvent.REFRESH, Presentations::refresh);
+
     sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
 
     backAction = new Action(new ActionTarget(List.of(ExposedControl.find(Navigable.class, "navigateBack"))), "trigger");
@@ -95,7 +101,9 @@ public class RootPresentationHandler implements EventRoot {
     if(event.getCode().isFunctionKey()) {
       // Special handling of Context Menu key
       if(event.getCode() == KeyCode.F10) {
-        contextMenuHandler.handle(event, createPresentationStack(event.getTarget()));
+        fire(PresentationEvent.triggerContextMenu());
+
+        event.consume();
 
         return;
       }
@@ -161,7 +169,7 @@ public class RootPresentationHandler implements EventRoot {
 
   private static void fireActionProposals(Event event, List<Action> actions) {
     for(Action action : actions) {
-      if(Events.dispatchEvent(event.getTarget(), ExposedActionEvent.createActionProposal(action))) {
+      if(Events.dispatchEvent(event.getTarget(), PresentationActionEvent.createActionProposal(action))) {
         event.consume();
         break;  // action was consumed, don't process potential other actions
       }
@@ -228,12 +236,12 @@ public class RootPresentationHandler implements EventRoot {
     Node node = theme.findPlacer(null, targetPresentation).place(null, targetPresentation);
 
     node.getProperties().put("presentation2", targetPresentation);
-    node.addEventHandler(ExposedActionEvent.ACTION_PROPOSED, this::handleActionProposal);
+    node.addEventHandler(PresentationActionEvent.PROPOSED, this::handleActionProposal);
 
     sceneManager.getRootPane().getChildren().setAll(node);
   }
 
-  private void handleActionProposal(ExposedActionEvent event) {
+  private void handleActionProposal(PresentationActionEvent event) {
     ActionTarget actionTarget = event.getAction().getActionTarget();
 
     for(Presentation presentation : createPresentationStack(event.getTarget())) {

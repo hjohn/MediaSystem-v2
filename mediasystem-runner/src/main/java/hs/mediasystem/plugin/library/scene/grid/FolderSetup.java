@@ -7,6 +7,7 @@ import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory.Folder
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.PresentationLoader;
+import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
@@ -74,7 +75,8 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
     listView.visibleColumns.set(3);
     listView.getStyleClass().add("glass-pane");
     listView.onItemSelected.set(e -> onItemSelected(e, presentation));
-    listView.getProperties().put("presentation2", workCellPresentationFactory.apply(presentation.selectedItem));
+
+    Presentations.associate(listView, workCellPresentationFactory.apply(presentation.selectedItem));
 
     AnnotatedImageCellFactory<Work> cellFactory = new AnnotatedImageCellFactory<>((work, model) -> {
       model.title.set(work.getDetails().getTitle());

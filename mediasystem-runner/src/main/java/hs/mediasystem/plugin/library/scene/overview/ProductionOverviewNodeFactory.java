@@ -10,6 +10,7 @@ import hs.mediasystem.plugin.library.scene.overview.EpisodePane.Model;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.presentation.NodeFactory;
+import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.MediaStream;
@@ -243,7 +244,9 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
         streamInfoPane.setMouseTransparent(true);
 
         setCenter(transitionPane);
-        getProperties().put("presentation2", new EpisodePresentation(presentation.children, presentation.selectedChild));
+
+        Presentations.associate(this, new EpisodePresentation(presentation.children, presentation.selectedChild));
+
         getStyleClass().add("episode-dynamic-panel");
 
         VBox.setVgrow(this, Priority.ALWAYS);

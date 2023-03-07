@@ -1,8 +1,8 @@
 package hs.mediasystem.runner.util;
 
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.PresentationActionEvent;
 import hs.mediasystem.runner.ActionTarget;
-import hs.mediasystem.runner.ExposedActionEvent;
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.util.expose.Trigger;
 import hs.mediasystem.util.javafx.SceneUtil;
@@ -34,7 +34,6 @@ public class DialogPane<R> extends StackPane {
   private boolean synchronous;
   private R result;
   private boolean finished;
-  private Object oldPresentation;
 
   public DialogPane(String styleClass, double delay, Predicate<Event> closeHandler) {
     this.delay = delay;
@@ -72,9 +71,7 @@ public class DialogPane<R> extends StackPane {
 
     NavigablePresentation navigablePresentation = new NavigablePresentation(this);
 
-    oldPresentation = scene.getRoot().getProperties().put("presentation2", navigablePresentation);
-
-    addEventHandler(ExposedActionEvent.ACTION_PROPOSED, e -> {
+    addEventHandler(PresentationActionEvent.PROPOSED, e -> {
       ActionTarget actionTarget = e.getAction().getActionTarget();
 
       if(actionTarget.getActionClass().isAssignableFrom(navigablePresentation.getClass())) {
@@ -96,8 +93,6 @@ public class DialogPane<R> extends StackPane {
       this.finished = true;
 
       if(dialogGlass != null) {
-        getScene().getRoot().getProperties().put("presentation2", oldPresentation);
-
         dialogGlass.remove();
         dialogGlass = null;
       }

@@ -2,13 +2,10 @@ package hs.mediasystem.presentation;
 
 import hs.mediasystem.runner.Navigable;
 import hs.mediasystem.runner.util.DebugFX;
+import hs.mediasystem.util.javafx.base.Events;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -43,21 +40,7 @@ public class ParentPresentation implements Presentation, Navigable {
     childPresentation.set(presentation);
     childPresentation.addListener(listener);
 
-    /*
-     * Determine presentation stack for refreshing first, then refresh it.
-     *
-     * The stack should be the presentation to be shown plus any of its
-     * child presentations.
-     */
-
-    List<Presentation> presentations = Stream.iterate(
-        presentation,
-        Objects::nonNull,
-        p -> p instanceof ParentPresentation pp ? pp.childPresentation.get() : null
-      )
-      .collect(Collectors.toList());
-
-    Presentations.refreshPresentations(e, presentations);
+    Events.dispatchEvent(e.getTarget(), PresentationEvent.refresh());
 
     e.consume();
   }

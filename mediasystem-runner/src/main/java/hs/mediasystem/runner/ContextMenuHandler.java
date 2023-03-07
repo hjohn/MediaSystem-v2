@@ -2,6 +2,7 @@ package hs.mediasystem.runner;
 
 import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.PresentationEvent;
 import hs.mediasystem.presentation.Presentations;
 import hs.mediasystem.runner.util.Dialogs;
 import hs.mediasystem.runner.util.LessLoader;
@@ -37,7 +38,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory.ListSpinnerValueFactory;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
@@ -56,11 +56,11 @@ public class ContextMenuHandler {
    * spreading the options across tabs.
    */
 
-  public void handle(KeyEvent event, List<Presentation> activePresentations) {
+  public void handle(PresentationEvent event) {
     GridPane gridPane = new GridPane();
     int row = 0;
 
-    for(Presentation presentation : activePresentations) {
+    for(Presentation presentation : event.getPresentations()) {
       List<ActionTarget> actionTargets = actionTargetProvider.getActionTargets(presentation.getClass());
       List<Node> sortedAndFilteredControls = actionTargets.stream()
         .filter(ActionTarget::isVisible)
