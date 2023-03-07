@@ -156,6 +156,10 @@ public class Annotations {
       .of(WorkCellPresentation.class)
       .as("showInfo");
 
+    Expose.booleanProperty((RootPresentation p) -> p.fpsGraphVisible)
+      .of(RootPresentation.class)
+      .as("fpsGraphVisible");
+
     // Debug actions
 
     Expose.action(RootPresentation::debugOnce)
