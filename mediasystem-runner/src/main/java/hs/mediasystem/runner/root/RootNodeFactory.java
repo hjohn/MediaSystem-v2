@@ -51,9 +51,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -70,7 +68,6 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
   @Inject private SceneManager sceneManager;
   @Inject private ViewPortFactory viewPortFactory;
   @Inject private Provider<ParentalControls> parentalControlsProvider;
-  @Inject @Nullable @Named("general.debug.showFPS") public Boolean showFPS = false;
 
   @Override
   public Node create(RootPresentation presentation) {
