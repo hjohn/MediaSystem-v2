@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.library.scene.grid.contribution;
 
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Model;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
-import hs.mediasystem.plugin.library.scene.grid.AbstractSetup;
+import hs.mediasystem.plugin.library.scene.grid.common.AbstractSetup;
 import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory.ContributionsPresentation;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role;

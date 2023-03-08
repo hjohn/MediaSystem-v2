@@ -1,6 +1,6 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.common;
 
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.GridViewPresentation;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.resource.ResourceManager;
 import hs.mediasystem.util.javafx.control.Containers;

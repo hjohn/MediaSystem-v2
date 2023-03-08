@@ -1,4 +1,4 @@
-package hs.mediasystem.runner.util;
+package hs.mediasystem.runner.util.debug;
 
 import java.util.ArrayList;
 import java.util.HashMap;

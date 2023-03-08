@@ -1,10 +1,12 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.common.WorkNotFoundException;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionPresentationFactory.GenericCollectionPresentation;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 

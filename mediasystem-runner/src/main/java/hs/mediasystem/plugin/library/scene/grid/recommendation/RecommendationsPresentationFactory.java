@@ -1,6 +1,8 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.recommendation;
 
 import hs.mediasystem.domain.work.WorkId;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.common.WorkNotFoundException;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Work;
 

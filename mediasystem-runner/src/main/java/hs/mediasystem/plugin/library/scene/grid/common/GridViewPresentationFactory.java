@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.common;
 
 import hs.jfx.eventstream.core.Changes;
 import hs.jfx.eventstream.core.Events;

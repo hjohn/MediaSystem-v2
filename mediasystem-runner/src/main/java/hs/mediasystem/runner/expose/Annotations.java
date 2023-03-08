@@ -1,8 +1,8 @@
 package hs.mediasystem.runner.expose;
 
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
-import hs.mediasystem.plugin.library.scene.grid.WorkCellPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.common.WorkCellPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.GridViewPresentation;
 import hs.mediasystem.plugin.library.scene.overview.EpisodePresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;

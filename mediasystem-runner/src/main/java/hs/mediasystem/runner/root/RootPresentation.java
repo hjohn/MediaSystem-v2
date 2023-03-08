@@ -1,7 +1,7 @@
 package hs.mediasystem.runner.root;
 
 import hs.mediasystem.presentation.ParentPresentation;
-import hs.mediasystem.runner.util.DebugFX;
+import hs.mediasystem.runner.util.debug.DebugFX;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;

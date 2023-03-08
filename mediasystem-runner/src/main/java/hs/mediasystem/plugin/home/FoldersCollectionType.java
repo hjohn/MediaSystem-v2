@@ -2,9 +2,9 @@ package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.collection.CollectionType;
 import hs.mediasystem.ui.api.WorksClient;

@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.common;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.WorkId;

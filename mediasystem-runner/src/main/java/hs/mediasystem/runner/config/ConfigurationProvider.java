@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

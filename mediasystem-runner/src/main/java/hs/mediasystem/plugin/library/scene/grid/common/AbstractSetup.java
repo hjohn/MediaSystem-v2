@@ -1,14 +1,14 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.common;
 
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
-import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.GridViewPresentation;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.runner.util.grid.MediaGridView;
 import hs.mediasystem.ui.api.ConsumedStateChanged;
 import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 import hs.mediasystem.util.javafx.base.Nodes;

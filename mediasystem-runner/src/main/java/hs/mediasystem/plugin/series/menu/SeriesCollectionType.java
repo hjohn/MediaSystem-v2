@@ -2,10 +2,10 @@ package hs.mediasystem.plugin.series.menu;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionPresentationFactory;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.collection.CollectionType;
 import hs.mediasystem.runner.grouping.GenreGrouping;

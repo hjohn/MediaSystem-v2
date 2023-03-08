@@ -1,8 +1,8 @@
 package hs.mediasystem.runner;
 
-import hs.mediasystem.runner.util.DebugSceneFX;
 import hs.mediasystem.runner.util.FXSceneManager;
 import hs.mediasystem.runner.util.SceneManager;
+import hs.mediasystem.runner.util.debug.DebugSceneFX;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;

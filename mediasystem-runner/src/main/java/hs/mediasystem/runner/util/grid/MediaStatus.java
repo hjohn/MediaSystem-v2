@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.library.scene;
+package hs.mediasystem.runner.util.grid;
 
 public enum MediaStatus {
   UNAVAILABLE,

@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid;
 
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory;
 import hs.mediasystem.ui.api.domain.Work;
 
 import java.util.List;

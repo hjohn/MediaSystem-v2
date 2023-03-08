@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.library.scene.grid.participation;
 
 import hs.mediasystem.domain.work.PersonId;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory;
 import hs.mediasystem.ui.api.PersonClient;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Participation;

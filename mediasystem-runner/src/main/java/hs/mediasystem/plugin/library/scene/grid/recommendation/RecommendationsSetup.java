@@ -1,10 +1,11 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.recommendation;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Model;
-import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
-import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentationFactory.RecommendationsPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.AbstractSetup;
+import hs.mediasystem.plugin.library.scene.grid.recommendation.RecommendationsPresentationFactory.RecommendationsPresentation;
+import hs.mediasystem.runner.util.grid.MediaStatus;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Work;
 

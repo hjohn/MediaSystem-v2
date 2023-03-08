@@ -1,6 +1,6 @@
 package hs.mediasystem.presentation;
 
-import hs.mediasystem.runner.util.DebugFX;
+import hs.mediasystem.runner.util.debug.DebugFX;
 import hs.mediasystem.util.javafx.base.Events;
 
 import java.util.ArrayDeque;

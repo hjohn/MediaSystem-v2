@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.library.scene.grid.contribution;
 
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory;
-import hs.mediasystem.plugin.library.scene.grid.WorkNotFoundException;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory;
+import hs.mediasystem.plugin.library.scene.grid.common.WorkNotFoundException;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Contribution;
 import hs.mediasystem.ui.api.domain.Role;

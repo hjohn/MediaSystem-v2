@@ -2,8 +2,8 @@ package hs.mediasystem.plugin.library.scene.base;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
 import hs.mediasystem.runner.grouping.WorksGroup;
+import hs.mediasystem.runner.util.grid.MediaItemFormatter;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.Parent;

@@ -1,6 +1,6 @@
-package hs.mediasystem.plugin.library.scene;
+package hs.mediasystem.runner.util.grid;
 
-import hs.mediasystem.runner.util.DebugFX;
+import hs.mediasystem.runner.util.debug.DebugFX;
 import hs.mediasystem.util.javafx.control.ActionListView;
 import hs.mediasystem.util.javafx.ui.gridlistviewskin.GridListViewSkin;
 import hs.mediasystem.util.javafx.ui.gridlistviewskin.Group;

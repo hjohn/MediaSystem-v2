@@ -1,8 +1,8 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.plugin.library.scene.MediaGridView;
-import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.overview.SeasonBar.Entry;
+import hs.mediasystem.runner.util.grid.MediaGridView;
+import hs.mediasystem.runner.util.grid.MediaStatus;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;

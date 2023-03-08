@@ -1,9 +1,9 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.common;
 
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.Filter;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.SortOrder;
-import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.ViewOptions;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.Filter;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.GridViewPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.SortOrder;
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.ViewOptions;
 import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.SettingsSource;
 

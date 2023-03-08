@@ -1,4 +1,4 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.common;
 
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.plugin.library.scene.overview.ShowInfoEventHandler;

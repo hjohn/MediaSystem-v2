@@ -1,7 +1,7 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
 import hs.mediasystem.domain.work.Reception;
-import hs.mediasystem.plugin.library.scene.MediaItemFormatter;
+import hs.mediasystem.runner.util.grid.MediaItemFormatter;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.util.image.ImageHandle;

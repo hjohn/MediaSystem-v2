@@ -2,8 +2,8 @@ package hs.mediasystem.plugin.basictheme;
 
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory.GenericCollectionPresentation;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionSetup;
+import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionSetup;
+import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionPresentationFactory.GenericCollectionPresentation;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.domain.Details;

@@ -2,8 +2,8 @@ package hs.mediasystem.plugin.basictheme;
 
 import hs.mediasystem.plugin.library.scene.base.LibraryNodeFactory;
 import hs.mediasystem.plugin.library.scene.base.LibraryPresentation;
-import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentationFactory.RecommendationsPresentation;
-import hs.mediasystem.plugin.library.scene.grid.RecommendationsSetup;
+import hs.mediasystem.plugin.library.scene.grid.recommendation.RecommendationsSetup;
+import hs.mediasystem.plugin.library.scene.grid.recommendation.RecommendationsPresentationFactory.RecommendationsPresentation;
 import hs.mediasystem.presentation.PlacerQualifier;
 import hs.mediasystem.ui.api.domain.Work;
 

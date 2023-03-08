@@ -2,13 +2,15 @@ package hs.mediasystem.plugin.library.scene.grid;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
-import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.grid.FolderPresentationFactory.FolderPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.ViewStatusBarFactory;
+import hs.mediasystem.plugin.library.scene.grid.common.WorkCellPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.presentation.PresentationLoader;
 import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
+import hs.mediasystem.runner.util.grid.MediaGridView;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.MediaStream;
 import hs.mediasystem.ui.api.domain.Work;

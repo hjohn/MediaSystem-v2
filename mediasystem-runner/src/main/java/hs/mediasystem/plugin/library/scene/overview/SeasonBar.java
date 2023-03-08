@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import hs.mediasystem.plugin.library.scene.MediaStatus;
+import hs.mediasystem.runner.util.grid.MediaStatus;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.Labels;
 

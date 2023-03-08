@@ -1,11 +1,12 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.generic;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Model;
-import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
-import hs.mediasystem.plugin.library.scene.grid.GenericCollectionPresentationFactory.GenericCollectionPresentation;
+import hs.mediasystem.plugin.library.scene.grid.common.AbstractSetup;
+import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionPresentationFactory.GenericCollectionPresentation;
 import hs.mediasystem.runner.grouping.WorksGroup;
+import hs.mediasystem.runner.util.grid.MediaStatus;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;

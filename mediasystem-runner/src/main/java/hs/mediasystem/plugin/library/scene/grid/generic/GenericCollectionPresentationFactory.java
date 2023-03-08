@@ -1,4 +1,6 @@
-package hs.mediasystem.plugin.library.scene.grid;
+package hs.mediasystem.plugin.library.scene.grid.generic;
+
+import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory;
 
 import java.util.List;
 import java.util.function.Function;

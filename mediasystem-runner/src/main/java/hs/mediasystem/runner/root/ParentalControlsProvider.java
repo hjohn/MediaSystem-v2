@@ -1,6 +1,6 @@
 package hs.mediasystem.runner.root;
 
-import hs.mediasystem.runner.ConfigurationProvider;
+import hs.mediasystem.runner.config.ConfigurationProvider;
 import hs.mediasystem.runner.root.ParentalControlsProvider.ParentalControls;
 
 import java.util.List;

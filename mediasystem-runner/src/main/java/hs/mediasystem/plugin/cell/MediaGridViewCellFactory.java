@@ -1,6 +1,6 @@
 package hs.mediasystem.plugin.cell;
 
-import hs.mediasystem.plugin.library.scene.MediaStatus;
+import hs.mediasystem.runner.util.grid.MediaStatus;
 import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.util.javafx.AsyncImageProperty;
 import hs.mediasystem.util.javafx.control.BiasedImageView;
