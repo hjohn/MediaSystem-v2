@@ -4,13 +4,11 @@ import hs.mediasystem.domain.media.MediaStructure;
 import hs.mediasystem.domain.media.Resolution;
 import hs.mediasystem.domain.media.Snapshot;
 import hs.mediasystem.domain.media.VideoTrack;
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.VideoLink;
-import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.plugin.library.scene.grid.ProductionCollectionFactory;
-import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentationFactory;
-import hs.mediasystem.plugin.library.scene.grid.contribution.ContributionsPresentationFactory;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
+import hs.mediasystem.presentation.Presentation;
+import hs.mediasystem.presentation.Theme;
+import hs.mediasystem.presentation.Theme.NavigationTarget;
 import hs.mediasystem.runner.dialog.DialogPane;
 import hs.mediasystem.runner.dialog.Dialogs;
 import hs.mediasystem.runner.presentation.PresentationLoader;
@@ -78,14 +76,12 @@ public class NavigationButtonsFactory {
       .thenComparing(MediaStream::lastModificationTime)
       .reversed();
 
-  @Inject private ProductionCollectionFactory productionCollectionFactory;
-  @Inject private RecommendationsPresentationFactory recommendationsPresentationFactory;
-  @Inject private ContributionsPresentationFactory contributionsPresentationFactory;
   @Inject private PlaybackOverlayPresentation.TaskFactory factory;
   @Inject private WorkClient workClient;
   @Inject private ImageHandleFactory imageHandleFactory;
+  @Inject private Theme theme;
 
-  public HBox create(Work work, EventHandler<ActionEvent> showEpisodes) {
+  public HBox create(Presentation presentation, Work work, EventHandler<ActionEvent> showEpisodes) {
     HBox hbox = Containers.hbox("navigation-area");
 
     if(work.getType().isSerie()) {
@@ -98,12 +94,16 @@ public class NavigationButtonsFactory {
       createPlayButtons(work).ifPresent(hbox.getChildren()::add);
     }
 
-    if(work.getId().getDataSource().getName().equals("TMDB")) {
-      if(work.getType().isComponent() && work.getType().isPlayable()) {
-        hbox.getChildren().add(Buttons.create("Cast & Crew", e -> navigateToCastAndCrew(e, work)));
+    List<NavigationTarget> targets = theme.targetsFor(presentation);
+
+    if(!targets.isEmpty()) {
+      if(targets.size() == 1) {
+        NavigationTarget target = targets.get(0);
+
+        hbox.getChildren().add(Buttons.create(target.getLabel(), target::go));
       }
       else {
-        hbox.getChildren().add(createRelatedButton(work));
+        hbox.getChildren().add(createRelatedButton(targets));
       }
     }
 
@@ -271,30 +271,14 @@ public class NavigationButtonsFactory {
     }
   }
 
-  private MultiButton createRelatedButton(Work work) {
+  private static MultiButton createRelatedButton(List<NavigationTarget> targets) {
     List<Button> nodes = new ArrayList<>();
 
-    nodes.add(Buttons.create("cast", "Cast & Crew", e -> navigateToCastAndCrew(e, work)));
-    nodes.add(Buttons.create("recommended", "Recommended", e -> navigateToRecommendations(e, work)));
-
-    work.getParent().filter(p -> p.type().equals(MediaType.COLLECTION))
-      .ifPresent(p -> {
-        nodes.add(Buttons.create("collection", "Collection", e -> navigateToCollection(e, p.id())));
-      });
+    for(NavigationTarget target : targets) {
+      nodes.add(Buttons.create(target.getLabel(), target::go));
+    }
 
     return new MultiButton(nodes);
-  }
-
-  private void navigateToCastAndCrew(ActionEvent event, Work work) {
-    PresentationLoader.navigate(event, () -> contributionsPresentationFactory.create(work.getId()));
-  }
-
-  private void navigateToCollection(ActionEvent event, WorkId id) {
-    PresentationLoader.navigate(event, () -> productionCollectionFactory.create(id));
-  }
-
-  private void navigateToRecommendations(ActionEvent event, Work work) {
-    PresentationLoader.navigate(event, () -> recommendationsPresentationFactory.create(work.getId()));
   }
 
   private static Button create(String title, String subtitle, EventHandler<ActionEvent> eventHandler) {

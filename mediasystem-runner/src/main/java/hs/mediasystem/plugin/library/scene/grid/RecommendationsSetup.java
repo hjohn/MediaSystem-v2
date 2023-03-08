@@ -5,11 +5,8 @@ import hs.mediasystem.plugin.cell.MediaGridViewCellFactory.Model;
 import hs.mediasystem.plugin.library.scene.MediaStatus;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.RecommendationsPresentationFactory.RecommendationsPresentation;
-import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory;
-import hs.mediasystem.runner.presentation.PresentationLoader;
 import hs.mediasystem.ui.api.domain.Parent;
 import hs.mediasystem.ui.api.domain.Work;
-import hs.mediasystem.util.javafx.base.ItemSelectedEvent;
 
 import javafx.scene.Node;
 
@@ -19,12 +16,6 @@ import javax.inject.Singleton;
 @Singleton
 public class RecommendationsSetup extends AbstractSetup<Work, Work, RecommendationsPresentation> {
   @Inject private ContextLayout contextLayout;
-  @Inject private ProductionPresentationFactory productionPresentationFactory;
-
-  @Override
-  protected void onItemSelected(ItemSelectedEvent<Work> event, RecommendationsPresentation presentation) {
-    PresentationLoader.navigate(event, () -> productionPresentationFactory.create(event.getItem().getId()));
-  }
 
   @Override
   protected Node createPreviewPanel(Work item) {

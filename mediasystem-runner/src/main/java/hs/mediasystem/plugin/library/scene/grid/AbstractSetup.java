@@ -5,6 +5,7 @@ import hs.mediasystem.plugin.library.scene.MediaGridView;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.GridViewPresentationFactory.GridViewPresentation;
 import hs.mediasystem.presentation.NodeFactory;
+import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
@@ -54,6 +55,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
   @Inject private ContextLayout contextLayout;
   @Inject private Function<ObservableValue<?>, WorkCellPresentation> workCellPresentationFactory;
   @Inject private ViewStatusBarFactory viewStatusBarFactory;
+  @Inject private Theme theme;
 
   public enum Area {
     CENTER_TOP,
@@ -238,7 +240,9 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
     return areaPane;
   }
 
-  protected abstract void onItemSelected(ItemSelectedEvent<T> event, P presentation);
+  private void onItemSelected(ItemSelectedEvent<T> event, P presentation) {
+    theme.targetFor(presentation).ifPresent(target -> target.go(event));
+  }
 
   protected abstract Node createPreviewPanel(U item);
 

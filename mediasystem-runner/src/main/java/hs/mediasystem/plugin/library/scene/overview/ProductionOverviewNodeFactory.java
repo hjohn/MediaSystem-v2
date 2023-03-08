@@ -122,7 +122,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
           });
 
         borderPane.setBottom(
-          Containers.stack(navigationButtonsFactory.create(current, e -> presentation.toListState()), buildStreamInfoPanel(current))
+          Containers.stack(navigationButtonsFactory.create(presentation, current, e -> presentation.toListState()), buildStreamInfoPanel(current))
         );
       });
 
@@ -233,12 +233,12 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
               transitionPane.add(oldIndex > newIndex, buildEpisodeUI(selectedChildCopy));
             }
 
-            setBottom(Containers.stack(navigationButtonsFactory.create(current, null), streamInfoPane));
+            setBottom(Containers.stack(navigationButtonsFactory.create(presentation, current, null), streamInfoPane));
             updateStreamInfoPane(streamInfoPane, current);
           });
 
         // duplicated
-        setBottom(Containers.stack(navigationButtonsFactory.create(selectedChildCopy.get(), null), streamInfoPane));
+        setBottom(Containers.stack(navigationButtonsFactory.create(presentation, selectedChildCopy.get(), null), streamInfoPane));
         updateStreamInfoPane(streamInfoPane, selectedChildCopy.get());
 
         streamInfoPane.setMouseTransparent(true);

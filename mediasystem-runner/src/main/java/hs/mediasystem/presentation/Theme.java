@@ -1,5 +1,10 @@
 package hs.mediasystem.presentation;
 
+import java.util.List;
+import java.util.Optional;
+
+import javafx.event.Event;
+
 public interface Theme {
   <P extends ParentPresentation, C extends Presentation> Placer<P, C> findPlacer(P parentPresentation, C childPresentation);
 
@@ -15,4 +20,42 @@ public interface Theme {
    *   ancestor {@code ParentPresentation}, otherwise {@code false}
    */
   boolean nestPresentation(ParentPresentation ancestor, Presentation descendant);
+
+  /**
+   * Given a {@link Presentation} returns all possible targets (in order of priority)
+   * to which can be navigated.
+   *
+   * @param presentation a {@link Presentation}, cannot be {@code null}
+   * @return a list of {@link NavigationTarget}s, never {@code null} or contains {@code null}, but can be empty
+   */
+  List<NavigationTarget> targetsFor(Presentation presentation);
+
+  /**
+   * Given a {@link Presentation} returns the single most important target
+   * to which can be navigated.
+   *
+   * @param presentation a {@link Presentation}, cannot be {@code null}
+   * @return an optional {@link NavigationTarget}, never {@code null}, but can be empty
+   */
+  Optional<NavigationTarget> targetFor(Presentation presentation);
+
+  /**
+   * A target to which can be navigated, including description.
+   */
+  interface NavigationTarget {
+
+    /**
+     * Returns a label for the target.
+     *
+     * @return a label for the target, never {@code null}
+     */
+    String getLabel();
+
+    /**
+     * Navigates to the target in response to an event.
+     *
+     * @param event an {@link Event}, cannot be {@code null}
+     */
+    void go(Event event);
+  }
 }
