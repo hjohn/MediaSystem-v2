@@ -119,6 +119,12 @@ public class DialogPane<R> extends StackPane {
     }
   }
 
+  // TODO doing dialogs by inserting a new child in the StackPane at the root is not ideal
+  // - Dialogs can stack sometimes (a progress dialog may be created (for refreshing presentations) while a standard dialog is in the process of fading out)
+  //   - This can cause conflicts when two dialogs are modifying properties at the same time
+  //   - Blur for example disappears on the main scene when opening a dialog (F10) and then using View File Information (a nested dialog); when nested is closed, blur is gone on whole scene
+  // - Dialogs modify the children of the top level StackPane (adding an effect), but never remove this effect
+  // - While dialogs are being nested, the children may have multiple "enabled-look" styles (although all should be removed at the end)
   private static class DialogGlass extends StackPane {
     private final Transition fadeOutAndShowDialog;
     private final StackPane root;
@@ -186,26 +192,31 @@ public class DialogPane<R> extends StackPane {
 
       fadeOutAndShowDialog.stop();
 
-      Transition fadeInAndRemove = new Transition() {
-        private final double opacityRange = getChildren().get(0).getOpacity();
+      double startOpacity = getChildren().get(0).getOpacity();
 
-        {
-          setCycleDuration(Duration.millis(500));
-        }
+      if(startOpacity > 0) {
+        Transition fadeInAndRemove = new Transition() {
+          {
+            setCycleDuration(Duration.millis(500));
+          }
 
-        @Override
-        protected void interpolate(double frac) {
-          double f = (1 - frac) * opacityRange;
+          @Override
+          protected void interpolate(double frac) {
+            double f = (1 - frac) * startOpacity;
 
-          getChildren().get(0).setOpacity(f);
-          setBackground(new Background(new BackgroundFill(new Color(0, 0, 0, f / 2), CornerRadii.EMPTY, Insets.EMPTY)));
+            getChildren().get(0).setOpacity(f);
+            setBackground(new Background(new BackgroundFill(new Color(0, 0, 0, f / 2), CornerRadii.EMPTY, Insets.EMPTY)));
 
-          children.stream().forEach(c -> c.setEffect(new GaussianBlur(f * 5)));
-        }
-      };
+            children.stream().forEach(c -> c.setEffect(new GaussianBlur(f * 5)));
+          }
+        };
 
-      fadeInAndRemove.setOnFinished(event -> root.getChildren().remove(DialogGlass.this));
-      fadeInAndRemove.play();
+        fadeInAndRemove.setOnFinished(event -> root.getChildren().remove(DialogGlass.this));
+        fadeInAndRemove.play();
+      }
+      else {
+        root.getChildren().remove(DialogGlass.this);
+      }
     }
   }
 
