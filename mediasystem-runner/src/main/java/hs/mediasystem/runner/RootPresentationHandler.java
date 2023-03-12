@@ -44,6 +44,7 @@ public class RootPresentationHandler implements EventRoot {
 
     scene.addEventHandler(PresentationEvent.CONTEXT_MENU, contextMenuHandler::handle);
     scene.addEventHandler(PresentationEvent.REFRESH, Presentations::refresh);
+    scene.addEventHandler(PresentationEvent.REQUEST_FOCUSED_REFRESH, this::refreshFocused);
 
     sceneManager.getRootPane().getStyleClass().setAll("root", "media-look");
   }
@@ -51,6 +52,11 @@ public class RootPresentationHandler implements EventRoot {
   @Override
   public void fire(Event event) {
     sceneManager.getScene().getFocusOwner().fireEvent(event);
+  }
+
+  private void refreshFocused(Event event) {
+    fire(PresentationEvent.refresh());
+    event.consume();
   }
 
   private void onKeyReleased(KeyEvent event) {

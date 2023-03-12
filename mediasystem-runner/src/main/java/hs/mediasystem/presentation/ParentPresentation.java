@@ -39,7 +39,13 @@ public class ParentPresentation implements Presentation, Navigable {
     childPresentation.set(presentation);
     childPresentation.addListener(listener);
 
-    Events.dispatchEvent(e.getTarget(), PresentationEvent.refresh());
+    /*
+     * Note: the refresh event should be sent to the newly focused
+     * node; the target of the navigate event would point to the UI about to
+     * disappear.
+     */
+
+    Events.dispatchEvent(e.getTarget(), PresentationEvent.requestFocusedRefresh());
 
     e.consume();
   }
