@@ -26,6 +26,7 @@ import javafx.util.Duration;
 public class BackgroundPane extends StackPane {
   private static final long SETTLE_MILLIS = 1000;   // How long to atleast wait for a new image to be selected (when image changes rapidly)
   private static final long LOAD_MILLIS = 5000;    // How long to wait for a new image to be loaded before displaying an empty image
+  private static final long FADE_IN_MILLIS = 1500;
   private static final Duration MAX_LOAD_DURATION = Duration.millis(LOAD_MILLIS);
   private static final Image EMPTY_IMAGE = new Image(new ByteArrayInputStream(Base64.getDecoder().decode("R0lGODlhAQABAHAAACH5BAUAAAAALAAAAAABAAEAAAICRAEAOw==")));  // Tiny transparent gif
   private static final Image DEFAULT_IMAGE = new Image(BackgroundPane.class.getResourceAsStream("curtain.jpg"));
@@ -104,7 +105,7 @@ public class BackgroundPane extends StackPane {
       new KeyValue(backgroundImageView.opacityProperty(), 1.0),
       new KeyValue(newBackgroundImageView.opacityProperty(), 0.0)
     ),
-    new KeyFrame(MAX_LOAD_DURATION.add(Duration.millis(3000)),
+    new KeyFrame(MAX_LOAD_DURATION.add(Duration.millis(FADE_IN_MILLIS)),
       new KeyValue(backgroundImageView.opacityProperty(), 0.0),
       new KeyValue(newBackgroundImageView.opacityProperty(), 1.0)
     )
