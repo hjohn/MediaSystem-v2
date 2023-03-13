@@ -15,32 +15,30 @@ import javax.inject.Singleton;
 public class ActionTargetProvider {
 
   public List<ActionTarget> getActionTargets(Class<?> rootClass) {
-    return createActionTargets(rootClass, new ArrayList<>());
+    return createActionTargets(rootClass, null);
   }
 
-  private List<ActionTarget> createActionTargets(Class<?> rootClass, List<ExposedControl> currentPath) {
+  private List<ActionTarget> createActionTargets(Class<?> rootClass, ActionTarget parent) {
     List<ActionTarget> actionTargets = new ArrayList<>();
 
     while(rootClass != null) {
       for(ExposedControl exposedControl : ExposedControl.find(rootClass)) {
-        currentPath.add(exposedControl);
+        ActionTarget actionTarget = new ActionTarget(parent, exposedControl);
 
         if(exposedControl instanceof AbstractExposedProperty) {
           if(exposedControl instanceof ExposedNode<?> en) {
-            actionTargets.addAll(createActionTargets(en.getProvidedType(), currentPath));
+            actionTargets.addAll(createActionTargets(en.getProvidedType(), actionTarget));
           }
           else {
-            actionTargets.add(new ActionTarget(currentPath));
+            actionTargets.add(actionTarget);
           }
         }
         else if(exposedControl instanceof ExposedMethod) {
-          actionTargets.add(new ActionTarget(currentPath));
+          actionTargets.add(actionTarget);
         }
         else {
           throw new IllegalStateException("Unhandled exposed member: " + exposedControl);
         }
-
-        currentPath.remove(currentPath.size() - 1);
       }
 
       rootClass = rootClass.getSuperclass();

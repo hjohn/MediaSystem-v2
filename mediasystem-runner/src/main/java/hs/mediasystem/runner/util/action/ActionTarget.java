@@ -12,10 +12,12 @@ import hs.mediasystem.util.expose.ExposedNode;
 import hs.mediasystem.util.expose.Trigger;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.beans.property.Property;
 
@@ -23,18 +25,24 @@ import javafx.beans.property.Property;
  * A (static) target for potential actions. An {@code ActionTarget} can have
  * multiple possible actions available to it.
  */
-public class ActionTarget {
+public final class ActionTarget {
   private static final Logger LOGGER = Logger.getLogger(ActionTarget.class.getName());
   private static final Pattern NUMERIC_PROPERTY_PATTERN = Pattern.compile("([a-zA-Z]+)\\s*(?:\\((.+)\\))?");
 
+  private final ActionTarget parent;
+  private final ExposedControl myControl;
   private final List<ExposedControl> path;
+  private final String pathIdentifier;
 
-  public ActionTarget(List<ExposedControl> path) {
-    if(path == null || path.isEmpty()) {
-      throw new IllegalArgumentException("path cannot be null or empty");
-    }
+  public ActionTarget(ActionTarget parent, ExposedControl exposedControl) {
+    this.parent = parent;
+    this.myControl = Objects.requireNonNull(exposedControl, "exposedControl");
+    this.path = getPathStream().toList();
+    this.pathIdentifier = path.stream().map(ExposedControl::getName).collect(Collectors.joining("."));
+  }
 
-    this.path = List.copyOf(path);
+  public String toPath() {
+    return pathIdentifier;
   }
 
   public List<ExposedControl> getPath() {
@@ -128,38 +136,37 @@ public class ActionTarget {
     return null;
   }
 
-  @SuppressWarnings("unchecked")
-  public <T> Property<T> getProperty(Object root) {
-    Object ownerInstance = findDirectOwnerInstanceFromRoot(root);
-
-    return ((AbstractExposedProperty<T>)getExposedControl()).getProperty(ownerInstance);
-  }
-
   public ExposedControl getExposedControl() {
-    return path.get(path.size() - 1);
+    return myControl;
   }
 
   public Object findDirectOwnerInstanceFromRoot(Object root) {
-    Object parent = root;
+    if(parent == null) {
+      return root;
+    }
 
-    for(int i = 0; i < path.size() - 1; i++) {
-      ExposedControl pathMember = path.get(i);
+    Object parentInstance = root;
 
+    for(ExposedControl pathMember : parent.path) {
       if(!(pathMember instanceof ExposedNode)) {
         throw new IllegalStateException("Bad path to property; \"" + pathMember.getName() + "\" does not have child properties; target: " + this);
       }
 
       @SuppressWarnings("unchecked")
-      Property<Object> property = ((AbstractExposedProperty<Object>)pathMember).getProperty(parent);
+      Property<Object> property = ((AbstractExposedProperty<Object>)pathMember).getProperty(parentInstance);
 
       if(property == null) {
         throw new IllegalStateException("\"" + pathMember.getName() + "\" was not set; target: " + this);
       }
 
-      parent = property.getValue();
+      parentInstance = property.getValue();
     }
 
-    return parent;
+    return parentInstance;
+  }
+
+  private Stream<ExposedControl> getPathStream() {
+    return parent == null ? Stream.of(myControl) : Stream.concat(parent.getPathStream(), Stream.of(myControl));
   }
 
   private <V> Trigger<V> add(Object ownerInstance, String parameter) {
@@ -268,6 +275,6 @@ public class ActionTarget {
 
   @Override
   public String toString() {
-    return path.get(0).getDeclaringClass().getName() + "::" + path.stream().map(ExposedControl::getName).collect(Collectors.joining("::"));
+    return getActionClass() + "::" + pathIdentifier;
   }
 }
