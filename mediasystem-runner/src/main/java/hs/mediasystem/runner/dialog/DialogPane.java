@@ -2,9 +2,6 @@ package hs.mediasystem.runner.dialog;
 
 import hs.mediasystem.presentation.Navigable;
 import hs.mediasystem.presentation.Presentation;
-import hs.mediasystem.presentation.PresentationActionEvent;
-import hs.mediasystem.runner.util.action.ActionTarget;
-import hs.mediasystem.util.expose.Trigger;
 import hs.mediasystem.util.javafx.SceneUtil;
 
 import java.util.ArrayList;
@@ -69,19 +66,7 @@ public class DialogPane<R> extends StackPane {
 
     dialogGlass = new DialogGlass(scene, this, delay);
 
-    NavigablePresentation navigablePresentation = new NavigablePresentation(this);
-
-    addEventHandler(PresentationActionEvent.PROPOSED, e -> {
-      ActionTarget actionTarget = e.getAction().getActionTarget();
-
-      if(actionTarget.getActionClass().isAssignableFrom(navigablePresentation.getClass())) {
-        Trigger<Object> trigger = actionTarget.createTrigger(e.getAction().getDescriptor(), navigablePresentation);
-
-        if(trigger != null) {
-          trigger.run(e, task -> Dialogs.showProgressDialog(e, task));
-        }
-      }
-    });
+    new NavigablePresentation().associate(this::addEventHandler);
 
     requestFocus();
 
@@ -220,17 +205,14 @@ public class DialogPane<R> extends StackPane {
     }
   }
 
-  public static class NavigablePresentation implements Presentation, Navigable {
-    private final DialogPane<?> dialogPane;
-
-    public NavigablePresentation(DialogPane<?> dialogPane) {
-      this.dialogPane = dialogPane;
-    }
+  public class NavigablePresentation implements Presentation, Navigable {
 
     @Override
     public void navigateBack(Event e) {
-      if(dialogPane.closeHandler.test(e)) {
-        dialogPane.close();
+      if(DialogPane.this.closeHandler.test(e)) {
+        DialogPane.this.close();
+
+        e.consume();
       }
     }
   }

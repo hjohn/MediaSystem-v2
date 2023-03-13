@@ -6,7 +6,6 @@ import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFacto
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.Theme;
 import hs.mediasystem.runner.grouping.WorksGroup;
-import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.grid.MediaGridView;
 import hs.mediasystem.ui.api.ConsumedStateChanged;
@@ -91,7 +90,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     listView.addEventHandler(ConsumedStateChanged.ANY, e -> new Thread(() -> Platform.runLater(presentation.createUpdateTask())).start());
 
-    Presentations.associate(listView, workCellPresentationFactory.apply(presentation.selectedItem));
+    workCellPresentationFactory.apply(presentation.selectedItem).associate(listView::addEventHandler);
 
     MediaGridViewCellFactory<U> cellFactory = new MediaGridViewCellFactory<>(AbstractSetup.this::fillModel);
 

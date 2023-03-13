@@ -45,28 +45,6 @@ public final class ActionTarget {
     return pathIdentifier;
   }
 
-  public List<ExposedControl> getPath() {
-    return path;
-  }
-
-  public Class<?> getActionClass() {
-    return path.get(0).getDeclaringClass();
-  }
-
-  public Class<?> getTargetClass() {
-    Class<?> cls = path.get(path.size() - 1).getDeclaringClass();
-
-    while(cls.getDeclaringClass() != null) {
-      cls = cls.getDeclaringClass();
-    }
-
-    return cls;
-  }
-
-  public String getTargetName() {
-    return path.get(path.size() - 1).getName();
-  }
-
   public double getOrder() {
     return ResourceManager.getDouble(getTargetClass(), "action-target." + getTargetName() + ".order", 0);
   }
@@ -167,6 +145,24 @@ public final class ActionTarget {
 
   private Stream<ExposedControl> getPathStream() {
     return parent == null ? Stream.of(myControl) : Stream.concat(parent.getPathStream(), Stream.of(myControl));
+  }
+
+  private Class<?> getActionClass() {
+    return parent == null ? getTargetClass() : parent.getActionClass();
+  }
+
+  private Class<?> getTargetClass() {
+    Class<?> cls = myControl.getDeclaringClass();
+
+    while(cls.getDeclaringClass() != null) {
+      cls = cls.getDeclaringClass();
+    }
+
+    return cls;
+  }
+
+  private String getTargetName() {
+    return myControl.getName();
   }
 
   private <V> Trigger<V> add(Object ownerInstance, String parameter) {

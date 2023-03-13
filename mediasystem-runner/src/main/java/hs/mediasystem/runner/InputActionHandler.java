@@ -1,8 +1,6 @@
 package hs.mediasystem.runner;
 
 import hs.mediasystem.runner.util.action.Action;
-import hs.mediasystem.runner.util.action.ActionTarget;
-import hs.mediasystem.util.expose.ExposedControl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +25,6 @@ public class InputActionHandler {
   private static final Logger LOGGER = Logger.getLogger(InputActionHandler.class.getName());
 
   @Inject @Named("input-mappings") private Map<String, Object> inputMappings;
-  @Inject private ActionTargetProvider actionTargetProvider;
 
   private final Map<KeyCombination, List<Action>> actions = new HashMap<>();
 
@@ -62,38 +59,10 @@ public class InputActionHandler {
 
       for(String action : actionNames) {
         String[] parts = action.split(":");
+        Action actionObject = new Action(parts[0], parts.length > 1 ? parts[1] : "trigger");
 
-        try {
-          Class<?> cls = Class.forName(parts[0]);
-
-          for(ActionTarget actionTarget : actionTargetProvider.getActionTargets(cls)) {
-            if(createPath(actionTarget.getPath()).equals(parts[0] + "." + parts[1])) {
-              Action actionObject = new Action(actionTarget, parts.length > 2 ? parts[2] : "trigger");
-
-              LOGGER.info("Mapped <" + combination + "> to " + actionObject);
-
-              actions.computeIfAbsent(combination, k -> new ArrayList<>()).add(actionObject);
-            }
-          }
-        }
-        catch(ClassNotFoundException e) {
-          LOGGER.warning("Unknown action (class not found) for input mapping: " + key + ", action was: " + action);
-        }
+        actions.computeIfAbsent(combination, k -> new ArrayList<>()).add(actionObject);
       }
     }
-  }
-
-  private static String createPath(List<ExposedControl> path) {
-    StringBuilder sb = new StringBuilder();
-
-    for(ExposedControl member : path) {
-      if(sb.length() == 0) {
-        sb.append(member.getDeclaringClass().getName());
-      }
-
-      sb.append(".").append(member.getName());
-    }
-
-    return sb.toString();
   }
 }

@@ -9,7 +9,6 @@ import hs.mediasystem.plugin.library.scene.overview.EpisodePane.Model;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.ProductionPresentation;
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.grid.MediaStatus;
 import hs.mediasystem.ui.api.WorkClient;
 import hs.mediasystem.ui.api.domain.Details;
@@ -245,7 +244,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
         setCenter(transitionPane);
 
-        Presentations.associate(this, new EpisodePresentation(presentation.children, presentation.selectedChild));
+        new EpisodePresentation(presentation.children, presentation.selectedChild).associate(this::addEventHandler);
 
         getStyleClass().add("episode-dynamic-panel");
 

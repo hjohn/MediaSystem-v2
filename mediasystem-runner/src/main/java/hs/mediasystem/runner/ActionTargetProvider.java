@@ -6,6 +6,7 @@ import hs.mediasystem.util.expose.ExposedNode;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Singleton;
@@ -17,6 +18,12 @@ public class ActionTargetProvider {
 
   public List<ActionTarget> getActionTargets(Class<?> rootClass) {
     return getAllActionTargets(rootClass, null).toList();
+  }
+
+  public Optional<ActionTarget> findMatching(Class<?> rootClass, String path) {
+    return getAllActionTargets(rootClass, null)  // TODO result of this call is basically constant (if it wasn't a stream)
+      .filter(at -> at.toPath().equals(path))
+      .findFirst();
   }
 
   private Stream<ActionTarget> getAllActionTargets(Class<?> rootClass, ActionTarget parent) {

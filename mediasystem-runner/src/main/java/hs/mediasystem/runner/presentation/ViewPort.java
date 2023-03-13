@@ -63,7 +63,7 @@ public class ViewPort extends TransitionPane {
       node.addEventHandler(NavigateEvent.NAVIGATION_BACK, n::navigateBack);
     }
 
-    Presentations.associate(node, current);
+    current.associate(node::addEventHandler);
 
     add(node);  // after transition ends, node will be the single visible node
 

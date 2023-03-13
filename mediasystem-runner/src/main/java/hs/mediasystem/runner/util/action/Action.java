@@ -3,31 +3,21 @@ package hs.mediasystem.runner.util.action;
 import java.util.Objects;
 
 /**
- * A combination of an {@link ActionTarget}, and a descriptor that describes
- * which action the target should perform.
+ * A location and descriptor for an action.
  */
 public class Action {
-  private final ActionTarget actionTarget;
+  private final String path;
   private final String descriptor;
 
   /**
    * Constructs a new instance.
    *
-   * @param actionTarget an {@link ActionTarget}, cannot be {@code null}
-   * @param descriptor an action descriptor, cannot be {@code null}
+   * @param path a path identifying the location of the action, cannot be {@code null}
+   * @param descriptor a descriptor describing the action, cannot be {@code null}
    */
-  public Action(ActionTarget actionTarget, String descriptor) {
-    this.actionTarget = Objects.requireNonNull(actionTarget, "actionTarget");
+  public Action(String path, String descriptor) {
+    this.path = Objects.requireNonNull(path, "path");
     this.descriptor = Objects.requireNonNull(descriptor, "descriptor");
-  }
-
-  /**
-   * Returns the {@link ActionTarget}.
-   *
-   * @return the {@link ActionTarget}, never {@code null}
-   */
-  public ActionTarget getActionTarget() {
-    return actionTarget;
   }
 
   /**
@@ -39,8 +29,17 @@ public class Action {
     return descriptor;
   }
 
+  /**
+   * Returns the location of the action.
+   *
+   * @return the location of the action, never {@code null}
+   */
+  public String getPath() {
+    return path;
+  }
+
   @Override
   public String toString() {
-    return actionTarget + "#" + descriptor;
+    return path + "#" + descriptor;
   }
 }
