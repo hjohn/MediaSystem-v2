@@ -1,0 +1,3 @@
+action-target:
+  navigateBack:
+    visible: false

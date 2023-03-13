@@ -1,49 +1,36 @@
 package hs.mediasystem.runner;
 
 import hs.mediasystem.runner.util.action.ActionTarget;
-import hs.mediasystem.util.expose.AbstractExposedProperty;
 import hs.mediasystem.util.expose.ExposedControl;
-import hs.mediasystem.util.expose.ExposedMethod;
 import hs.mediasystem.util.expose.ExposedNode;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Singleton;
+
+import org.int4.dirk.util.Types;
 
 @Singleton
 public class ActionTargetProvider {
 
   public List<ActionTarget> getActionTargets(Class<?> rootClass) {
-    return createActionTargets(rootClass, null);
+    return getAllActionTargets(rootClass, null).toList();
   }
 
-  private List<ActionTarget> createActionTargets(Class<?> rootClass, ActionTarget parent) {
-    List<ActionTarget> actionTargets = new ArrayList<>();
+  private Stream<ActionTarget> getAllActionTargets(Class<?> rootClass, ActionTarget parent) {
+    return Types.getSuperTypes(rootClass).stream()
+      .map(ExposedControl::find)
+      .flatMap(Collection::stream)
+      .flatMap(control -> toActionTarget(control, parent));
+  }
 
-    while(rootClass != null) {
-      for(ExposedControl exposedControl : ExposedControl.find(rootClass)) {
-        ActionTarget actionTarget = new ActionTarget(parent, exposedControl);
+  private Stream<ActionTarget> toActionTarget(ExposedControl exposedControl, ActionTarget parent) {
+    ActionTarget actionTarget = new ActionTarget(parent, exposedControl);
 
-        if(exposedControl instanceof AbstractExposedProperty) {
-          if(exposedControl instanceof ExposedNode<?> en) {
-            actionTargets.addAll(createActionTargets(en.getProvidedType(), actionTarget));
-          }
-          else {
-            actionTargets.add(actionTarget);
-          }
-        }
-        else if(exposedControl instanceof ExposedMethod) {
-          actionTargets.add(actionTarget);
-        }
-        else {
-          throw new IllegalStateException("Unhandled exposed member: " + exposedControl);
-        }
-      }
-
-      rootClass = rootClass.getSuperclass();
-    }
-
-    return actionTargets;
+    return exposedControl instanceof ExposedNode<?> exposedNode
+      ? getAllActionTargets(exposedNode.getProvidedType(), actionTarget)
+      : Stream.of(actionTarget);
   }
 }
