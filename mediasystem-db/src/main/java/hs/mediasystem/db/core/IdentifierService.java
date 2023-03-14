@@ -61,9 +61,7 @@ public class IdentifierService {
       throw new IllegalArgumentException("identificationServices cannot have services with the same name: " + identificationServices.stream().map(IdentificationService::getName).toList());
     }
 
-    this.parentDescriptorCacheSubscription = persistentEventStream.plain().subscribe("IdentifierService", e -> {
-      parentDescriptors.put(e.location(), e);
-    });
+    this.parentDescriptorCacheSubscription = persistentEventStream.plain().subscribe("IdentifierService", e -> parentDescriptors.put(e.location(), e));
 
     source.plain().subscribe("IdentifierService", this::process);
   }
