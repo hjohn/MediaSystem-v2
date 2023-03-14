@@ -23,7 +23,49 @@ import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class StreamableService {
-  private final NavigableMap<String, Streamable> cache = new TreeMap<>();
+
+  /**
+   * Comparator which mimics the behavior of {@code Comparator.compare(s -> s + "/")}
+   * without the overhead of creating new strings. A quick performance measurement
+   * showed this is about twice as fast.
+   */
+  private static final Comparator<String> PATH_COMPARATOR = new Comparator<>() {
+    @Override
+    public int compare(String o1, String o2) {
+      int l1 = o1.length();
+      int l2 = o2.length();
+      int min = Math.min(l1, l2);
+
+      for(int i = 0; i < min; i++) {
+        int c = Character.compare(o1.charAt(i), o2.charAt(i));
+
+        if(c != 0) {
+          return c;
+        }
+      }
+
+      char c1 = l1 == min ? '/' : o1.charAt(min);
+      char c2 = l2 == min ? '/' : o2.charAt(min);
+
+      int c = Character.compare(c1, c2);
+
+      if(c != 0) {
+        return c;
+      }
+
+      return l1 == l2 ? 0 : l1 < l2 ? -1 : 1;
+    }
+  };
+
+  /*
+   * Note on the sorting in the cache. The order in the cache should be such that all children
+   * of a parent are directly below that parent. When doing a simplistic alphabetical sort
+   * however the paths "a", "a/2" and "ab" are sorted as "a", "ab", "a/2". Appending a trailing
+   * slash before sorting ("a/", "a/2/", "ab/") results in the desired order (same as input in
+   * this case). The trailing character must be a slash or it won't sort correctly.
+   */
+
+  private final NavigableMap<String, Streamable> cache = new TreeMap<>(PATH_COMPARATOR);
   private final PersistentEventStream<StreamableEvent> persistentEventStream;
   private final Subscription cacheSubscription;
 
@@ -55,7 +97,7 @@ public class StreamableService {
     cacheSubscription.join();
 
     String basePath = event.base().toString();
-    List<Discovery> discoveries = event.discoveries().stream().sorted(Comparator.comparing(d -> d.location())).toList();
+    List<Discovery> discoveries = event.discoveries().stream().sorted(Comparator.comparing(d -> d.location().toString(), PATH_COMPARATOR)).toList();
     List<Streamable> updatedStreamables = new ArrayList<>();
     List<String> removedItems = new ArrayList<>();
     Discovery currentDiscovery = null;
@@ -73,7 +115,7 @@ public class StreamableService {
       while(i < discoveries.size()) {
         Discovery d = discoveries.get(i);
 
-        int c = d.location().toString().compareTo(path);
+        int c = PATH_COMPARATOR.compare(d.location().toString(), path);
 
         if(c > 0) {
           break;

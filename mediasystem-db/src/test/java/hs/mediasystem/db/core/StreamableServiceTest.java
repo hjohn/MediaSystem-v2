@@ -267,6 +267,73 @@ public class StreamableServiceTest {
     );
   }
 
+  @Test
+  void shouldNotGetConfusedWhenABaseURLIsAPrefixOfAnother() {
+    URI root = Path.of("/").toUri();
+    URI aParent = root.resolve("a");
+    URI aPostfixParent = root.resolve("a%20postfix");
+
+    store.append(appender -> {
+      appender.append(updatedSerie(root.resolve("a"), 1));
+      appender.append(updated(root.resolve("a/1"), aParent, 1));
+      appender.append(updated(root.resolve("a/2"), aParent, 1));
+      appender.append(updated(root.resolve("a/3"), aParent, 1));
+      appender.append(updatedSerie(root.resolve("a%20postfix"), 1));
+      appender.append(updated(root.resolve("a%20postfix/4"), aPostfixParent, 1));
+      appender.append(updated(root.resolve("a%20postfix/5"), aPostfixParent, 1));
+      appender.append(updated(root.resolve("a%20postfix/6"), aPostfixParent, 1));
+    });
+
+    StreamableService differ = new StreamableService(store, discoverEvents);
+    Subscription subscription = differ.events().plain().subscribe(queue::add);
+
+    subscription.join();
+    queue.clear();
+
+    discoverEvents.push(new DiscoverEvent(aParent, ID_SERVICE, TAGS, List.of(
+      discovery(root.resolve("a/1"), aParent, 2),
+      discovery(root.resolve("a/3"), aParent, 1),
+      discovery(root.resolve("a/4"), aParent, 1)
+    )));
+
+    await().untilAsserted(() ->
+      assertThat(queue).containsExactlyInAnyOrder(
+        updated(root.resolve("a/1"), aParent, 2),
+        updated(root.resolve("a/4"), aParent, 1),
+        new StreamableEvent.Removed(root.resolve("a/2"))
+      )
+    );
+
+    queue.clear();
+
+    discoverEvents.push(new DiscoverEvent(aPostfixParent, ID_SERVICE, TAGS, List.of(
+      discovery(root.resolve("a%20postfix/4"), aPostfixParent, 1),
+      discovery(root.resolve("a%20postfix/5"), aPostfixParent, 1),
+      discovery(root.resolve("a%20postfix/6"), aPostfixParent, 1),
+      discovery(root.resolve("a%20postfix/7"), aPostfixParent, 1)
+    )));
+
+    await().untilAsserted(() ->
+      assertThat(queue).containsExactlyInAnyOrder(
+        updated(root.resolve("a%20postfix/7"), aPostfixParent, 1)
+      )
+    );
+
+    queue.clear();
+
+    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, List.of(
+      serieDiscovery(root.resolve("a"), 1),
+      serieDiscovery(root.resolve("a%20postfix"), 1),
+      serieDiscovery(root.resolve("b"), 1)
+    )));
+
+    await().untilAsserted(() ->
+      assertThat(queue).containsExactlyInAnyOrder(
+        updatedSerie(root.resolve("b"), 1)
+      )
+    );
+  }
+
   private static ContentPrint contentPrint(int id) {
     return new ContentPrint(new ContentID(id), null, 1000L, new byte[] {1, 2, 3}, Instant.ofEpochSecond(1000));
   }
