@@ -54,7 +54,7 @@ public class ViewPort extends TransitionPane {
       return null;
     }
 
-    Node node = theme.findPlacer(parentPresentation, current).place(parentPresentation, current);
+    Node node = theme.place(parentPresentation, current);
 
     if(current instanceof ParentPresentation pp) {
       node.addEventHandler(NavigateEvent.NAVIGATION_TO, e -> handleNavigateEvent(e, pp));

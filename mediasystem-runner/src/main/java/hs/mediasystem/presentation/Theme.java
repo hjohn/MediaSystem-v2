@@ -4,9 +4,22 @@ import java.util.List;
 import java.util.Optional;
 
 import javafx.event.Event;
+import javafx.scene.Node;
 
 public interface Theme {
-  <P extends ParentPresentation, C extends Presentation> Placer<P, C> findPlacer(P parentPresentation, C childPresentation);
+
+  /**
+   * Returns a {@link Node} representing the child presentation which, if necessary,
+   * has been adjusted to best fit in with the UI associated with the parent
+   * presentation, if provided.
+   *
+   * @param <P> the type of the parent {@link Presentation}
+   * @param <C> the type of the child {@link Presentation}
+   * @param parentPresentation a parent {@link Presentation}, can be {@code null}
+   * @param childPresentation a child {@link Presentation}, cannot be {@code null}
+   * @return a {@link Node} for the adjusted child presentation, never {@code null}
+   */
+  <P extends ParentPresentation, C extends Presentation> Node place(P parentPresentation, C childPresentation);
 
   /**
    * Attempts to make the given descendant {@link Presentation} a direct or indirect child of the given ancestor

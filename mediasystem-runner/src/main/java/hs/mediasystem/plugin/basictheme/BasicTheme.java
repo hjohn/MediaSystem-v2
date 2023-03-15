@@ -93,7 +93,7 @@ public class BasicTheme implements Theme {
   }
 
   @Override
-  public <P extends ParentPresentation, C extends Presentation> Placer<P, C> findPlacer(P parentPresentation, C childPresentation) {
+  public <P extends ParentPresentation, C extends Presentation> Node place(P parentPresentation, C childPresentation) {
     @SuppressWarnings("unchecked")
     Class<? extends NodeFactory<C>> childNodeFactoryClass = (Class<? extends NodeFactory<C>>)(Class<?>)findNodeFactory(childPresentation.getClass());
 
@@ -112,7 +112,7 @@ public class BasicTheme implements Theme {
         @SuppressWarnings("unchecked")
         Placer<P, C> instance = instanceResolver.getInstance(Placer.class, descriptor);
 
-        return instance;
+        return instance.place(parentPresentation, childPresentation);
       }
       catch(InjectionException e) {
         // Fall-through
@@ -121,12 +121,7 @@ public class BasicTheme implements Theme {
 
     NodeFactory<C> nodeFactory = instanceResolver.getInstance(childNodeFactoryClass);
 
-    return new Placer<>() {
-      @Override
-      public Node place(P parentPresentation, C presentation) {
-        return nodeFactory.create(presentation);
-      }
-    };
+    return nodeFactory.create(childPresentation);
   }
 
   @Override
