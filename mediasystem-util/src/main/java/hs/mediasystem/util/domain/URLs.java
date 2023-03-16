@@ -25,9 +25,7 @@ public class URLs {
   public static final byte[] readAllBytes(URL url, Map<String, String> requestProperties) throws IOException {
     URLConnection connection = url.openConnection();
 
-    if(connection instanceof HttpURLConnection) {
-      HttpURLConnection httpURLConnection = (HttpURLConnection)connection;
-
+    if(connection instanceof HttpURLConnection httpURLConnection) {
       requestProperties.entrySet().stream().forEach(e -> httpURLConnection.addRequestProperty(e.getKey(), e.getValue()));
 
       if(httpURLConnection.getResponseCode() != 200) {

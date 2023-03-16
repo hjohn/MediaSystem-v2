@@ -204,8 +204,8 @@ public class CssLayoutFactory {
   }
 
   private static ChildDefinition toChildDefinition(Object obj) {
-    if(obj instanceof String) {
-      return new ChildDefinition((String)obj, Map.of());
+    if(obj instanceof String s) {
+      return new ChildDefinition(s, Map.of());
     }
 
     if(obj instanceof Map) {

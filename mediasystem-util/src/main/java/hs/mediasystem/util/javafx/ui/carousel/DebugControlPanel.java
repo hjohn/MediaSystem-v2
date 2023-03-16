@@ -24,9 +24,7 @@ public class DebugControlPanel extends VBox {
   }
 
   public void unbind(Layout genericLayout) {
-    if(genericLayout instanceof RayLayout) {
-      RayLayout layout = (RayLayout)genericLayout;
-
+    if(genericLayout instanceof RayLayout layout) {
       layout.radiusRatioProperty().unbind();
       layout.viewDistanceRatioProperty().unbind();
       layout.carouselViewFractionProperty().unbind();
@@ -55,9 +53,7 @@ public class DebugControlPanel extends VBox {
       }});
     }}, 2, row++);
 
-    if(genericLayout instanceof RayLayout) {
-      RayLayout layout = (RayLayout)genericLayout;
-
+    if(genericLayout instanceof RayLayout layout) {
       addSlider(layout.centerPositionProperty(), "%4.2f", "Center Position (0.0 - 1.0)", 0.0, 1.0, 0.1, "The horizontal position of the carousel center expressed as the fraction of thalf the view width");
       addSlider(layout.radiusRatioProperty(), "%4.2f", "Radius Ratio (0.0 - 2.0)", 0.0, 2.0, 0.1, "The radius of the carousel expressed as the fraction of half the view width");
       addSlider(layout.viewDistanceRatioProperty(), "%4.2f", "View Distance Ratio (0.0 - 4.0)", 0.0, 4.0, 0.1, "The distance of the camera expressed as a fraction of the radius of the carousel");

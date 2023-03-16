@@ -121,12 +121,12 @@ public class DialogPane<R> extends StackPane {
     public DialogGlass(Scene scene, DialogPane<?> dialogPane, double delay) {
       Parent parent = scene.getRoot();
 
-      if(!(parent instanceof StackPane)) {
+      if(!(parent instanceof StackPane stackPane)) {
         // Reasoning behind having a StackPane as root, is that changing the Scene root will trigger Scene property changes for the entire scene graph, which can have undesirable side effects when used to unregister listeners...
         throw new IllegalStateException("Root of Scene must be a StackPane in order to support Dialogs");
       }
 
-      this.root = (StackPane)parent;
+      this.root = stackPane;
       this.children = new ArrayList<>(root.getChildren());
 
       for(Node child : children) {

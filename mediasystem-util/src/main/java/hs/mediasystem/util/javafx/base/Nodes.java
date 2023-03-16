@@ -102,8 +102,8 @@ public class Nodes {
    * @return <code>true</code> if focus was given, otherwise <code>false</code>
    */
   public static boolean focus(Node node) {
-    if(node instanceof Parent) {
-      for(Node child : ((Parent)node).getChildrenUnmodifiable()) {
+    if(node instanceof Parent p) {
+      for(Node child : p.getChildrenUnmodifiable()) {
         if(focus(child)) {
           return true;
         }

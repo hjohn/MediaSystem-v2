@@ -41,9 +41,7 @@ public class SceneUtil {
       if(!e.isConsumed() && e.getCode() == KeyCode.ENTER) {
         Node node = scene.getFocusOwner();
 
-        if(node instanceof Button) {
-          Button button = (Button)node;
-
+        if(node instanceof Button button) {
           button.fire();
           e.consume();
         }

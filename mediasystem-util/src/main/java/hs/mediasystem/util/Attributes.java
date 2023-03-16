@@ -22,11 +22,11 @@ public class Attributes {
       Object k = moreKeyValuePairs[i];
       Object v = moreKeyValuePairs[i + 1];
 
-      if(!(k instanceof String)) {
+      if(!(k instanceof String stringKey)) {
         throw new IllegalArgumentException("moreKeyValuePairs element " + i + " must be a String: " + k);
       }
       if(v != null) {
-        map.put((String)k, v);
+        map.put(stringKey, v);
       }
     }
 
