@@ -14,13 +14,6 @@ public interface ExposedControl {
     return EXPOSED_PROPERTIES.getOrDefault(cls, Collections.emptyList());
   }
 
-  public static ExposedControl find(Class<?> cls, String name) {
-    return EXPOSED_PROPERTIES.getOrDefault(cls, Collections.emptyList()).stream()
-      .filter(ec -> ec.getName().equals(name))
-      .findFirst()
-      .orElse(null);
-  }
-
   public static void clear() {
     EXPOSED_PROPERTIES.clear();
   }
