@@ -69,25 +69,41 @@ public class BasicTheme implements Theme {
 
   @Override
   public boolean nestPresentation(ParentPresentation ancestor, Presentation descendant) {
-    List<Class<? extends Presentation>> hierarchy = new ArrayList<>();
 
-    for(Class<? extends Presentation> cls = descendant.getClass(); (cls = findParent(cls)) != ancestor.getClass();) {
-      if(cls == null) {
+    /*
+     * When a stack of presentations needs to be created, any ancestor's child
+     * presentation should be updated as the last step, so that any listeners on
+     * ancestor will see a fully constructed child presentation stack immediately.
+     *
+     * The reason for this is that when new ViewPorts are created, they immediately
+     * trigger UI construction if the child presentation is already set correctly;
+     * if not this process is delayed until the ViewPort becomes visible. If this
+     * process is delayed, it means that a Node that may need to receive focus
+     * initially may not be present yet when focus is being switched to the new
+     * ViewPort.
+     */
+
+    List<Class<? extends ParentPresentation>> hierarchy = new ArrayList<>();
+    Class<? extends ParentPresentation> parentClass;
+
+    for(Class<? extends Presentation> cls = descendant.getClass(); (parentClass = findParent(cls)) != ancestor.getClass(); cls = parentClass) {
+      if(parentClass == null) {
         return false;  // given ancestor presentation can not be an ancestor for the given descendant
       }
 
-      hierarchy.add(0, cls);
+      hierarchy.add(parentClass);
     }
 
-    ParentPresentation presentation = ancestor;
+    Presentation presentation = descendant;
 
-    for(Class<? extends Presentation> parentClass : hierarchy) {
-      presentation.childPresentation.set(instanceResolver.getInstance(parentClass));
+    for(Class<? extends ParentPresentation> cls : hierarchy) {
+      ParentPresentation pp = instanceResolver.getInstance(cls);
 
-      presentation = (ParentPresentation)presentation.childPresentation.get();
+      pp.childPresentation.set(presentation);
+      presentation = pp;
     }
 
-    presentation.childPresentation.set(descendant);  // presentation is now the direct parent for descendant
+    ancestor.childPresentation.set(presentation);  // presentation is now the presentation which has descendant as its direct or indirect descendant
 
     return true;
   }
@@ -220,7 +236,7 @@ public class BasicTheme implements Theme {
     }
   }
 
-  private static Class<? extends Presentation> findParent(Class<? extends Presentation> cls) {
+  private static Class<? extends ParentPresentation> findParent(Class<? extends Presentation> cls) {
     if(cls == GenericCollectionPresentation.class) {
       return LibraryPresentation.class;
     }
