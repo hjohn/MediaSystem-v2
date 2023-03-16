@@ -90,7 +90,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     listView.addEventHandler(ConsumedStateChanged.ANY, e -> new Thread(() -> Platform.runLater(presentation.createUpdateTask())).start());
 
-    workCellPresentationFactory.apply(presentation.selectedItem).associate(listView::addEventHandler);
+    workCellPresentationFactory.apply(presentation.selectedItem).associate(Nodes.toEventHandlerTarget(listView));
 
     MediaGridViewCellFactory<U> cellFactory = new MediaGridViewCellFactory<>(AbstractSetup.this::fillModel);
 

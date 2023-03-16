@@ -1,9 +1,6 @@
 package hs.mediasystem.presentation;
 
-import java.util.function.BiConsumer;
-
-import javafx.event.EventHandler;
-import javafx.event.EventType;
+import hs.mediasystem.util.javafx.base.EventHandlerTarget;
 
 public interface Presentation {
 
@@ -25,13 +22,13 @@ public interface Presentation {
   }
 
   /**
-   * Associates this {@link Presentation} to the given event handler appender, so that it may
+   * Associates this {@link Presentation} to the given event handler target, so that it may
    * process {@link PresentationEvent}s relevant to it
    *
-   * @param eventHandlerAppender an appender for an {@link EventHandler}, cannot be {@code null}
-   * @throws NullPointerException when {@code eventHandlerAppender} is {@code null}
+   * @param eventHandlerTarget an {@link EventHandlerTarget}, cannot be {@code null}
+   * @throws NullPointerException when {@code eventHandlerTarget} is {@code null}
    */
-  default void associate(BiConsumer<EventType<PresentationEvent>, EventHandler<PresentationEvent>> eventHandlerAppender) {
-    eventHandlerAppender.accept(PresentationEvent.ANY, e -> e.addPresentation(this));
+  default void associate(EventHandlerTarget eventHandlerTarget) {
+    eventHandlerTarget.addEventFilter(PresentationEvent.ANY, e -> e.addPresentation(this));
   }
 }

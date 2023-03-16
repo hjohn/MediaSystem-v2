@@ -77,7 +77,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
     listView.getStyleClass().add("glass-pane");
     listView.onItemSelected.set(e -> onItemSelected(e, presentation));
 
-    workCellPresentationFactory.apply(presentation.selectedItem).associate(listView::addEventHandler);
+    workCellPresentationFactory.apply(presentation.selectedItem).associate(Nodes.toEventHandlerTarget(listView));
 
     AnnotatedImageCellFactory<Work> cellFactory = new AnnotatedImageCellFactory<>((work, model) -> {
       model.title.set(work.getDetails().getTitle());

@@ -244,7 +244,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
         setCenter(transitionPane);
 
-        new EpisodePresentation(presentation.children, presentation.selectedChild).associate(this::addEventHandler);
+        new EpisodePresentation(presentation.children, presentation.selectedChild).associate(Nodes.toEventHandlerTarget(this));
 
         getStyleClass().add("episode-dynamic-panel");
 

@@ -1,10 +1,14 @@
 package hs.mediasystem.util.javafx.base;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -112,5 +116,38 @@ public class Nodes {
     }
 
     return false;
+  }
+
+  /**
+   * Creates an {@link EventHandlerTarget} given a {@link Node}.
+   *
+   * @param node a {@link Node}, cannot be {@code null}
+   * @return an {@link EventHandlerTarget}, never {@code null}
+   * @throws NullPointerException when {@code node} is {@code null}
+   */
+  public static EventHandlerTarget toEventHandlerTarget(Node node) {
+    Objects.requireNonNull(node, "node");
+
+    return new EventHandlerTarget() {
+      @Override
+      public <T extends Event> void addEventFilter(EventType<T> eventType, EventHandler<? super T> eventHandler) {
+        node.addEventFilter(eventType, eventHandler);
+      }
+
+      @Override
+      public <T extends Event> void addEventHandler(EventType<T> eventType, EventHandler<? super T> eventHandler) {
+        node.addEventHandler(eventType, eventHandler);
+      }
+
+      @Override
+      public <T extends Event> void removeEventFilter(EventType<T> eventType, EventHandler<? super T> eventHandler) {
+        node.removeEventFilter(eventType, eventHandler);
+      }
+
+      @Override
+      public <T extends Event> void removeEventHandler(EventType<T> eventType, EventHandler<? super T> eventHandler) {
+        node.removeEventHandler(eventType, eventHandler);
+      }
+    };
   }
 }
