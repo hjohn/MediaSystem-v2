@@ -64,7 +64,6 @@ public class LocalWorksClient implements WorksClient {
 
     return new Work(
       work.getId(),
-      work.getType(),
       createParent(work.getParent().orElse(null)),
       createDetails(work.getDescriptor(), work.getParent().orElse(null), primary),
       streams

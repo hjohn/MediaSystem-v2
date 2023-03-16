@@ -18,18 +18,14 @@ public class Work {
   public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.lastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
 
   private final WorkId id;
-  private final MediaType type;
   private final Optional<Parent> parent;
   private final Details details;
   private final List<MediaStream> streams;
   private final Optional<MediaStream> primaryStream;
 
-  public Work(WorkId id, MediaType type, Parent parent, Details details, List<MediaStream> streams) {
+  public Work(WorkId id, Parent parent, Details details, List<MediaStream> streams) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
-    }
-    if(type == null) {
-      throw new IllegalArgumentException("type cannot be null");
     }
     if(details == null) {
       throw new IllegalArgumentException("details cannot be null");
@@ -39,7 +35,6 @@ public class Work {
     }
 
     this.id = id;
-    this.type = type;
     this.parent = Optional.ofNullable(parent);
     this.details = details;
     this.streams = streams;
@@ -56,7 +51,7 @@ public class Work {
   }
 
   public MediaType getType() {
-    return type;
+    return id.getType();
   }
 
   public Optional<Parent> getParent() {
