@@ -33,6 +33,8 @@ import com.sun.javafx.binding.OrElseBinding;
 import com.sun.javafx.binding.Subscription;
 import com.sun.javafx.binding.ThrottledBinding;
 
+import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -297,16 +299,39 @@ public interface ObservableValue<T> extends Observable {
     }
 
     /**
-     * Creates a {@link Subscription} on this {@link ObservableValue} which
-     * immediately provides its current value to the given {@code subscriber},
-     * followed by any subsequent changes in value.
+     * Creates a {@link Subscription} on this value which calls the given
+     * {@code subscriber} with the old and new value of this value whenever it
+     * changes.<p>
+     *
+     * The parameters supplied to the {@link BiConsumer} are the old and new value
+     * respectively.
+     *
+     * @param subscriber a {@code BiConsumer} to supply with the old and new values
+     *     of this {@code ObservableValue}, cannot be {@code null}
+     * @return a {@code Subscription} which can be used to cancel this
+     *     subscription, never {@code null}
+     */
+    default Subscription changes(BiConsumer<? super T, ? super T> subscriber) {
+      Objects.requireNonNull(subscriber, "subscriber cannot be null");
+      ChangeListener<T> listener = (obs, old, current) -> subscriber.accept(old, current);
+
+      addListener(listener);
+
+      return () -> removeListener(listener);
+    }
+
+    /**
+     * Creates a {@link Subscription} on this value which immediately provides
+     * the current value to the given {@code subscriber}, followed by any
+     * subsequent changes in value.
      *
      * @param subscriber a {@link Consumer} to supply with the values of this
-     *     {@link ObservableValue}, cannot be null
-     * @return a {@link Subscription} which can be used to cancel this
-     *     subscription, never null
+     *     {@code ObservableValue}, cannot be {@code null}
+     * @return a {@code Subscription} which can be used to cancel this
+     *     subscription, never {@code null}
      */
-    default Subscription subscribe(Consumer<? super T> subscriber) {
+    default Subscription values(Consumer<? super T> subscriber) {
+        Objects.requireNonNull(subscriber, "subscriber cannot be null");
         ChangeListener<T> listener = (obs, old, current) -> subscriber.accept(current);
 
         subscriber.accept(getValue());  // eagerly send current value
@@ -316,17 +341,17 @@ public interface ObservableValue<T> extends Observable {
     }
 
     /**
-     * Creates a {@link Subscription} on this {@link ObservableValue} which
-     * calls the given {@code runnable} whenever this {@code ObservableValue}
-     * becomes invalid.
+     * Creates a {@link Subscription} on this value which calls the given
+     * {@code runnable} whenever it becomes invalid.
      *
-     * @param runnable a {@link Runnable} to call whenever this
-     *     {@link ObservableValue} becomes invalid, cannot be null
-     * @return a {@link Subscription} which can be used to cancel this
-     *     subscription, never null
+     * @param subscriber a {@code Runnable} to call whenever this
+     *     value becomes invalid, cannot be {@code null}
+     * @return a {@code Subscription} which can be used to cancel this
+     *     subscription, never {@code null}
      */
-    default Subscription subscribeInvalidations(Runnable runnable) {
-        InvalidationListener listener = obs -> runnable.run();
+    default Subscription invalidations(Runnable subscriber) {
+        Objects.requireNonNull(subscriber, "subscriber cannot be null");
+        InvalidationListener listener = obs -> subscriber.run();
 
         addListener(listener);
 

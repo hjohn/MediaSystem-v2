@@ -111,7 +111,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
     presentation.root
       .when(Nodes.showing(pane))
-      .subscribe(current -> {
+      .values(current -> {
         CompletableFuture.supplyAsync(() -> workClient.findContributions(current.getId()))
           .thenAcceptAsync(contributors -> pane.model.contributors.set(contributors), Platform::runLater)
           .whenComplete((v, e) -> {
@@ -258,7 +258,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
         childTransitionPanelSubscription = selectedChild
           .when(Nodes.showing(pane))
-          .subscribe(work -> {
+          .values(work -> {
             Details details = work.getDetails();
 
             double percentage = work.getState().consumed() ? 1.0 : work.getWatchedFraction().orElse(-1);

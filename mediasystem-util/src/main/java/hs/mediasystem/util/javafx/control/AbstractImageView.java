@@ -111,7 +111,7 @@ public abstract class AbstractImageView extends Region {
   private void setupFadeIn(Node placeHolder) {
     imageView.setOpacity(0);
 
-    Nodes.showing(this).subscribe(v -> {
+    Nodes.showing(this).values(v -> {
       Platform.runLater(() -> {
         visibleForOneFrame = v;
       });
