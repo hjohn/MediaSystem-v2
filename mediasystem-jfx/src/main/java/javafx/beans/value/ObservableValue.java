@@ -31,6 +31,7 @@ import com.sun.javafx.binding.FlatMappedBinding;
 import com.sun.javafx.binding.MappedBinding;
 import com.sun.javafx.binding.OrElseBinding;
 import com.sun.javafx.binding.Subscription;
+import com.sun.javafx.binding.ThrottledBinding;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -273,6 +274,22 @@ public interface ObservableValue<T> extends Observable {
      */
     default ObservableValue<T> when(ObservableValue<Boolean> condition) {
         return new ConditionalBinding<>(this, condition);
+    }
+
+    /**
+     * Returns an {@code ObservableValue} which may delay or skip values held by
+     * this value according to the given {@link Throttler}. Although values can be
+     * delayed or skipped, the returned observable can never hold a value that was
+     * not previously held by this value.
+     *
+     * @param throttler a {@link Throttler}, cannot be {@code null}
+     * @return an {@code ObservableValue} that holds delayed values from this value;
+     *     never returns {@code null}
+     * @throws NullPointerException if the throttler is {@code null}
+     * @since 21
+     */
+    default ObservableValue<T> throttle(Throttler throttler) {
+        return new ThrottledBinding<>(this, throttler);
     }
 
     default ObservableValue<T> filter(Predicate<? super T> predicate) {
