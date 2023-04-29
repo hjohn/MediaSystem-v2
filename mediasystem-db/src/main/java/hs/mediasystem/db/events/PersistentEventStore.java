@@ -12,9 +12,13 @@ import java.lang.invoke.MethodHandles.Lookup;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -27,26 +31,18 @@ import java.util.regex.Pattern;
 public class PersistentEventStore<T> implements EventStore<T> {
   private static final Pattern STORE_NAME_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z0-9]*");
 
-  private static record Max(Long id) {}
-  private static record EventRecord(long id, byte[] data) {}
-
-  private static final Lookup lookup = MethodHandles.lookup();
-  private static final Mapper<Max> MAX_MAPPER = Mapper.of(lookup, Max.class);
-  private static final Mapper<EventRecord> EVENT_RECORD_MAPPER = Mapper.of(lookup, EventRecord.class);
-
-  private final Database database;
+  private final String storeName;
   private final Class<T> eventType;
-  private final EventSerializer<T> serializer;
-  private final String tableName;
+  private final Store<T> store;
 
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
   private final Lock readLock = lock.readLock();
   private final Lock writeLock = lock.writeLock();
-  private final Mapper<EventEnvelope<T>> envelopeMapper = data -> createEnvelope(EVENT_RECORD_MAPPER.map(data));
-
-  private long latestIndex;
+  private final Lock taskLock = new ReentrantLock();
+  private final Map<TaskKey, CompletableFuture<List<EventEnvelope<T>>>> sharedTasks = new ConcurrentHashMap<>();
 
   private CountDownLatch eventAvailableLatch = new CountDownLatch(1);
+  private long latestIndex;
 
   /**
    * Constructs a new instance.
@@ -72,38 +68,10 @@ public class PersistentEventStore<T> implements EventStore<T> {
       throw new IllegalArgumentException("storeName must be a valid name: " + storeName);
     }
 
-    this.database = Objects.requireNonNull(database, "database");
     this.eventType = Objects.requireNonNull(eventType, "eventType");
-    this.serializer = Objects.requireNonNull(serializer, "serializer");
-    this.tableName = "\"events_" + storeName + "\"";
-
-    try(Transaction tx = database.beginTransaction()) {
-      tx.execute(
-        """
-          CREATE TABLE IF NOT EXISTS "events_{storeName}" (
-            id SERIAL8,
-            aggregate_id VARCHAR NOT NULL,
-            type VARCHAR NOT NULL,
-            data BYTEA NOT NULL,
-
-            CONSTRAINT "events_{storeName}_id" PRIMARY KEY (id)
-          )
-        """.replace("{storeName}", storeName)
-      );
-
-      tx.execute(
-        """
-          CREATE INDEX IF NOT EXISTS "events_{storeName}_aggregate_idx"
-            ON "events_{storeName}" (aggregate_id, type, id)
-        """.replace("{storeName}", storeName)
-      );
-
-      Max max = tx.mapOne(MAX_MAPPER, "SELECT MAX(id) FROM " + tableName).orElseThrow();
-
-      this.latestIndex = max.id == null ? -1 : max.id;
-
-      tx.commit();
-    }
+    this.storeName = storeName;
+    this.store = new Store<>(Objects.requireNonNull(database, "database"), "events_" + storeName, serializer);
+    this.latestIndex = store.initialize();
   }
 
   @Override
@@ -120,7 +88,7 @@ public class PersistentEventStore<T> implements EventStore<T> {
     writeLock.lock();
 
     try {
-      storeEvents(callback, lastId -> {
+      store.storeEvents(callback, lastId -> {
         // Called when outer commit completes (successful or not)
         try {
           if(lastId != -1) {
@@ -208,53 +176,151 @@ public class PersistentEventStore<T> implements EventStore<T> {
     return latestIndex >= 0;
   }
 
-  private void storeEvents(Callback<T> callback, Consumer<Long> completionHook) throws Exception {
-    boolean completionHookSet = false;
+  private List<EventEnvelope<T>> fetchEvents(long fromIndex, int max) {
+    TaskKey key = new TaskKey(fromIndex, max);
+    CompletableFuture<List<EventEnvelope<T>>> future;
+    boolean triggered = true;
 
-    try(Transaction tx = database.beginTransaction()) {
-      AtomicLong lastId = new AtomicLong();
+    taskLock.lock();
 
-      tx.addCompletionHook(transactionState -> completionHook.accept(transactionState == TransactionState.COMMITTED ? lastId.get() : -1));
-      completionHookSet = true;
+    try {
+      future = sharedTasks.get(key);
 
-      callback.accept(event -> lastId.set(storeEventWithinTransaction(tx, event)));
+      if(future == null) {
+        triggered = false;
+        future = new CompletableFuture<>();
 
-      tx.commit();  // If an exception occurs in storing (serialization, database) this won't be reached
-    }
-    finally {
-      if(!completionHookSet) {
-        completionHook.accept(-1L);
+        sharedTasks.put(key, future);
       }
     }
-  }
-
-  private long storeEventWithinTransaction(Transaction tx, T event) throws DatabaseException, SerializerException {
-      return tx.insert(tableName, Map.of("aggregate_id", serializer.extractAggregateId(event), "type", serializer.extractType(event), "data", serializer.serialize(event)));
-  }
-
-  private List<EventEnvelope<T>> fetchEvents(long fromIndex, int max) {
-    try(Transaction tx = database.beginReadOnlyTransaction()) {
-      return
-        tx.mapAll(
-          envelopeMapper,
-          "SELECT id, data FROM " + tableName + " WHERE id >= ? ORDER BY id LIMIT ?",
-          fromIndex,
-          max
-        );
+    finally {
+      taskLock.unlock();
     }
-  }
 
-  private EventEnvelope<T> createEnvelope(EventRecord er) {
+    if(!triggered) {
+      future.completeAsync(() -> store.queryEvents(fromIndex, max), Runnable::run);
+    }
+
     try {
-      return new EventEnvelope<>(er.id, serializer.unserialize(er.data));
+      return future.get();
     }
-    catch(SerializerException e) {
-      throw new IllegalStateException("Unable to deserialize event: " + er, e);
+    catch(InterruptedException e) {
+      throw new AssertionError(e);
+    }
+    catch(ExecutionException e) {
+      if(e.getCause() instanceof RuntimeException re) {
+        throw re;
+      }
+
+      throw new IllegalStateException(e.getCause());  // not expecting any checked exceptions
+    }
+    finally {
+      sharedTasks.remove(key);
     }
   }
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "[" + tableName + "; latestIndex=" + latestIndex + "]";
+    return getClass().getSimpleName() + "[" + storeName + "; latestIndex=" + latestIndex + "]";
+  }
+
+  private record TaskKey(long fromIndex, int max) {}
+
+  private static class Store<T> {
+    private static record Max(Long id) {}
+    private static record EventRecord(long id, byte[] data) {}
+
+    private static final Lookup lookup = MethodHandles.lookup();
+    private static final Mapper<Max> MAX_MAPPER = Mapper.of(lookup, Max.class);
+    private static final Mapper<EventRecord> EVENT_RECORD_MAPPER = Mapper.of(lookup, EventRecord.class);
+
+    private final Database database;
+    private final String tableName;
+    private final String quotedTableName;
+    private final Mapper<EventEnvelope<T>> mapper;
+    private final EventSerializer<T> serializer;
+
+    Store(Database database, String tableName, EventSerializer<T> serializer) {
+      this.database = database;
+      this.tableName = tableName;
+      this.quotedTableName = "\"" + tableName + "\"";
+      this.mapper = data -> createEnvelope(EVENT_RECORD_MAPPER.map(data));
+      this.serializer = serializer;
+    }
+
+    long initialize() {
+      try(Transaction tx = database.beginTransaction()) {
+        tx.execute(
+          """
+            CREATE TABLE IF NOT EXISTS "{tableName}" (
+              id SERIAL8,
+              aggregate_id VARCHAR NOT NULL,
+              type VARCHAR NOT NULL,
+              data BYTEA NOT NULL,
+
+              CONSTRAINT "{tableName}_id" PRIMARY KEY (id)
+            )
+          """.replace("{tableName}", tableName)
+        );
+
+        tx.execute(
+          """
+            CREATE INDEX IF NOT EXISTS "{tableName}_aggregate_idx"
+              ON "{tableName}" (aggregate_id, type, id)
+          """.replace("{tableName}", tableName)
+        );
+
+        Max max = tx.mapOne(MAX_MAPPER, "SELECT MAX(id) FROM " + quotedTableName).orElseThrow();
+
+        tx.commit();
+
+        return max.id == null ? -1 : max.id;
+      }
+    }
+
+    List<EventEnvelope<T>> queryEvents(long fromIndex, int max) {
+      try(Transaction tx = database.beginReadOnlyTransaction()) {
+        return
+          tx.mapAll(
+            mapper,
+            "SELECT id, data FROM " + quotedTableName + " WHERE id >= ? ORDER BY id LIMIT ?",
+            fromIndex,
+            max
+          );
+      }
+    }
+
+    void storeEvents(Callback<T> callback, Consumer<Long> completionHook) throws Exception {
+      boolean completionHookSet = false;
+
+      try(Transaction tx = database.beginTransaction()) {
+        AtomicLong lastId = new AtomicLong();
+
+        tx.addCompletionHook(transactionState -> completionHook.accept(transactionState == TransactionState.COMMITTED ? lastId.get() : -1));
+        completionHookSet = true;
+
+        callback.accept(event -> lastId.set(storeEventWithinTransaction(tx, event)));
+
+        tx.commit();  // If an exception occurs in storing (serialization, database) this won't be reached
+      }
+      finally {
+        if(!completionHookSet) {
+          completionHook.accept(-1L);
+        }
+      }
+    }
+
+    private long storeEventWithinTransaction(Transaction tx, T event) throws DatabaseException, SerializerException {
+      return tx.insert(quotedTableName, Map.of("aggregate_id", serializer.extractAggregateId(event), "type", serializer.extractType(event), "data", serializer.serialize(event)));
+    }
+
+    private EventEnvelope<T> createEnvelope(EventRecord er) {
+      try {
+        return new EventEnvelope<>(er.id, serializer.unserialize(er.data));
+      }
+      catch(SerializerException e) {
+        throw new IllegalStateException("Unable to deserialize event: " + er, e);
+      }
+    }
   }
 }
