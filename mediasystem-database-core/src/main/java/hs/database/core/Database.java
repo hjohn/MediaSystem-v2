@@ -624,7 +624,7 @@ public class Database {
     private <T> void query(ResultSetConsumer<T> consumer, Function<ResultSetMetaData, T> metaDataConverter, String sql, Object... parameters) {
       ensureNotFinished();
 
-      LOG.fine(this + ": " + sql + ": " + Arrays.toString(parameters));
+      long nanos = System.nanoTime();
 
       try(PreparedStatement statement = connection.prepareStatement(sql)) {
         setParameters(Arrays.asList(parameters), statement);
@@ -636,6 +636,8 @@ public class Database {
             consumer.accept(rs, metaData);
           }
         }
+
+        LOG.fine(this + " [" + (System.nanoTime() - nanos) / 1000000 + " ms]: " + sql + ": " + Arrays.toString(parameters));
       }
       catch(IllegalStateException | SQLException e) {
         throw new DatabaseException(this, sql + ": " + Arrays.toString(parameters), e);
