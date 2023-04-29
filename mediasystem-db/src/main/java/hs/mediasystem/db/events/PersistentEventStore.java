@@ -42,6 +42,7 @@ public class PersistentEventStore<T> implements EventStore<T> {
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
   private final Lock readLock = lock.readLock();
   private final Lock writeLock = lock.writeLock();
+  private final Mapper<EventEnvelope<T>> envelopeMapper = data -> createEnvelope(EVENT_RECORD_MAPPER.map(data));
 
   private long latestIndex;
 
@@ -274,14 +275,11 @@ public class PersistentEventStore<T> implements EventStore<T> {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
       return
         tx.mapAll(
-          EVENT_RECORD_MAPPER,
+          envelopeMapper,
           "SELECT id, data FROM " + tableName + " WHERE id >= ? ORDER BY id LIMIT ?",
           fromIndex,
           max
-        )
-        .stream()
-        .map(this::createEnvelope)
-        .toList();
+        );
     }
   }
 
