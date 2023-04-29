@@ -144,32 +144,7 @@ public class PersistentEventStore<T> implements EventStore<T> {
 
   @Override
   public EventEnvelope<T> take(long fromIndex) throws InterruptedException {
-    if(fromIndex < 0) {
-      throw new IllegalArgumentException("fromIndex must not be negative: " + fromIndex);
-    }
-
-    for(;;) {
-      CountDownLatch latch = null;
-
-      readLock.lock();
-
-      try {
-        if(fromIndex > latestIndex) {
-          latch = this.eventAvailableLatch;
-        }
-      }
-      finally {
-        readLock.unlock();
-      }
-
-      if(latch == null) {
-        break;
-      }
-
-      latch.await();  // wait for new event to become available
-    }
-
-    return fetchEvent(fromIndex);
+    return take(fromIndex, 1).get(0);
   }
 
   @Override
@@ -207,11 +182,9 @@ public class PersistentEventStore<T> implements EventStore<T> {
 
   @Override
   public EventEnvelope<T> poll(long fromIndex) {
-    if(fromIndex < 0) {
-      throw new IllegalArgumentException("fromIndex must not be negative: " + fromIndex);
-    }
+    List<EventEnvelope<T>> list = poll(fromIndex, 1);
 
-    return fromIndex > latestIndex ? null : fetchEvent(fromIndex);
+    return list.isEmpty() ? null : list.get(0);
   }
 
   @Override
@@ -257,18 +230,6 @@ public class PersistentEventStore<T> implements EventStore<T> {
 
   private long storeEventWithinTransaction(Transaction tx, T event) throws DatabaseException, SerializerException {
       return tx.insert(tableName, Map.of("aggregate_id", serializer.extractAggregateId(event), "type", serializer.extractType(event), "data", serializer.serialize(event)));
-  }
-
-  private EventEnvelope<T> fetchEvent(long fromIndex) {
-    try(Transaction tx = database.beginReadOnlyTransaction()) {
-      EventRecord er = tx.mapOne(
-        EVENT_RECORD_MAPPER,
-        "SELECT id, data FROM " + tableName + " WHERE id >= ? ORDER BY id LIMIT 1",
-        fromIndex
-      ).orElseThrow(() -> new IllegalStateException("No records in " + tableName + " matched id >= " + fromIndex));
-
-      return createEnvelope(er);
-    }
   }
 
   private List<EventEnvelope<T>> fetchEvents(long fromIndex, int max) {
