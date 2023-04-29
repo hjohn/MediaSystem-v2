@@ -41,7 +41,7 @@ import javax.inject.Singleton;
  * "!rate-limit": Used to specify a maximum rate at which resources can be accessed.  The rate limit is
  * specified as three semi-colon separated parameters: [name];[maxBurstPermits];[permitRefreshRatePerSecond].<p>
  *
- * "!safe-url": A URL for logging requests stripped off sensitive data (passwords, API key's)<p>
+ * "!safe-url": A URL for identifying and logging requests stripped off sensitive data (passwords, API key's)<p>
  *
  * "!key": A logical key to store in the cache with the response.
  */
