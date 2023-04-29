@@ -50,6 +50,27 @@ class RangeCache<T> {  // ranges are not really exposed, different name when mak
   }
 
   /**
+   * Returns the cached size available from the given index. Note that the
+   * number of entries in this range may be far less or even 0. If the size
+   * would be larger than {@link Long#MAX_VALUE}, then {@code Long#MAX_VALUE}
+   * is returned.
+   *
+   * @param fromIndex an index to check
+   * @return the cached size available from the given index, never negative
+   */
+  public synchronized long size(long fromIndex) {
+    Range range = cache.floorEntry(fromIndex).getValue();
+
+    if(range == null) {
+      return 0;
+    }
+
+    long r = range.end - fromIndex + 1;
+
+    return r < 0 ? Long.MAX_VALUE : r;
+  }
+
+  /**
    * Inserts a list of items into the cache. The start offset must be
    * equal to or less than the index of the first item, the items must be
    * in ascending order and may not contain duplicate indices.

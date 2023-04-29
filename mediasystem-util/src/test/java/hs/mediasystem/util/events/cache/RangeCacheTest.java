@@ -23,6 +23,13 @@ public class RangeCacheTest {
     }
 
     @Test
+    void shouldNotHaveAnySize() {
+      assertThat(cache.size(0)).isEqualTo(0);
+      assertThat(cache.size(10)).isEqualTo(0);
+      assertThat(cache.size(Long.MAX_VALUE)).isEqualTo(0);
+    }
+
+    @Test
     void shouldRejectInsertionOfItemsInNonAscendingOrder() {
       assertThatThrownBy(() -> cache.insert(10, List.of(20L, 15L)))
         .isExactlyInstanceOf(IllegalArgumentException.class)
@@ -79,6 +86,19 @@ public class RangeCacheTest {
         assertThat(cache.find(21)).isNull();
       }
 
+      @Test
+      void shouldHaveCorrectSize() {
+        assertThat(cache.size(10)).isEqualTo(11L);
+        assertThat(cache.size(11)).isEqualTo(10L);
+        assertThat(cache.size(12)).isEqualTo(9L);
+        assertThat(cache.size(13)).isEqualTo(8L);
+        assertThat(cache.size(19)).isEqualTo(2L);
+        assertThat(cache.size(20)).isEqualTo(1L);
+
+        assertThat(cache.size(9)).isEqualTo(0L);
+        assertThat(cache.size(21)).isEqualTo(0L);
+      }
+
       @Nested
       class AndANonTouchingNonOverlappingRangeIsAdded {
         {
@@ -106,6 +126,24 @@ public class RangeCacheTest {
           assertThat(cache.find(51)).isNull();
         }
 
+        @Test
+        void shouldHaveCorrectSize() {
+          assertThat(cache.size(10)).isEqualTo(11L);
+          assertThat(cache.size(11)).isEqualTo(10L);
+          assertThat(cache.size(12)).isEqualTo(9L);
+          assertThat(cache.size(13)).isEqualTo(8L);
+          assertThat(cache.size(19)).isEqualTo(2L);
+          assertThat(cache.size(20)).isEqualTo(1L);
+          assertThat(cache.size(40)).isEqualTo(11L);
+          assertThat(cache.size(43)).isEqualTo(8L);
+          assertThat(cache.size(50)).isEqualTo(1L);
+
+          assertThat(cache.size(9)).isEqualTo(0L);
+          assertThat(cache.size(21)).isEqualTo(0L);
+          assertThat(cache.size(39)).isEqualTo(0L);
+          assertThat(cache.size(51)).isEqualTo(0L);
+        }
+
         @Nested
         class AndAnExactRangeIsInsertedInBetween {
           {
@@ -131,6 +169,24 @@ public class RangeCacheTest {
           void shouldNotFindEntriesOutsideRange() {
             assertThat(cache.find(9)).isNull();
             assertThat(cache.find(51)).isNull();
+          }
+
+          @Test
+          void shouldHaveCorrectSize() {
+            assertThat(cache.size(10)).isEqualTo(41L);
+            assertThat(cache.size(11)).isEqualTo(40L);
+            assertThat(cache.size(12)).isEqualTo(39L);
+            assertThat(cache.size(13)).isEqualTo(38L);
+            assertThat(cache.size(19)).isEqualTo(32L);
+            assertThat(cache.size(20)).isEqualTo(31L);
+            assertThat(cache.size(21)).isEqualTo(30L);
+            assertThat(cache.size(39)).isEqualTo(12L);
+            assertThat(cache.size(40)).isEqualTo(11L);
+            assertThat(cache.size(43)).isEqualTo(8L);
+            assertThat(cache.size(50)).isEqualTo(1L);
+
+            assertThat(cache.size(9)).isEqualTo(0L);
+            assertThat(cache.size(51)).isEqualTo(0L);
           }
         }
 
@@ -160,6 +216,24 @@ public class RangeCacheTest {
             assertThat(cache.find(9)).isNull();
             assertThat(cache.find(51)).isNull();
           }
+
+          @Test
+          void shouldHaveCorrectSize() {
+            assertThat(cache.size(10)).isEqualTo(41L);
+            assertThat(cache.size(11)).isEqualTo(40L);
+            assertThat(cache.size(12)).isEqualTo(39L);
+            assertThat(cache.size(13)).isEqualTo(38L);
+            assertThat(cache.size(19)).isEqualTo(32L);
+            assertThat(cache.size(20)).isEqualTo(31L);
+            assertThat(cache.size(21)).isEqualTo(30L);
+            assertThat(cache.size(39)).isEqualTo(12L);
+            assertThat(cache.size(40)).isEqualTo(11L);
+            assertThat(cache.size(43)).isEqualTo(8L);
+            assertThat(cache.size(50)).isEqualTo(1L);
+
+            assertThat(cache.size(9)).isEqualTo(0L);
+            assertThat(cache.size(51)).isEqualTo(0L);
+          }
         }
 
         @Nested
@@ -187,6 +261,24 @@ public class RangeCacheTest {
           void shouldNotFindEntriesOutsideRange() {
             assertThat(cache.find(9)).isNull();
             assertThat(cache.find(51)).isNull();
+          }
+
+          @Test
+          void shouldHaveCorrectSize() {
+            assertThat(cache.size(10)).isEqualTo(41L);
+            assertThat(cache.size(11)).isEqualTo(40L);
+            assertThat(cache.size(12)).isEqualTo(39L);
+            assertThat(cache.size(13)).isEqualTo(38L);
+            assertThat(cache.size(19)).isEqualTo(32L);
+            assertThat(cache.size(20)).isEqualTo(31L);
+            assertThat(cache.size(21)).isEqualTo(30L);
+            assertThat(cache.size(39)).isEqualTo(12L);
+            assertThat(cache.size(40)).isEqualTo(11L);
+            assertThat(cache.size(43)).isEqualTo(8L);
+            assertThat(cache.size(50)).isEqualTo(1L);
+
+            assertThat(cache.size(9)).isEqualTo(0L);
+            assertThat(cache.size(51)).isEqualTo(0L);
           }
         }
 
@@ -216,6 +308,25 @@ public class RangeCacheTest {
             assertThat(cache.find(26)).isNull();
             assertThat(cache.find(39)).isNull();
             assertThat(cache.find(51)).isNull();
+          }
+
+          @Test
+          void shouldHaveCorrectSize() {
+            assertThat(cache.size(10)).isEqualTo(16L);
+            assertThat(cache.size(11)).isEqualTo(15L);
+            assertThat(cache.size(12)).isEqualTo(14L);
+            assertThat(cache.size(13)).isEqualTo(13L);
+            assertThat(cache.size(19)).isEqualTo(7L);
+            assertThat(cache.size(20)).isEqualTo(6L);
+            assertThat(cache.size(21)).isEqualTo(5L);
+            assertThat(cache.size(40)).isEqualTo(11L);
+            assertThat(cache.size(43)).isEqualTo(8L);
+            assertThat(cache.size(50)).isEqualTo(1L);
+
+            assertThat(cache.size(9)).isEqualTo(0L);
+            assertThat(cache.size(26)).isEqualTo(0L);
+            assertThat(cache.size(39)).isEqualTo(0L);
+            assertThat(cache.size(51)).isEqualTo(0L);
           }
         }
 
@@ -247,6 +358,26 @@ public class RangeCacheTest {
             assertThat(cache.find(24)).isNull();
             assertThat(cache.find(51)).isNull();
           }
+
+          @Test
+          void shouldHaveCorrectSize() {
+            assertThat(cache.size(10)).isEqualTo(11L);
+            assertThat(cache.size(11)).isEqualTo(10L);
+            assertThat(cache.size(12)).isEqualTo(9L);
+            assertThat(cache.size(13)).isEqualTo(8L);
+            assertThat(cache.size(19)).isEqualTo(2L);
+            assertThat(cache.size(20)).isEqualTo(1L);
+            assertThat(cache.size(25)).isEqualTo(26L);
+            assertThat(cache.size(26)).isEqualTo(25L);
+            assertThat(cache.size(39)).isEqualTo(12L);
+            assertThat(cache.size(40)).isEqualTo(11L);
+            assertThat(cache.size(43)).isEqualTo(8L);
+            assertThat(cache.size(50)).isEqualTo(1L);
+
+            assertThat(cache.size(9)).isEqualTo(0L);
+            assertThat(cache.size(21)).isEqualTo(0L);
+            assertThat(cache.size(51)).isEqualTo(0L);
+          }
         }
       }
     }
@@ -272,6 +403,26 @@ public class RangeCacheTest {
       @Test
       void shouldNotFindEntriesOutsideRange() {
         assertThat(cache.find(21)).isNull();
+      }
+
+      @Test
+      void shouldHaveCorrectSize() {
+        assertThat(cache.size(Long.MIN_VALUE)).isEqualTo(Long.MAX_VALUE);
+        assertThat(cache.size(Long.MIN_VALUE + 23)).isEqualTo(Long.MAX_VALUE - 1);
+        assertThat(cache.size(0)).isEqualTo(21L);
+        assertThat(cache.size(9)).isEqualTo(12L);
+        assertThat(cache.size(10)).isEqualTo(11L);
+        assertThat(cache.size(11)).isEqualTo(10L);
+        assertThat(cache.size(12)).isEqualTo(9L);
+        assertThat(cache.size(13)).isEqualTo(8L);
+        assertThat(cache.size(19)).isEqualTo(2L);
+        assertThat(cache.size(20)).isEqualTo(1L);
+
+        assertThat(cache.size(21)).isEqualTo(0L);
+        assertThat(cache.size(25)).isEqualTo(0L);
+        assertThat(cache.size(26)).isEqualTo(0L);
+        assertThat(cache.size(39)).isEqualTo(0L);
+        assertThat(cache.size(51)).isEqualTo(0L);
       }
     }
   }
