@@ -100,6 +100,7 @@ public class AbstractEventStream<T> {
       }
       catch(Exception e) {
         LOGGER.log(Level.SEVERE, "Subscription was stopped for: " + consumer + " due to an exception: ", e);
+        break;
       }
     }
 
