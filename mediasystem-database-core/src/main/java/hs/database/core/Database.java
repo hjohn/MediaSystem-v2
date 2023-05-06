@@ -36,6 +36,8 @@ import java.util.stream.StreamSupport;
 import javax.inject.Provider;
 
 import org.eclipse.jdt.annotation.Nullable;
+import org.postgresql.copy.CopyManager;
+import org.postgresql.core.BaseConnection;
 
 public class Database {
   private static final Logger LOG = Logger.getLogger(Database.class.getName());
@@ -619,6 +621,24 @@ public class Database {
       );
 
       return records;
+    }
+
+    public synchronized <T> List<T> copyAll(Mapper<T> mapper, String sql, List<Class<?>> columnTypes) throws DatabaseException {
+      try {
+        if(!connection.isWrapperFor(BaseConnection.class)) {
+          return mapAll(mapper, sql);
+        }
+
+        return CopySupport.copyAll(this, createCopyManager(), mapper, sql, columnTypes);
+      }
+      catch(SQLException e) {
+        throw new DatabaseException(this, sql, e);
+      }
+    }
+
+    @SuppressWarnings("resource")
+    private CopyManager createCopyManager() throws SQLException {
+      return new CopyManager(connection.unwrap(BaseConnection.class));
     }
 
     private <T> void query(ResultSetConsumer<T> consumer, Function<ResultSetMetaData, T> metaDataConverter, String sql, Object... parameters) {
