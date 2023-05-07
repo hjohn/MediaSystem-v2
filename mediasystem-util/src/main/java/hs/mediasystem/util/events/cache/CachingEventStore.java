@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 
 public class CachingEventStore<T> implements EventStore<T> {
   private static final Executor EXECUTOR = Executors.newCachedThreadPool();
-  private static final int BLOCK_SIZE = 1000;
+  private static final int BLOCK_SIZE = 5000;
 
   private final EventStore<T> delegate;
   private final RangeCache<EventEnvelope<T>> cache = new RangeCache<>(EventEnvelope::index);
