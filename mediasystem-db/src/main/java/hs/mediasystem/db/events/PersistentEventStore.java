@@ -258,6 +258,7 @@ public class PersistentEventStore<T> implements EventStore<T> {
               id SERIAL8,
               aggregate_id VARCHAR NOT NULL,
               type VARCHAR NOT NULL,
+              timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
               data BYTEA NOT NULL,
 
               CONSTRAINT "{tableName}_id" PRIMARY KEY (id)
