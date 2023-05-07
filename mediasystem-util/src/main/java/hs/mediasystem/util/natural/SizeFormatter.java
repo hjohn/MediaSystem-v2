@@ -214,14 +214,7 @@ public class SizeFormatter {
         return String.format("%.0f" + extension, n);
       }
 
-      if(mod3 == 0) {
-        return String.format("%." + (significantDigits - 1) + "f" + extension, n);
-      }
-      if(mod3 == 1) {
-        return String.format("%." + (significantDigits - 2) + "f" + extension, n);
-      }
-
-      return String.format("%." + (significantDigits - 3) + "f" + extension, n);
+      return String.format("%." + (significantDigits - mod3 - 1) + "f" + extension, n);
     }
 
     @Override
