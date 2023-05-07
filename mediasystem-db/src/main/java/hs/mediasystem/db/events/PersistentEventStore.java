@@ -227,6 +227,8 @@ public class PersistentEventStore<T> implements EventStore<T> {
   private record TaskKey(long fromIndex, int max) {}
 
   private static class Store<T> {
+    private static final List<Class<?>> COLUMN_TYPES = List.of(Long.class, byte[].class);
+
     private static record Max(Long id) {}
     private static record EventRecord(long id, byte[] data) {}
 
@@ -280,13 +282,11 @@ public class PersistentEventStore<T> implements EventStore<T> {
 
     List<EventEnvelope<T>> queryEvents(long fromIndex, int max) {
       try(Transaction tx = database.beginReadOnlyTransaction()) {
-        return
-          tx.mapAll(
-            mapper,
-            "SELECT id, data FROM " + quotedTableName + " WHERE id >= ? ORDER BY id LIMIT ?",
-            fromIndex,
-            max
-          );
+        return tx.copyAll(
+          mapper,
+          "SELECT id, data FROM " + quotedTableName + " WHERE id >= " + fromIndex + " ORDER BY id LIMIT " + max,
+          COLUMN_TYPES
+        );
       }
     }
 
