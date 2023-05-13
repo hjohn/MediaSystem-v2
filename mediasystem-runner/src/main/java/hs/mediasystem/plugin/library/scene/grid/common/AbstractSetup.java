@@ -1,5 +1,6 @@
 package hs.mediasystem.plugin.library.scene.grid.common;
 
+import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
 import hs.mediasystem.plugin.library.scene.base.ContextLayout;
 import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFactory.GridViewPresentation;
@@ -25,26 +26,21 @@ import hs.mediasystem.util.javafx.ui.transition.multi.Custom;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Orientation;
 import javafx.geometry.VPos;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
+import javafx.throttle.FXThrottlers;
 import javafx.util.Duration;
 
 import javax.inject.Inject;
-
-import org.reactfx.EventStreams;
-import org.reactfx.Subscription;
-import org.reactfx.value.Val;
 
 public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> implements NodeFactory<P> {
   protected static final String SYSTEM_PREFIX = "MediaSystem:Library:Presentation:";
@@ -104,74 +100,67 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
       }
     });
 
-    EventStreams.valuesOf(Nodes.showing(listView))
-      .map(visible -> visible ? presentation.items : FXCollections.<U>emptyObservableList())
-      .feedTo(listView.itemsProperty());
+    ObservableValue<Boolean> showing = Nodes.showing(listView);
 
-    EventStreams.valuesOf(listView.itemsProperty())
-      .conditionOnShowing(listView)
-      .observe(new Consumer<ObservableList<U>>() {
-        private Subscription subscription;
+    /*
+     * Bind model items to view:
+     */
 
-        @Override
-        public void accept(ObservableList<U> list) {
-          if(subscription != null) {
-            subscription.unsubscribe();
-          }
+    listView.itemsProperty().bind(presentation.items.when(showing).map(FXCollections::observableList));
 
-          subscription = EventStreams.valuesOf(presentation.selectedItem)
-            .withDefaultEvent(presentation.selectedItem.getValue())
-            .repeatOn(EventStreams.changesOf(list))
-            .conditionOnShowing(listView)
-            .observe(item -> updateSelectedItem(listView, presentation, item));
-        }
-      });
+    /*
+     * Update the list view selected item; it needs to be updated also after
+     * the list changes as the index gets reset to -1 otherwise:
+     */
+
+    presentation.selectedItem
+      .when(showing)
+      .values(item -> updateSelectedItem(listView, presentation, item));
+
+    presentation.items
+      .when(showing)
+      .invalidations(() -> updateSelectedItem(listView, presentation, presentation.selectedItem.get()));
 
     return listView;
   }
 
-  private void configurePanes(AreaPane2<Area> areaPane, TransitionPane contextPanel, TransitionPane previewPanel, P presentation) {
+  private void configurePanes(AreaPane2<Area> areaPane, TransitionPane contextPanelContainer, TransitionPane previewPanelContainer, P presentation) {
     MediaGridView<U> listView = createMediaGridView(presentation);
 
-    // Clear preview panel immediately:
-    Val.wrap(listView.getSelectionModel().selectedItemProperty()).values()
-      .observe(current -> previewPanel.clear());
-
     // Create it if selection was stable for a time:
-    Val.wrap(listView.getSelectionModel().selectedItemProperty()).values()
-      .successionEnds(java.time.Duration.ofMillis(500))
-      .observe(current -> {
-        if(current != null) {
-          Node context = createPreviewPanel(current);
+    listView.getSelectionModel().selectedItemProperty().throttle(FXThrottlers.throttle(java.time.Duration.ofMillis(250)))
+      .values(v -> {
+        if(v != null) {
+          Node context = createPreviewPanel(v);
 
           if(context != null) {
-            previewPanel.add(context);
+            previewPanelContainer.addAtEnd(context);
           }
         }
       });
 
     areaPane.add(Area.CENTER, listView);
 
-    EventStreams.invalidationsOf(presentation.contextItem)
-      .withDefaultEvent(null)
-      .conditionOnShowing(listView)
-      .observe(ci -> {
+    ObservableValue<Boolean> shown = Nodes.showing(listView);
+
+    presentation.contextItem
+      .when(shown)
+      .values(v -> {
         Node contextItem = createContextPanel(presentation);
 
         if(contextItem != null) {
-          contextPanel.add(contextItem);
+          contextPanelContainer.add(contextItem);
         }
         else {
-          contextPanel.clear();
+          contextPanelContainer.clear();
         }
       });
 
-    EventStreams.invalidationsOf(presentation.groups)
-      .withDefaultEvent(null)
-      .conditionOnShowing(listView)
+    Invalidations.of(presentation.groups)
+      .conditionOn(shown)
       .map(x -> presentation.groups)
       .map(list -> list.isEmpty() ? null : list)
-      .feedTo(listView.groups);
+      .subscribe(listView.groups::set);
 
     listView.requestFocus();
 
@@ -183,7 +172,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
       return;
     }
 
-    int selectedIndex = presentation.items.indexOf(selectedItem);
+    int selectedIndex = presentation.items.getValue().indexOf(selectedItem);
 
     if(selectedIndex == -1) {
       selectedIndex = 0;

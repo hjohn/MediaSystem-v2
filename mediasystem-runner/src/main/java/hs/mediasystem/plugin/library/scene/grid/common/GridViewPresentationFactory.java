@@ -11,6 +11,7 @@ import hs.mediasystem.runner.grouping.NoGrouping;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.SettingsSource;
+import hs.mediasystem.util.javafx.Properties;
 import hs.mediasystem.util.javafx.ui.gridlistviewskin.Group;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -80,7 +82,10 @@ public abstract class GridViewPresentationFactory {
     private final ObjectProperty<U> internalSelectedItem = new SimpleObjectProperty<>(null);
 
     public final ReadOnlyObjectProperty<U> selectedItem = internalSelectedItem;  // TODO this could be cast back, not as safe as wrapper
-    public final ObservableList<U> items = FXCollections.observableArrayList();
+
+    private final ObjectProperty<List<U>> writableItems = new SimpleObjectProperty<>(List.of());
+
+    public final ObservableValue<List<U>> items = Properties.readOnly(writableItems);
     public final ObservableList<Group> groups = FXCollections.observableArrayList();
 
     private final IntegerProperty totalItemCountInternal = new SimpleIntegerProperty(0);
@@ -239,10 +244,10 @@ public abstract class GridViewPresentationFactory {
       groups.clear();
 
       if(order.grouper == null || (!(grouping.getValue() instanceof NoGrouping) && !availableGroupings.isEmpty())) {
-        items.setAll(baseItems);
+        writableItems.set(baseItems);
       }
       else {
-        items.clear();
+        List<U> newItems = new ArrayList<>();
 
         Map<Comparable<Object>, List<U>> groupedElements = group(baseItems, order.grouper);
         Comparator<Entry<Comparable<Object>, List<U>>> comparator = Comparator.comparing(Map.Entry::getKey);
@@ -261,10 +266,11 @@ public abstract class GridViewPresentationFactory {
         for(Entry<Comparable<Object>, List<U>> e : list) {
           newGroups.add(new Group(e.getKey().toString().toUpperCase(), position));
 
-          items.addAll(e.getValue());
+          newItems.addAll(e.getValue());
           position += e.getValue().size();
         }
 
+        writableItems.set(newItems);
         groups.addAll(newGroups);
       }
 
@@ -290,7 +296,7 @@ public abstract class GridViewPresentationFactory {
     }
 
     private U findById(String id) {
-      return items.stream()
+      return items.getValue().stream()
         .filter(i -> toId(i).equals(id))
         .findFirst()
         .orElse(null);

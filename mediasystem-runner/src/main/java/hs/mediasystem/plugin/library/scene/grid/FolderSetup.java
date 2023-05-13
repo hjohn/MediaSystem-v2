@@ -31,8 +31,6 @@ import javafx.scene.Node;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.reactfx.EventStreams;
-
 @Singleton
 public class FolderSetup implements NodeFactory<FolderPresentation> {
   private static final String STYLES_URL = LessLoader.compile(FolderSetup.class, "folder-scene-styles.less");
@@ -114,15 +112,26 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
       }
     });
 
-    EventStreams.valuesOf(Nodes.showing(listView))
-      .map(visible -> visible ? presentation.items : FXCollections.<Work>emptyObservableList())
-      .feedTo(listView.itemsProperty());
+    ObservableValue<Boolean> showing = Nodes.showing(listView);
 
-    EventStreams.valuesOf(presentation.selectedItem)
-      .withDefaultEvent(presentation.selectedItem.getValue())
-      .repeatOn(EventStreams.changesOf(listView.itemsProperty()))
-      .conditionOnShowing(listView)
-      .observe(item -> updateSelectedItem(listView, presentation, item));
+    /*
+     * Bind model items to view:
+     */
+
+    listView.itemsProperty().bind(presentation.items.when(showing).map(FXCollections::observableList));
+
+    /*
+     * Update the list view selected item; it needs to be updated also after
+     * the list changes as the index gets reset to -1 otherwise:
+     */
+
+    presentation.selectedItem
+      .when(showing)
+      .values(item -> updateSelectedItem(listView, presentation, item));
+
+    presentation.items
+      .when(showing)
+      .invalidations(() -> updateSelectedItem(listView, presentation, presentation.selectedItem.get()));
 
     return listView;
   }
@@ -132,7 +141,7 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
       return;
     }
 
-    int selectedIndex = presentation.items.indexOf(selectedItem);
+    int selectedIndex = presentation.items.getValue().indexOf(selectedItem);
 
     if(selectedIndex == -1) {
       selectedIndex = 0;
