@@ -339,24 +339,6 @@ public interface ObservableValue<T> extends Observable {
 
         return () -> removeListener(listener);
     }
-
-    /**
-     * Creates a {@link Subscription} on this value which calls the given
-     * {@code runnable} whenever it becomes invalid.
-     *
-     * @param subscriber a {@code Runnable} to call whenever this
-     *     value becomes invalid, cannot be {@code null}
-     * @return a {@code Subscription} which can be used to cancel this
-     *     subscription, never {@code null}
-     */
-    default Subscription invalidations(Runnable subscriber) {
-        Objects.requireNonNull(subscriber, "subscriber cannot be null");
-        InvalidationListener listener = obs -> subscriber.run();
-
-        addListener(listener);
-
-        return () -> removeListener(listener);
-    }
 }
 
 // TODO conditoinOn: How would you write this if you couldn't map null?

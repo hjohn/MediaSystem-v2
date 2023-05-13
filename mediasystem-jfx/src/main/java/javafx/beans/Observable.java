@@ -25,6 +25,9 @@
 
 package javafx.beans;
 
+import com.sun.javafx.binding.Subscription;
+
+import java.util.Objects;
 
 /**
  * An {@code Observable} is an entity that wraps content and allows to
@@ -93,4 +96,21 @@ public interface Observable {
      */
     void removeListener(InvalidationListener listener);
 
+    /**
+     * Creates a {@link Subscription} on this observable which calls the given
+     * {@code runnable} whenever it becomes invalid.
+     *
+     * @param subscriber a {@code Runnable} to call whenever this
+     *     observable becomes invalid, cannot be {@code null}
+     * @return a {@code Subscription} which can be used to cancel this
+     *     subscription, never {@code null}
+     */
+    default Subscription invalidations(Runnable subscriber) {
+        Objects.requireNonNull(subscriber, "subscriber cannot be null");
+        InvalidationListener listener = obs -> subscriber.run();
+
+        addListener(listener);
+
+        return () -> removeListener(listener);
+    }
 }
