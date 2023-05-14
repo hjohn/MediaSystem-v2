@@ -72,10 +72,6 @@ public class Dialogs {
     return show(event, null, options);
   }
 
-  public static <T> Optional<T> showProgressDialog(Event event, boolean cancellable, Task<T> task) {
-    return showProgressDialog(((Node)event.getTarget()).getScene(), cancellable, task);
-  }
-
   /**
    * Shows a dialog with a progress bar controlled by the supplied {@link Task}.  Once the
    * task finishes the dialog closes automatically and returns the result of the task.  If
@@ -87,15 +83,22 @@ public class Dialogs {
    * Although the dialog is always shown and can be interacted with, it will remain
    * hidden (100% transparent) until 1 second has elapsed.  Short running tasks therefore
    * can remain hidden, while longer running tasks (or tasks that occasionally take longer)
-   * will become visible to inform the user.
+   * will become visible to inform the user.<p>
+   *
+   * This can only be called with an {@link Event} which is associated with a {@link Scene}
+   * and only from event handlers because of the nested event loop that will be constructed.
    *
    * @param <T> the result type of the {@link Task}
-   * @param scene a {@link Scene} to show this dialog on
+   * @param event an {@link Event} to determine where to show this dialog
    * @param cancellable whether or not the task can be cancelled
    * @param task a {@link Task} to execute, cannot be {@code null}
    * @return an Optional with the result of the {@link Task} or empty if the task was cancelled or threw an exception
    */
-  public static <T> Optional<T> showProgressDialog(Scene scene, boolean cancellable, Task<T> task) {
+  public static <T> Optional<T> showProgressDialog(Event event, boolean cancellable, Task<T> task) {
+    return showProgressDialog(((Node)event.getTarget()).getScene(), cancellable, task);
+  }
+
+  private static <T> Optional<T> showProgressDialog(Scene scene, boolean cancellable, Task<T> task) {
     if(task == null) {
       throw new IllegalArgumentException("task cannot be null");
     }
@@ -157,10 +160,6 @@ public class Dialogs {
 
   public static <T> Optional<T> showProgressDialog(Event event, Task<T> task) {
     return showProgressDialog(event, true, task);
-  }
-
-  public static <T> Optional<T> showProgressDialog(Scene scene, Task<T> task) {
-    return showProgressDialog(scene, true, task);
   }
 
   public static String translateException(Throwable t) {
