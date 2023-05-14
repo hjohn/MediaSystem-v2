@@ -73,7 +73,7 @@ public class CollectionService {
       LocalDate date = production.getDetails().getDate().orElse(null);
 
       if(reception != null && date != null && !Boolean.TRUE.equals(production.getClassification().pornographic())) {
-        return reception.rating() + date.getYear() * 0.05;
+        return reception.rating() + date.getYear() * 0.25;
       }
     }
 
