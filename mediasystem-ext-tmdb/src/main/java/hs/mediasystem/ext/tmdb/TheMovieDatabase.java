@@ -116,13 +116,21 @@ public class TheMovieDatabase {
       connection.addRequestProperty("!safe-url", url.toString().replaceAll("api_key=[0-9A-Za-z]+", "api_key=***"));   // Strips api_key from URL for safe logging
       connection.addRequestProperty("!key", key);
 
-      int responseCode = connection.getResponseCode();
-
-      if(responseCode < 200 || responseCode >= 300) {
-        throw new HttpException(url, responseCode, connection.getResponseMessage());
-      }
+      /*
+       * The input stream is retrieved here first to avoid getting an awkwardly
+       * wrapped exception from getResponseCode (getResponseCode calls getInputStream
+       * internally, remembers the exception getInputStream might throw, and then
+       * wraps it (in a simple RuntimeException) to get a correct stacktrace. See 
+       * JDK-5003746 which suggests the workaround of calling getInputStream first.
+       */
 
       try(InputStream is = connection.getInputStream()) {
+        int responseCode = connection.getResponseCode();
+
+        if(responseCode < 200 || responseCode >= 300) {
+          throw new HttpException(url, responseCode, connection.getResponseMessage());
+        }
+
         return objectMapper.readTree(is);
       }
     }
