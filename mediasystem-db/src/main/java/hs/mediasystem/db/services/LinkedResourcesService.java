@@ -135,7 +135,7 @@ public class LinkedResourcesService {
       LinkedResource existing = linkedResources.get(event.location());
 
       if(existing != null) {
-        LinkedResource resource = merge(existing, new IdentificationService.Identification(event.descriptors(), event.match()));
+        LinkedResource resource = merge(existing, new IdentificationService.Identification(event.releases(), event.match()));
 
         update(resource);
       }
@@ -177,7 +177,7 @@ public class LinkedResourcesService {
   }
 
   private static List<Work> createWorks(Resource resource, Optional<IdentificationService.Identification> mi) {
-    List<Work> works = mi.map(IdentificationService.Identification::descriptors)
+    List<Work> works = mi.map(IdentificationService.Identification::releases)
       .stream()
       .flatMap(Collection::stream)
       .map(Work::new)

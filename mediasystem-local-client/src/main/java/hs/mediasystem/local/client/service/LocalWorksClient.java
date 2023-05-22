@@ -6,7 +6,6 @@ import hs.mediasystem.api.datasource.domain.Keyword;
 import hs.mediasystem.api.datasource.domain.Movie;
 import hs.mediasystem.api.datasource.domain.Production;
 import hs.mediasystem.api.datasource.domain.Release;
-import hs.mediasystem.api.datasource.domain.Season;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.db.services.WorksService;
 import hs.mediasystem.domain.stream.MediaType;
@@ -178,12 +177,12 @@ public class LocalWorksClient implements WorksClient {
   }
 
   private static hs.mediasystem.ui.api.domain.Serie createSerie(Serie serie) {
-    List<Season> seasons = serie.getSeasons();
+    List<Serie.Season> seasons = serie.getSeasons();
 
     return new hs.mediasystem.ui.api.domain.Serie(
       Optional.ofNullable(serie.getLastAirDate()),
-      Optional.ofNullable(seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).count()),
-      Optional.ofNullable(seasons == null ? null : (int)seasons.stream().filter(s -> s.getNumber() > 0).map(Season::getEpisodes).flatMap(Collection::stream).count())
+      Optional.ofNullable(seasons == null ? null : (int)seasons.stream().filter(s -> s.number() > 0).count()),
+      Optional.ofNullable(seasons == null ? null : (int)seasons.stream().filter(s -> s.number() > 0).map(Serie.Season::episodes).flatMap(Collection::stream).count())
     );
   }
 

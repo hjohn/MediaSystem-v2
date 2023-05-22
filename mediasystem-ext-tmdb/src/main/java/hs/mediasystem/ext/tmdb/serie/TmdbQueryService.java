@@ -3,8 +3,6 @@ package hs.mediasystem.ext.tmdb.serie;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.api.datasource.domain.Details;
-import hs.mediasystem.api.datasource.domain.Episode;
-import hs.mediasystem.api.datasource.domain.Season;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.api.datasource.services.AbstractQueryService;
 import hs.mediasystem.domain.stream.MediaType;
@@ -62,8 +60,10 @@ public class TmdbQueryService extends AbstractQueryService {
       String seasonNumber = season.get("season_number").asText();
 
       if(!appendToResponse.isEmpty()) {
-        firstSeasonNumber = seasonNumber;
         appendToResponse += ",";
+      }
+      else {
+        firstSeasonNumber = seasonNumber;
       }
 
       appendToResponse += "season/" + seasonNumber;
@@ -90,8 +90,8 @@ public class TmdbQueryService extends AbstractQueryService {
     return seasons;
   }
 
-  private Season toSeason(JsonNode node, String parentId) throws IOException {
-    List<Episode> episodes = new ArrayList<>();
+  private Serie.Season toSeason(JsonNode node, String parentId) throws IOException {
+    List<Serie.Episode> episodes = new ArrayList<>();
 
     for(JsonNode episode : node.at("/episodes")) {
       try {
@@ -107,7 +107,7 @@ public class TmdbQueryService extends AbstractQueryService {
 
     WorkId id = new WorkId(DataSources.TMDB, MediaType.SEASON, parentId + "/" + seasonNumber);
 
-    return new Season(
+    return new Serie.Season(
       id,
       new Details(
         Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),
@@ -123,7 +123,7 @@ public class TmdbQueryService extends AbstractQueryService {
     );
   }
 
-  private Episode toEpisode(JsonNode node, String parentKey) throws IOException {
+  private Serie.Episode toEpisode(JsonNode node, String parentKey) throws IOException {
     String releaseDate = node.path("air_date").textValue();
     Reception reception = node.get("vote_count").isNumber() && node.get("vote_average").isNumber() ?
       new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt()) : null;
@@ -131,7 +131,7 @@ public class TmdbQueryService extends AbstractQueryService {
     int episodeNumber = node.get("episode_number").asInt();
     WorkId id = new WorkId(DataSources.TMDB, MediaType.EPISODE, parentKey + "/" + seasonNumber + "/" + episodeNumber);
 
-    return new Episode(
+    return new Serie.Episode(
       id,
       new Details(
         Optional.ofNullable(node.get("name")).map(JsonNode::textValue).orElse("(untitled)"),

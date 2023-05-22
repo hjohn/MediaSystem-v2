@@ -96,8 +96,8 @@ public class RecommendationService {
       WorkDescriptor descriptor = findBestDescriptor(stream.location()).orElse(null);
 
       if(descriptor instanceof Episode episode && watched) {
-        return serie.findNextEpisode(episode)
-          .flatMap(nextEpisode -> linkedWorksService.find(nextEpisode.getId())  // Episode to Stream
+        return serie.findNextEpisode(episode.getSeasonNumber(), episode.getNumber())
+          .flatMap(nextEpisode -> linkedWorksService.find(nextEpisode.id())  // Episode to Stream
             .map(mediaStreamService::toMediaStream)
             .map(ms -> !ms.state().consumed() && ms.state().resumePosition().isZero()
               ? localWorkService.findFirst(ms.location()).map(w -> new Recommendation(lastWatchedTime, w)).orElse(null)

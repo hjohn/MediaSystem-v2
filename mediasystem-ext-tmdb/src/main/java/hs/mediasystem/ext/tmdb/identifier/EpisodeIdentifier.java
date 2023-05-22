@@ -33,7 +33,10 @@ public class EpisodeIdentifier {
     ChildType type = typeString == null ? null : ChildType.valueOf(typeString);
 
     if(sequence != null && type == ChildType.EPISODE) {
-      List<Episode> list = attemptMatch(serie, sequence);  // This will also match specials of the TMDB supported form, with season 0 and an episode number
+      // This will also match specials of the TMDB supported form, with season 0 and an episode number
+      List<Episode> list = attemptMatch(serie, sequence).stream()
+        .map(EpisodeIdentifier::toEpisode)
+        .toList();
 
       if(!list.isEmpty()) {
         return Optional.of(new Identification(list, new Match(Type.DERIVED, 1.0f, Instant.now())));
@@ -41,18 +44,30 @@ public class EpisodeIdentifier {
     }
 
     if(type == null || type == ChildType.SPECIAL) {
-      Tuple2<Float, Episode> match = attemptSpecialsMatch(serie, childAttributes.get(Attribute.TITLE), childAttributes.get(Attribute.SUBTITLE), sequence);
+      Tuple2<Float, Serie.Episode> match = attemptSpecialsMatch(serie, childAttributes.get(Attribute.TITLE), childAttributes.get(Attribute.SUBTITLE), sequence);
 
       if(match != null) {
-        return Optional.of(new Identification(List.of(match.b), new Match(Type.NAME, match.a, Instant.now())));
+        return Optional.of(new Identification(List.of(toEpisode(match.b)), new Match(Type.NAME, match.a, Instant.now())));
       }
     }
 
     return Optional.empty();
   }
 
-  private static List<Episode> attemptMatch(Serie serie, String sequence) {
-    List<Episode> list = new ArrayList<>();
+  private static Episode toEpisode(Serie.Episode episode) {
+    return new Episode(
+      episode.id(),
+      episode.details(),
+      episode.reception(),
+      episode.duration(),
+      episode.seasonNumber(),
+      episode.number(),
+      episode.personRoles()
+    );
+  }
+
+  private static List<Serie.Episode> attemptMatch(Serie serie, String sequence) {
+    List<Serie.Episode> list = new ArrayList<>();
     String[] parts = sequence.split(",");
 
     /*
@@ -69,7 +84,7 @@ public class EpisodeIdentifier {
 
       serie.findSeason(seasonNumber).ifPresent(season -> {
         for(int i = Integer.parseInt(numbers[0]); i <= Integer.parseInt(numbers[numbers.length - 1]); i++) {
-          Episode episode = season.findEpisode(i);
+          Serie.Episode episode = season.findEpisode(i);
 
           if(episode != null) {
             list.add(episode);
@@ -81,14 +96,14 @@ public class EpisodeIdentifier {
     return list;
   }
 
-  private static Tuple2<Float, Episode> attemptSpecialsMatch(Serie serie, String title, String subtitle, String sequence) {
+  private static Tuple2<Float, Serie.Episode> attemptSpecialsMatch(Serie serie, String title, String subtitle, String sequence) {
     return serie.findSeason(0).map(season -> {
-      Episode bestEpisode = null;
+      Serie.Episode bestEpisode = null;
       float bestMatch = 0;
 
       for(String joinedString : combinations(title, subtitle, sequence)) {
-        for(Episode episode : season.getEpisodes()) {
-          String name = episode.getDetails().getTitle();
+        for(Serie.Episode episode : season.episodes()) {
+          String name = episode.details().getTitle();
           float match = (float)WeightedNgramDistance.calculate(name, joinedString);
 
           if(match > 0.5 && match > bestMatch) {

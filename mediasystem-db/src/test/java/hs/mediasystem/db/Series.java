@@ -4,7 +4,6 @@ import hs.mediasystem.api.datasource.domain.Classification;
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Episode;
 import hs.mediasystem.api.datasource.domain.Keyword;
-import hs.mediasystem.api.datasource.domain.Season;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.api.datasource.domain.Serie.State;
 import hs.mediasystem.domain.stream.MediaType;
@@ -48,14 +47,26 @@ public class Series {
       LocalDate.of(2009, 6, 6),
       99.0,
       Arrays.asList(
-        new Season(
+        new Serie.Season(
           new WorkId(DataSource.instance("TMDB"), MediaType.SEASON, "1"),
           new Details("Season 1", "subtitle", "", LocalDate.of(2003, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
           1,
-          episodes
+          episodes.stream().map(Series::toSerieEpisode).toList()
         )
       ),
       Set.of()
+    );
+  }
+
+  private static Serie.Episode toSerieEpisode(Episode episode) {
+    return new Serie.Episode(
+      episode.getId(),
+      episode.getDetails(),
+      episode.getReception(),
+      episode.getDuration(),
+      episode.getSeasonNumber(),
+      episode.getNumber(),
+      episode.getPersonRoles()
     );
   }
 }

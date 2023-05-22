@@ -3,6 +3,7 @@ package hs.mediasystem.api.datasource.domain;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +13,39 @@ import java.util.Optional;
 import java.util.Set;
 
 public class Serie extends Production {
+  public record Season(WorkId id, Details details, int number, List<Episode> episodes) {
+    public Season {
+      if(id == null) {
+        throw new IllegalArgumentException("id cannot be null");
+      }
+      if(details == null) {
+        throw new IllegalArgumentException("details cannot be null");
+      }
+
+      episodes = List.copyOf(episodes);
+    }
+
+    public Episode findEpisode(int number) {
+      return episodes.stream().filter(e -> e.number() == number).findFirst().orElse(null);
+    }
+  }
+
+  public record Episode(WorkId id, Details details, Reception reception, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
+    public Episode {
+      if(id == null) {
+        throw new IllegalArgumentException("id cannot be null");
+      }
+      if(details == null) {
+        throw new IllegalArgumentException("details cannot be null");
+      }
+      if(number < 0) {
+        throw new IllegalArgumentException("number must not be negative: " + number);
+      }
+
+      personRoles = List.copyOf(personRoles);
+    }
+  }
+
   public enum State {
     ENDED,
     CONTINUING,
@@ -60,15 +94,15 @@ public class Serie extends Production {
   }
 
   public Optional<Season> findSeason(int seasonNumber) {
-    return seasons == null ? Optional.empty() : seasons.stream().filter(s -> s.getNumber() == seasonNumber).findFirst();
+    return seasons == null ? Optional.empty() : seasons.stream().filter(s -> s.number() == seasonNumber).findFirst();
   }
 
   public Optional<Episode> findEpisode(int seasonNumber, int episodeNumber) {
-    return seasons == null ? null : seasons.stream().filter(s -> s.getNumber() == seasonNumber).map(Season::getEpisodes).flatMap(Collection::stream).filter(e -> e.getNumber() == episodeNumber).findFirst();
+    return seasons == null ? null : seasons.stream().filter(s -> s.number() == seasonNumber).map(Season::episodes).flatMap(Collection::stream).filter(e -> e.number() == episodeNumber).findFirst();
   }
 
-  public Optional<Episode> findNextEpisode(Episode episode) {
-    return findEpisode(episode.getSeasonNumber(), episode.getNumber() + 1)
-      .or(() -> findEpisode(episode.getSeasonNumber() + 1, 1));
+  public Optional<Episode> findNextEpisode(int seasonNumber, int episodeNumber) {
+    return findEpisode(seasonNumber, episodeNumber + 1)
+      .or(() -> findEpisode(seasonNumber + 1, 1));
   }
 }

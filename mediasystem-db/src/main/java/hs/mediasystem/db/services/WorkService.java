@@ -5,7 +5,6 @@ import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Episode;
 import hs.mediasystem.api.datasource.domain.Movie;
 import hs.mediasystem.api.datasource.domain.ProductionCollection;
-import hs.mediasystem.api.datasource.domain.Season;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.api.datasource.domain.stream.Contribution;
 import hs.mediasystem.api.datasource.domain.stream.Work;
@@ -151,9 +150,10 @@ public class WorkService {
         .declaring(IOException.class)
         .flatMap(serie ->
           CheckedStreams.forIOException(serie.getSeasons())
-            .map(Season::getEpisodes)
+            .map(Serie.Season::episodes)
             .flatMapStream(List::stream)
-            .filter(ep -> !episodesWithStreams.containsKey(ep.getId()))
+            .filter(ep -> !episodesWithStreams.containsKey(ep.id()))
+            .map(WorkService::toEpisode)
             .map(ep -> toRemoteWork(ep, serie))
         )
         .toList()
@@ -174,8 +174,9 @@ public class WorkService {
       .filter(Serie.class::isInstance)
       .map(Serie.class::cast)
       .map(serie -> CheckedStreams.forIOException(serie.getSeasons())
-        .map(Season::getEpisodes)
+        .map(Serie.Season::episodes)
         .flatMapStream(List::stream)
+        .map(WorkService::toEpisode)
         .map(ep -> toRemoteWork(ep, serie))
         .collect(Collectors.toList())
       )
@@ -192,10 +193,11 @@ public class WorkService {
     return CheckedOptional.from(descriptorService.find(parentId))
       .map(Serie.class::cast)
       .flatMap(serie -> CheckedStreams.forIOException(serie.getSeasons())
-        .map(Season::getEpisodes)
+        .map(Serie.Season::episodes)
         .flatMapStream(List::stream)
-        .filter(ep -> ep.getId().equals(id))
+        .filter(ep -> ep.id().equals(id))
         .findFirst()
+        .map(WorkService::toEpisode)
         .map(e -> toRemoteWork(e, serie))
       );
   }
@@ -261,5 +263,17 @@ public class WorkService {
     Details details = descriptor.getDetails();
 
     return new Parent(descriptor.getId(), details.getTitle(), details.getBackdrop());
+  }
+
+  private static Episode toEpisode(Serie.Episode episode) {
+    return new Episode(
+      episode.id(),
+      episode.details(),
+      episode.reception(),
+      episode.duration(),
+      episode.seasonNumber(),
+      episode.number(),
+      episode.personRoles()
+    );
   }
 }

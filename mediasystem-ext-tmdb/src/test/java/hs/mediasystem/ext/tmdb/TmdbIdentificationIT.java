@@ -421,9 +421,9 @@ public class TmdbIdentificationIT {
       assertThat(event.match().type()).isEqualTo(Type.NAME);
       assertThat(event.match().accuracy()).isEqualTo(1.0f);
 
-      assertThat(event.descriptors().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.SERIE, "1981"));
-      assertThat(event.descriptors().get(0).getDetails().getTitle()).isEqualTo("Charmed");
-      assertThat(event.descriptors().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
+      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.SERIE, "1981"));
+      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("Charmed");
+      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
     }
 
     DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Series/Charmed/"), Optional.of("TMDB"), new StreamTags(Set.of("cartoon")), List.of(
@@ -437,9 +437,9 @@ public class TmdbIdentificationIT {
       assertThat(event.match().type()).isEqualTo(Type.DERIVED);
       assertThat(event.match().accuracy()).isEqualTo(1.0f);
 
-      assertThat(event.descriptors().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/1"));
-      assertThat(event.descriptors().get(0).getDetails().getTitle()).isEqualTo("Something Wicca This Way Comes");
-      assertThat(event.descriptors().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
+      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/1"));
+      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("Something Wicca This Way Comes");
+      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
     }
 
     {
@@ -448,13 +448,13 @@ public class TmdbIdentificationIT {
       assertThat(event.match().type()).isEqualTo(Type.DERIVED);
       assertThat(event.match().accuracy()).isEqualTo(1.0f);
 
-      assertThat(event.descriptors().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/2"));
-      assertThat(event.descriptors().get(0).getDetails().getTitle()).isEqualTo("I've Got You Under My Skin");
-      assertThat(event.descriptors().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 14));
+      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/2"));
+      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("I've Got You Under My Skin");
+      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 14));
 
-      assertThat(event.descriptors().get(1).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/3"));
-      assertThat(event.descriptors().get(1).getDetails().getTitle()).isEqualTo("Thank You for Not Morphing");
-      assertThat(event.descriptors().get(1).getDetails().getDate()).contains(LocalDate.of(1998, 10, 21));
+      assertThat(event.releases().get(1).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/3"));
+      assertThat(event.releases().get(1).getDetails().getTitle()).isEqualTo("Thank You for Not Morphing");
+      assertThat(event.releases().get(1).getDetails().getDate()).contains(LocalDate.of(1998, 10, 21));
     }
 
     DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Movies/"), Optional.of("TMDB"), new StreamTags(Set.of("movies")), List.of(
@@ -467,9 +467,9 @@ public class TmdbIdentificationIT {
       assertThat(event.match().type()).isEqualTo(Type.NAME_AND_RELEASE_DATE);
       assertThat(event.match().accuracy()).isEqualTo(0.79420984f);
 
-      assertThat(event.descriptors().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.MOVIE, "218"));
-      assertThat(event.descriptors().get(0).getDetails().getTitle()).isEqualTo("The Terminator");
-      assertThat(event.descriptors().get(0).getDetails().getDate()).contains(LocalDate.of(1984, 10, 26));
+      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.MOVIE, "218"));
+      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("The Terminator");
+      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1984, 10, 26));
     }
   }
 }

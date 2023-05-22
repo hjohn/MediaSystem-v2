@@ -7,7 +7,6 @@ import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Keyword;
 import hs.mediasystem.api.datasource.domain.Movie;
 import hs.mediasystem.api.datasource.domain.Production;
-import hs.mediasystem.api.datasource.domain.Season;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
@@ -92,7 +91,7 @@ public class ObjectFactory {
     );
   }
 
-  public Serie toSerie(JsonNode node, List<Season> seasons) throws IOException {
+  public Serie toSerie(JsonNode node, List<Serie.Season> seasons) throws IOException {
     WorkId id = new WorkId(DataSources.TMDB, MediaType.SERIE, node.path("id").asText());
 
     return new Serie(

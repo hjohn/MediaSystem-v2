@@ -1,6 +1,7 @@
 package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.datasource.services.IdentificationService;
 import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
 import hs.mediasystem.api.discovery.Discovery;
@@ -118,7 +119,7 @@ public class IdentifierService {
         LOGGER.warning("Identification skipped (missing parent identification) for: " + discovery.location());
       }
       else {
-        WorkDescriptor parent = parentIdentificationEvent.descriptors().get(0);  // TODO get(0) ain't nice, for parents it should be the only one
+        Release parent = parentIdentificationEvent.releases().get(0);  // TODO get(0) ain't nice, for parents it should be the only one
 
         identify(serviceName, discovery, parent);
       }
@@ -148,7 +149,7 @@ public class IdentifierService {
             LOGGER.info("Identification with service '" + service + "' was not successful for: " + location);
           }
           else {
-            persistentEventStream.push(new IdentificationEvent(location, identification.descriptors(), identification.match()));
+            persistentEventStream.push(new IdentificationEvent(location, identification.releases(), identification.match()));
           }
         }
         catch(IOException e) {

@@ -1,6 +1,7 @@
 package hs.mediasystem.api.datasource.services;
 
 import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.work.Match;
 
@@ -16,19 +17,19 @@ public interface IdentificationService {
   /**
    * Holds the result of an identification.
    *
-   * @param descriptors one or more descriptors that matched the discovery, cannot be {@code null} or empty
+   * @param releases one or more releases that matched the discovery, cannot be {@code null} or empty
    * @param match a {@link Match}, cannot be {@code null}
    */
-  record Identification(List<? extends WorkDescriptor> descriptors, Match match) {
+  record Identification(List<? extends Release> releases, Match match) {
     public Identification {
-      if(descriptors == null) {
-        throw new IllegalArgumentException("descriptors cannot be null");
+      if(releases == null) {
+        throw new IllegalArgumentException("releases cannot be null");
       }
       if(match == null) {
         throw new IllegalArgumentException("match cannot be null");
       }
-      if(descriptors.isEmpty()) {
-        throw new IllegalArgumentException("descriptors cannot be empty");
+      if(releases.isEmpty()) {
+        throw new IllegalArgumentException("releases cannot be empty");
       }
     }
   }
