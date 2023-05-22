@@ -4,6 +4,7 @@ import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Episode;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.image.ImageURI;
@@ -11,6 +12,7 @@ import hs.mediasystem.util.image.ImageURI;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Optional;
 
 public class Episodes {
   public static Episode create() {
@@ -42,6 +44,7 @@ public class Episodes {
       id,
       new Details(title, "Subtitle", "Stuff", LocalDate.of(2012, 6, 6), null, new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
       new Reception(8, 12345),
+      new Parent(new WorkId(DataSource.instance("TMDB"), MediaType.SERIE, "999"), "GoT", Optional.empty()),
       Duration.ofMinutes(40),
       season,
       episodeNumber,

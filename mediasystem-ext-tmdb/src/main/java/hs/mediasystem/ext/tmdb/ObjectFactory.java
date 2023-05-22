@@ -11,6 +11,7 @@ import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.KeywordId;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.image.ImageURI;
@@ -40,8 +41,9 @@ public class ObjectFactory {
     return new Production(
       id,
       createDetails(node, id),
-      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       createReception(node),
+      null,
+      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       new Classification(
         node.path("genres").findValuesAsText("name"),
         node.path("spoken_languages").findValuesAsText("name"),
@@ -59,9 +61,14 @@ public class ObjectFactory {
 
     JsonNode collectionPath = node.path("belongs_to_collection");
     Set<WorkId> relatedWorks = new HashSet<>();
+    Parent parent = null;
 
     if(collectionPath.isObject()) {
-      relatedWorks.add(new WorkId(DataSources.TMDB, MediaType.COLLECTION, collectionPath.path("id").asText()));
+      WorkId id = new WorkId(DataSources.TMDB, MediaType.COLLECTION, collectionPath.path("id").asText());
+
+      relatedWorks.add(id);
+
+      parent = new Parent(id, collectionPath.path("name").asText(), Optional.ofNullable(tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id.toString())));
     }
 
     String imdbId = node.path("imdb_id").textValue();
@@ -75,8 +82,9 @@ public class ObjectFactory {
     return new Movie(
       id,
       createDetails(node, id),
-      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       createReception(node),
+      parent,
+      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       runtime == null ? null : Duration.ofMinutes(runtime.intValue()),
       new Classification(
         node.path("genres").findValuesAsText("name"),
@@ -97,8 +105,8 @@ public class ObjectFactory {
     return new Serie(
       id,
       createDetails(node, id),
-      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       createReception(node),
+      node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       new Classification(
         node.path("genres").findValuesAsText("name"),
         node.path("languages").findValuesAsText("name"),

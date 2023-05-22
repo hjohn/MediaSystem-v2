@@ -104,8 +104,9 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
         null,
         backdropURI
       ),
-      null,  // tag line is not part of this response
       reception,
+      null,
+      null,  // tag line is not part of this response
       new Classification(
         genres,
         List.of(),

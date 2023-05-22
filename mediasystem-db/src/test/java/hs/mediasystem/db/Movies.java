@@ -31,8 +31,9 @@ public class Movies {
     return new Movie(
       id,
       new Details(title, "subtitle", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
-      "Skynet comes",
       new Reception(8, 12345),
+      null,
+      "Skynet comes",
       Duration.ofHours(2),
       new Classification(
         Arrays.asList("Action", "Science-Fiction"),

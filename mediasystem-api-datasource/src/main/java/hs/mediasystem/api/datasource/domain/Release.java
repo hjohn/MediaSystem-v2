@@ -1,6 +1,7 @@
 package hs.mediasystem.api.datasource.domain;
 
 import hs.mediasystem.api.datasource.WorkDescriptor;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.image.ImageURI;
@@ -12,8 +13,9 @@ public class Release implements WorkDescriptor {
   private final WorkId id;
   private final Details details;
   private final Reception reception;
+  private final Optional<Parent> parent;
 
-  public Release(WorkId id, Details details, Reception reception) {
+  public Release(WorkId id, Details details, Reception reception, Parent parent) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -24,6 +26,7 @@ public class Release implements WorkDescriptor {
     this.id = id;
     this.details = details;
     this.reception = reception;
+    this.parent = Optional.ofNullable(parent);
   }
 
   @Override
@@ -34,6 +37,10 @@ public class Release implements WorkDescriptor {
   @Override
   public Details getDetails() {
     return details;
+  }
+
+  public Optional<Parent> getParent() {
+    return parent;
   }
 
   public String getTitle() {

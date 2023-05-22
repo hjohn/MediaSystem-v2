@@ -1,6 +1,7 @@
 package hs.mediasystem.api.datasource.domain;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 
@@ -17,8 +18,8 @@ public class Production extends Release {
   private final double popularity;
   private final Set<WorkId> relatedWorks;
 
-  public Production(WorkId id, Details details, String tagLine, Reception reception, Classification classification, double popularity, Set<WorkId> relatedWorks) {
-    super(id, details, reception);
+  public Production(WorkId id, Details details, Reception reception, Parent parent, String tagLine, Classification classification, double popularity, Set<WorkId> relatedWorks) {
+    super(id, details, reception, parent);
 
     if(classification == null) {
       throw new IllegalArgumentException("classification cannot be null");

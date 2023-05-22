@@ -198,6 +198,7 @@ public class LinkedResourcesService {
       createMinimalDetails(resource.attributes()),
       null,
       null,
+      null,
       Classification.EMPTY,
       0.0,
       Set.of()

@@ -153,7 +153,7 @@ public class WorkService {
             .map(Serie.Season::episodes)
             .flatMapStream(List::stream)
             .filter(ep -> !episodesWithStreams.containsKey(ep.id()))
-            .map(WorkService::toEpisode)
+            .map(e -> toEpisode(serie, e))
             .map(ep -> toRemoteWork(ep, serie))
         )
         .toList()
@@ -176,7 +176,7 @@ public class WorkService {
       .map(serie -> CheckedStreams.forIOException(serie.getSeasons())
         .map(Serie.Season::episodes)
         .flatMapStream(List::stream)
-        .map(WorkService::toEpisode)
+        .map(e -> toEpisode(serie, e))
         .map(ep -> toRemoteWork(ep, serie))
         .collect(Collectors.toList())
       )
@@ -197,7 +197,7 @@ public class WorkService {
         .flatMapStream(List::stream)
         .filter(ep -> ep.id().equals(id))
         .findFirst()
-        .map(WorkService::toEpisode)
+        .map(e -> toEpisode(serie, e))
         .map(e -> toRemoteWork(e, serie))
       );
   }
@@ -265,11 +265,12 @@ public class WorkService {
     return new Parent(descriptor.getId(), details.getTitle(), details.getBackdrop());
   }
 
-  private static Episode toEpisode(Serie.Episode episode) {
+  private static Episode toEpisode(Serie serie, Serie.Episode episode) {
     return new Episode(
       episode.id(),
       episode.details(),
       episode.reception(),
+      new Parent(serie.getId(), serie.getTitle(), serie.getBackdrop()),
       episode.duration(),
       episode.seasonNumber(),
       episode.number(),

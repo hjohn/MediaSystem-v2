@@ -8,6 +8,7 @@ import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.Attribute.ChildType;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
+import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.domain.Tuple;
 import hs.mediasystem.util.domain.Tuple.Tuple2;
@@ -35,7 +36,7 @@ public class EpisodeIdentifier {
     if(sequence != null && type == ChildType.EPISODE) {
       // This will also match specials of the TMDB supported form, with season 0 and an episode number
       List<Episode> list = attemptMatch(serie, sequence).stream()
-        .map(EpisodeIdentifier::toEpisode)
+        .map(e -> toEpisode(serie, e))
         .toList();
 
       if(!list.isEmpty()) {
@@ -47,18 +48,19 @@ public class EpisodeIdentifier {
       Tuple2<Float, Serie.Episode> match = attemptSpecialsMatch(serie, childAttributes.get(Attribute.TITLE), childAttributes.get(Attribute.SUBTITLE), sequence);
 
       if(match != null) {
-        return Optional.of(new Identification(List.of(toEpisode(match.b)), new Match(Type.NAME, match.a, Instant.now())));
+        return Optional.of(new Identification(List.of(toEpisode(serie, match.b)), new Match(Type.NAME, match.a, Instant.now())));
       }
     }
 
     return Optional.empty();
   }
 
-  private static Episode toEpisode(Serie.Episode episode) {
+  private static Episode toEpisode(Serie serie, Serie.Episode episode) {
     return new Episode(
       episode.id(),
       episode.details(),
       episode.reception(),
+      new Parent(serie.getId(), serie.getTitle(), serie.getBackdrop()),
       episode.duration(),
       episode.seasonNumber(),
       episode.number(),

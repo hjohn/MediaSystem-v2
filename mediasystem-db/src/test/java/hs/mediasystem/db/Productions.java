@@ -21,8 +21,9 @@ public class Productions {
     return new Production(
       new WorkId(DataSource.instance("TMDB"), MediaType.MOVIE, "12345"),
       new Details("The Terminator", "Subtitle", "Robot kills humans", LocalDate.of(1984, 6, 6), new ImageURI("http://localhost", "key"), null, new ImageURI("http://localhost", "key")),
-      "Skynet Comes",
       new Reception(8, 12345),
+      null,
+      "Skynet Comes",
       new Classification(
         Arrays.asList("Action", "Science-Fiction"),
         Arrays.asList("en"),
