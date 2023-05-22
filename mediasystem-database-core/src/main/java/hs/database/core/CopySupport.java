@@ -44,77 +44,85 @@ public class CopySupport {
 
     String fullSql = "COPY (" + sql + ") TO STDOUT WITH (FORMAT binary)";
     CopyOut copyOut = copyManager.copyOut(fullSql);
-    List<T> decoded = new ArrayList<>();
-    Object[] raw = new Object[columnTypes.size()];
-    boolean headerSkipped = false;
 
-    for(;;) {
-      byte[] data = copyOut.readFromCopy();
+    try {
+      List<T> decoded = new ArrayList<>();
+      Object[] raw = new Object[columnTypes.size()];
+      boolean headerSkipped = false;
 
-      if(data == null) {
-        break;
-      }
+      for(;;) {
+        byte[] data = copyOut.readFromCopy();
 
-      ByteBuffer buf = ByteBuffer.wrap(data);  // network byte order is default, so good
-
-      bytesRead += data.length;
-
-      if(!headerSkipped) {
-        headerSkipped = true;
-        buf.position(15);
-
-        int extensionSize = buf.getInt();
-
-        buf.position(15 + 4 + extensionSize);
-      }
-
-      int fieldCount = buf.getShort();
-
-      if(fieldCount == -1) {
-        continue;
-      }
-
-      if(fieldCount != columnTypes.size()) {
-        throw new IllegalStateException("Unexpected field count: " + fieldCount);
-      }
-
-      for(int i = 0; i < columnTypes.size(); i++) {
-        Class<?> columnType = columnTypes.get(i);
-        FieldType fieldType = FIELD_TYPES.get(columnType);
-        int fieldLength = buf.getInt();
-
-        if(fieldType == null) {
-          throw new IllegalStateException("Unsupported columnType: " + columnType);
+        if(data == null) {
+          break;
         }
 
-        if(fieldLength == -1) {
-          raw[i] = null;
+        ByteBuffer buf = ByteBuffer.wrap(data);  // network byte order is default, so good
+
+        bytesRead += data.length;
+
+        if(!headerSkipped) {
+          headerSkipped = true;
+          buf.position(15);
+
+          int extensionSize = buf.getInt();
+
+          buf.position(15 + 4 + extensionSize);
         }
-        else {
-          if(fieldType.length() >= 0 && fieldLength != fieldType.length()) {
-            throw new IllegalStateException("Unexpected field length " + fieldLength + "; expected " + fieldType.length() + " for " + columnType);
+
+        int fieldCount = buf.getShort();
+
+        if(fieldCount == -1) {
+          continue;
+        }
+
+        if(fieldCount != columnTypes.size()) {
+          throw new IllegalStateException("Unexpected field count: " + fieldCount);
+        }
+
+        for(int i = 0; i < columnTypes.size(); i++) {
+          Class<?> columnType = columnTypes.get(i);
+          FieldType fieldType = FIELD_TYPES.get(columnType);
+          int fieldLength = buf.getInt();
+
+          if(fieldType == null) {
+            throw new IllegalStateException("Unsupported columnType: " + columnType);
           }
 
-          raw[i] = fieldType.extractor().apply(buf, fieldLength);
+          if(fieldLength == -1) {
+            raw[i] = null;
+          }
+          else {
+            if(fieldType.length() >= 0 && fieldLength != fieldType.length()) {
+              throw new IllegalStateException("Unexpected field length " + fieldLength + "; expected " + fieldType.length() + " for " + columnType);
+            }
+
+            raw[i] = fieldType.extractor().apply(buf, fieldLength);
+          }
+        }
+
+        if(buf.remaining() != 0) {
+          throw new IllegalStateException("Unexpected additional field encountered");
+        }
+
+        try {
+          decoded.add(mapper.map(raw));
+        }
+        catch(Throwable e) {
+          throw new IllegalStateException("Mapper threw exception for input: " + Arrays.toString(data), e);
         }
       }
 
-      if(buf.remaining() != 0) {
-        throw new IllegalStateException("Unexpected additional field encountered");
-      }
+      nanos = System.nanoTime() - nanos;
 
-      try {
-        decoded.add(mapper.map(raw));
-      }
-      catch(Throwable e) {
-        throw new IllegalStateException("Mapper threw exception for input: " + Arrays.toString(data), e);
+      StatementLogger.log(tx, fullSql, decoded.size(), bytesRead, nanos);
+
+      return decoded;
+    }
+    finally {
+      if(copyOut.isActive()) {
+        copyOut.cancelCopy();
       }
     }
-
-    nanos = System.nanoTime() - nanos;
-
-    StatementLogger.log(tx, fullSql, decoded.size(), bytesRead, nanos);
-
-    return decoded;
   }
 }
