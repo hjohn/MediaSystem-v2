@@ -74,10 +74,9 @@ public class DatabaseResponseCache extends ResponseCache {
 
   /**
    * Thrown when a resource was unavailable in the cache and {@link CacheMode#ONLY_CACHED}
-   * was active. Note: this can't be an {@link IOException} because these exceptions are
-   * ignored by the cache caller.
+   * was active.
    */
-  public static class NotCachedException extends RuntimeException {
+  public static class NotCachedException extends IOException {
     NotCachedException(String message) {
       super(message);
     }
