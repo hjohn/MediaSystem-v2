@@ -5,7 +5,6 @@ import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 
 import java.time.Duration;
-import java.util.Set;
 
 public class Movie extends Production {
   public enum State {
@@ -17,8 +16,8 @@ public class Movie extends Production {
   private final Duration runtime;
   private final State state;
 
-  public Movie(WorkId id, Details details, Reception reception, Parent parent, String tagLine, Duration runtime, Classification classification, double popularity, State state, Set<WorkId> relatedWorks) {
-    super(id, details, reception, parent, tagLine, classification, popularity, relatedWorks);
+  public Movie(WorkId id, Details details, Reception reception, Parent parent, String tagLine, Duration runtime, Classification classification, double popularity, State state) {
+    super(id, details, reception, parent, tagLine, classification, popularity);
 
     this.runtime = runtime;
     this.state = state;

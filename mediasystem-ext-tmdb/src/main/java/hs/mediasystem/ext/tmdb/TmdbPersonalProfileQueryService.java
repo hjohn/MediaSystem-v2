@@ -6,10 +6,10 @@ import hs.mediasystem.api.datasource.domain.Classification;
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Person;
 import hs.mediasystem.api.datasource.domain.PersonalProfile;
+import hs.mediasystem.api.datasource.domain.PersonalProfile.Gender;
 import hs.mediasystem.api.datasource.domain.Production;
 import hs.mediasystem.api.datasource.domain.ProductionRole;
 import hs.mediasystem.api.datasource.domain.Role;
-import hs.mediasystem.api.datasource.domain.PersonalProfile.Gender;
 import hs.mediasystem.api.datasource.services.PersonalProfileQueryService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.PersonId;
@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -114,8 +113,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
         Map.of(),
         node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
       ),
-      node.path("popularity").doubleValue(),
-      Set.of()
+      node.path("popularity").doubleValue()
     );
 
     RoleId roleId = new RoleId(DataSources.TMDB, node.get("credit_id").asText());

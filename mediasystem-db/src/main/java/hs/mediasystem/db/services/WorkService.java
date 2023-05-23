@@ -3,8 +3,8 @@ package hs.mediasystem.db.services;
 import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Episode;
-import hs.mediasystem.api.datasource.domain.Movie;
 import hs.mediasystem.api.datasource.domain.ProductionCollection;
+import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.api.datasource.domain.stream.Contribution;
 import hs.mediasystem.api.datasource.domain.stream.Work;
@@ -128,7 +128,7 @@ public class WorkService {
       .forEach(identifierService::reidentify);
   }
 
-  Work toWork(WorkDescriptor descriptor) throws IOException {
+  Work toWork(WorkDescriptor descriptor) {
     return CheckedOptional.from(linkedWorksService.find(descriptor.getId()))
       .map(this::toWork)
       .orElseGet(() -> toRemoteWork(descriptor, null));
@@ -161,7 +161,7 @@ public class WorkService {
     ).toList();
   }
 
-  private Work toWork(LinkedWork linkedWork) throws IOException {
+  private Work toWork(LinkedWork linkedWork) {
     return new Work(
       linkedWork.work().descriptor(),
       findOrCreateParent(linkedWork).orElse(null),
@@ -202,7 +202,7 @@ public class WorkService {
       );
   }
 
-  private Work toRemoteWork(WorkDescriptor descriptor, WorkDescriptor parentDescriptor) throws IOException {
+  private static Work toRemoteWork(WorkDescriptor descriptor, WorkDescriptor parentDescriptor) {
     return new Work(
       descriptor,
       parentDescriptor == null ? queryParent(descriptor).orElse(null) : createParent(parentDescriptor),
@@ -210,42 +210,20 @@ public class WorkService {
     );
   }
 
-  private CheckedOptional<Parent> findOrCreateParent(LinkedWork linkedWork) throws IOException {
-
-    /*
-     * A LinkedWork is always a local resource, so its parent information is based on that.
-     * It can however be a Movie, in which case we should find the collection.
-     */
-
+  private Optional<Parent> findOrCreateParent(LinkedWork linkedWork) {
     Resource resource = linkedWork.matchedResources().get(0).resource();
 
-    return CheckedOptional.from(resource.parentLocation())
-      .flatMapOpt(this::createParent)
-      .or(() -> findParentForLocal(linkedWork.work().descriptor()));
+    return linkedWork.work().descriptor() instanceof Release release
+      ? release.getParent().or(() -> resource.parentLocation().flatMap(this::createParent))
+      : Optional.empty();
   }
 
-  private CheckedOptional<Parent> findParentForLocal(WorkDescriptor descriptor) throws IOException {
-    // Only for collections, everything else should already be available for a local work
-    if(descriptor instanceof Movie movie) {
-      return queryParent(descriptor);
+  private static Optional<Parent> queryParent(WorkDescriptor descriptor) {
+    if(descriptor instanceof Release release) {
+      return release.getParent();
     }
 
-    return CheckedOptional.empty();
-  }
-
-  private CheckedOptional<Parent> queryParent(WorkDescriptor descriptor) throws IOException {
-    if(descriptor instanceof Movie movie) {
-      return CheckedOptional.from(movie.getCollectionId())
-        .flatMap(this::queryProductionCollection)
-        .map(this::createParent);
-    }
-
-    if(descriptor instanceof Episode) {
-      return CheckedOptional.from(descriptor.getId().getParent()).flatMapOpt(descriptorService::find)
-        .map(this::createParent);
-    }
-
-    return CheckedOptional.empty();
+    return Optional.empty();
   }
 
   private CheckedOptional<ProductionCollection> queryProductionCollection(WorkId id) throws IOException {
@@ -259,7 +237,7 @@ public class WorkService {
       .map(lr -> createParent(lr.works().get(0).descriptor()));
   }
 
-  private Parent createParent(WorkDescriptor descriptor) {
+  private static Parent createParent(WorkDescriptor descriptor) {
     Details details = descriptor.getDetails();
 
     return new Parent(descriptor.getId(), details.getTitle(), details.getBackdrop());

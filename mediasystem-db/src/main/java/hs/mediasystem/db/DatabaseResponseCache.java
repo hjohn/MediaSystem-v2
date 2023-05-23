@@ -63,23 +63,8 @@ public class DatabaseResponseCache extends ResponseCache {
      * Fetches remote resource only if it is unavailable in the cache,
      * regardless of how old it is.
      */
-    PREFER_CACHED,
+    PREFER_CACHED
 
-    /**
-     * Returns resources which are available in the cache only. Never
-     * fetches remote resources but throws a {@link NotCachedException} instead.
-     */
-    ONLY_CACHED
-  }
-
-  /**
-   * Thrown when a resource was unavailable in the cache and {@link CacheMode#ONLY_CACHED}
-   * was active.
-   */
-  public static class NotCachedException extends IOException {
-    NotCachedException(String message) {
-      super(message);
-    }
   }
 
   private static final Logger LOGGER = Logger.getLogger(DatabaseResponseCache.class.getName());
@@ -130,10 +115,6 @@ public class DatabaseResponseCache extends ResponseCache {
     }
 
     // Either entry was missing, wasn't fresh enough, or it couldn't be decoded.
-    if(cacheMode == CacheMode.ONLY_CACHED) {
-      throw new NotCachedException("URL was not available in cache and CacheMode.ONLY_CACHED was set: " + safeURL);
-    }
-
     // Fetch from original source:
     LOGGER.fine("Direct fetch (" + cacheMode + "): " + safeURL);
 

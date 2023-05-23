@@ -20,11 +20,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -51,8 +49,7 @@ public class ObjectFactory {
         Map.of(),
         node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
       ),
-      node.path("popularity").doubleValue(),
-      Set.of()
+      node.path("popularity").doubleValue()
     );
   }
 
@@ -60,21 +57,16 @@ public class ObjectFactory {
     Number runtime = node.path("runtime").numberValue();
 
     JsonNode collectionPath = node.path("belongs_to_collection");
-    Set<WorkId> relatedWorks = new HashSet<>();
     Parent parent = null;
 
     if(collectionPath.isObject()) {
       WorkId id = new WorkId(DataSources.TMDB, MediaType.COLLECTION, collectionPath.path("id").asText());
 
-      relatedWorks.add(id);
-
-      parent = new Parent(id, collectionPath.path("name").asText(), Optional.ofNullable(tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id.toString())));
-    }
-
-    String imdbId = node.path("imdb_id").textValue();
-
-    if(imdbId != null) {
-      relatedWorks.add(new WorkId(DataSources.IMDB, MediaType.MOVIE, imdbId));
+      parent = new Parent(
+        id,
+        collectionPath.path("name").asText(),
+        Optional.ofNullable(tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id.toString()))
+      );
     }
 
     WorkId id = new WorkId(DataSources.TMDB, MediaType.MOVIE, node.path("id").asText());
@@ -94,8 +86,7 @@ public class ObjectFactory {
         node.path("adult").isBoolean() ? node.path("adult").booleanValue() : null
       ),
       node.path("popularity").doubleValue(),
-      toMovieState(node.path("status").textValue()),
-      relatedWorks
+      toMovieState(node.path("status").textValue())
     );
   }
 
@@ -117,8 +108,7 @@ public class ObjectFactory {
       toSerieState(node.path("status").textValue()),
       parseDate(node.path("last_air_date").textValue()),
       node.path("popularity").doubleValue(),
-      seasons,
-      Set.of()
+      seasons
     );
   }
 

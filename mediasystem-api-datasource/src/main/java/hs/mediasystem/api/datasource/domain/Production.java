@@ -1,13 +1,11 @@
 package hs.mediasystem.api.datasource.domain;
 
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Parent;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Represents either a Movie, a TV Movie or an entire TV Series.
@@ -16,9 +14,8 @@ public class Production extends Release {
   private final Optional<String> tagLine;
   private final Classification classification;
   private final double popularity;
-  private final Set<WorkId> relatedWorks;
 
-  public Production(WorkId id, Details details, Reception reception, Parent parent, String tagLine, Classification classification, double popularity, Set<WorkId> relatedWorks) {
+  public Production(WorkId id, Details details, Reception reception, Parent parent, String tagLine, Classification classification, double popularity) {
     super(id, details, reception, parent);
 
     if(classification == null) {
@@ -28,7 +25,6 @@ public class Production extends Release {
     this.tagLine = Optional.ofNullable(tagLine);
     this.popularity = popularity;
     this.classification = classification;
-    this.relatedWorks = Set.copyOf(relatedWorks);
   }
 
   public Optional<String> getTagLine() {
@@ -49,14 +45,6 @@ public class Production extends Release {
 
   public double getPopularity() {
     return popularity;
-  }
-
-  public Set<WorkId> getRelatedWorks() {
-    return relatedWorks;
-  }
-
-  public Optional<WorkId> getCollectionId() {
-    return relatedWorks.stream().filter(i -> i.getType().equals(MediaType.COLLECTION)).findAny();
   }
 
   @Override

@@ -20,7 +20,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -96,8 +95,7 @@ public class LocalIdentificationService implements IdentificationService {
       null,
       null,
       Classification.EMPTY,
-      1.0,
-      Set.of()
+      1.0
     );
   }
 }

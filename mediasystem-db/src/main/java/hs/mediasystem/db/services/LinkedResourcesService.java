@@ -200,8 +200,7 @@ public class LinkedResourcesService {
       null,
       null,
       Classification.EMPTY,
-      0.0,
-      Set.of()
+      0.0
     );
   }
 

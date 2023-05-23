@@ -16,7 +16,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
 
 public class Movies {
   public static Movie create() {
@@ -43,8 +42,7 @@ public class Movies {
         false
       ),
       99.0,
-      State.RELEASED,
-      Set.of()
+      State.RELEASED
     );
   }
 }

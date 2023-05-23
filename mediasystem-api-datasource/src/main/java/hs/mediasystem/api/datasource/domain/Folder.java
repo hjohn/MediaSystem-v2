@@ -3,8 +3,6 @@ package hs.mediasystem.api.datasource.domain;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 
-import java.util.Set;
-
 public class Folder extends Production {
 
   /**
@@ -16,6 +14,6 @@ public class Folder extends Production {
    * @param classification a {@link Classification}, cannot be null
    */
   public Folder(WorkId id, Details details, Reception reception, Classification classification) {
-    super(id, details, reception, null, null, classification, 1.0, Set.of());
+    super(id, details, reception, null, null, classification, 1.0);
   }
 }

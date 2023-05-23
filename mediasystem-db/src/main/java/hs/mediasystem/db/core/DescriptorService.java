@@ -7,7 +7,6 @@ import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.services.QueryService;
 import hs.mediasystem.db.DatabaseResponseCache;
 import hs.mediasystem.db.DatabaseResponseCache.CacheMode;
-import hs.mediasystem.db.DatabaseResponseCache.NotCachedException;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.WorkId;
@@ -41,33 +40,6 @@ public class DescriptorService {
       if(queryServicesByDataSource.put(new TypedDataSource(service.getDataSource(), service.getMediaType()), service) != null) {
         LOGGER.warning("Multiple query services available for datasource: " + service.getDataSource());
       }
-    }
-  }
-
-  public Optional<WorkDescriptor> findCached(WorkId id) {
-    WorkDescriptor descriptor = cache.getIfPresent(id);
-
-    if(descriptor != null) {
-      return Optional.of(descriptor);
-    }
-
-    CacheMode cacheMode = responseCache.getCurrentThreadCacheMode();
-
-    responseCache.setCurrentThreadCacheMode(CacheMode.ONLY_CACHED);
-
-    try {
-      return queryWork(id);
-    }
-    catch(NotCachedException e) {
-      LOGGER.warning("Work was not available in cache, skipped: " + id);
-      // TODO perhaps a background task should be triggered to fetch this information so it is cached next time!
-      return Optional.empty();
-    }
-    catch(IOException e) {
-      throw new IllegalStateException("Unexpected exception as CacheMode was set to ONLY_CACHED while querying: " + id, e);
-    }
-    finally {
-      responseCache.setCurrentThreadCacheMode(cacheMode);
     }
   }
 

@@ -13,7 +13,6 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class Productions {
 
@@ -31,8 +30,7 @@ public class Productions {
         Map.of(),
         false
       ),
-      20.0,
-      Set.of()
+      20.0
     );
   }
 }
