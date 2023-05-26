@@ -60,7 +60,7 @@ public class EpisodeIdentifier {
       episode.id(),
       episode.details(),
       episode.reception(),
-      new Context(serie.getId(), serie.getTitle(), serie.getBackdrop()),
+      new Context(serie.getId(), serie.getTitle(), serie.getCover(), serie.getBackdrop()),
       episode.duration(),
       episode.seasonNumber(),
       episode.number(),

@@ -44,7 +44,7 @@ public class Episodes {
       id,
       new Details(title, "Subtitle", "Stuff", LocalDate.of(2012, 6, 6), null, new ImageURI("http://localhost", "key"), new ImageURI("http://localhost", "key")),
       new Reception(8, 12345),
-      new Context(new WorkId(DataSource.instance("TMDB"), MediaType.SERIE, "999"), "GoT", Optional.empty()),
+      new Context(new WorkId(DataSource.instance("TMDB"), MediaType.SERIE, "999"), "GoT", Optional.empty(), Optional.empty()),
       Duration.ofMinutes(40),
       season,
       episodeNumber,

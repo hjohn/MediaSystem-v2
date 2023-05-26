@@ -65,6 +65,7 @@ public class ObjectFactory {
       context = new Context(
         id,
         collectionPath.path("name").asText(),
+        Optional.ofNullable(tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + id.toString())),
         Optional.ofNullable(tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id.toString()))
       );
     }

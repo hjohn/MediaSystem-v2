@@ -240,7 +240,7 @@ public class WorkService {
   private static Context createContext(WorkDescriptor descriptor) {
     Details details = descriptor.getDetails();
 
-    return new Context(descriptor.getId(), details.getTitle(), details.getBackdrop());
+    return new Context(descriptor.getId(), details.getTitle(), details.getCover(), details.getBackdrop());
   }
 
   private static Episode toEpisode(Serie serie, Serie.Episode episode) {
@@ -248,7 +248,7 @@ public class WorkService {
       episode.id(),
       episode.details(),
       episode.reception(),
-      new Context(serie.getId(), serie.getTitle(), serie.getBackdrop()),
+      new Context(serie.getId(), serie.getTitle(), serie.getCover(), serie.getBackdrop()),
       episode.duration(),
       episode.seasonNumber(),
       episode.number(),

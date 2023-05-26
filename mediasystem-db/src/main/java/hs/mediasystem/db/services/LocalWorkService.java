@@ -54,6 +54,6 @@ public class LocalWorkService {
   private Context createParent(WorkDescriptor descriptor) {
     Details details = descriptor.getDetails();
 
-    return new Context(descriptor.getId(), details.getTitle(), details.getBackdrop());
+    return new Context(descriptor.getId(), details.getTitle(), details.getCover(), details.getBackdrop());
   }
 }

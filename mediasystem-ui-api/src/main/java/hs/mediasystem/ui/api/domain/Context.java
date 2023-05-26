@@ -6,7 +6,7 @@ import hs.mediasystem.util.image.ImageHandle;
 
 import java.util.Optional;
 
-public record Context(WorkId id, String title, Optional<ImageHandle> backdrop) {
+public record Context(WorkId id, String title, Optional<ImageHandle> cover, Optional<ImageHandle> backdrop) {
   public MediaType type() {
     return id.getType();
   }

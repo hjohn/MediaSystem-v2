@@ -73,6 +73,7 @@ public class LocalWorksClient implements WorksClient {
     return context == null ? null : new Context(
       context.id(),
       context.title(),
+      context.cover().map(imageHandleFactory::fromURI),
       context.backdrop().map(imageHandleFactory::fromURI)
     );
   }
