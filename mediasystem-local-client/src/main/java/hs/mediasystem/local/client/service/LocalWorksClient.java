@@ -13,7 +13,7 @@ import hs.mediasystem.ui.api.WorksClient;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
 import hs.mediasystem.ui.api.domain.MediaStream;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Stage;
@@ -63,17 +63,17 @@ public class LocalWorksClient implements WorksClient {
 
     return new Work(
       work.getId(),
-      createParent(work.getParent().orElse(null)),
-      createDetails(work.getDescriptor(), work.getParent().orElse(null), primary),
+      createContext(work.getContext().orElse(null)),
+      createDetails(work.getDescriptor(), work.getContext().orElse(null), primary),
       streams
     );
   }
 
-  private Parent createParent(hs.mediasystem.domain.work.Parent parent) {
-    return parent == null ? null : new Parent(
-      parent.id(),
-      parent.title(),
-      parent.backdrop().map(imageHandleFactory::fromURI)
+  private Context createContext(hs.mediasystem.domain.work.Context context) {
+    return context == null ? null : new Context(
+      context.id(),
+      context.title(),
+      context.backdrop().map(imageHandleFactory::fromURI)
     );
   }
 
@@ -83,7 +83,7 @@ public class LocalWorksClient implements WorksClient {
    * - sample image is taken first snapshot if missing (don't use backdrop, it is not a sample!)
    * - backdrop is taken from parent or from the second snapshot if missing
    */
-  private Details createDetails(WorkDescriptor descriptor, hs.mediasystem.domain.work.Parent parent, MediaStream stream) {
+  private Details createDetails(WorkDescriptor descriptor, hs.mediasystem.domain.work.Context context, MediaStream stream) {
     Optional<MediaStream> mediaStream = Optional.ofNullable(stream);
 
     return new Details(
@@ -102,13 +102,13 @@ public class LocalWorksClient implements WorksClient {
         .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor.getDetails().getBackdrop()
-        .or(() -> parent == null ? Optional.empty() : parent.backdrop())
+        .or(() -> context == null ? Optional.empty() : context.backdrop())
         .or(() -> mediaStream.map(LocalWorksClient::snapshotsToBackdrop))
         .map(imageHandleFactory::fromURI)
         .orElse(null),
       descriptor instanceof Production m ? m.getTagLine().orElse(null) : null,
       descriptor instanceof Serie s ? createSerie(s) : null,
-      parent != null && parent.getType() == MediaType.SERIE ? createSequence(descriptor) : null,
+      context != null && context.getType() == MediaType.SERIE ? createSequence(descriptor) : null,
       descriptor instanceof Release r ? r.getReception() : null,
       descriptor instanceof Production p ? p.getPopularity() : null,
       descriptor instanceof Production p ? createClassification(p) : Classification.DEFAULT

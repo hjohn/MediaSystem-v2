@@ -6,7 +6,7 @@ import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.datasource.domain.stream.Work;
 import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.Resource;
-import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.Context;
 
 import java.net.URI;
 import java.util.Optional;
@@ -36,11 +36,11 @@ public class LocalWorkService {
     );
   }
 
-  private Optional<Parent> findParent(LinkedWork linkedWork) {
+  private Optional<Context> findParent(LinkedWork linkedWork) {
     Resource resource = linkedWork.matchedResources().get(0).resource();
 
     return linkedWork.work().descriptor() instanceof Release release
-      ? release.getParent().or(() -> resource.parentLocation().flatMap(this::findDescriptor).map(this::createParent))
+      ? release.getContext().or(() -> resource.parentLocation().flatMap(this::findDescriptor).map(this::createParent))
       : Optional.empty();
   }
 
@@ -51,9 +51,9 @@ public class LocalWorkService {
       .map(hs.mediasystem.db.services.domain.Work::descriptor);
   }
 
-  private Parent createParent(WorkDescriptor descriptor) {
+  private Context createParent(WorkDescriptor descriptor) {
     Details details = descriptor.getDetails();
 
-    return new Parent(descriptor.getId(), details.getTitle(), details.getBackdrop());
+    return new Context(descriptor.getId(), details.getTitle(), details.getBackdrop());
   }
 }

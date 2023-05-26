@@ -27,7 +27,7 @@ public class CollectionGrouping implements Grouping<Work, Object> {
     List<Object> topLevelItems = new ArrayList<>();
 
     for(Work work : items) {
-      work.getParent().filter(p -> p.type().equals(MediaType.COLLECTION)).ifPresent(p -> {
+      work.getContext().filter(c -> c.type().equals(MediaType.COLLECTION)).ifPresent(p -> {
         if(!childWorks.containsKey(p.id())) {
           workClient.find(p.id()).ifPresent(r -> {
             List<Work> children = workClient.findChildren(p.id()).stream()
@@ -43,7 +43,7 @@ public class CollectionGrouping implements Grouping<Work, Object> {
         }
       });
 
-      if(work.getParent().filter(p -> childWorks.containsKey(p.id())).isEmpty()) {
+      if(work.getContext().filter(c -> childWorks.containsKey(c.id())).isEmpty()) {
         topLevelItems.add(work);
       }
     }

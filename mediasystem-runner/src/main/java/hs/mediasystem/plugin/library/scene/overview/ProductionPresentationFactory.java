@@ -9,7 +9,7 @@ import hs.mediasystem.ui.api.SettingsClient;
 import hs.mediasystem.ui.api.SettingsSource;
 import hs.mediasystem.ui.api.StreamStateClient;
 import hs.mediasystem.ui.api.WorkClient;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.javafx.property.SimpleReadOnlyObjectProperty;
@@ -47,7 +47,7 @@ public class ProductionPresentationFactory {
     ProductionPresentation presentation = new ProductionPresentation();
 
     Work work = queryWork(id);
-    WorkId rootId = work.getType().isComponent() ? work.getParent().map(Parent::id).orElse(id) : id;
+    WorkId rootId = work.getType().isComponent() ? work.getContext().map(Context::id).orElse(id) : id;
     WorkId selectedChildId = rootId.equals(id) ? null : id;
     State state = rootId.equals(id) ? State.OVERVIEW : State.EPISODE;
 
@@ -95,7 +95,7 @@ public class ProductionPresentationFactory {
 
     private ProductionPresentation() {
       selectedChild.addListener((obs, old, current) ->
-        current.getParent().ifPresent(p -> settingsSource.storeSetting("last-selected:" + p.id(), current.getId().toString()))
+        current.getContext().ifPresent(c -> settingsSource.storeSetting("last-selected:" + c.id(), current.getId().toString()))
       );
     }
 

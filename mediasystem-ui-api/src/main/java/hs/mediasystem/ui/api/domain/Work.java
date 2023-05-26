@@ -18,12 +18,12 @@ public class Work {
   public static final Comparator<Work> BY_LAST_WATCHED_DATE = Comparator.comparing(Work::getState, Comparator.comparing((State d) -> d.lastConsumptionTime().orElse(null), Comparator.nullsLast(Comparator.naturalOrder())));
 
   private final WorkId id;
-  private final Optional<Parent> parent;
+  private final Optional<Context> context;
   private final Details details;
   private final List<MediaStream> streams;
   private final Optional<MediaStream> primaryStream;
 
-  public Work(WorkId id, Parent parent, Details details, List<MediaStream> streams) {
+  public Work(WorkId id, Context context, Details details, List<MediaStream> streams) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
@@ -35,7 +35,7 @@ public class Work {
     }
 
     this.id = id;
-    this.parent = Optional.ofNullable(parent);
+    this.context = Optional.ofNullable(context);
     this.details = details;
     this.streams = streams;
 
@@ -54,8 +54,8 @@ public class Work {
     return id.getType();
   }
 
-  public Optional<Parent> getParent() {
-    return parent;
+  public Optional<Context> getContext() {
+    return context;
   }
 
   public Details getDetails() {

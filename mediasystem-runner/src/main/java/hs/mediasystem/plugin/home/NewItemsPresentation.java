@@ -2,7 +2,7 @@ package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ui.api.RecommendationClient;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
@@ -59,14 +59,14 @@ public class NewItemsPresentation {
     for(Recommendation recommendation : recommendations) {
       Work work = recommendation.work();
       Sequence sequence = work.getDetails().getSequence().orElse(null);
-      Parent parent = work.getParent().orElse(null);
+      Context context = work.getContext().orElse(null);
       boolean hasParent = recommendation.work().getType().isComponent();
 
-      if(!hasParent || parent == null || sequence == null) {
+      if(!hasParent || context == null || sequence == null) {
         groupedMap.put(work.getId().toString(), new ConsolidatedNewItem(recommendation));
       }
       else {
-        ConsolidatedNewItem item = groupedMap.computeIfAbsent(parent.id().toString(), k -> new ConsolidatedNewItem(recommendation));
+        ConsolidatedNewItem item = groupedMap.computeIfAbsent(context.id().toString(), k -> new ConsolidatedNewItem(recommendation));
 
         if(sequence.type() == Type.EPISODE) {
           item.episodes++;
@@ -103,7 +103,7 @@ public class NewItemsPresentation {
     return new Item(
       recommendation,
       null,
-      work.getParent().orElseThrow().title(),
+      work.getContext().orElseThrow().title(),
       createSubtitle(item)
     );
   }
@@ -148,13 +148,13 @@ public class NewItemsPresentation {
   }
 
   private static Item toItem(Recommendation recommendation) {
-    boolean hasParent = recommendation.work().getType().isComponent();
+    boolean hasContext = recommendation.work().getType().isComponent();
 
     return new Item(
       recommendation,
-      hasParent ? recommendation.work().getParent().map(Parent::title).orElse(null) : null,
+      hasContext ? recommendation.work().getContext().map(Context::title).orElse(null) : null,
       recommendation.work().getDetails().getTitle(),
-      !hasParent ? recommendation.work().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null) : null
+      !hasContext ? recommendation.work().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null) : null
     );
   }
 

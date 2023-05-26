@@ -1,6 +1,6 @@
 package hs.mediasystem.api.datasource.domain;
 
-import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 
@@ -15,10 +15,10 @@ public class Episode extends Release {
   private final List<PersonRole> personRoles;
   private final Duration duration;
 
-  public Episode(WorkId id, Details details, Reception reception, Parent parent, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
-    super(id, details, reception, parent);
+  public Episode(WorkId id, Details details, Reception reception, Context context, Duration duration, int seasonNumber, int number, List<PersonRole> personRoles) {
+    super(id, details, reception, context);
 
-    if(parent == null) {
+    if(context == null) {
       throw new IllegalArgumentException("parent cannot be null");
     }
     if(number < 0) {

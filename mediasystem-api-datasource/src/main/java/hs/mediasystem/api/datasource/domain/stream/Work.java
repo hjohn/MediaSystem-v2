@@ -4,7 +4,7 @@ import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.domain.media.MediaStream;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.domain.work.WorkId;
 
 import java.util.List;
@@ -26,9 +26,9 @@ import java.util.Optional;
 public class Work {
   private final WorkDescriptor descriptor;
   private final List<MediaStream> streams;
-  private final Optional<Parent> parent;
+  private final Optional<Context> context;
 
-  public Work(WorkDescriptor descriptor, Parent parent, List<MediaStream> streams) {
+  public Work(WorkDescriptor descriptor, Context context, List<MediaStream> streams) {
     if(descriptor == null) {
       throw new IllegalArgumentException("descriptor cannot be null");
     }
@@ -36,7 +36,7 @@ public class Work {
       throw new IllegalArgumentException("streams cannot be null or contain nulls: " + streams);
     }
 
-    this.parent = Optional.ofNullable(parent);
+    this.context = Optional.ofNullable(context);
     this.descriptor = descriptor;
     this.streams = streams;
   }
@@ -49,8 +49,8 @@ public class Work {
     return descriptor.getDetails();
   }
 
-  public Optional<Parent> getParent() {
-    return parent;
+  public Optional<Context> getContext() {
+    return context;
   }
 
   public MediaType getType() {

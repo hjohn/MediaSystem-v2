@@ -17,7 +17,7 @@ import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.media.MediaStream;
 import hs.mediasystem.domain.stream.MediaType;
-import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.domain.work.VideoLink;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.checked.CheckedOptional;
@@ -164,7 +164,7 @@ public class WorkService {
   private Work toWork(LinkedWork linkedWork) {
     return new Work(
       linkedWork.work().descriptor(),
-      findOrCreateParent(linkedWork).orElse(null),
+      findOrCreateContext(linkedWork).orElse(null),
       linkedWork.matchedResources().stream().map(mediaStreamService::toMediaStream).toList()
     );
   }
@@ -205,22 +205,22 @@ public class WorkService {
   private static Work toRemoteWork(WorkDescriptor descriptor, WorkDescriptor parentDescriptor) {
     return new Work(
       descriptor,
-      parentDescriptor == null ? queryParent(descriptor).orElse(null) : createParent(parentDescriptor),
+      parentDescriptor == null ? queryContext(descriptor).orElse(null) : createContext(parentDescriptor),
       List.of()
     );
   }
 
-  private Optional<Parent> findOrCreateParent(LinkedWork linkedWork) {
+  private Optional<Context> findOrCreateContext(LinkedWork linkedWork) {
     Resource resource = linkedWork.matchedResources().get(0).resource();
 
     return linkedWork.work().descriptor() instanceof Release release
-      ? release.getParent().or(() -> resource.parentLocation().flatMap(this::createParent))
+      ? release.getContext().or(() -> resource.parentLocation().flatMap(this::createContext))
       : Optional.empty();
   }
 
-  private static Optional<Parent> queryParent(WorkDescriptor descriptor) {
+  private static Optional<Context> queryContext(WorkDescriptor descriptor) {
     if(descriptor instanceof Release release) {
-      return release.getParent();
+      return release.getContext();
     }
 
     return Optional.empty();
@@ -232,15 +232,15 @@ public class WorkService {
       .map(ProductionCollection.class::cast);
   }
 
-  private Optional<Parent> createParent(URI parentUri) {
+  private Optional<Context> createContext(URI parentUri) {
     return linkedResourcesService.find(parentUri)
-      .map(lr -> createParent(lr.works().get(0).descriptor()));
+      .map(lr -> createContext(lr.works().get(0).descriptor()));
   }
 
-  private static Parent createParent(WorkDescriptor descriptor) {
+  private static Context createContext(WorkDescriptor descriptor) {
     Details details = descriptor.getDetails();
 
-    return new Parent(descriptor.getId(), details.getTitle(), details.getBackdrop());
+    return new Context(descriptor.getId(), details.getTitle(), details.getBackdrop());
   }
 
   private static Episode toEpisode(Serie serie, Serie.Episode episode) {
@@ -248,7 +248,7 @@ public class WorkService {
       episode.id(),
       episode.details(),
       episode.reception(),
-      new Parent(serie.getId(), serie.getTitle(), serie.getBackdrop()),
+      new Context(serie.getId(), serie.getTitle(), serie.getBackdrop()),
       episode.duration(),
       episode.seasonNumber(),
       episode.number(),

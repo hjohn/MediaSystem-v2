@@ -6,7 +6,7 @@ import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.runner.util.grid.MediaItemFormatter;
 import hs.mediasystem.ui.api.domain.Classification;
 import hs.mediasystem.ui.api.domain.Details;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Person;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
@@ -57,7 +57,7 @@ public class ContextLayout {
     BasePanel panel = create(work.getDetails());
 
     if(work.getType().isComponent()) {
-      work.getParent().map(Parent::title).ifPresent(panel.groupTitle::set);
+      work.getContext().map(Context::title).ifPresent(panel.groupTitle::set);
     }
 
     panel.subtitle.set(work.getDetails().getClassification().genres().stream().collect(Collectors.joining(" / ")));

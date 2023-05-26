@@ -3,7 +3,7 @@ package hs.mediasystem.plugin.home;
 import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.presentation.PresentationLoader;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
@@ -29,13 +29,13 @@ public class RecommendationsNodeFactory extends AbstractCarouselNodeFactory impl
   }
 
   private void fillRecommendationModel(Recommendation recommendation, AnnotatedImageCellFactory.Model model) {
-    boolean hasParent = recommendation.work().getType().isComponent();
+    boolean hasContext = recommendation.work().getType().isComponent();
 
     fillRecommendationModel(
       recommendation,
-      hasParent ? recommendation.work().getParent().map(Parent::title).orElse(null) : null,
+      hasContext ? recommendation.work().getContext().map(Context::title).orElse(null) : null,
       recommendation.work().getDetails().getTitle(),
-      !hasParent ? recommendation.work().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null) : null,
+      !hasContext ? recommendation.work().getDetails().getReleaseDate().map(LocalDate::getYear).map(Object::toString).orElse(null) : null,
       model
     );
   }

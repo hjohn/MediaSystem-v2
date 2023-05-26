@@ -7,7 +7,7 @@ import hs.mediasystem.plugin.library.scene.grid.common.AbstractSetup;
 import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionPresentationFactory.GenericCollectionPresentation;
 import hs.mediasystem.runner.grouping.WorksGroup;
 import hs.mediasystem.runner.util.grid.MediaStatus;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
 import hs.mediasystem.ui.api.domain.Work;
@@ -34,9 +34,9 @@ public class GenericCollectionSetup extends AbstractSetup<Work, Object, GenericC
       model.title.set(work.getDetails().getTitle());
       model.imageHandle.set(work.getDetails().getAnyCover().orElse(null));
       model.annotation1.set(work.getDetails().getSequence().map(this::createSequenceInfo).orElseGet(() -> work.getDetails().getYearRange()));
-      model.annotation2.set(work.getParent()
-        .filter(p -> p.type().equals(MediaType.COLLECTION))
-        .map(Parent::title)
+      model.annotation2.set(work.getContext()
+        .filter(c -> c.type().equals(MediaType.COLLECTION))
+        .map(Context::title)
         .orElse("")
       );
       model.status.set(work.getStreams().isEmpty() ? MediaStatus.UNAVAILABLE : work.getState().consumed() ? MediaStatus.WATCHED : MediaStatus.AVAILABLE);

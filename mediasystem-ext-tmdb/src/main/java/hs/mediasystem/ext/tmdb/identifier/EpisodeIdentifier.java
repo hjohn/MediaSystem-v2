@@ -8,7 +8,7 @@ import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.Attribute.ChildType;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
-import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.domain.Tuple;
 import hs.mediasystem.util.domain.Tuple.Tuple2;
@@ -60,7 +60,7 @@ public class EpisodeIdentifier {
       episode.id(),
       episode.details(),
       episode.reception(),
-      new Parent(serie.getId(), serie.getTitle(), serie.getBackdrop()),
+      new Context(serie.getId(), serie.getTitle(), serie.getBackdrop()),
       episode.duration(),
       episode.seasonNumber(),
       episode.number(),

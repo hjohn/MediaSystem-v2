@@ -187,7 +187,7 @@ public class BasicTheme implements Theme {
       targets.add(contributions(id));
       targets.add(recommendations(id));
 
-      work.getParent().filter(p -> p.type().equals(MediaType.COLLECTION))
+      work.getContext().filter(p -> p.type().equals(MediaType.COLLECTION))
         .ifPresent(p -> targets.add(collection(p.id())));
 
       return targets;

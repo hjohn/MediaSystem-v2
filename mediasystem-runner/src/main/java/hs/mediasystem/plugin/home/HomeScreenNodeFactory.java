@@ -8,7 +8,7 @@ import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.runner.presentation.PresentationLoader;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.CollectionClient;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.util.domain.Tuple;
 import hs.mediasystem.util.image.ImageHandle;
@@ -164,9 +164,9 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     ActionListView<Recommendation> mediaGridView = recommendationsNodeFactory.create(presentation);
 
     backdrop.bind(presentation.selectedItem.map(r ->
-      r.work().getParent()
-        .filter(p -> p.type().isSerie())
-        .flatMap(Parent::backdrop)
+      r.work().getContext()
+        .filter(c -> c.type().isSerie())
+        .flatMap(Context::backdrop)
         .or(() -> r.work().getDetails().getBackdrop())
         .orElse(null)
     ));
@@ -194,9 +194,9 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     ActionListView<NewItemsPresentation.Item> mediaGridView = newItemsNodeFactory.create(presentation);
 
     backdrop.bind(presentation.selectedItem.map(item ->
-      item.recommendation.work().getParent()
-        .filter(p -> p.type().isSerie())
-        .flatMap(Parent::backdrop)
+      item.recommendation.work().getContext()
+        .filter(c -> c.type().isSerie())
+        .flatMap(Context::backdrop)
         .or(() -> item.recommendation.work().getDetails().getBackdrop())
         .orElse(null)
     ));

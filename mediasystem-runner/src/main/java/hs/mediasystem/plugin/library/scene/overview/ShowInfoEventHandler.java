@@ -9,7 +9,7 @@ import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.runner.presentation.Presentations;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.ui.api.domain.MediaStream;
-import hs.mediasystem.ui.api.domain.Parent;
+import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Work;
 import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.util.image.ImageHandleFactory;
@@ -55,7 +55,7 @@ public class ShowInfoEventHandler {
     }
 
     VBox titleBox = Containers.vbox("title-panel",
-      Labels.create("serie-title", work.getType().isComponent() ? work.getParent().map(Parent::title).orElse("") : "", Labels.HIDE_IF_EMPTY),
+      Labels.create("serie-title", work.getType().isComponent() ? work.getContext().map(Context::title).orElse("") : "", Labels.HIDE_IF_EMPTY),
       titleLabel
     );
 

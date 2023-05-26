@@ -120,7 +120,7 @@ public class PlaybackOverlayPane extends StackPane {
       setId("video-overlay_info");
       setBottom(new HBox() {{
         getChildren().add(new VBox() {{
-          ObservableValue<String> serieName = PlaybackOverlayPane.this.presentation.map(pop -> pop.work).map(Work::getParent).map(o -> o.orElse(null)).map(p -> p.type().isSerie() ? p.title() : null);
+          ObservableValue<String> serieName = PlaybackOverlayPane.this.presentation.map(pop -> pop.work).map(Work::getContext).map(o -> o.orElse(null)).map(p -> p.type().isSerie() ? p.title() : null);
           ObservableValue<String> title = PlaybackOverlayPane.this.presentation.map(pop -> pop.work).map(Work::getDetails).map(Details::getTitle);
 
           HBox.setHgrow(this, Priority.ALWAYS);

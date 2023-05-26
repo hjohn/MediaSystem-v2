@@ -11,7 +11,7 @@ import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.KeywordId;
-import hs.mediasystem.domain.work.Parent;
+import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.image.ImageURI;
@@ -57,12 +57,12 @@ public class ObjectFactory {
     Number runtime = node.path("runtime").numberValue();
 
     JsonNode collectionPath = node.path("belongs_to_collection");
-    Parent parent = null;
+    Context context = null;
 
     if(collectionPath.isObject()) {
       WorkId id = new WorkId(DataSources.TMDB, MediaType.COLLECTION, collectionPath.path("id").asText());
 
-      parent = new Parent(
+      context = new Context(
         id,
         collectionPath.path("name").asText(),
         Optional.ofNullable(tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id.toString()))
@@ -75,7 +75,7 @@ public class ObjectFactory {
       id,
       createDetails(node, id),
       createReception(node),
-      parent,
+      context,
       node.path("tagline").isTextual() && node.path("tagline").textValue().isBlank() ? null : node.path("tagline").textValue(),
       runtime == null ? null : Duration.ofMinutes(runtime.intValue()),
       new Classification(
