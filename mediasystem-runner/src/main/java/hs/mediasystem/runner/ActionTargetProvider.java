@@ -5,9 +5,10 @@ import hs.mediasystem.util.expose.ExposedControl;
 import hs.mediasystem.util.expose.ExposedNode;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.inject.Singleton;
 
@@ -15,29 +16,32 @@ import org.int4.dirk.util.Types;
 
 @Singleton
 public class ActionTargetProvider {
+  private final Map<Class<?>, List<ActionTarget>> actionTargets = new HashMap<>();
 
   public List<ActionTarget> getActionTargets(Class<?> rootClass) {
-    return getAllActionTargets(rootClass, null).toList();
+    return actionTargets.computeIfAbsent(rootClass, k -> getAllActionTargets(rootClass, null));
   }
 
   public Optional<ActionTarget> findMatching(Class<?> rootClass, String path) {
-    return getAllActionTargets(rootClass, null)  // TODO result of this call is basically constant (if it wasn't a stream)
+    return getActionTargets(rootClass)
+      .stream()
       .filter(at -> at.toPath().equals(path))
       .findFirst();
   }
 
-  private Stream<ActionTarget> getAllActionTargets(Class<?> rootClass, ActionTarget parent) {
+  private List<ActionTarget> getAllActionTargets(Class<?> rootClass, ActionTarget parent) {
     return Types.getSuperTypes(rootClass).stream()
       .map(ExposedControl::find)
       .flatMap(Collection::stream)
-      .flatMap(control -> toActionTarget(control, parent));
+      .flatMap(control -> toActionTarget(control, parent).stream())
+      .toList();
   }
 
-  private Stream<ActionTarget> toActionTarget(ExposedControl exposedControl, ActionTarget parent) {
+  private List<ActionTarget> toActionTarget(ExposedControl exposedControl, ActionTarget parent) {
     ActionTarget actionTarget = new ActionTarget(parent, exposedControl);
 
     return exposedControl instanceof ExposedNode<?> exposedNode
       ? getAllActionTargets(exposedNode.getProvidedType(), actionTarget)
-      : Stream.of(actionTarget);
+      : List.of(actionTarget);
   }
 }
