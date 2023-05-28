@@ -2,8 +2,6 @@ package hs.mediasystem.presentation;
 
 import hs.mediasystem.runner.util.action.Action;
 
-import java.util.function.Supplier;
-
 import javafx.event.EventType;
 
 public class PresentationActionEvent extends PresentationEvent {
@@ -16,7 +14,7 @@ public class PresentationActionEvent extends PresentationEvent {
 
   private final Action action;
 
-  private PresentationActionEvent(EventType<PresentationActionEvent> type, Action action) {
+  PresentationActionEvent(EventType<? extends PresentationActionEvent> type, Action action) {
     super(type);
 
     this.action = action;

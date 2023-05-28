@@ -2,18 +2,17 @@ package hs.mediasystem.runner;
 
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.PresentationActionEvent;
+import hs.mediasystem.presentation.PresentationActionFiredEvent;
 import hs.mediasystem.presentation.PresentationEvent;
 import hs.mediasystem.runner.dialog.Dialogs;
 import hs.mediasystem.runner.util.SceneManager;
 import hs.mediasystem.runner.util.action.Action;
+import hs.mediasystem.runner.util.action.ActionTarget;
 import hs.mediasystem.util.expose.Trigger;
 import hs.mediasystem.util.javafx.base.Events;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import javafx.concurrent.Task;
 import javafx.event.Event;
@@ -73,16 +72,33 @@ public class RootPresentationHandler implements EventRoot {
   private void handleActionEvent(PresentationActionEvent event) {
     List<Presentation> presentations = event.getPresentations();
 
-    IntStream.range(0, presentations.size())
-      .mapToObj(i -> presentations.get(presentations.size() - i - 1))
-      .map(p -> toTrigger(p, event.getAction()))
-      .flatMap(Optional::stream)
-      .takeWhile(x -> !event.isConsumed())
-      .forEach(trigger -> trigger.run(event, task -> Dialogs.showProgressDialog(event, task)));
+    for(int i = presentations.size(); i-- > 0; ) {
+      Presentation p = presentations.get(i);
+
+      if(tryRunAction(event, p)) {
+        break;
+      }
+    }
   }
 
-  private Optional<Trigger<Object>> toTrigger(Presentation presentation, Action action) {
-    return actionTargetProvider.findMatching(presentation.getClass(), action.getPath())
-      .map(actionTarget -> actionTarget.createTrigger(action.getDescriptor(), presentation));  // can result in empty optional when createTrigger returns null
+  private boolean tryRunAction(PresentationActionEvent event, Presentation presentation) {
+    Action action = event.getAction();
+    ActionTarget actionTarget = actionTargetProvider.findMatching(presentation.getClass(), action.getPath()).orElse(null);
+
+    if(actionTarget == null) {
+      return false;
+    }
+
+    Trigger<Object> trigger = actionTarget.createTrigger(action.getDescriptor(), presentation);
+
+    trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
+
+    if(!event.isConsumed()) {
+      return false;
+    }
+
+    Events.dispatchEvent(event.getTarget(), PresentationActionFiredEvent.create(action, actionTarget, presentation));
+
+    return true;
   }
 }
