@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.action;
 
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.presentation.PresentationEvent;

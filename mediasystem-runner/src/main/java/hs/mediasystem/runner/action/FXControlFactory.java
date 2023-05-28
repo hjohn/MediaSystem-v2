@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.action;
 
 import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.runner.dialog.Dialogs;

@@ -1,4 +1,4 @@
-package hs.mediasystem.runner;
+package hs.mediasystem.runner.action;
 
 import hs.mediasystem.runner.util.action.ActionTarget;
 import hs.mediasystem.util.expose.AbstractExposedProperty;

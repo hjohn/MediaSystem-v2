@@ -1,14 +1,22 @@
 package hs.mediasystem.runner.root;
 
 import hs.mediasystem.presentation.NodeFactory;
+import hs.mediasystem.presentation.PresentationActionEvent;
+import hs.mediasystem.presentation.PresentationActionFiredEvent;
+import hs.mediasystem.runner.action.FXControlFactory;
+import hs.mediasystem.runner.action.InputActionHandler;
 import hs.mediasystem.runner.presentation.ViewPort;
 import hs.mediasystem.runner.presentation.ViewPortFactory;
 import hs.mediasystem.runner.root.ParentalControlsProvider.ParentalControls;
 import hs.mediasystem.runner.util.LessLoader;
 import hs.mediasystem.runner.util.SceneManager;
+import hs.mediasystem.runner.util.action.ActionTarget;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
+import hs.mediasystem.util.javafx.SceneUtil;
 import hs.mediasystem.util.javafx.SpecialEffects;
+import hs.mediasystem.util.javafx.base.Events;
+import hs.mediasystem.util.javafx.base.FocusEvent;
 import hs.mediasystem.util.javafx.control.Containers;
 import hs.mediasystem.util.javafx.control.GridPane;
 import hs.mediasystem.util.javafx.control.GridPaneUtil;
@@ -25,6 +33,7 @@ import java.util.stream.Collectors;
 
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.animation.Transition;
 import javafx.beans.property.BooleanProperty;
@@ -35,7 +44,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
@@ -49,6 +60,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Duration;
 
 import javax.inject.Inject;
@@ -60,6 +73,7 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
   private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM);
   private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG);
   private static final String ROOT_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "root.less");
+  private static final String ACTION_DISPLAY_POPUP_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "action-display-popup.less");
   private static final String PROGRESS_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "progress-pane.less");
   private static final String CLOCK_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "clock-pane.less");
   private static final String LOGO_STYLES_URL = LessLoader.compile(RootNodeFactory.class, "logo-pane.less");
@@ -68,6 +82,8 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
   @Inject private SceneManager sceneManager;
   @Inject private ViewPortFactory viewPortFactory;
   @Inject private Provider<ParentalControls> parentalControlsProvider;
+  @Inject private FXControlFactory controlFactory;
+  @Inject private InputActionHandler inputActionHandler;
 
   @Override
   public Node create(RootPresentation presentation) {
@@ -121,7 +137,117 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
       stackPane.addEventHandler(KeyEvent.KEY_TYPED, new PinCodeEventHandler(presentation, parentalControls.passcode));
     }
 
+    stackPane.addEventHandler(PresentationActionFiredEvent.ANY, new ActionDisplayPopupEventHandler());
+
     return stackPane;
+  }
+
+  class ActionDisplayPopupEventHandler implements EventHandler<PresentationActionFiredEvent> {
+    private static final Duration CLOSE_TIME = Duration.seconds(2.0);
+    private static final Duration FADE_DURATION = Duration.seconds(0.2);
+
+    private Popup popup;
+
+    class Popup {
+      private final ActionTarget target;
+      private final Stage stage = new Stage(StageStyle.TRANSPARENT);
+      private final HBox hbox = Containers.hbox("root, media-look, action-display-popup");
+      private final Scene scene = SceneUtil.createScene(hbox);
+      private final Timeline timeline = new Timeline(
+        new KeyFrame(FADE_DURATION, new KeyValue(hbox.opacityProperty(), 1.0)),
+        new KeyFrame(CLOSE_TIME, new KeyValue(hbox.opacityProperty(), 1.0)),
+        new KeyFrame(CLOSE_TIME.add(FADE_DURATION), new KeyValue(hbox.opacityProperty(), 0.0)),
+        new KeyFrame(CLOSE_TIME.add(FADE_DURATION).add(FADE_DURATION), e -> {
+          if(this == popup) {
+            popup = null;  // only clear if it wasn't replaced yet by another
+          }
+
+          stage.close();
+        })  // allow FADE_DURATION of time in case user pressed BACK when fading out to prevent an unwanted BACK
+      );
+
+      Popup(Scene sourceScene, ActionTarget target, Node... nodes) {
+        this.target = target;
+
+        inputActionHandler.attachToScene(scene);
+
+        scene.getStylesheets().add(ACTION_DISPLAY_POPUP_STYLES_URL);
+        scene.setFill(Color.TRANSPARENT);
+
+        hbox.setOpacity(0);
+        hbox.getChildren().setAll(nodes);
+
+        scene.addEventFilter(EventType.ROOT, e -> {
+          if(CLOSE_TIME.greaterThan(timeline.getCurrentTime())) {
+            timeline.playFromStart();
+          }
+        });
+
+        scene.addEventHandler(PresentationActionEvent.PROPOSED, e -> {
+          if(e.getAction().getPath().equals("navigateBack")) {
+            if(CLOSE_TIME.greaterThan(timeline.getCurrentTime())) {
+              timeline.playFrom(CLOSE_TIME);
+            }
+
+            e.consume();
+          }
+        });
+
+        scene.addEventHandler(EventType.ROOT, e -> {
+          if(e.isConsumed()) {
+            return;  // consumed events apparently are in some cases being delivered (when at the same level in the capturing/bubbling hierarchy); not sure if this is a bug or not, but definitely seems odd
+          }
+
+          if(e.getEventType().equals(KeyEvent.KEY_RELEASED) || e.getEventType().equals(KeyEvent.KEY_TYPED) || e instanceof ActionEvent || e instanceof FocusEvent) {
+            return;
+          }
+
+          if(CLOSE_TIME.greaterThan(timeline.getCurrentTime())) {
+            timeline.playFrom(CLOSE_TIME);
+          }
+
+          if(e instanceof PresentationActionEvent && Events.dispatchEvent(sourceScene.getFocusOwner(), e)) {
+            e.consume();
+          }
+        });
+
+        timeline.playFromStart();
+
+        stage.initOwner(sourceScene.getWindow());
+        stage.setScene(scene);
+        stage.show();
+      }
+    }
+
+    @Override
+    public void handle(PresentationActionFiredEvent event) {
+      ActionTarget actionTarget = event.getActionTarget();
+
+      if(!actionTarget.isVisible()) {
+        return;  // prevents showing controls that are unsuited for interaction (pause, player position)
+      }
+
+      if(popup != null) {
+        if(actionTarget.equals(popup.target)) {
+          popup.timeline.playFromStart();
+        }
+        else {
+          if(CLOSE_TIME.greaterThan(popup.timeline.getCurrentTime())) {
+            popup.timeline.playFrom(CLOSE_TIME);  // close immediately if it wasn't closing yet
+          }
+
+          popup = null;
+        }
+      }
+
+      if(popup == null) {
+        Node control = controlFactory.createInteractiveControl(actionTarget, event.getPresentation());
+
+        if(control != null && event.getTarget() instanceof Node node) {
+          popup = new Popup(node.getScene(), actionTarget, Labels.create("title", actionTarget.getLabel()), control);
+        }
+      }
+    }
   }
 
   private static final int FPS_SIZE = 300;
