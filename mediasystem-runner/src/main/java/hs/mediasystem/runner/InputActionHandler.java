@@ -13,16 +13,15 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import javafx.event.Event;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.KeyCombination.Modifier;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -113,11 +112,8 @@ public class InputActionHandler {
 
     if(event.getCode().isFunctionKey()) {
       // Special handling of Context Menu key
-      if(event.getCode() == KeyCode.F10) {
-        if(event.getSource() instanceof Node node) {
-          node.fireEvent(PresentationEvent.triggerContextMenu());
-        }
-
+      if(event.getCode() == KeyCode.F10 && event.getSource() instanceof Scene scene) {
+        scene.getFocusOwner().fireEvent(PresentationEvent.triggerContextMenu());
         event.consume();
 
         return;
