@@ -153,11 +153,10 @@ public interface ObservableValue<T> extends Observable {
     T getValue();
 
     /**
-     * Creates an {@code ObservableValue} that holds the result of applying a
-     * mapping on this {@code ObservableValue}'s value. The result is updated
-     * when this {@code ObservableValue}'s value changes. If this value is
-     * {@code null}, no mapping is applied and the resulting value is also
-     * {@code null}.
+     * Returns an {@code ObservableValue} that holds the result of applying the
+     * given mapping function on this value. The result is updated when this
+     * {@code ObservableValue} changes. If this value is {@code null}, no
+     * mapping is applied and the resulting value is also {@code null}.
      * <p>
      * For example, mapping a string to an upper case string:
      * <pre>{@code
@@ -172,19 +171,22 @@ public interface ObservableValue<T> extends Observable {
      * }</pre>
      *
      * @param <U> the type of values held by the resulting {@code ObservableValue}
-     * @param mapper a {@code Function} that converts a given value to a new value, cannot be {@code null}
-     * @return an {@code ObservableValue} holding the result of mapping this {@code ObservableValue}'s
-     *     value, or {@code null} when it is {@code null}; never returns {@code null}
+     * @param mapper the mapping function to apply to a value, cannot be {@code null}
+     * @return an {@code ObservableValue} that holds the result of applying the given
+     *     mapping function on this value, or {@code null} when it
+     *     is {@code null}; never returns {@code null}
+     * @throws NullPointerException if the mapping function is {@code null}
+     * @since 19
      */
     default <U> ObservableValue<U> map(Function<? super T, ? extends U> mapper) {
         return new MappedBinding<>(this, mapper);
     }
 
     /**
-     * Creates an {@code ObservableValue} that holds this {@code ObservableValue}'s
-     * value, or the given value if it is {@code null}. The result is updated when
-     * this {@code ObservableValue}'s value changes. This method, when combined with
-     * {@link #map(Function)}, allows handling of all values including {@code null} values.
+     * Returns an {@code ObservableValue} that holds this value, or the given constant if
+     * it is {@code null}. The result is updated when this {@code ObservableValue} changes. This
+     * method, when combined with {@link #map(Function)}, allows handling of all values
+     * including {@code null} values.
      * <p>
      * For example, mapping a string to an upper case string, but leaving it blank
      * if the input is {@code null}:
@@ -197,22 +199,23 @@ public interface ObservableValue<T> extends Observable {
      * upperCase.getValue();  // Returns ""
      * }</pre>
      *
-     * @param constant an alternative value to use when this {@code ObservableValue}
+     * @param constant the value to use when this {@code ObservableValue}
      *     holds {@code null}; can be {@code null}
-     * @return an {@code ObservableValue} holding this {@code ObservableValue}'s value,
-     *     or the given value if it is {@code null}; never returns {@code null}
+     * @return an {@code ObservableValue} that holds this value, or the given constant if
+     *     it is {@code null}; never returns {@code null}
+     * @since 19
      */
     default ObservableValue<T> orElse(T constant) {
         return new OrElseBinding<>(this, constant);
     }
 
     /**
-     * Creates a new {@code ObservableValue} that holds the value of a nested {@code ObservableValue}
-     * by applying a mapping function to extract the nested {@code ObservableValue}. The result
-     * is updated when either this {@code ObservableValue} or the {@code ObservableValue}
-     * resulting from the mapping changes. If this value is {@code null}, no mapping is applied
-     * and the resulting value is {@code null}. If the mapping resulted in {@code null}, then
-     * the resulting value is also {@code null}.
+     * Returns an {@code ObservableValue} that holds the value of an {@code ObservableValue}
+     * produced by applying the given mapping function on this value. The result is updated
+     * when either this {@code ObservableValue} or the {@code ObservableValue} produced by
+     * the mapping changes. If this value is {@code null}, no mapping is applied and the
+     * resulting value is {@code null}. If the mapping resulted in {@code null}, then the
+     * resulting value is also {@code null}.
      * <p>
      * For example, a property that is only {@code true} when a UI element is part of a {@code Scene}
      * that is part of a {@code Window} that is currently shown on screen:
@@ -224,55 +227,75 @@ public interface ObservableValue<T> extends Observable {
      *
      * // Assuming the listView is currently shown to the user, then:
      *
-     * isShowing().getValue();  // Returns true
+     * isShowing.getValue();  // Returns true
      *
      * listView.getScene().getWindow().hide();
-     * isShowing().getValue();  // Returns false
+     * isShowing.getValue();  // Returns false
      *
      * listView.getScene().getWindow().show();
-     * isShowing().getValue();  // Returns true
+     * isShowing.getValue();  // Returns true
      *
      * listView.getParent().getChildren().remove(listView);
-     * isShowing().getValue();  // Returns false
+     * isShowing.getValue();  // Returns false
      * }</pre>
-     * Changes in the values of any of: the scene of {@code listView}, the window of that scene, or
+     * Changes in any of the values of: the scene of {@code listView}, the window of that scene, or
      * the showing of that window, will update the boolean value {@code isShowing}.
      * <p>
      * This method is preferred over {@link javafx.beans.binding.Bindings#select Bindings} methods
      * since it is type safe.
      *
      * @param <U> the type of values held by the resulting {@code ObservableValue}
-     * @param mapper a {@code Function} that converts a given value to an
-     *     {@code ObservableValue}; cannot be {@code null}
-     * @return an {@code ObservableValue} holding the value of an {@code ObservableValue}
-     *     resulting from mapping this {@code ObservableValue}'s value, or {@code null} when
-     *     the value is {@code null}; never returns {@code null}
+     * @param mapper the mapping function to apply to a value, cannot be {@code null}
+     * @return an {@code ObservableValue} that holds the value of an {@code ObservableValue}
+     *     produced by applying the given mapping function on this value, or
+     *     {@code null} when the value is {@code null}; never returns {@code null}
+     * @throws NullPointerException if the mapping function is {@code null}
+     * @since 19
      */
     default <U> ObservableValue<U> flatMap(Function<? super T, ? extends ObservableValue<? extends U>> mapper) {
         return new FlatMappedBinding<>(this, mapper);
     }
 
     /**
-     * Returns an {@link ObservableValue} which holds the value in this
-     * {@code ObservableValue} whenever the given {@code condition} evaluates to
-     * {@code true}, otherwise holds the value held by this {@code ObservableValue}
-     * when {@code condition} became {@code false}.<p>
+     * Returns an {@code ObservableValue} that holds this value and is updated only
+     * when {@code condition} holds {@code true}.
+     * <p>
+     * The returned {@code ObservableValue} only observes this value when
+     * {@code condition} holds {@code true}. This allows this {@code ObservableValue}
+     * and the conditional {@code ObservableValue} to be garbage collected if neither is
+     * otherwise strongly referenced when {@code condition} holds {@code false}.
+     * This is in contrast to the general behavior of bindings, where the binding is
+     * only eligible for garbage collection when not observed itself.
+     * <p>
+     * A {@code condition} holding {@code null} is treated as holding {@code false}.
+     * <p>
+     * For example:
+     * <pre>{@code
+     * ObservableValue<Boolean> condition = new SimpleBooleanProperty(true);
+     * ObservableValue<String> longLivedProperty = new SimpleStringProperty("A");
+     * ObservableValue<String> whenProperty = longLivedProperty.when(condition);
      *
-     * The returned {@code ObservableValue} only observes this
-     * {@code ObservableValue} when the given {@code condition} evaluates to
-     * {@code true}. This allows the returned {@code ObservableValue} to be
-     * garbage collected if not otherwise strongly referenced when
-     * {@code condition} becomes {@code false}.<p>
+     * // observe whenProperty, which will in turn observe longLivedProperty
+     * whenProperty.addListener((ov, old, current) -> System.out.println(current));
      *
-     * Returning {@code null} from the given {@code condition} is treated the
-     * same as returning {@code false}.
+     * longLivedProperty.setValue("B");  // "B" is printed
      *
-     * @param condition a boolean {@code ObservableValue}, cannot be null
-     * @return an {@link ObservableValue} which holds the value in this
-     *     {@code ObservableValue} whenever the given {@code condition}
-     *     evaluates to {@code true}, otherwise holds the value held by this
-     *     {@code ObservableValue} when {@code condition} became {@code false},
-     *     never null
+     * condition.setValue(false);
+     *
+     * // After condition becomes false, whenProperty stops observing longLivedProperty; condition
+     * // and whenProperty may now be eligible for GC despite being observed by the ChangeListener
+     *
+     * longLivedProperty.setValue("C");  // nothing is printed
+     * longLivedProperty.setValue("D");  // nothing is printed
+     *
+     * condition.setValue(true);  // longLivedProperty is observed again, and "D" is printed
+     * }</pre>
+     *
+     * @param condition a boolean {@code ObservableValue}, cannot be {@code null}
+     * @return an {@code ObservableValue} that holds this value whenever the given
+     *     condition evaluates to {@code true}, otherwise holds the last seen value;
+     *     never returns {@code null}
+     * @since 20
      */
     default ObservableValue<T> when(ObservableValue<Boolean> condition) {
         return new ConditionalBinding<>(this, condition);
