@@ -60,7 +60,7 @@ public class PlayerBindings {
     formattedAudioDelay = new StringBinding(audioDelay) {
       @Override
       protected String computeValue() {
-        return String.format("%5.1fs", audioDelay.getValue() / 1000.0);
+        return String.format("%d ms", audioDelay.getValue());
       }
     };
 
