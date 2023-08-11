@@ -67,7 +67,7 @@ public class PlayerBindings {
     formattedSubtitleDelay = new StringBinding(subtitleDelay) {
       @Override
       protected String computeValue() {
-        return String.format("%5.1fs", subtitleDelay.getValue() / 1000.0);
+        return String.format("%5.1f s", subtitleDelay.getValue() / 1000.0);
       }
     };
 
