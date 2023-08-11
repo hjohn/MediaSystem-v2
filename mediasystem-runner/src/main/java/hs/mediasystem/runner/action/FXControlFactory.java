@@ -223,6 +223,19 @@ public class FXControlFactory {
       return null;
     }
 
+    Invalidations.of(slider.minProperty(), slider.maxProperty())
+      .subscribe(obs -> configureSlider(slider));
+
+    /*
+     * Setup min/max before binding value, as value is clamped to these values.
+     * By default a slider has a range of 0 to 100, and if the min/max values are
+     * not changed yet, the value may be clamped (and updated to the model)
+     * unexpectedly.
+     */
+
+    slider.minProperty().bind(min);
+    slider.maxProperty().bind(max);
+
     // Bidirectional mapping binding:
     value.when(Nodes.showing(slider)).map(toNumber).values(slider.valueProperty()::setValue);
     slider.valueProperty().map(fromNumber).values(value::setValue);
@@ -244,12 +257,6 @@ public class FXControlFactory {
         throw new UnsupportedOperationException();
       }
     });
-
-    Invalidations.of(slider.minProperty(), slider.maxProperty())
-      .subscribe(obs -> configureSlider(slider));
-
-    slider.minProperty().bind(min);
-    slider.maxProperty().bind(max);
 
     HBox hbox = Containers.hbox(
       "slider-container",
