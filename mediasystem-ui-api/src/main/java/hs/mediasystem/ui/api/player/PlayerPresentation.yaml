@@ -8,14 +8,17 @@ action-target:
   audioTrack:
     order: 5
     label: Audio Track
-  volume:
+  audioDelay:
     order: 6
+    label: Audio Delay
+  volume:
+    order: 7
     label: Volume
   muted:
-    order: 7
+    order: 8
     label: Mute
   statOverlay:
-    order: 8
+    order: 9
     label: Statistics Overlay
   position:
     label: Position

@@ -114,6 +114,12 @@ public class Annotations {
       .format(AudioTrack::getDescription)
       .as("audioTrack");
 
+    Expose.longProperty(PlayerPresentation::audioDelayProperty)
+      .of(PlayerPresentation.class)
+      .range(-5000, 5000, 50)
+      .format(v -> v == 0 ? "None" : String.format("%d ms", v))
+      .as("audioDelay");
+
     Expose.listProperty(PlayerPresentation::statOverlayProperty)
       .of(PlayerPresentation.class)
       .allowedValues(p -> p.statOverlays())
