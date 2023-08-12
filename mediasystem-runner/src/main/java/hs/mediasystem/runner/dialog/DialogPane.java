@@ -1,6 +1,7 @@
 package hs.mediasystem.runner.dialog;
 
 import hs.mediasystem.presentation.Navigable;
+import hs.mediasystem.presentation.NavigateEvent;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.util.javafx.SceneUtil;
 import hs.mediasystem.util.javafx.base.Nodes;
@@ -67,7 +68,10 @@ public class DialogPane<R> extends StackPane {
 
     dialogGlass = new DialogGlass(scene, this, delay);
 
-    new NavigablePresentation().associate(Nodes.toEventHandlerTarget(this));
+    NavigablePresentation navigablePresentation = new NavigablePresentation();
+
+    navigablePresentation.associate(Nodes.toEventHandlerTarget(this));
+    addEventHandler(NavigateEvent.NAVIGATION_BACK, navigablePresentation::navigateBack);
 
     requestFocus();
 
