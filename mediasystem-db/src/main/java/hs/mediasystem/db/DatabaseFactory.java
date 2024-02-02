@@ -1,8 +1,9 @@
 package hs.mediasystem.db;
 
-import hs.database.core.ConnectionPool;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 import hs.database.core.Database;
-import hs.database.core.SimpleConnectionPoolDataSource;
 import hs.database.core.SimpleDatabaseStatementTranslator;
 import hs.database.schema.DatabaseStatementTranslator;
 import hs.database.schema.DatabaseUpdater;
@@ -18,8 +19,8 @@ import hs.mediasystem.util.events.cache.CachingEventStore;
 import hs.mediasystem.util.events.store.EventStore;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
@@ -28,7 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import javax.sql.ConnectionPoolDataSource;
+import javax.sql.DataSource;
 
 import org.int4.dirk.annotations.Produces;
 
@@ -36,19 +37,16 @@ import org.int4.dirk.annotations.Produces;
 public class DatabaseFactory {
   private static final Logger LOGGER = Logger.getLogger(DatabaseFactory.class.getName());
 
-  @Inject @Nullable @Named("database.driverClass") private String driverClass;
   @Inject @Nullable @Named("database.url") private String url;
   @Inject @Nullable @Named("database.user") private String user;
   @Inject @Nullable @Named("database.password") private String password;
   @Inject @Nullable @Named("database.postConnectSql") private String postConnectSql;
 
-  private ConnectionPool pool;
+  private DataSource dataSource;
 
   @PostConstruct
   private void postConstruct() {
-    ConnectionPoolDataSource dataSource = url == null ? createDerbyDataSource() : createUserDataSource();
-
-    pool = new ConnectionPool(dataSource, 5);
+    this.dataSource = url == null ? createDerbyDataSource() : createUserDataSource();
   }
 
   @Produces @Singleton
@@ -152,48 +150,31 @@ public class DatabaseFactory {
     return new SimpleDatabaseStatementTranslator(translations);
   }
 
-  private static ConnectionPoolDataSource createDerbyDataSource() {
-    try {
-      Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+  private static DataSource createDerbyDataSource() {
+    HikariConfig config = new HikariConfig();
 
-      return new SimpleConnectionPoolDataSource("jdbc:derby:db;create=true");
-    }
-    catch(ClassNotFoundException e) {
-      throw new IllegalStateException(e);
-    }
+    config.setJdbcUrl("jdbc:derby:db;create=true");
+
+    return new HikariDataSource(config);
   }
 
   private Connection createConnection() {
     try {
-      return pool.getConnection();
+      return dataSource.getConnection();
     }
-    catch(InterruptedException e) {
-      Thread.currentThread().interrupt();
-
-      throw new RuntimeException("Interrupted while getting connection from pool", e);
+    catch(SQLException e) {
+      throw new IllegalStateException(e);
     }
   }
 
-  private ConnectionPoolDataSource createUserDataSource() {
-    try {
-      Class.forName(driverClass);
-      Properties properties = new Properties();
+  private DataSource createUserDataSource() {
+    HikariConfig config = new HikariConfig();
 
-      if(user != null) {
-        properties.put("user", user);
-      }
-      if(password != null) {
-        properties.put("password", password);
-      }
+    config.setJdbcUrl(url);
+    config.setUsername(user);
+    config.setPassword(password);
+    config.setConnectionInitSql(postConnectSql);
 
-      SimpleConnectionPoolDataSource dataSource = new SimpleConnectionPoolDataSource(url, properties);
-
-      dataSource.setPostConnectSql(postConnectSql);
-
-      return dataSource;
-    }
-    catch(ClassNotFoundException e) {
-      throw new RuntimeException(e);
-    }
+    return new HikariDataSource(config);
   }
 }
