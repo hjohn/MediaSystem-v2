@@ -172,7 +172,7 @@ public class AnnotedRecordMapperTest {
   @Test
   public void shouldFetchStub() {
 //    when(transaction.selectUnique(TestEmployee.class, "id=?", 201)).thenReturn(testEmployee);
-    when(transaction.selectUnique("*", "employees", "id=?", 201)).thenReturn(new Record(
+    when(transaction.selectUnique("*", "employees", "id=?", 201)).thenReturn(new DatabaseRecord(
       new Object[] {201, "John Doe", 1001, false, null},
       new FieldMapper() {{
         add("", "id", 0);

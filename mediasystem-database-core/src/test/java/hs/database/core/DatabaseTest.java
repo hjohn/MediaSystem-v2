@@ -200,11 +200,11 @@ public class DatabaseTest {
   @Test
   public void shouldSelectRow() throws SQLException {
     try(Transaction transaction = database.beginTransaction()) {
-      Record record = transaction.selectUnique("*", "employees", "id=?", 1001);
+      DatabaseRecord databaseRecord = transaction.selectUnique("*", "employees", "id=?", 1001);
 
-      assertEquals(Integer.valueOf(1001), record.getInteger("id"));
-      assertEquals("PART_TIME", record.getString("hours"));
-      assertEquals("Database Joe", record.getString("name"));
+      assertEquals(Integer.valueOf(1001), databaseRecord.getInteger("id"));
+      assertEquals("PART_TIME", databaseRecord.getString("hours"));
+      assertEquals("Database Joe", databaseRecord.getString("name"));
     }
 
     verify(connection).prepareStatement("SELECT * FROM employees WHERE id=?");

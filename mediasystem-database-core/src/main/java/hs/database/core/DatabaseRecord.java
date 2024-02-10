@@ -8,11 +8,11 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-public class Record implements Map<String, Object> {
+public class DatabaseRecord implements Map<String, Object> {
   private final Object[] data;
   private final FieldMapper fieldMapper;
 
-  public Record(Object[] data, FieldMapper fieldMapper) {
+  public DatabaseRecord(Object[] data, FieldMapper fieldMapper) {
     this.data = data;
     this.fieldMapper = fieldMapper;
   }

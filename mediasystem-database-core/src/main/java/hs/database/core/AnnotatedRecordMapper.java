@@ -319,9 +319,9 @@ public final class AnnotatedRecordMapper<T> implements RecordMapper<T> {
     }
 
     try(Transaction transaction = database.beginReadOnlyTransaction()) {
-      Record record = transaction.selectUnique("*", mapper.getTableName(), whereClause, ids);
+      DatabaseRecord databaseRecord = transaction.selectUnique("*", mapper.getTableName(), whereClause, ids);
 
-      mapper.applyValues(transaction, instance, record);
+      mapper.applyValues(transaction, instance, databaseRecord);
     }
   }
 

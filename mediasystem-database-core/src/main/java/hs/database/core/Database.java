@@ -358,14 +358,14 @@ public class Database {
       }
     }
 
-    public synchronized Record selectUnique(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
-      List<Record> result = select(fields, tableName, whereCondition, parameters);
+    public synchronized DatabaseRecord selectUnique(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
+      List<DatabaseRecord> result = select(fields, tableName, whereCondition, parameters);
 
       return result.isEmpty() ? null : result.get(0);
     }
 
-    public synchronized Record selectUnique(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
-      List<Record> result = select(fields, tableName, whereCondition, parameters);
+    public synchronized DatabaseRecord selectUnique(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
+      List<DatabaseRecord> result = select(fields, tableName, whereCondition, parameters);
 
       return result.isEmpty() ? null : result.get(0);
     }
@@ -390,7 +390,7 @@ public class Database {
       return new QueryAndOrderedParameters(queryBuilder.toString(), orderedParameters.toArray(new Object[orderedParameters.size()]));
     }
 
-    public synchronized List<Record> select(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
+    public synchronized List<DatabaseRecord> select(String fields, String tableName, String whereCondition, Map<String, Object> parameters) throws DatabaseException {
       QueryAndOrderedParameters queryAndOrderedParameters = createQueryAndOrderedParameters(whereCondition, parameters);
 
       return select(fields, tableName, queryAndOrderedParameters.query, queryAndOrderedParameters.arrayParameters);
@@ -411,8 +411,8 @@ public class Database {
       }
     }
 
-    public synchronized List<Record> select(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
-      List<Record> records = new ArrayList<>();
+    public synchronized List<DatabaseRecord> select(String fields, String tableName, String whereCondition, Object... parameters) throws DatabaseException {
+      List<DatabaseRecord> records = new ArrayList<>();
 
       ResultSetConsumer<FieldMapper> consumer = new ResultSetConsumer<>() {
         @Override
@@ -423,7 +423,7 @@ public class Database {
             values[i - 1] = rs.getObject(i);
           }
 
-          records.add(new Record(values, fieldMapper));
+          records.add(new DatabaseRecord(values, fieldMapper));
         }
       };
 
