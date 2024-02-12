@@ -1,9 +1,14 @@
 package hs.database.core;
 
+import hs.database.core.Reflector.Entries;
+import hs.database.core.Reflector.Values;
 import hs.database.util.Closer;
 import hs.database.util.WeakValueMap;
 
+import java.lang.StringTemplate.Processor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.RecordComponent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -26,10 +31,12 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -981,6 +988,78 @@ public class Database {
       }
     }
 
+    /**
+     * Executes one or more statements that can return multiple results. Use
+     * the results object to get each result in turn.
+     *
+     * @param template an SQL template, cannot be {@code null}
+     * @return a results object, never {@code null}
+     * @throws DatabaseException when statements are invalid, or an I/O error occurred
+     */
+    public synchronized Results execute(StringTemplate template) {
+      return new Results(template);
+    }
+
+    /**
+     * Creates a query executor suitable for a single query type statement.
+     *
+     * @param template an SQL template, cannot be {@code null}
+     * @return a query executor, never {@code null}
+     */
+    public synchronized QueryExecutor query(StringTemplate template) {
+      return new QueryExecutor(template);
+    }
+
+    /**
+     * Executes a single insert type statement of the form {@code INSERT INTO <table> (<field list>) VALUES (<value list>)}
+     * <p>
+     * The field list must consist of:
+     * <ul>
+     * <li>Field names of the given table</li>
+     * <li>{@link Reflector}s which can provide field names of the given table</li>
+     * </ul>
+     * The value list must consist of:
+     * <ul>
+     * <li>Strings, arrays, primitive types or their boxes</li>
+     * <li>{@link Record}s which values are used in their declared order</li>
+     * <li>{@link Reflector.Values} which values are used in their declared order</li>
+     * </ul>
+     * <p>
+     * Note: to ensure the statement is not rolled back at the end
+     * of the transaction, {@link Transaction#commit()} should be called.
+     *
+     * @param template an SQL template, cannot be {@code null}
+     * @return the number of affected rows, never negative
+     * @throws DatabaseException when statements are invalid, or an I/O error occurred
+     */
+    public synchronized long executeInsert(StringTemplate template) {
+      try (Results r = new Results(template)) {
+        return r.getRowCount();
+      }
+    }
+
+    public synchronized long executeUpdate(StringTemplate template) {
+      try (Results r = new Results(template)) {
+        return r.getRowCount();
+      }
+    }
+
+    /**
+     * Executes a single delete type statement.
+     * <p>
+     * Note: to ensure the statement is not rolled back at the end
+     * of the transaction, {@link Transaction#commit()} should be called.
+     *
+     * @param template an SQL template, cannot be {@code null}
+     * @return the number of affected rows, never negative
+     * @throws DatabaseException when statements are invalid, or an I/O error occurred
+     */
+    public synchronized long executeDelete(StringTemplate template) {
+      try (Results r = new Results(template)) {
+        return r.getRowCount();
+      }
+    }
+
     public enum TransactionState {
       COMMITTED, ROLLED_BACK;
     }
@@ -1091,6 +1170,203 @@ public class Database {
         }
       }
     }
+
+    abstract class Base {
+      private static final SqlMapper<String> TEXT_MAPPER = rs -> rs.getString(1);
+      private static final SqlMapper<Integer> INT_MAPPER = rs -> rs.getInt(1);
+      private static final SqlMapper<Long> LONG_MAPPER = rs -> rs.getLong(1);
+      private static final SqlMapper<byte[]> BYTES_MAPPER = rs -> rs.getBytes(1);
+
+      public abstract <T> T as(SqlMapper<T> mapper);
+      public abstract <T> List<T> asList(SqlMapper<T> mapper);
+      public abstract <T> void consume(SqlMapper<T> mapper, Consumer<T> consumer);
+
+      public final <T> Optional<T> asOptional(SqlMapper<T> mapper) {
+        return Optional.ofNullable(as(mapper));
+      }
+
+      public final String asText() {
+        return as(TEXT_MAPPER);
+      }
+
+      public final Optional<String> asOptionalText() {
+        return asOptional(TEXT_MAPPER);
+      }
+
+      public final int asInt() {
+        return as(INT_MAPPER);
+      }
+
+      public final Optional<Integer> asOptionalInt() {
+        return asOptional(INT_MAPPER);
+      }
+
+      public final long asLong() {
+        return as(LONG_MAPPER);
+      }
+
+      public final Optional<Long> asOptionalLong() {
+        return asOptional(LONG_MAPPER);
+      }
+
+      public final byte[] asBytes() {
+        return as(BYTES_MAPPER);
+      }
+
+      public final Optional<byte[]> asOptionalBytes() {
+        return asOptional(BYTES_MAPPER);
+      }
+    }
+
+    public class Results extends Base implements AutoCloseable {
+      private final PreparedStatement ps;
+
+      enum State {RESULT_SET, UPDATE_COUNT}
+
+      private State state;
+      private long updateCount = -1;
+
+      Results(StringTemplate template) {
+        try {
+          this.ps = toPreparedStatement(connection, template);
+
+          try {
+            this.state = ps.execute() ? State.RESULT_SET : (updateCount = ps.getLargeUpdateCount()) == -1 ? null : State.UPDATE_COUNT;
+          }
+          catch(SQLException e) {
+            throw new DatabaseException(Transaction.this, "execution failed for:\n    " + template + "\n    --> " + ps.toString(), e);
+          }
+        }
+        catch(SQLException e) {
+          throw new DatabaseException(Transaction.this, "creating statement failed for: " + template, e);
+        }
+      }
+
+      @Override
+      public void close() {
+        try {
+          ps.close();
+        }
+        catch(SQLException e) {
+          throw new DatabaseException(Transaction.this, "close failed", e);
+        }
+      }
+
+      private void ensureIsResultSet() {
+        if(state != State.RESULT_SET) {
+          throw new DatabaseException(Transaction.this, "not a result set");
+        }
+      }
+
+      private void ensureIsUpdateCount() {
+        if(state != State.UPDATE_COUNT) {
+          throw new DatabaseException(Transaction.this, "not an update count");
+        }
+      }
+
+      private void moveToNextResult() throws SQLException {
+        this.state = ps.getMoreResults() ? State.RESULT_SET : (updateCount = ps.getLargeUpdateCount()) == -1 ? null : State.UPDATE_COUNT;
+      }
+
+      public long getRowCount() {
+        ensureIsUpdateCount();
+
+        try {
+          long count = updateCount;
+
+          moveToNextResult();
+
+          return count;
+        }
+        catch(SQLException e) {
+          throw new DatabaseException(Transaction.this, "error getting update count", e);
+        }
+      }
+
+      @Override
+      public <T> List<T> asList(SqlMapper<T> mapper) {
+        ensureIsResultSet();
+
+        try(ResultSet rs = ps.getResultSet()) {
+          RestrictedResultSet restrictedResultSet = new RestrictedResultSet(rs);
+          List<T> results = new ArrayList<>();
+
+          while(rs.next()) {
+            results.add(mapper.map(restrictedResultSet));
+          }
+
+          moveToNextResult();
+
+          return results;
+        }
+        catch(SQLException e) {
+          throw new DatabaseException(Transaction.this, e.getMessage(), e);
+        }
+      }
+
+      @Override
+      public <T> T as(SqlMapper<T> mapper) {
+        ensureIsResultSet();
+
+        try(ResultSet rs = ps.getResultSet()) {
+          T element = rs.next() ? mapper.map(new RestrictedResultSet(rs)) : null;
+
+          moveToNextResult();
+
+          return element;
+        }
+        catch(SQLException e) {
+          throw new DatabaseException(Transaction.this, e.getMessage(), e);
+        }
+      }
+
+      @Override
+      public <T> void consume(SqlMapper<T> mapper, Consumer<T> consumer) {
+        ensureIsResultSet();
+
+        try(ResultSet rs = ps.getResultSet()) {
+          RestrictedResultSet restrictedResultSet = new RestrictedResultSet(rs);
+
+          while(rs.next()) {
+            consumer.accept(mapper.map(restrictedResultSet));
+          }
+
+          moveToNextResult();
+        }
+        catch(SQLException e) {
+          throw new DatabaseException(Transaction.this, e.getMessage(), e);
+        }
+      }
+    }
+
+    public class QueryExecutor extends Base {
+      private final StringTemplate template;
+
+      QueryExecutor(StringTemplate template) {
+        this.template = template;
+      }
+
+      @Override
+      public <T> List<T> asList(SqlMapper<T> mapper) {
+        try(Results r = new Results(template)) {
+          return r.asList(mapper);
+        }
+      }
+
+      @Override
+      public <T> T as(SqlMapper<T> mapper) {
+        try(Results r = new Results(template)) {
+          return r.as(mapper);
+        }
+      }
+
+      @Override
+      public <T> void consume(SqlMapper<T> mapper, Consumer<T> consumer) {
+        try(Results r = new Results(template)) {
+          r.consume(mapper, consumer);
+        }
+      }
+    }
   }
 
   private static class QueryAndOrderedParameters {
@@ -1102,4 +1378,123 @@ public class Database {
       this.arrayParameters = arrayParameters;
     }
   }
+
+  private static final Predicate<String> NOT_EMPTY = Predicate.not(String::isEmpty);
+
+  private static PreparedStatement toPreparedStatement(Connection connection, StringTemplate template) throws SQLException {
+    StringBuilder sb = new StringBuilder();
+    List<String> fragments = template.fragments();
+    List<Object> values = template.values();
+
+    for(int i = 0; i < values.size(); i++) {
+      Object value = values.get(i);
+
+      sb.append(fragments.get(i));
+
+      if(value instanceof Reflector r) {
+        sb.append(r.names().stream().filter(NOT_EMPTY).collect(Collectors.joining(", ")));
+      }
+      else if(value instanceof Entries e) {
+        sb.append(e.reflector().names().stream().filter(NOT_EMPTY).map(t -> t + " = ?").collect(Collectors.joining(", ")));
+      }
+      else if(value instanceof Values v) {
+        sb.append(v.reflector().names().stream().filter(NOT_EMPTY).map(t -> "?").collect(Collectors.joining(", ")));
+      }
+      else if(value instanceof Record r) {
+        RecordComponent[] recordComponents = r.getClass().getRecordComponents();
+
+        for (int j = 0; j < recordComponents.length; j++) {
+          if (j != 0) {
+            sb.append(",");
+          }
+
+          sb.append("?");
+        }
+      }
+      else {
+        sb.append("?");
+      }
+    }
+
+    sb.append(fragments.getLast());
+
+    PreparedStatement ps = connection.prepareStatement(sb.toString());
+
+    fillParameters(ps, template.values());
+
+    return ps;
+  }
+
+  private static void fillParameters(PreparedStatement ps, List<Object> values) throws SQLException {
+    int index = 1;
+
+    for(Object value : values) {
+      index = fillParameter(index, ps, value);
+    }
+  }
+
+  private static int fillParameter(int startIndex, PreparedStatement ps, Object value) throws SQLException {
+    int index = startIndex;
+
+    switch(value) {
+      case Entries e -> {
+        Record data = e.data();
+        RecordComponent[] recordComponents = data.getClass().getRecordComponents();
+        List<String> names = e.reflector().names();
+
+        for(int i = 0; i < names.size(); i++) {
+          String name = names.get(i);
+
+          if(!name.isEmpty()) {
+            try {
+              index = fillParameter(index, ps, recordComponents[i].getAccessor().invoke(data));
+            }
+            catch(IllegalAccessException | InvocationTargetException ex) {
+              throw new IllegalStateException(ex);
+            }
+          }
+        }
+      }
+      case Values v -> {
+        Record data = v.data();
+        RecordComponent[] recordComponents = data.getClass().getRecordComponents();
+        List<String> names = v.reflector().names();
+
+        for(int i = 0; i < names.size(); i++) {
+          String name = names.get(i);
+
+          if(!name.isEmpty()) {
+            try {
+              index = fillParameter(index, ps, recordComponents[i].getAccessor().invoke(data));
+            }
+            catch(IllegalAccessException | InvocationTargetException ex) {
+              throw new IllegalStateException(ex);
+            }
+          }
+        }
+      }
+      case Reflector r -> {}
+      case Record data -> {
+        for(RecordComponent recordComponent : data.getClass().getRecordComponents()) {
+          try {
+            index = fillParameter(index, ps, recordComponent.getAccessor().invoke(data));
+          }
+          catch(IllegalAccessException | InvocationTargetException e) {
+            throw new IllegalStateException(e);
+          }
+        }
+      }
+      case Integer i -> ps.setInt(index++, i);
+      case Float f -> ps.setFloat(index++, f);
+      case Double d -> ps.setDouble(index++, d);
+      case Boolean b -> ps.setBoolean(index++, b);
+      case String s -> ps.setString(index++, s);
+      case byte[] ba -> ps.setBytes(index++, ba);
+      default -> throw new UnsupportedOperationException("unknown type for value: " + value + " at index " + index + "; type: " + value.getClass());
+    }
+
+    return index;
+  }
+
+  public static final Processor<StringTemplate, RuntimeException> SQL = StringTemplate.RAW;
 }
