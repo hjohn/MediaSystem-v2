@@ -992,22 +992,22 @@ public class Database {
      * Executes one or more statements that can return multiple results. Use
      * the results object to get each result in turn.
      *
-     * @param template an SQL template, cannot be {@code null}
+     * @param sql an SQL statement, cannot be {@code null}
      * @return a results object, never {@code null}
      * @throws DatabaseException when statements are invalid, or an I/O error occurred
      */
-    public synchronized Results execute(StringTemplate template) {
-      return new Results(template);
+    public synchronized Results execute(SafeSQL sql) {
+      return new Results(sql);
     }
 
     /**
      * Creates a query executor suitable for a single query type statement.
      *
-     * @param template an SQL template, cannot be {@code null}
+     * @param sql an SQL statement, cannot be {@code null}
      * @return a query executor, never {@code null}
      */
-    public synchronized QueryExecutor query(StringTemplate template) {
-      return new QueryExecutor(template);
+    public synchronized QueryExecutor query(SafeSQL sql) {
+      return new QueryExecutor(sql);
     }
 
     /**
@@ -1028,18 +1028,18 @@ public class Database {
      * Note: to ensure the statement is not rolled back at the end
      * of the transaction, {@link Transaction#commit()} should be called.
      *
-     * @param template an SQL template, cannot be {@code null}
+     * @param sql an SQL statement, cannot be {@code null}
      * @return the number of affected rows, never negative
      * @throws DatabaseException when statements are invalid, or an I/O error occurred
      */
-    public synchronized long executeInsert(StringTemplate template) {
-      try (Results r = new Results(template)) {
+    public synchronized long executeInsert(SafeSQL sql) {
+      try (Results r = new Results(sql)) {
         return r.getRowCount();
       }
     }
 
-    public synchronized long executeUpdate(StringTemplate template) {
-      try (Results r = new Results(template)) {
+    public synchronized long executeUpdate(SafeSQL sql) {
+      try (Results r = new Results(sql)) {
         return r.getRowCount();
       }
     }
@@ -1050,12 +1050,12 @@ public class Database {
      * Note: to ensure the statement is not rolled back at the end
      * of the transaction, {@link Transaction#commit()} should be called.
      *
-     * @param template an SQL template, cannot be {@code null}
+     * @param sql an SQL statement, cannot be {@code null}
      * @return the number of affected rows, never negative
      * @throws DatabaseException when statements are invalid, or an I/O error occurred
      */
-    public synchronized long executeDelete(StringTemplate template) {
-      try (Results r = new Results(template)) {
+    public synchronized long executeDelete(SafeSQL sql) {
+      try (Results r = new Results(sql)) {
         return r.getRowCount();
       }
     }
@@ -1226,19 +1226,19 @@ public class Database {
       private State state;
       private long updateCount = -1;
 
-      Results(StringTemplate template) {
+      Results(SafeSQL sql) {
         try {
-          this.ps = toPreparedStatement(connection, template);
+          this.ps = toPreparedStatement(connection, sql);
 
           try {
             this.state = ps.execute() ? State.RESULT_SET : (updateCount = ps.getLargeUpdateCount()) == -1 ? null : State.UPDATE_COUNT;
           }
           catch(SQLException e) {
-            throw new DatabaseException(Transaction.this, "execution failed for:\n    " + template + "\n    --> " + ps.toString(), e);
+            throw new DatabaseException(Transaction.this, "execution failed for:\n    " + sql + "\n    --> " + ps.toString(), e);
           }
         }
         catch(SQLException e) {
-          throw new DatabaseException(Transaction.this, "creating statement failed for: " + template, e);
+          throw new DatabaseException(Transaction.this, "creating statement failed for: " + sql, e);
         }
       }
 
@@ -1340,29 +1340,29 @@ public class Database {
     }
 
     public class QueryExecutor extends Base {
-      private final StringTemplate template;
+      private final SafeSQL sql;
 
-      QueryExecutor(StringTemplate template) {
-        this.template = template;
+      QueryExecutor(SafeSQL sql) {
+        this.sql = sql;
       }
 
       @Override
       public <T> List<T> asList(SqlMapper<T> mapper) {
-        try(Results r = new Results(template)) {
+        try(Results r = new Results(sql)) {
           return r.asList(mapper);
         }
       }
 
       @Override
       public <T> T as(SqlMapper<T> mapper) {
-        try(Results r = new Results(template)) {
+        try(Results r = new Results(sql)) {
           return r.as(mapper);
         }
       }
 
       @Override
       public <T> void consume(SqlMapper<T> mapper, Consumer<T> consumer) {
-        try(Results r = new Results(template)) {
+        try(Results r = new Results(sql)) {
           r.consume(mapper, consumer);
         }
       }
@@ -1381,8 +1381,9 @@ public class Database {
 
   private static final Predicate<String> NOT_EMPTY = Predicate.not(String::isEmpty);
 
-  private static PreparedStatement toPreparedStatement(Connection connection, StringTemplate template) throws SQLException {
+  private static PreparedStatement toPreparedStatement(Connection connection, SafeSQL sql) throws SQLException {
     StringBuilder sb = new StringBuilder();
+    StringTemplate template = sql.template();
     List<String> fragments = template.fragments();
     List<Object> values = template.values();
 
@@ -1496,5 +1497,39 @@ public class Database {
     return index;
   }
 
-  public static final Processor<StringTemplate, RuntimeException> SQL = StringTemplate.RAW;
+  public static class SafeSQL {
+    private final StringTemplate template;
+
+    private SafeSQL(StringTemplate template) {
+      this.template = template;
+
+      /*
+       * Simplistic injection prevention that can be improved later:
+       */
+
+      for(String fragment : template.fragments()) {
+        if(fragment.contains("'")) {
+          throw new IllegalArgumentException("Template doesn't look safe, detected single quote: " + template);
+        }
+        if(fragment.contains("\\")) {
+          throw new IllegalArgumentException("Template doesn't look safe, detected backslash: " + template);
+        }
+      }
+    }
+
+    StringTemplate template() {
+      return template;
+    }
+
+    @Override
+    public String toString() {
+      return template.toString();
+    }
+  }
+
+  public static final Processor<SafeSQL, RuntimeException> SQL = new Processor<>() {
+    public SafeSQL process(StringTemplate stringTemplate) {
+      return new SafeSQL(stringTemplate);
+    }
+  };
 }

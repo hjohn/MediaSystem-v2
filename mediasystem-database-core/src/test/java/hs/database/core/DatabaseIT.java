@@ -75,7 +75,7 @@ public class DatabaseIT {
 
       try(Transaction tx = database.beginTransaction()) {
         tx.execute("CREATE TABLE employee (id serial4, name varchar(100), age int4, data bytea)");
-        tx.executeInsert(Database.SQL."INSERT INTO employee (\{EXCEPT_ID}) VALUES ('John Doe', 32, '\\x001122'::bytea)");
+        tx.executeInsert(Database.SQL."INSERT INTO employee (\{EXCEPT_ID}) VALUES (\{"John Doe"}, 32, \{new byte[] {0, 0x11, 0x22}})");
         tx.executeInsert(Database.SQL."INSERT INTO employee (\{EXCEPT_ID}) VALUES (\{EXCEPT_ID.values(new All(5, "Jane Doe", 43, new byte[] {1, 2, 3}))})");
 
         assertEquals("John Doe", tx.query(Database.SQL."SELECT name FROM employee WHERE id = 1").asText());
@@ -91,7 +91,7 @@ public class DatabaseIT {
         assertThat(list.get(0).data).isEqualTo(new byte[] {1, 2, 3});
         assertThat(list.get(1).data).isEqualTo(new byte[] {0, 0x11, 0x22});
 
-        assertThat(tx.executeUpdate(Database.SQL."UPDATE employee SET \{EXCEPT_ID.entries(new All(5, "Alice Brooks", 52, new byte[] {2, 3, 5}))} WHERE name = 'John Doe'")).isEqualTo(1);
+        assertThat(tx.executeUpdate(Database.SQL."UPDATE employee SET \{EXCEPT_ID.entries(new All(5, "Alice Brooks", 52, new byte[] {2, 3, 5}))} WHERE name = \{"John Doe"}")).isEqualTo(1);
 
         list = tx.query(Database.SQL."SELECT \{ALL} FROM employee ORDER BY name DESC").asList(ALL.asMapperFor(All.class));
 
