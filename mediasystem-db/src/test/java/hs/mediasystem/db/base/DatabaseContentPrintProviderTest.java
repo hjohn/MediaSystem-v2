@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,13 +61,14 @@ class DatabaseContentPrintProviderTest {
     when(uriStore.findAll(any(), any())).thenReturn(new HashMap<>(Map.of(existingFile.toUri().toString(), existingFileContentPrint.getId())));
     doAnswer(invocation -> {
       Consumer<ContentPrintRecord> consumer = invocation.getArgument(0);
-      consumer.accept(new ContentPrintRecord() {{
-        setId(existingFileContentPrint.getId().asInt());
-        setHash(existingFileHash);
-        setSize(15L);
-        setLastModificationTime(1201);
-        setCreationMillis(15001);
-      }});
+      consumer.accept(new ContentPrintRecord(
+        existingFileContentPrint.getId().asInt(),
+        existingFileHash,
+        15L,
+        1201,
+        null,
+        15001
+      ));
       return null;
     }).when(idStore).forEach(any());
 
@@ -80,11 +82,12 @@ class DatabaseContentPrintProviderTest {
 
   @AfterEach
   void afterEach() throws IOException {
-    Files.walk(tempDir)
-      .skip(1)
-      .sorted(Comparator.reverseOrder())
-      .map(Path::toFile)
-      .forEach(File::delete);
+    try(Stream<Path> s = Files.walk(tempDir)) {
+      s.skip(1)
+        .sorted(Comparator.reverseOrder())
+        .map(Path::toFile)
+        .forEach(File::delete);
+    }
   }
 
   @Test
@@ -185,13 +188,13 @@ class DatabaseContentPrintProviderTest {
   }
 
   private static ContentPrintRecord createRecord(int id, Long size, long lastModificationTime, byte[] hash) {
-    ContentPrintRecord record = new ContentPrintRecord();
-
-    record.setId(id);
-    record.setLastModificationTime(lastModificationTime);
-    record.setSize(size);
-    record.setHash(hash);
-
-    return record;
+    return new ContentPrintRecord(
+      id,
+      hash,
+      size,
+      lastModificationTime,
+      null,
+      lastModificationTime
+    );
   }
 }

@@ -1,94 +1,79 @@
 package hs.mediasystem.db.contentprints;
 
-import hs.database.core.Database;
-import hs.database.core.Database.Transaction;
 import hs.mediasystem.domain.stream.ContentID;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.int4.db.core.Database;
+import org.int4.db.core.Transaction;
+import org.int4.db.core.fluent.Extractor;
+import org.int4.db.core.fluent.Reflector;
+
 @Singleton
 public class ContentPrintDatabase {
-  private static final Map<String, Object> RESET_LAST_SEEN_TIME;
-
-  static {
-    Map<String, Object> map = new HashMap<>();
-
-    map.put("lastseentime", null);
-
-    RESET_LAST_SEEN_TIME = Collections.unmodifiableMap(map);
-  }
+  private static final Reflector<ContentPrintRecord> ALL = Reflector.of(ContentPrintRecord.class).withNames("id", "hash", "size", "modtime", "lastseentime", "creation_ms");
+  private static final Extractor<ContentPrintRecord> EXCEPT_ID = ALL.excluding("id");
 
   @Inject private Database database;
 
-  public <T, U> Map<T, U> findAll(Function<ContentPrintRecord, T> keyMapper, Function<ContentPrintRecord, U> valueMapper) {
-    try(Transaction tx = database.beginReadOnlyTransaction()) {
-      Map<T, U> map = new HashMap<>();
-
-      tx.select(r -> map.put(keyMapper.apply(r), valueMapper.apply(r)), ContentPrintRecord.class);
-
-      return map;
-    }
-  }
-
   public void forEach(Consumer<ContentPrintRecord> consumer) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
-      tx.select(consumer, ContentPrintRecord.class);
+      tx."SELECT \{ALL} FROM content_prints"
+        .map(ALL)
+        .consume(consumer);
     }
   }
 
   public ContentPrintRecord findOrAdd(Long size, long lastModificationTime, byte[] hash) {
     try(Transaction tx = database.beginTransaction()) {
-      ContentPrintRecord record = findStreamDataByHash(hash, size, lastModificationTime);
+      ContentPrintRecord r = findStreamDataByHash(hash, size, lastModificationTime);
 
-      if(record != null) {
-        return record;
+      if(r != null) {
+        return r;
       }
 
-      record = new ContentPrintRecord();
-
-      record.setSize(size);
-      record.setLastModificationTime(lastModificationTime);
-      record.setHash(hash);
-      record.setCreationMillis(Instant.now().toEpochMilli());
-
-      tx.insert(record);
+      r = new ContentPrintRecord(null, hash, size, lastModificationTime, null, Instant.now().toEpochMilli());
+      r = tx."INSERT INTO content_prints (\{EXCEPT_ID}) VALUES (\{r})"
+        .mapGeneratedKeys()
+        .asInt()
+        .map(r::withId)
+        .get();
       tx.commit();
 
-      return record;
+      return r;
     }
   }
 
   public ContentPrintRecord update(ContentID contentId, Long size, long lastModificationTime, byte[] hash) {  // used to update directories with latest signature
     try(Transaction tx = database.beginTransaction()) {
-      ContentPrintRecord record = tx.selectUnique(ContentPrintRecord.class, "id = ?", contentId.asInt());
+      ContentPrintRecord r = tx."SELECT \{ALL} FROM content_prints WHERE id = \{contentId.asInt()}"
+        .map(ALL)
+        .get()
+        .with(hash, size, lastModificationTime);
 
-      record.setSize(size);
-      record.setLastModificationTime(lastModificationTime);
-      record.setHash(hash);
-
-      tx.update(record);
+      tx."UPDATE content_prints SET \{EXCEPT_ID.entries(r)} WHERE id = \{r.id()}".execute();
       tx.commit();
 
-      return record;
+      return r;
     }
   }
 
   private ContentPrintRecord findStreamDataByHash(byte[] hash, Long size, long lastModificationTime) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
       if(size == null) {
-        return tx.selectUnique(ContentPrintRecord.class, "hash = ? AND size IS NULL AND modtime = ?", hash, lastModificationTime);
+        return tx."SELECT \{ALL} FROM content_prints WHERE hash = \{hash} AND size IS NULL AND modtime = \{lastModificationTime}"
+          .map(ALL)
+          .get();
       }
 
-      return tx.selectUnique(ContentPrintRecord.class, "hash = ? AND size = ? AND modtime = ?", hash, size, lastModificationTime);
+      return tx."SELECT \{ALL} FROM content_prints WHERE hash = \{hash} AND size = \{size} AND modtime = \{lastModificationTime}"
+        .map(ALL)
+        .get();
     }
   }
 
@@ -97,7 +82,7 @@ public class ContentPrintDatabase {
       long now = Instant.now().toEpochMilli();
 
       for(ContentID contentID : idsToMark) {
-        tx.update("content_prints", contentID.asInt(), Map.of("lastseentime", now));
+        tx."UPDATE content_prints SET lastseentime = \{now} WHERE id = \{contentID.asInt()}".execute();
       }
 
       tx.commit();
@@ -107,7 +92,7 @@ public class ContentPrintDatabase {
   public void unmarkSeen(Set<ContentID> idsToUnmark) {
     try(Transaction tx = database.beginTransaction()) {
       for(ContentID contentID : idsToUnmark) {
-        tx.update("content_prints", contentID.asInt(), RESET_LAST_SEEN_TIME);
+        tx."UPDATE content_prints SET lastseentime = NULL WHERE id = \{contentID.asInt()}".execute();
       }
 
       tx.commit();

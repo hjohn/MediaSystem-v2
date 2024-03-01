@@ -17,6 +17,7 @@
     <version.eventstream>0.3.0</version.eventstream>
     <version.junit5>5.10.2</version.junit5>
     <version.mockito>3.12.4</version.mockito>
+    <version.templatedjdbc>0.0.5</version.templatedjdbc>
   </properties>
 
   <modules>
@@ -36,8 +37,6 @@
     <module>mediasystem-ext-scanners</module>
     <module>mediasystem-ext-tmdb</module>
     <module>mediasystem-ext-vlc</module>
-
-    <module>mediasystem-database-core</module>
 
     <module>mediasystem-package</module>
   </modules>
@@ -68,6 +67,16 @@
         <groupId>org.int4.dirk.extensions</groupId>
         <artifactId>extensions-assisted</artifactId>
         <version>${version.dirk}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.int4.db</groupId>
+        <artifactId>db-core</artifactId>
+        <version>${version.templatedjdbc}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.int4.db</groupId>
+        <artifactId>db-test</artifactId>
+        <version>${version.templatedjdbc}</version>
       </dependency>
       <dependency>
         <groupId>com.github.hjohn.jfx.eventstream</groupId>

@@ -1,13 +1,10 @@
 package hs.mediasystem.db.base;
 
-import hs.database.core.Database;
-import hs.database.core.Database.Transaction;
-import hs.database.core.DatabaseException;
 import hs.mediasystem.db.base.Setting.PersistLevel;
 import hs.mediasystem.util.concurrent.NamedThreadFactory;
 import hs.mediasystem.util.exception.Throwables;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -20,8 +17,16 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.int4.db.core.Database;
+import org.int4.db.core.DatabaseException;
+import org.int4.db.core.Transaction;
+import org.int4.db.core.fluent.Extractor;
+import org.int4.db.core.fluent.Reflector;
+
 @Singleton
 public class SettingsStore {
+  private static final Reflector<Setting> ALL = Reflector.of(Setting.class).withNames("id", "system", "persistlevel", "name", "value", "lastupdated");
+  private static final Extractor<Setting> EXCEPT_ID = ALL.excluding("id");
   private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("SettingStorePersister", true));
   private static final String SEPARATOR = "/::/";
   private static final Logger LOGGER = Logger.getLogger(SettingsStore.class.getName());
@@ -50,27 +55,19 @@ public class SettingsStore {
     }
 
     try(Transaction tx = database.beginTransaction()) {
-      Date now = new Date();
+      Instant now = Instant.now();
 
       for(Map.Entry<String, String> entry : copiedDirtyEntries.entrySet()) {
         String key = entry.getKey();
         int index = key.indexOf(SEPARATOR);
         String system = key.substring(0, index);
         String name = key.substring(index + SEPARATOR.length());
-        Setting setting = tx.selectUnique(Setting.class, "system = ? AND name = ?", system, name);
+        String value = entry.getValue();
 
-        if(setting == null) {
-          setting = new Setting();
-
-          setting.setSystem(system);
-          setting.setKey(name);
-          setting.setPersistLevel(PersistLevel.PERMANENT);
-        }
-
-        setting.setValue(entry.getValue());
-        setting.setLastUpdated(now);
-
-        tx.merge(setting);
+        tx."""
+          INSERT INTO settings (\{EXCEPT_ID}) VALUES (\{system}, \{PersistLevel.PERMANENT}, \{name}, \{value}, \{now})
+            ON CONFLICT (system, name) DO UPDATE SET value = excluded.value, lastupdated = excluded.lastupdated
+        """.execute();
       }
 
       tx.commit();
@@ -93,9 +90,11 @@ public class SettingsStore {
     }
 
     try(Transaction tx = database.beginReadOnlyTransaction()) {
-      Setting setting = tx.selectUnique(Setting.class, "system = ? AND name = ?", system, name);
+      Setting setting = tx."SELECT \{ALL} FROM settings WHERE system = \{system} AND name = \{name}"
+        .map(ALL)
+        .get();
 
-      value = setting == null ? null : setting.getValue();
+      value = setting == null ? null : setting.value();
       cache.put(key, value);
 
       LOGGER.fine("Retrieved database value for '" + key + "': " + value);

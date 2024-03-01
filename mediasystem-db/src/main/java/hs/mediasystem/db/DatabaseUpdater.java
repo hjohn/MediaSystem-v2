@@ -1,4 +1,4 @@
-package hs.database.schema;
+package hs.mediasystem.db;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,18 +10,17 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
-import javax.inject.Provider;
 
 public class DatabaseUpdater {
   private static final Logger LOGGER = Logger.getLogger(DatabaseUpdater.class.getName());
 
-  private final Provider<Connection> connectionProvider;
+  private final Supplier<Connection> connectionProvider;
   private final DatabaseStatementTranslator translator;
 
-  public DatabaseUpdater(Provider<Connection> connectionProvider, DatabaseStatementTranslator translator) {
+  public DatabaseUpdater(Supplier<Connection> connectionProvider, DatabaseStatementTranslator translator) {
     this.connectionProvider = connectionProvider;
     this.translator = translator;
   }

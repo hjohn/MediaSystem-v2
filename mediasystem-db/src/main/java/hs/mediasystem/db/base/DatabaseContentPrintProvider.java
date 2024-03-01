@@ -49,14 +49,14 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
 
   @PostConstruct
   private void postConstruct() {
-    contentIds = uriDatabase.findAll(UriRecord::getUri, r -> new ContentID(r.getContentId()));
+    contentIds = uriDatabase.findAll(UriRecord::uri, r -> new ContentID(r.contentId()));
 
     contentPrintDatabase.forEach(r -> {
       ContentPrint contentPrint = fromRecord(r);
 
       contentPrints.put(contentPrint.getId(), contentPrint);
 
-      if(r.getLastSeenTime() != null) {
+      if(r.lastSeenTime() != null) {
         markedIds.add(contentPrint.getId());
       }
     });
@@ -232,10 +232,10 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     byte[] hash = createHash(uri);
 
     try(Key key = lock.lock()) {
-      ContentPrintRecord record = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
-      uriDatabase.store(uri.toString(), record.getId());
+      ContentPrintRecord contentPrintRecord = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
+      uriDatabase.store(uri.toString(), contentPrintRecord.id());
 
-      ContentPrint contentPrint = fromRecord(record);
+      ContentPrint contentPrint = fromRecord(contentPrintRecord);
 
       contentIds.put(uri.toString(), contentPrint.getId());
       contentPrints.put(contentPrint.getId(), contentPrint);
@@ -244,8 +244,8 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     }
   }
 
-  private static ContentPrint fromRecord(ContentPrintRecord record) {
-    return new ContentPrint(new ContentID(record.getId()), record.getSize(), record.getLastModificationTime(), record.getHash(), Instant.ofEpochMilli(record.getCreationMillis()));
+  private static ContentPrint fromRecord(ContentPrintRecord contentPrintRecord) {
+    return new ContentPrint(new ContentID(contentPrintRecord.id()), contentPrintRecord.size(), contentPrintRecord.lastModificationTime(), contentPrintRecord.hash(), Instant.ofEpochMilli(contentPrintRecord.creationMillis()));
   }
 
   private byte[] createHash(URI uri) throws IOException {

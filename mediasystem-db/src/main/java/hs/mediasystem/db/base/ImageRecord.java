@@ -1,79 +1,20 @@
 package hs.mediasystem.db.base;
 
-import hs.database.annotations.Column;
-import hs.database.annotations.Id;
-import hs.database.annotations.Table;
-import hs.database.core.DatabaseObject;
-
 import java.time.LocalDateTime;
 
-@Table(name = "images")
-public class ImageRecord extends DatabaseObject {
+public record ImageRecord(String url, String key, LocalDateTime creationTime, LocalDateTime accessTime, byte[] image) {
 
-  @Id(generated = false)
-  @Column
-  private String url;
+  public static ImageRecord of(String url, String key, byte[] data) {
+    LocalDateTime now = LocalDateTime.now();
 
-  @Column(name = "logical_key")
-  private String key;
-
-  @Column
-  private LocalDateTime creationTime;
-
-  @Column
-  private LocalDateTime accessTime;
-
-  @Column
-  private byte[] image;
-
-  public ImageRecord(String url, String key, byte[] data) {
-    this.url = url;
-    this.creationTime = LocalDateTime.now();
-    this.accessTime = creationTime;
-    this.key = key;
-    this.image = data;
+    return new ImageRecord(url, key, now, now, data);
   }
 
-  public ImageRecord() {
+  public ImageRecord with(String key, LocalDateTime creationTime, byte[] image) {
+    return new ImageRecord(url, key, creationTime, accessTime, image);
   }
 
-  public String getUrl() {
-    return url;
-  }
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
-
-  public LocalDateTime getCreationTime() {
-    return creationTime;
-  }
-
-  public void setCreationTime(LocalDateTime creationTime) {
-    this.creationTime = creationTime;
-  }
-
-  public LocalDateTime getAccessTime() {
-    return accessTime;
-  }
-
-  public void setAccessTime(LocalDateTime accessTime) {
-    this.accessTime = accessTime;
-  }
-
-  public String getKey() {
-    return key;
-  }
-
-  public void setKey(String key) {
-    this.key = key;
-  }
-
-  public byte[] getImage() {
-    return image;
-  }
-
-  public void setImage(byte[] image) {
-    this.image = image;
+  public ImageRecord withAccessTime(LocalDateTime accessTime) {
+    return new ImageRecord(url, key, creationTime, accessTime, image);
   }
 }

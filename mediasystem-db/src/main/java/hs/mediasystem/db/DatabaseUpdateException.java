@@ -1,4 +1,4 @@
-package hs.database.schema;
+package hs.mediasystem.db;
 
 import java.sql.SQLException;
 

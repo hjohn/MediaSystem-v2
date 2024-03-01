@@ -34,8 +34,8 @@ public class HashUpdater {
     AtomicInteger notFound = new AtomicInteger();
 
     store.forEach(r -> {
-      List<String> uris = uriStore.findUris(r.getId());
-      byte[] oldHash = r.getHash();
+      List<String> uris = uriStore.findUris(r.id());
+      byte[] oldHash = r.hash();
 
       int count = recordsSeen.incrementAndGet();
       boolean found = false;
@@ -51,7 +51,7 @@ public class HashUpdater {
             if(!Arrays.equals(oldHash, newHash)) {
               hashesChanged.incrementAndGet();
 
-              store.update(new ContentID(r.getId()), r.getSize(), r.getLastModificationTime(), newHash);
+              store.update(new ContentID(r.id()), r.size(), r.lastModificationTime(), newHash);
               break;  // No further uri's need checking if we found a working one
             }
           }

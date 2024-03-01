@@ -3,10 +3,6 @@ package hs.mediasystem.db;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
-import hs.database.core.Database;
-import hs.database.core.SimpleDatabaseStatementTranslator;
-import hs.database.schema.DatabaseStatementTranslator;
-import hs.database.schema.DatabaseUpdater;
 import hs.mediasystem.db.core.IdentificationEvent;
 import hs.mediasystem.db.core.StreamableEvent;
 import hs.mediasystem.db.events.EventSerializer;
@@ -21,16 +17,18 @@ import hs.mediasystem.util.events.store.EventStore;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.sql.DataSource;
 
+import org.int4.db.core.Database;
+import org.int4.db.core.DatabaseBuilder;
 import org.int4.dirk.annotations.Produces;
 
 @Singleton
@@ -114,11 +112,11 @@ public class DatabaseFactory {
   @Produces
   @Singleton
   Database createDatabase(DatabaseStatementTranslator translator) {
-    Provider<Connection> connectionProvider = () -> createConnection();
+    Supplier<Connection> connectionProvider = () -> createConnection();
 
     new DatabaseUpdater(connectionProvider, translator).updateDatabase("db-scripts");
 
-    return new Database(connectionProvider);
+    return DatabaseBuilder.using(connectionProvider).build();
   }
 
   @Produces

@@ -103,9 +103,9 @@ public class DatabaseResponseCache extends ResponseCache {
     String key = requestHeaders.getOrDefault("!key", DEFAULT_NULL).get(0);
     CacheMode cacheMode = CACHE_MODE.get();
 
-    if(image != null && (cacheMode != CacheMode.DEFAULT || image.getCreationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now()))) {
+    if(image != null && (cacheMode != CacheMode.DEFAULT || image.creationTime().plusSeconds(timeOut).isAfter(LocalDateTime.now()))) {
       // fresh enough or cache use forced, return it
-      CacheResponse response = decodeCacheResponse(image.getImage(), safeURL);
+      CacheResponse response = decodeCacheResponse(image.image(), safeURL);
 
       if(response != null) {
         return response;
@@ -154,7 +154,7 @@ public class DatabaseResponseCache extends ResponseCache {
         // If unsuccessful, for whatever reason, and there is an (expired) cached response, return that:
         LOGGER.warning("Direct fetch failed, falling back to cache: " + safeURL);
 
-        CacheResponse response = decodeCacheResponse(image.getImage(), safeURL);
+        CacheResponse response = decodeCacheResponse(image.image(), safeURL);
 
         if(response != null) {
           return response;

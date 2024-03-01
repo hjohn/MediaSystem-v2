@@ -1,6 +1,5 @@
 package hs.mediasystem.db.extract;
 
-import hs.database.core.Database;
 import hs.mediasystem.db.events.EventSerializer;
 import hs.mediasystem.db.events.PersistentEventStore;
 import hs.mediasystem.db.events.Serializer;
@@ -22,6 +21,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+import org.int4.db.core.Database;
 import org.int4.dirk.annotations.Produces;
 
 @Singleton
@@ -80,7 +80,7 @@ public class DefaultStreamMetaDataStore {
       // Create events based on old database table:
       database.forEach(r -> {
         try {
-          StreamMetaData smd = codec.decode(r.getJson());
+          StreamMetaData smd = codec.decode(r.json());
 
           persistentEventStream.push(new StreamMetaDataEvent.Updated(smd));
         }

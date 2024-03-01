@@ -1,10 +1,5 @@
 package hs.mediasystem.db.events;
 
-import hs.database.core.Database;
-import hs.database.core.Database.Transaction;
-import hs.database.core.Database.Transaction.TransactionState;
-import hs.database.core.DatabaseException;
-import hs.database.core.Mapper;
 import hs.mediasystem.util.events.store.EventStore;
 
 import java.lang.invoke.MethodHandles;
@@ -22,6 +17,14 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+
+import org.int4.db.core.Database;
+import org.int4.db.core.DatabaseException;
+import org.int4.db.core.Transaction;
+import org.int4.db.core.TransactionResult;
+import org.int4.db.core.fluent.Identifier;
+import org.int4.db.core.fluent.Mapper;
+import org.int4.db.core.fluent.Reflector;
 
 /**
  * An {@link EventStore} which stores all events in a {@link Database}.
@@ -227,34 +230,28 @@ public class PersistentEventStore<T> implements EventStore<T> {
   private record TaskKey(long fromIndex, int max) {}
 
   private static class Store<T> {
-    private static final List<Class<?>> COLUMN_TYPES = List.of(Long.class, byte[].class);
-
-    private static record Max(Long id) {}
     private static record EventRecord(long id, byte[] data) {}
 
-    private static final Lookup lookup = MethodHandles.lookup();
-    private static final Mapper<Max> MAX_MAPPER = Mapper.of(lookup, Max.class);
-    private static final Mapper<EventRecord> EVENT_RECORD_MAPPER = Mapper.of(lookup, EventRecord.class);
+    private static final Lookup LOOKUP = MethodHandles.lookup();
+    private static final Reflector<EventRecord> ALL = Reflector.of(LOOKUP, EventRecord.class);
 
     private final Database database;
-    private final String tableName;
-    private final String quotedTableName;
+    private final Identifier tableName;
     private final Mapper<EventEnvelope<T>> mapper;
     private final EventSerializer<T> serializer;
 
     Store(Database database, String tableName, EventSerializer<T> serializer) {
       this.database = database;
-      this.tableName = tableName;
-      this.quotedTableName = "\"" + tableName + "\"";
-      this.mapper = data -> createEnvelope(EVENT_RECORD_MAPPER.map(data));
+      this.tableName = Identifier.of(tableName);
+      this.mapper = data -> createEnvelope(ALL.apply(data));
       this.serializer = serializer;
     }
 
     long initialize() {
       try(Transaction tx = database.beginTransaction()) {
-        tx.execute(
+        tx.
           """
-            CREATE TABLE IF NOT EXISTS "{tableName}" (
+            CREATE TABLE IF NOT EXISTS "\{tableName}" (
               id SERIAL8,
               aggregate_id VARCHAR NOT NULL,
               type VARCHAR NOT NULL,
@@ -263,31 +260,35 @@ public class PersistentEventStore<T> implements EventStore<T> {
 
               CONSTRAINT "{tableName}_id" PRIMARY KEY (id)
             )
-          """.replace("{tableName}", tableName)
-        );
+          """.execute();
 
-        tx.execute(
+        tx.
           """
-            CREATE INDEX IF NOT EXISTS "{tableName}_aggregate_idx"
-              ON "{tableName}" (aggregate_id, type, id)
-          """.replace("{tableName}", tableName)
-        );
+            CREATE INDEX IF NOT EXISTS "\{tableName}_aggregate_idx"
+              ON "\{tableName}" (aggregate_id, type, id)
+          """.execute();
 
-        Max max = tx.mapOne(MAX_MAPPER, "SELECT MAX(id) FROM " + quotedTableName).orElseThrow();
+        long max = tx."SELECT MAX(id) FROM \"\{tableName}\"".asLong().getOptional().orElse(-1L);
 
         tx.commit();
 
-        return max.id == null ? -1 : max.id;
+        return max;
       }
     }
 
     List<EventEnvelope<T>> queryEvents(long fromIndex, int max) {
       try(Transaction tx = database.beginReadOnlyTransaction()) {
-        return tx.copyAll(
-          mapper,
-          "SELECT id, data FROM " + quotedTableName + " WHERE id >= " + fromIndex + " ORDER BY id LIMIT " + max,
-          COLUMN_TYPES
-        );
+        return tx."SELECT id, data FROM \"\{tableName}\" WHERE id >= \{fromIndex} ORDER BY id LIMIT \{max}"
+          .map(mapper)
+          .toList();
+
+// TODO perhaps reimplement copy
+//    private static final List<Class<?>> COLUMN_TYPES = List.of(Long.class, byte[].class);
+//        return tx.copyAll(
+//          mapper,
+//          "SELECT id, data FROM \"" + tableName + "\" WHERE id >= " + fromIndex + " ORDER BY id LIMIT " + max,
+//          COLUMN_TYPES
+//        );
       }
     }
 
@@ -297,7 +298,7 @@ public class PersistentEventStore<T> implements EventStore<T> {
       try(Transaction tx = database.beginTransaction()) {
         AtomicLong lastId = new AtomicLong();
 
-        tx.addCompletionHook(transactionState -> completionHook.accept(transactionState == TransactionState.COMMITTED ? lastId.get() : -1));
+        tx.addCompletionHook(transactionState -> completionHook.accept(transactionState == TransactionResult.COMMITTED ? lastId.get() : -1));
         completionHookSet = true;
 
         callback.accept(event -> lastId.set(storeEventWithinTransaction(tx, event)));
@@ -312,7 +313,11 @@ public class PersistentEventStore<T> implements EventStore<T> {
     }
 
     private long storeEventWithinTransaction(Transaction tx, T event) throws DatabaseException, SerializerException {
-      return tx.insert(quotedTableName, Map.of("aggregate_id", serializer.extractAggregateId(event), "type", serializer.extractType(event), "data", serializer.serialize(event)));
+      return tx.
+          """
+            INSERT INTO "\{tableName}" (aggregate_id, type, data)
+              VALUES (\{serializer.extractAggregateId(event)}, \{serializer.extractType(event)}, \{serializer.serialize(event)})
+          """.mapGeneratedKeys().asLong().get();
     }
 
     private EventEnvelope<T> createEnvelope(EventRecord er) {

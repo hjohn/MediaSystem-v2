@@ -1,7 +1,5 @@
 package hs.mediasystem.db.extract;
 
-import hs.database.core.Database;
-import hs.database.core.Database.Transaction;
 import hs.mediasystem.db.base.DatabaseContentPrintProvider;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.media.StreamMetaData;
@@ -33,6 +31,8 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.bytedeco.javacpp.avutil;
+import org.int4.db.core.Database;
+import org.int4.db.core.Transaction;
 
 @Singleton
 public class MediaMetaDataExtractor {

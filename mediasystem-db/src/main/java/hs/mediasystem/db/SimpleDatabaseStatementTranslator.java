@@ -1,12 +1,10 @@
-package hs.database.core;
-
-import hs.database.schema.DatabaseStatementTranslator;
+package hs.mediasystem.db;
 
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class SimpleDatabaseStatementTranslator implements DatabaseStatementTranslator {
+class SimpleDatabaseStatementTranslator implements DatabaseStatementTranslator {
   private final Map<String, String> translations;
 
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{(\\w+)\\}");
