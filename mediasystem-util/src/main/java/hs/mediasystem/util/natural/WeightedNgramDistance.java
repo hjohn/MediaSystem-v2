@@ -73,7 +73,8 @@ public class WeightedNgramDistance {
     s = s.toLowerCase();
     s = s.replaceAll("\\.", "");
     s = s.replaceAll("[^a-z0-9&]", " ");
-    s = s.replaceAll(" +", " ");
+    s = s.replaceAll(" +", " ");  // removes double inner spaces
+    s = s.trim();  // removes leading/trailing spaces
 
     return s;
   }
