@@ -116,7 +116,7 @@ public class LinkedResourcesService {
 
         update(linkedResource);
       }
-      else if(event instanceof ResourceEvent.Removed r) {
+      else if(event instanceof ResourceEvent.Removed) {
         LinkedResource existing = linkedResources.get(location);
 
         locationsByContentId.computeIfPresent(existing.contentId(), (k, v) -> v.remove(location) && v.isEmpty() ? null : v);

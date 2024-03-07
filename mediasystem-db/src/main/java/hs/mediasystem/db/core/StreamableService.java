@@ -79,7 +79,7 @@ public class StreamableService {
       if(e instanceof StreamableEvent.Updated u) {
         cache.put(location.toString(), u.streamable());
       }
-      else if(e instanceof StreamableEvent.Removed r) {
+      else if(e instanceof StreamableEvent.Removed) {
         cache.remove(location.toString());
       }
     });

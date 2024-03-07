@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,7 +37,7 @@ public class LessLoader {
       // create a parent directory level for each part of the package name.  Two levels would be "../..".
       packageName = packageName.replaceAll("\\.", "/").replaceAll("[^/]+", "..");
 
-      this.baseUrl = new URL(cls.getResource(""), packageName);
+      this.baseUrl = cls.getResource("").toURI().resolve(packageName).toURL();
       this.root = baseUrl.toExternalForm().replaceAll("/$", "");
     }
     catch(Exception e) {
@@ -103,6 +104,6 @@ public class LessLoader {
       : Platform.isMac() ? "mac"
       : "other";
 
-    return new URL(path.substring(0, slash) + "/" + name + "-" + type + "." + extension);
+    return URI.create(path.substring(0, slash) + "/" + name + "-" + type + "." + extension).toURL();
   }
 }

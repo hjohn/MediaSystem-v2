@@ -79,7 +79,7 @@ public class StreamablesAsResourceService {
 
         update(resource, output);
       }
-      else if(event instanceof StreamableEvent.Removed r) {
+      else if(event instanceof StreamableEvent.Removed) {
         Resource existing = resources.get(location);
 
         locationsByContentId.computeIfPresent(existing.contentId(), (k, v) -> v.remove(location) && v.isEmpty() ? null : v);
@@ -99,7 +99,7 @@ public class StreamablesAsResourceService {
 
         updateLinkedResources(contentId, u.streamMetaData(), output);
       }
-      else if(event instanceof StreamMetaDataEvent.Removed r) {
+      else if(event instanceof StreamMetaDataEvent.Removed) {
         metaDataByContentId.remove(contentId);
 
         updateLinkedResources(contentId, null, output);
