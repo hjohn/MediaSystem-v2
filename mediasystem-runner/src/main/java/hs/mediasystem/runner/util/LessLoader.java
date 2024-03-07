@@ -15,9 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.util.Base64;
 
 public class LessLoader {
   private final URL baseUrl;
@@ -46,10 +44,10 @@ public class LessLoader {
   }
 
   public String compile(String name) {
-    return compileUrl(cls.getResource(name)).toExternalForm();
+    return compileUrl(cls.getResource(name));
   }
 
-  private URL compileUrl(URL url) {
+  private String compileUrl(URL url) {
     try {
       String lessData = URLs.readAllString(url).replace("${root}", root);
 
@@ -66,12 +64,8 @@ public class LessLoader {
         }
       });
 
-      Path tempFile = Files.createTempFile(null, null);
-      Files.write(tempFile, compiledCSS.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
-
-      tempFile.toFile().deleteOnExit();
-
-      return tempFile.toUri().toURL();
+      return "data:text/css;charset=UTF-8;base64,"
+        + Base64.getEncoder().encodeToString(compiledCSS.getBytes(StandardCharsets.UTF_8));
     }
     catch(LessException e) {
       throw new IllegalStateException("Exception while parsing: " + url, e);
