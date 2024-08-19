@@ -1,9 +1,8 @@
 package hs.mediasystem.db.services;
 
-import hs.mediasystem.db.services.domain.LinkedResource;
+import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.db.services.domain.LinkedWork;
-import hs.mediasystem.db.services.domain.MatchedResource;
-import hs.mediasystem.db.services.domain.Work;
+import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
@@ -33,8 +32,8 @@ import javax.inject.Singleton;
 class LinkedWorksService {
   private static final DataSource RESOURCE_DATA_SOURCE = DataSource.instance("@INTERNAL");
   private static final Comparator<LinkedWork> REVERSED_CREATION_ORDER = Comparator
-    .comparing((LinkedWork lw) -> lw.matchedResources().get(0).resource().discoveryTime())
-    .thenComparing(lw -> lw.matchedResources().get(0).resource().lastModificationTime())
+    .comparing((LinkedWork lw) -> lw.resources().getFirst().streamable().contentPrint().getSignatureCreationTime())
+    .thenComparing(lw -> lw.resources().getFirst().streamable().contentPrint().getLastModificationTime())
     .reversed();
 
   private final Map<WorkId, LinkedWork> linkedWorks = new HashMap<>();
@@ -43,27 +42,27 @@ class LinkedWorksService {
   private final Map<URI, URI> parentLocations = new HashMap<>();  // TODO unused, remove
 
   @Inject
-  private LinkedWorksService(Source<LinkedResourceEvent> linkedResourceEvents) {
-    linkedResourceEvents.subscribe(this::processEvent).join();
+  private LinkedWorksService(Source<ResourceEvent> resourceEvents) {
+    resourceEvents.subscribe(this::processEvent).join();
   }
 
-  private void processEvent(LinkedResourceEvent event) {
+  private void processEvent(ResourceEvent event) {
     synchronized(linkedWorks) {
-      if(event instanceof LinkedResourceEvent.Updated u) {
-        LinkedResource linkedResource = u.resource();
+      if(event instanceof ResourceEvent.Updated u) {
+        Resource resource = u.resource();
 
-        remove(linkedResource.location());
-        add(linkedResource);
+        remove(resource.location());
+        add(resource);
       }
-      else if(event instanceof LinkedResourceEvent.Removed r) {
+      else if(event instanceof ResourceEvent.Removed r) {
         remove(r.location());
       }
     }
   }
 
-  private void add(LinkedResource linkedResource) {
-    addStream(linkedResource);
-    addResourceToChildren(linkedResource);
+  private void add(Resource resource) {
+    addStream(resource);
+    addResourceToChildren(resource);
   }
 
   private void remove(URI location) {
@@ -71,10 +70,10 @@ class LinkedWorksService {
     removeStream(location);
   }
 
-  private void addResourceToChildren(LinkedResource linkedResource) {
-    linkedResource.resource().parentLocation().ifPresent(parentLocation -> {
-      parentLocations.put(linkedResource.location(), parentLocation);
-      children.computeIfAbsent(parentLocation, k -> new HashSet<>()).add(linkedResource.location());
+  private void addResourceToChildren(Resource resource) {
+    resource.streamable().parentLocation().ifPresent(parentLocation -> {
+      parentLocations.put(resource.location(), parentLocation);
+      children.computeIfAbsent(parentLocation, k -> new HashSet<>()).add(resource.location());
     });
   }
 
@@ -86,17 +85,17 @@ class LinkedWorksService {
     }
   }
 
-  private void addStream(LinkedResource linkedResource) {
-    for(Work work : linkedResource.works()) {
-      LinkedWork linkedWork = new LinkedWork(work, List.of(new MatchedResource(linkedResource.match(), linkedResource.resource())));
+  private void addStream(Resource resource) {
+    for(Release release : resource.releases()) {
+      LinkedWork linkedWork = new LinkedWork(release, List.of(resource));
 
       linkedWorks.merge(linkedWork.id(), linkedWork, (w1, w2) -> new LinkedWork(
-        w2.work(),
-        Stream.concat(w1.matchedResources().stream(), w2.matchedResources().stream()).toList()
+        w2.workDescriptor(),
+        Stream.concat(w1.resources().stream(), w2.resources().stream()).toList()
       ));
     }
 
-    workIdsByLocation.put(linkedResource.resource().location(), linkedResource.works().stream().map(Work::id).collect(Collectors.toSet()));
+    workIdsByLocation.put(resource.location(), resource.releases().stream().map(Release::getId).collect(Collectors.toSet()));
   }
 
   private void removeStream(URI location) {
@@ -106,13 +105,13 @@ class LinkedWorksService {
       for(WorkId workId : affectedWorkIds) {
         LinkedWork linkedWork = linkedWorks.get(workId);  // should never return null as index is always maintained
 
-        if(linkedWork.matchedResources().size() == 1) {
+        if(linkedWork.resources().size() == 1) {
           linkedWorks.remove(linkedWork.id());
         }
         else {
           linkedWorks.put(linkedWork.id(), new LinkedWork(
-            linkedWork.work(),
-            linkedWork.matchedResources().stream().filter(mr -> !mr.resource().location().equals(location)).toList()
+            linkedWork.workDescriptor(),
+            linkedWork.resources().stream().filter(mr -> !mr.location().equals(location)).toList()
           ));
         }
       }
@@ -141,9 +140,9 @@ class LinkedWorksService {
   public List<LinkedWork> findChildren(WorkId id) {
     synchronized(linkedWorks) {
       return find(id).stream()
-        .map(LinkedWork::matchedResources)
+        .map(LinkedWork::resources)
         .flatMap(List::stream)
-        .map(MatchedResource::location)
+        .map(Resource::location)
         .map(children::get)
         .flatMap(Set::stream)
         .map(workIdsByLocation::get)
@@ -185,7 +184,7 @@ class LinkedWorksService {
     synchronized(linkedWorks) {
       return linkedWorks.values().stream()
         .filter(lw -> tag == null || hasTag(lw, tag))
-        .filter(lw -> !lw.matchedResources().stream().map(MatchedResource::resource).flatMap(r -> r.parentLocation().stream()).anyMatch(Objects::nonNull))
+        .filter(lw -> !lw.resources().stream().flatMap(r -> r.streamable().parentLocation().stream()).anyMatch(Objects::nonNull))
         .collect(Collectors.toList());
     }
   }
@@ -234,13 +233,13 @@ class LinkedWorksService {
   public List<LinkedWork> find(ContentID cid) {
     synchronized(linkedWorks) {
       return linkedWorks.values().stream()
-        .filter(lw -> lw.matchedResources().stream().anyMatch(mr -> mr.resource().contentId().equals(cid)))
+        .filter(lw -> lw.resources().stream().anyMatch(mr -> mr.contentId().equals(cid)))
         .sorted(Comparator.comparing(lw -> lw.id().toString()))
         .collect(Collectors.toList());
     }
   }
 
   private static boolean hasTag(LinkedWork linkedWork, String tag) {
-    return linkedWork.matchedResources().get(0).resource().tags().contains(tag);
+    return linkedWork.resources().getFirst().streamable().tags().contains(tag);
   }
 }

@@ -2,22 +2,22 @@ package hs.mediasystem.util;
 
 import java.util.Comparator;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class PriorityRateLimiter {
   private static final long NANOSECONDS_PER_SECOND = 1000L * 1000L * 1000L;
-  private static final long NANOSECONDS_PER_MILLISECOND = 1000L * 1000L;
 
   private final double permitsPerNanoSecond;
   private final double maxPermits;
 
-  private double availablePermits;
-  private long lastNanos = System.nanoTime();
+  private double availablePermits;  // only access while holding permits lock
+  private long lastNanos = System.nanoTime();  // only access while holding permits lock
 
   private final PriorityBlockingQueue<ThreadWrapper> queue = new PriorityBlockingQueue<>(11, Comparator.comparing(ThreadWrapper::getPriority).reversed());
-  private final Lock queueLock = new ReentrantLock();
-  private final Object permitsLock = new Object();
+  private final Lock queueLock = new ReentrantLock(true);
+  private final Condition queueWaitCondition = queueLock.newCondition();
 
   /**
    * Holds the thread currently waiting for permits to become available (by using
@@ -47,47 +47,45 @@ public class PriorityRateLimiter {
     this(permitsPerSecond, 1.0);
   }
 
-  public void acquire() {
+  public void acquire() throws InterruptedException {
+    ThreadWrapper currentThread = new ThreadWrapper(Thread.currentThread(), queueLock.newCondition());
+
     for(;;) {
-      ThreadWrapper currentThread = new ThreadWrapper(Thread.currentThread());
-
-      queueLock.lock();
-
-      if(currentWaitingThread == null) {
-        currentWaitingThread = currentThread;
-
-        queueLock.unlock();
-      }
-      else {
-        queue.add(currentThread);
-
-        synchronized(currentThread) {
-          queueLock.unlock();  // Must be unlocked *after* acquiring thread wrapper monitor
-
-          waitForNotification(currentThread);
-        }
-      }
-
-      // Synchronized because permits are altered in two places, potentially by two different threads at once:
-      synchronized(permitsLock) {
-        waitForSufficientPermits();
-      }
-
-      /*
-       * Sufficient permits are now available.  This thread must either consume
-       * them itself, or allow another thread to consume them (if one is available
-       * with higher priority) and put itself back into the wait queue.
-       */
-
       queueLock.lock();
 
       try {
+        if(currentWaitingThread == null) {
+          currentWaitingThread = currentThread;
+        }
+        else {
+          queue.add(currentThread);
+
+          waitForNotification(currentThread);  // will release (and re-aquire) queueLock while blocking
+        }
+
+        /*
+         * Only one thread should ever be in this part, as they're either the current waiting
+         * thread, or they're not (in which case they're waiting to be notified).
+         */
+
+        waitForSufficientPermits();  // will release (and re-aquire) queueLock while blocking
+
+        /*
+         * Sufficient permits are now available.  This thread must either consume
+         * them itself, or allow another thread to consume them (if one is available
+         * with higher priority) and put itself back into the wait queue.
+         *
+         * In all cases, we take the top thread and wake it.
+         * - If the awakened thread is higher priority, it will see there are enough permits and consume them
+         *   -> The current thread is requeue'd (at the end unfortunately)
+         * - If the awakened thread was lower priority it becomes the new waiting thread
+         *   -> The current thread consumes the permits
+         */
+
         currentWaitingThread = queue.poll();
 
         if(currentWaitingThread != null) {
-          synchronized(currentWaitingThread) {
-            currentWaitingThread.notify();
-          }
+          currentWaitingThread.condition.signal();
 
           // The thread that was waiting for permits may not be the highest priority one...
           if(currentWaitingThread.getPriority() > currentThread.getPriority()) {
@@ -97,11 +95,9 @@ public class PriorityRateLimiter {
           }
         }
 
-        synchronized(permitsLock) {
-          // Current thread was the highest priority one, consume the permits, and allow thread to continue:
-          availablePermits -= 1.0;
-          break;
-        }
+        // Current thread was the highest priority one, consume the permits, and allow thread to continue:
+        availablePermits -= 1.0;
+        break;
       }
       finally {
         queueLock.unlock();
@@ -109,44 +105,25 @@ public class PriorityRateLimiter {
     }
   }
 
-  private void waitForSufficientPermits() {
+  // Only call while holding the queue lock:
+  private void waitForSufficientPermits() throws InterruptedException {
     updatePermits();
 
     while(availablePermits < 1.0) {
-      try {
-        // Sleep roughly the amount of time it would take for a permit to become available, or a minimum of 1 ms:
-        Thread.sleep(Math.min(1L, (long)((1.0 - availablePermits) / permitsPerNanoSecond * NANOSECONDS_PER_MILLISECOND)));
-      }
-      catch(InterruptedException e) {
-        // ignore
-      }
+      // Sleep roughly the amount of time it would take for a permit to become available
+      queueWaitCondition.awaitNanos((long)((1.0 - availablePermits) / permitsPerNanoSecond));
 
       updatePermits();
     }
   }
 
-  private void waitForNotification(ThreadWrapper currentThread) {
-    for(;;) {
-      try {
-        currentThread.wait();
-
-        queueLock.lock();
-
-        try {
-          if(currentWaitingThread == currentThread) {
-            break;
-          }
-        }
-        finally {
-          queueLock.unlock();
-        }
-      }
-      catch(InterruptedException e) {
-        // Ignore
-      }
+  private void waitForNotification(ThreadWrapper currentThread) throws InterruptedException {
+    while(currentWaitingThread != currentThread) {
+      currentThread.condition.await();
     }
   }
 
+  // Only call while holding the queue lock:
   private void updatePermits() {
     long currentNanos = System.nanoTime();
     long nanosElapsed = currentNanos - lastNanos;
@@ -171,13 +148,15 @@ public class PriorityRateLimiter {
    */
   private static class ThreadWrapper {
     final Thread thread;
+    final Condition condition;
 
-    ThreadWrapper(Thread thread) {
+    ThreadWrapper(Thread thread, Condition condition) {
       this.thread = thread;
+      this.condition = condition;
     }
 
     int getPriority() {
-      return this.thread.getPriority();
+      return this.thread.getPriority() - (this.thread.isVirtual() ? 10 : 0);
     }
   }
 }

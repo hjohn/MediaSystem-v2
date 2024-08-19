@@ -1,8 +1,6 @@
 package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.api.discovery.Attribute;
-import hs.mediasystem.api.discovery.ContentPrint;
-import hs.mediasystem.api.discovery.ContentPrintProvider;
 import hs.mediasystem.api.discovery.Discoverer;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.stream.MediaType;
@@ -17,41 +15,40 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class FoldersDiscoverer implements Discoverer {
   private static final NameDecoder FILE_NAME_DECODER = new NameDecoder(Mode.FILE);
 
-  @Inject private ContentPrintProvider contentPrintProvider;
-
   @Override
-  public void discover(URI root, BiConsumer<URI, List<Discovery>> consumer) throws IOException {
-    scan(root, consumer, true);
+  public void discover(URI root, Registry registry) throws IOException {
+    scan(root, registry, true);
   }
 
-  private void scan(URI root, BiConsumer<URI, List<Discovery>> consumer, boolean isRoot) throws IOException {
+  private void scan(URI root, Registry registry, boolean isRoot) throws IOException {
     Path rootPath = Path.of(root);
-    List<Discovery> discoveries = CheckedStreams.forIOException(Files.walk(rootPath, 1, FileVisitOption.FOLLOW_LINKS))
-      .filter(path -> !path.equals(rootPath))
-      .filter(path -> Files.isDirectory(path) || Constants.VIDEOS.matcher(path.getFileName().toString()).matches())
-      .map(path -> toDiscovery(path, isRoot))
-      .toList();
 
-    consumer.accept(root, discoveries);
+    try(Stream<Path> walk = Files.walk(rootPath, 1, FileVisitOption.FOLLOW_LINKS)) {
+      List<Discovery> discoveries = CheckedStreams.forIOException(walk)
+        .filter(path -> !path.equals(rootPath))
+        .filter(path -> Files.isDirectory(path) || Constants.VIDEOS.matcher(path.getFileName().toString()).matches())
+        .map(path -> toDiscovery(path))
+        .toList();
 
-    for(Discovery discovery : discoveries) {
-      if(Files.isDirectory(Path.of(discovery.location()))) {
-        scan(discovery.location(), consumer, false);
+      registry.register(isRoot ? null : root, discoveries);
+
+      for(Discovery child : discoveries) {
+        if(Files.isDirectory(Path.of(child.location()))) {
+          scan(child.location(), registry, false);
+        }
       }
     }
   }
 
-  private Discovery toDiscovery(Path path, boolean isRoot) throws IOException {
+  private static Discovery toDiscovery(Path path) throws IOException {
     String fileName = path.getFileName().toString();
     DecodeResult result = FILE_NAME_DECODER.decode(fileName);
     URI uri = path.toUri();
@@ -62,8 +59,12 @@ public class FoldersDiscoverer implements Discoverer {
       Attribute.YEAR, result.getReleaseYear()
     );
 
-    ContentPrint contentPrint = contentPrintProvider.get(uri, Files.isDirectory(path) ? null : Files.size(path), Files.getLastModifiedTime(path).toMillis());
-
-    return new Discovery(Files.isDirectory(path) ? MediaType.FOLDER : MediaType.FILE, uri, attributes, Optional.ofNullable(isRoot ? null : path.getParent().toUri()), contentPrint);
+    return new Discovery(
+      Files.isDirectory(path) ? MediaType.FOLDER : MediaType.FILE,
+      uri,
+      attributes,
+      Files.getLastModifiedTime(path).toInstant(),
+      Files.isDirectory(path) ? null : Files.size(path)
+    );
   }
 }

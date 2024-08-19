@@ -1,5 +1,7 @@
 package hs.mediasystem.db.core;
 
+import hs.mediasystem.api.datasource.services.IdentificationProvider;
+import hs.mediasystem.api.discovery.Discoverer;
 import hs.mediasystem.util.concurrent.NamedThreadFactory;
 import hs.mediasystem.util.events.SynchronousEventStream;
 import hs.mediasystem.util.events.streams.EventStream;
@@ -8,6 +10,8 @@ import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -28,6 +32,7 @@ public class DiscoveryController {
   private final EventStream<DiscoverEvent> eventStream = new SynchronousEventStream<>();
 
   @Inject private Collection<ImportSource> importSources;
+  @Inject private List<IdentificationProvider> identificationProviders;
   @Inject @Opt @Named("server.discovery.initial-delay") private Long initialDelay = 15L;  // After 15 seconds start scans
   @Inject @Opt @Named("server.discovery.delay") private Long delay = 5 * 60L;  // Time in between scans: 5 minutes
 
@@ -48,8 +53,23 @@ public class DiscoveryController {
     LOGGER.info("Initiating discovery with " + importSources.size() + " sources...");
 
     for(ImportSource source : importSources) {
+      LOGGER.info("Discovering " + source + "...");
+
+      IdentificationProvider provider = identificationProviders.stream()
+        .filter(ip -> ip.getName().equals(source.identificationService().orElse(null)))
+        .findFirst()
+        .orElse(null);
+
       try {
-        source.discoverer().discover(source.root(), (uri, discoveries) -> eventStream.push(new DiscoverEvent(uri, source.identificationService(), source.tags(), discoveries)));
+        Discoverer.Registry registry = (parentLocation, discoveries) -> eventStream.push(new DiscoverEvent(
+          parentLocation == null ? source.root() : parentLocation,
+          Optional.ofNullable(provider),
+          source.tags(),
+          parentLocation == null || parentLocation.equals(source.root()) ? Optional.empty() : Optional.of(parentLocation),
+          discoveries
+        ));
+
+        source.discoverer().discover(source.root(), registry);
       }
       catch(IOException e) {
         LOGGER.warning("Failed scanning: " + source + "; exception: " + Throwables.formatAsOneLine(e));

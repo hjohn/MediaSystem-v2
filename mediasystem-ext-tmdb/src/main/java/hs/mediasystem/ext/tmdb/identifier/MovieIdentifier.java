@@ -2,7 +2,7 @@ package hs.mediasystem.ext.tmdb.identifier;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
+import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match;

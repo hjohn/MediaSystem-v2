@@ -16,6 +16,8 @@ import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -30,6 +32,7 @@ public class TheMovieDatabase {
 
   private final String apiKey = CryptoUtil.decrypt("8AF22323DB8C0F235B38F578B7E09A61DB6F971EED59DE131E4EF70003CE84B483A778EBD28200A031F035F4209B61A4", "-MediaSystem-"); // Yes, I know you can still get the key.
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private final Lock lock = new ReentrantLock(true);
 
   @Inject @Opt @Named("ext.tmdb.host") private String host = "http://api.themoviedb.org/";
 
@@ -96,15 +99,18 @@ public class TheMovieDatabase {
   }
 
   private JsonNode getConfiguration() throws IOException {
-    if(configuration == null) {
-      synchronized(this) {
-        if(configuration == null) {
-          configuration = query("3/configuration", null);
-        }
-      }
-    }
+    lock.lock();
 
-    return configuration;
+    try {
+      if(configuration == null) {
+        configuration = query("3/configuration", null);
+      }
+
+      return configuration;
+    }
+    finally {
+      lock.unlock();
+    }
   }
 
   private JsonNode getURL(URL url, String key) throws IOException {

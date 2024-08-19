@@ -1,4 +1,4 @@
-package hs.mediasystem.api.discovery;
+package hs.mediasystem.db.services.domain;
 
 import hs.mediasystem.domain.stream.ContentID;
 
@@ -24,7 +24,7 @@ public class ContentPrint {
   private final ContentID id;  // an identifier that never changes for this particular ContentPrint
   private final Long size;
   private final byte[] hash;  // be careful when converting this to a record, need frozen arrays or a wrapper
-  private final long lastModificationTime;  // TODO convert to Instant
+  private final Instant lastModificationTime;
   private final Instant signatureCreationTime;
 
   /**
@@ -36,12 +36,15 @@ public class ContentPrint {
    * @param hash a hash, never {@code null}
    * @param signatureCreationTime an {@link Instant}, never {@code null}
    */
-  public ContentPrint(ContentID id, Long size, long lastModificationTime, byte[] hash, Instant signatureCreationTime) {
+  public ContentPrint(ContentID id, Long size, Instant lastModificationTime, byte[] hash, Instant signatureCreationTime) {
     if(id == null) {
       throw new IllegalArgumentException("id cannot be null");
     }
     if(size != null && size < 0) {
       throw new IllegalArgumentException("size cannot be negative: " + size);
+    }
+    if(lastModificationTime == null) {
+      throw new IllegalArgumentException("lastModificationTime cannot be null");
     }
     if(hash == null) {
       throw new IllegalArgumentException("hash cannot be null");
@@ -69,12 +72,7 @@ public class ContentPrint {
     return size;
   }
 
-  /**
-   * The last modification time in milliseconds since the epoch.
-   *
-   * @return last modification time in milliseconds since the epoch
-   */
-  public long getLastModificationTime() {
+  public Instant getLastModificationTime() {
     return lastModificationTime;
   }
 
@@ -111,7 +109,7 @@ public class ContentPrint {
       return false;
     }
 
-    if(lastModificationTime != other.lastModificationTime) {
+    if(!Objects.equals(lastModificationTime, other.lastModificationTime)) {
       return false;
     }
 

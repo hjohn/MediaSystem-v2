@@ -1,30 +1,48 @@
 package hs.mediasystem.db.core;
 
-import hs.mediasystem.api.discovery.Discovery;
+import hs.mediasystem.db.services.domain.ContentPrint;
+import hs.mediasystem.domain.media.StreamDescriptor;
 import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.domain.stream.MediaType;
 
 import java.net.URI;
 import java.util.Optional;
 
-public record Streamable(Discovery discovery, Optional<String> identificationService, StreamTags tags) {
+public record Streamable(MediaType mediaType, URI location, ContentPrint contentPrint, Optional<URI> parentLocation, StreamTags tags, Optional<StreamDescriptor> descriptor) {
 
   public Streamable {
-    if(discovery == null) {
-      throw new IllegalArgumentException("discovery cannot be null");
+    if(mediaType == null) {
+      throw new IllegalArgumentException("mediaType cannot be null");
     }
-    if(identificationService == null) {
-      throw new IllegalArgumentException("identificationService cannot be null");
+    if(location == null) {
+      throw new IllegalArgumentException("location cannot be null");
+    }
+    if(contentPrint == null) {
+      throw new IllegalArgumentException("contentPrint cannot be null");
+    }
+    if(parentLocation == null) {
+      throw new IllegalArgumentException("parentLocation cannot be null");
     }
     if(tags == null) {
       throw new IllegalArgumentException("tags cannot be null");
     }
-  }
-
-  public URI location() {
-    return discovery.location();
+    if(descriptor == null) {
+      throw new IllegalArgumentException("descriptor cannot be null");
+    }
   }
 
   public ContentID contentId() {
-    return discovery.contentPrint().getId();
+    return contentPrint().getId();
+  }
+
+  public Streamable with(StreamDescriptor descriptor) {
+    return new Streamable(
+      mediaType,
+      location,
+      contentPrint,
+      parentLocation,
+      tags,
+      Optional.of(descriptor)
+    );
   }
 }

@@ -16,8 +16,8 @@
     <version.dirk>1.0.0-beta1</version.dirk>
     <version.eventstream>0.3.0</version.eventstream>
     <version.junit5>5.10.2</version.junit5>
-    <version.mockito>3.12.4</version.mockito>
-    <version.templatedjdbc>0.0.5</version.templatedjdbc>
+    <version.mockito>5.12.0</version.mockito>
+    <version.templatedjdbc>0.1.1</version.templatedjdbc>
   </properties>
 
   <modules>
@@ -150,6 +150,11 @@
         <groupId>javax.inject</groupId>
         <artifactId>javax.inject</artifactId>
         <version>1</version>
+      </dependency>
+      <dependency> <!-- force a specific version of byte buddy that supports JDK 21 -->
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.14.15</version>
       </dependency>
       <dependency>
         <groupId>org.awaitility</groupId>

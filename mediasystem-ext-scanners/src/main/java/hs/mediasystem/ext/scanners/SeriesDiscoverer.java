@@ -1,11 +1,9 @@
 package hs.mediasystem.ext.scanners;
 
 import hs.mediasystem.api.discovery.Attribute;
-import hs.mediasystem.api.discovery.ContentPrint;
-import hs.mediasystem.api.discovery.ContentPrintProvider;
+import hs.mediasystem.api.discovery.Attribute.ChildType;
 import hs.mediasystem.api.discovery.Discoverer;
 import hs.mediasystem.api.discovery.Discovery;
-import hs.mediasystem.api.discovery.Attribute.ChildType;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
@@ -26,18 +24,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class SeriesDiscoverer implements Discoverer {
   private static final Logger LOGGER = Logger.getLogger(SeriesDiscoverer.class.getName());
+  private static final Pattern SPECIALS_PATTERN = Pattern.compile("(?i)(\\bspecials?\\b.*|.*\\bspecials?\\b)");
+  private static final Pattern EXTRAS_PATTERN = Pattern.compile("(?i)(\\bextras?\\b.*|.*\\bextras?\\b)");
   private static final NameDecoder NAME_DECODER = new NameDecoder(Mode.SERIE);
   private static final NameDecoder EPISODE_NAME_DECODER = new NameDecoder(Mode.EPISODE);
   private static final NameDecoder SPECIAL_NAME_DECODER = new NameDecoder(Mode.SPECIAL);
@@ -45,12 +42,8 @@ public class SeriesDiscoverer implements Discoverer {
   private static final Set<FileVisitOption> FILE_VISIT_OPTIONS = new HashSet<>(Arrays.asList(FileVisitOption.FOLLOW_LINKS));
   private static final Workload WORKLOAD = BackgroundTaskRegistry.createWorkload("Discovering series");
 
-  @Inject private ContentPrintProvider contentPrintProvider;
-
   @Override
-  public void discover(URI root, BiConsumer<URI, List<Discovery>> consumer) throws IOException {
-    LOGGER.info("Discovering " + root);
-
+  public void discover(URI root, Registry registry) throws IOException {
     List<Path> scanResults = scan(Path.of(root));
     List<Discovery> series = new ArrayList<>();
 
@@ -67,8 +60,6 @@ public class SeriesDiscoverer implements Discoverer {
         String imdb = result.getCode();
         String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
 
-        ContentPrint contentPrint = contentPrintProvider.get(path.toUri(), null, Files.getLastModifiedTime(path).toMillis());
-
         Attributes attributes = Attributes.of(
           Attribute.TITLE, title,
           Attribute.SUBTITLE, subtitle,
@@ -76,18 +67,18 @@ public class SeriesDiscoverer implements Discoverer {
           Attribute.ID_PREFIX + "IMDB", imdbNumber
         );
 
-        series.add(new Discovery(MediaType.SERIE, path.toUri(), attributes, Optional.empty(), contentPrint));
+        series.add(new Discovery(MediaType.SERIE, path.toUri(), attributes, Files.getLastModifiedTime(path).toInstant(), null));
       }
       catch(Exception e) {
         LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
       }
     }
 
-    consumer.accept(root, series);
+    registry.register(null, series);
 
     for(Discovery discovery : series) {
       try {
-        consumer.accept(discovery.location(), scanSerie(Path.of(discovery.location()), discovery));
+        registry.register(discovery.location(), scanSerie(discovery.location()));
       }
       catch(Exception e) {
         LOGGER.warning("Exception while scanning serie: " + discovery  + ", for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
@@ -98,17 +89,18 @@ public class SeriesDiscoverer implements Discoverer {
     }
   }
 
-  private List<Discovery> scanSerie(Path root, Discovery parent) {
+  private static List<Discovery> scanSerie(URI root) {
     List<Discovery> results = new ArrayList<>();
+    Path rootPath = Path.of(root);
 
     try {
-      List<Path> scanResults = new PathFinder(5).find(root, Constants.VIDEOS);
+      List<Path> scanResults = new PathFinder(5).find(rootPath, Constants.VIDEOS);
 
       for(Path path : scanResults) {
-        Path relative = root.relativize(path);
+        Path relative = rootPath.relativize(path);
         String name = path.getFileName().toString();
-        ChildType type = hasPathPart(relative, "specials?") ? ChildType.SPECIAL :
-                         hasPathPart(relative, "extras?")   ? ChildType.EXTRA : null;
+        ChildType type = hasPathPart(relative, SPECIALS_PATTERN) ? ChildType.SPECIAL :
+                         hasPathPart(relative, EXTRAS_PATTERN)   ? ChildType.EXTRA : null;
 
         DecodeResult result = type == ChildType.SPECIAL ? SPECIAL_NAME_DECODER.decode(name) :
                               type == ChildType.EXTRA   ? SIMPLE_NAME_DECODER.decode(name) :
@@ -122,7 +114,7 @@ public class SeriesDiscoverer implements Discoverer {
         String imdb = result.getCode();
         String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
 
-        ContentPrint contentPrint = contentPrintProvider.get(path.toUri(), Files.size(path), Files.getLastModifiedTime(path).toMillis());
+        URI uri = path.toUri();
 
         if(type == null && sequence != null && sequence.contains(",")) {
           type = ChildType.EPISODE;  // sequences with a comma have an episode number in them (",2", "10,15"); ones without comma only had a season or special number in it, or nothing at all
@@ -137,24 +129,21 @@ public class SeriesDiscoverer implements Discoverer {
           Attribute.CHILD_TYPE, type == null ? null : type.toString()
         );
 
-        results.add(new Discovery(MediaType.EPISODE, path.toUri(), attributes, Optional.of(parent.location()), contentPrint));
+        results.add(new Discovery(MediaType.EPISODE, uri, attributes, Files.getLastModifiedTime(path).toInstant(), Files.size(path)));
       }
     }
     catch(RuntimeException | IOException e) {
-      LOGGER.warning("Exception while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility
+      LOGGER.warning("Exception while getting items for \"" + rootPath + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility
     }
 
     return results;
   }
 
-  private static boolean hasPathPart(Path input, String part) {
-    Pattern prefixPattern = Pattern.compile("\\b" + part + "\\b.*");
-    Pattern postfixPattern = Pattern.compile(".*\\b" + part + "\\b");
-
+  private static boolean hasPathPart(Path input, Pattern pattern) {
     for(Path path : input) {
-      String name = path.toString().toLowerCase();
+      String name = path.toString();
 
-      if(prefixPattern.matcher(name).matches() || postfixPattern.matcher(name).matches()) {
+      if(pattern.matcher(name).matches()) {
         return true;
       }
     }

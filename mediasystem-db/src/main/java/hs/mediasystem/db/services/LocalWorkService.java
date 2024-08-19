@@ -30,25 +30,24 @@ public class LocalWorkService {
 
   Work toWork(LinkedWork linkedWork) {
     return new Work(
-      linkedWork.work().descriptor(),
+      linkedWork.workDescriptor(),
       findParent(linkedWork).orElse(null),
-      linkedWork.matchedResources().stream().map(mediaStreamService::toMediaStream).toList()
+      linkedWork.resources().stream().map(mediaStreamService::toMediaStream).toList()
     );
   }
 
   private Optional<Context> findParent(LinkedWork linkedWork) {
-    Resource resource = linkedWork.matchedResources().get(0).resource();
+    Resource resource = linkedWork.resources().getFirst();
 
-    return linkedWork.work().descriptor() instanceof Release release
-      ? release.getContext().or(() -> resource.parentLocation().flatMap(this::findDescriptor).map(this::createParent))
+    return linkedWork.workDescriptor() instanceof Release release
+      ? release.getContext().or(() -> resource.streamable().parentLocation().flatMap(this::findDescriptor).map(this::createParent))
       : Optional.empty();
   }
 
   private Optional<WorkDescriptor> findDescriptor(URI location) {
     return linkedWorksService.find(location).stream()
       .findFirst()
-      .map(LinkedWork::work)
-      .map(hs.mediasystem.db.services.domain.Work::descriptor);
+      .map(LinkedWork::workDescriptor);
   }
 
   private Context createParent(WorkDescriptor descriptor) {

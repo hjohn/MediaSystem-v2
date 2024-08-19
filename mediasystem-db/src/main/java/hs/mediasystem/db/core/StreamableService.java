@@ -1,20 +1,31 @@
 package hs.mediasystem.db.core;
 
+import hs.mediasystem.api.datasource.services.IdentificationProvider;
 import hs.mediasystem.api.discovery.Discovery;
-import hs.mediasystem.util.events.EventSelector;
-import hs.mediasystem.util.events.PersistentEventStream;
-import hs.mediasystem.util.events.store.EventStore;
+import hs.mediasystem.db.base.DatabaseContentPrintProvider;
+import hs.mediasystem.db.core.StreamDescriptorFetchTaskManager.DescribedLocation;
+import hs.mediasystem.db.extract.StreamDescriptorService;
+import hs.mediasystem.db.services.domain.ContentPrint;
+import hs.mediasystem.util.events.SynchronousEventStream;
+import hs.mediasystem.util.events.streams.EventStream;
 import hs.mediasystem.util.events.streams.Source;
-import hs.mediasystem.util.events.streams.Subscription;
+import hs.mediasystem.util.exception.Throwables;
 
+import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -23,6 +34,164 @@ import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class StreamableService {
+  record Item(Streamable streamable, Discovery discovery, Optional<IdentificationProvider> identificationProvider) {}
+
+  private static final Logger LOGGER = System.getLogger(StreamableService.class.getName());
+
+  /*
+   * Note on the sorting in the cache. The order in the cache should be such that all children
+   * of a parent are directly below that parent. When doing a simplistic alphabetical sort
+   * however the paths "a", "a/2" and "ab" are sorted as "a", "ab", "a/2". Appending a trailing
+   * slash before sorting ("a/", "a/2/", "ab/") results in the desired order (same as input in
+   * this case). The trailing character must be a slash or it won't sort correctly.
+   */
+
+  private final NavigableMap<String, Streamable> cache = new TreeMap<>(PATH_COMPARATOR);
+  private final BlockingQueue<DescribedLocation> queue = new SynchronousQueue<>();
+  private final Map<URI, Item> items = new HashMap<>();
+  private final SynchronousEventStream<StreamableEvent> eventStream;  // TODO non-memory backed stream risks losing items before subscribers are present
+  private final DatabaseContentPrintProvider contentPrintProvider;
+  private final StreamDescriptorFetchTaskManager taskManager;
+
+  @Inject
+  public StreamableService(Source<DiscoverEvent> eventSource, DatabaseContentPrintProvider contentPrintProvider, StreamDescriptorService streamDescriptorService) {
+    this.eventStream = new SynchronousEventStream<>();
+    this.contentPrintProvider = contentPrintProvider;
+    this.taskManager = new StreamDescriptorFetchTaskManager(streamDescriptorService, queue);
+
+    eventSource.subscribe("StreamableService", this::process);
+
+    Thread.ofPlatform()
+      .daemon()
+      .name(this.getClass().getSimpleName() + ":queueReader")
+      .start(this::processQueue);
+  }
+
+  @Produces
+  @Singleton
+  EventStream<StreamableEvent> events() {
+    return eventStream;
+  }
+
+  private synchronized void process(DiscoverEvent event) {
+    String basePath = event.base().toString();
+    List<Discovery> discoveries = event.discoveries().stream().sorted(Comparator.comparing(d -> d.location().toString(), PATH_COMPARATOR)).toList();
+    List<StreamableEvent.Updated> updatedStreamables = new ArrayList<>();
+    List<Streamable> removedItems = new ArrayList<>();
+    Discovery currentDiscovery = null;
+    int i = 0;
+
+    outer:
+    for(Entry<String, Streamable> entry : cache.tailMap(basePath, false).entrySet()) {
+      Streamable cached = entry.getValue();
+      String path = entry.getKey();
+
+      if(!path.startsWith(basePath)) {
+        break;
+      }
+
+      while(i < discoveries.size()) {
+        Discovery d = discoveries.get(i);
+        int c = PATH_COMPARATOR.compare(d.location().toString(), path);
+
+        if(c > 0) {
+          break;
+        }
+
+        currentDiscovery = d;
+
+        i++;
+
+        // Only add item if its parent exists in cache:
+        if(event.parentLocation().map(Object::toString).map(cache::containsKey).orElse(true)) {
+          Streamable streamable = create(d, event);
+
+          if(streamable != null && (c < 0 || !streamable.equals(cached))) {
+            updatedStreamables.add(new StreamableEvent.Updated(streamable, event.identificationProvider(), d));
+          }
+        }
+
+        if(c == 0) {
+          continue outer;
+        }
+      }
+
+      /*
+       * Only remove existing item if its path does not start with the last seen
+       * scraped path:
+       */
+
+      if(currentDiscovery == null || !path.startsWith(currentDiscovery.location().toString())) {
+        removedItems.add(cached);
+      }
+    }
+
+    while(i < discoveries.size()) {
+      Discovery d = discoveries.get(i++);
+
+      // Only add item if its parent exists in cache:
+      if(event.parentLocation().map(Object::toString).map(cache::containsKey).orElse(true)) {
+        Streamable streamable = create(d, event);
+
+        if(streamable != null) {
+          updatedStreamables.add(new StreamableEvent.Updated(streamable, event.identificationProvider(), d));
+        }
+      }
+    }
+
+    removedItems.stream().map(Streamable::location).forEach(this::streamableRemoved);
+    updatedStreamables.stream().forEach(this::streamableUpdated);
+  }
+
+  private synchronized void streamableUpdated(StreamableEvent.Updated updated) {
+    items.put(updated.location(), new Item(updated.streamable(), updated.discovery(), updated.identificationProvider()));
+    taskManager.create(updated.location());
+    cache.put(updated.location().toString(), updated.streamable());
+    eventStream.push(updated);
+  }
+
+  private synchronized void streamableRemoved(URI location) {
+    items.remove(location);
+    taskManager.stop(location);
+    cache.remove(location.toString());
+    eventStream.push(new StreamableEvent.Removed(location));
+  }
+
+  private void processQueue() {
+    try {
+      for(;;) {
+        streamDescriptorUpdated(queue.take());
+      }
+    }
+    catch(InterruptedException e) {
+      LOGGER.log(Level.INFO, "Stopping " + Thread.currentThread());
+    }
+  }
+
+  private synchronized void streamDescriptorUpdated(DescribedLocation result) {
+    Item item = items.get(result.location());
+
+    if(item != null) {
+      eventStream.push(new StreamableEvent.Updated(
+        item.streamable.with(result.descriptor()),
+        item.identificationProvider,
+        item.discovery
+      ));
+    }
+  }
+
+  private Streamable create(Discovery discovery, DiscoverEvent event) {
+    try {
+      ContentPrint contentPrint = contentPrintProvider.get(discovery.location(), discovery.size(), discovery.lastModificationTime());
+
+      return new Streamable(discovery.mediaType(), discovery.location(), contentPrint, event.parentLocation(), event.tags(), Optional.empty());
+    }
+    catch(IOException e) {
+      LOGGER.log(Level.WARNING, "Unable to create content hash for discovery, skipping: " + discovery + ", because: " + Throwables.formatAsOneLine(e));
+
+      return null;
+    }
+  }
 
   /**
    * Comparator which mimics the behavior of {@code Comparator.compare(s -> s + "/")}
@@ -56,113 +225,4 @@ public class StreamableService {
       return l1 == l2 ? 0 : l1 < l2 ? -1 : 1;
     }
   };
-
-  /*
-   * Note on the sorting in the cache. The order in the cache should be such that all children
-   * of a parent are directly below that parent. When doing a simplistic alphabetical sort
-   * however the paths "a", "a/2" and "ab" are sorted as "a", "ab", "a/2". Appending a trailing
-   * slash before sorting ("a/", "a/2/", "ab/") results in the desired order (same as input in
-   * this case). The trailing character must be a slash or it won't sort correctly.
-   */
-
-  private final NavigableMap<String, Streamable> cache = new TreeMap<>(PATH_COMPARATOR);
-  private final PersistentEventStream<StreamableEvent> persistentEventStream;
-  private final Subscription cacheSubscription;
-
-  @Inject
-  public StreamableService(EventStore<StreamableEvent> store, Source<DiscoverEvent> eventSource) {
-    this.persistentEventStream = new PersistentEventStream<>(store);
-
-    cacheSubscription = persistentEventStream.plain().subscribe("StreamableService", e -> {
-      URI location = e.location();
-
-      if(e instanceof StreamableEvent.Updated u) {
-        cache.put(location.toString(), u.streamable());
-      }
-      else if(e instanceof StreamableEvent.Removed) {
-        cache.remove(location.toString());
-      }
-    });
-
-    eventSource.subscribe("StreamableService", this::process);
-  }
-
-  @Produces
-  @Singleton
-  EventSelector<StreamableEvent> events() {
-    return persistentEventStream;
-  }
-
-  private void process(DiscoverEvent event) {
-    cacheSubscription.join();
-
-    String basePath = event.base().toString();
-    List<Discovery> discoveries = event.discoveries().stream().sorted(Comparator.comparing(d -> d.location().toString(), PATH_COMPARATOR)).toList();
-    List<Streamable> updatedStreamables = new ArrayList<>();
-    List<String> removedItems = new ArrayList<>();
-    Discovery currentDiscovery = null;
-    int i = 0;
-
-    outer:
-    for(Entry<String, Streamable> entry : cache.tailMap(basePath, false).entrySet()) {
-      Streamable cached = entry.getValue();
-      String path = entry.getKey();
-
-      if(!path.startsWith(basePath)) {
-        break;
-      }
-
-      while(i < discoveries.size()) {
-        Discovery d = discoveries.get(i);
-
-        int c = PATH_COMPARATOR.compare(d.location().toString(), path);
-
-        if(c > 0) {
-          break;
-        }
-
-        currentDiscovery = d;
-
-        i++;
-
-        // Only add item if its parent exists in cache:
-        if(d.parentLocation().map(Object::toString).map(cache::containsKey).orElse(true)) {
-          Streamable streamable = create(d, event.identificationService(), event.tags());
-
-          if(c < 0 || !streamable.equals(cached)) {
-            updatedStreamables.add(streamable);
-          }
-        }
-
-        if(c == 0) {
-          continue outer;
-        }
-      }
-
-      /*
-       * Only remove existing item if its path does not start with the last seen
-       * scraped path:
-       */
-
-      if(currentDiscovery == null || !path.startsWith(currentDiscovery.location().toString())) {
-        removedItems.add(path);
-      }
-    }
-
-    while(i < discoveries.size()) {
-      Discovery item = discoveries.get(i++);
-
-      // Only add item if its parent exists in cache:
-      if(item.parentLocation().map(Object::toString).map(cache::containsKey).orElse(true)) {
-        updatedStreamables.add(create(item, event.identificationService(), event.tags()));
-      }
-    }
-
-    removedItems.stream().map(URI::create).map(StreamableEvent.Removed::new).forEach(persistentEventStream::push);
-    updatedStreamables.stream().map(StreamableEvent.Updated::new).forEach(persistentEventStream::push);
-  }
-
-  private static Streamable create(Discovery discovery, Optional<String> identificationServiceName, StreamTags tags) {
-    return new Streamable(discovery, identificationServiceName, tags);
-  }
 }

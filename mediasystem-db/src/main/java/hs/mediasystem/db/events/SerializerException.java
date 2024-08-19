@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * Thrown to indicate a problem during serialization or deserialization.
  */
-public class SerializerException extends Exception {
+public class SerializerException extends RuntimeException {
 
   /**
    * Constructs a new instance.

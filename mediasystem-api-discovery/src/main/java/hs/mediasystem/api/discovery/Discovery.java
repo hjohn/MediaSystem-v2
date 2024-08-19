@@ -5,7 +5,7 @@ import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.domain.URIs;
 
 import java.net.URI;
-import java.util.Optional;
+import java.time.Instant;
 
 /**
  * A discovered location with a media.
@@ -13,10 +13,10 @@ import java.util.Optional;
  * @param mediaType a {@link MediaType}, cannot be {@code null}
  * @param location a {@link URI}, cannot be {@code null}
  * @param attributes an {@link Attributes}, cannot be {@code null}
- * @param parentLocation an optional parent location (required for component media types), cannot be {@code null}
- * @param contentPrint a {@link ContentPrint}, cannot be {@code null}
+ * @param lastModificationTime an {@link Instant}, cannot be {@code null}
+ * @param size a size, can be {@code null} but cannot be negative
  */
-public record Discovery(MediaType mediaType, URI location, Attributes attributes, Optional<URI> parentLocation, ContentPrint contentPrint) {
+public record Discovery(MediaType mediaType, URI location, Attributes attributes, Instant lastModificationTime, Long size) {
 
   public Discovery {
     if(mediaType == null) {
@@ -28,18 +28,13 @@ public record Discovery(MediaType mediaType, URI location, Attributes attributes
     if(attributes == null) {
       throw new IllegalArgumentException("attributes cannot be null");
     }
-    if(parentLocation == null) {
-      throw new IllegalArgumentException("parentLocation cannot be null");
+    if(lastModificationTime == null) {
+      throw new IllegalArgumentException("lastModificationTime cannot be null");
     }
-    if(contentPrint == null) {
-      throw new IllegalArgumentException("contentPrint cannot be null");
-    }
-
-    if(mediaType.isComponent() && parentLocation.isEmpty()) {
-      throw new IllegalArgumentException("parentLocation must be provided for Component MediaTypes: " + parentLocation);
+    if(size != null && size < 0) {
+      throw new IllegalArgumentException("size cannot be negative: " + size);
     }
 
     location = URIs.normalizeAsFile(location);
-    parentLocation = parentLocation.map(URIs::normalizeAsFile);
   }
 }

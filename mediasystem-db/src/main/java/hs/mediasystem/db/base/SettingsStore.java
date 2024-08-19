@@ -17,11 +17,11 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.int4.db.core.Database;
-import org.int4.db.core.DatabaseException;
-import org.int4.db.core.Transaction;
-import org.int4.db.core.fluent.Extractor;
-import org.int4.db.core.fluent.Reflector;
+import org.int4.db.core.api.Database;
+import org.int4.db.core.api.DatabaseException;
+import org.int4.db.core.api.Transaction;
+import org.int4.db.core.reflect.Extractor;
+import org.int4.db.core.reflect.Reflector;
 
 @Singleton
 public class SettingsStore {

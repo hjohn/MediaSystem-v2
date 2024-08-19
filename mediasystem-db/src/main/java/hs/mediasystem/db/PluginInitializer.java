@@ -1,6 +1,5 @@
 package hs.mediasystem.db;
 
-import hs.mediasystem.db.extract.MediaMetaDataExtractor;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
 
 import java.io.IOException;
@@ -77,6 +76,5 @@ public class PluginInitializer {
     LOGGER.info(plugins.size() + " plugins loaded from: " + root);
 
     instanceResolver.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
-    instanceResolver.getInstance(MediaMetaDataExtractor.class);  // Triggers background thread
   }
 }

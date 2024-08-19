@@ -3,9 +3,19 @@ package hs.mediasystem.api.discovery;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 public interface Discoverer {
+
+  interface Registry {
+
+    /**
+     * Register a list of discoveries for a location.
+     *
+     * @param parentLocation a parent location, cannot be {@code null}
+     * @param discoveries a list of discoveries, cannot be {@code null}, but can be empty
+     */
+    void register(URI parentLocation, List<Discovery> discoveries);
+  }
 
   /**
    * Scans a given {@link URI} for potential discoveries. Discoveries must
@@ -14,8 +24,8 @@ public interface Discoverer {
    * may take multiple passes before all discoveries are processed.
    *
    * @param root a root, cannot be {@code null}
-   * @param consumer a call back to process a (partial) discovery hierarchy, cannot be {@code null}
+   * @param registry a place to register discoveries, cannot be {@code null}
    * @throws IOException when an I/O problem occurred
    */
-  void discover(URI root, BiConsumer<URI, List<Discovery>> consumer) throws IOException;
+  void discover(URI root, Registry registry) throws IOException;
 }

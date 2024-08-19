@@ -5,7 +5,6 @@ import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Production;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
 import hs.mediasystem.db.services.domain.LinkedWork;
-import hs.mediasystem.db.services.domain.Work;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Collection;
 import hs.mediasystem.domain.work.CollectionDefinition;
@@ -39,8 +38,7 @@ public class CollectionService {
       Collections.sort(works, WEIGHTED_RATING_COMPARATOR);
 
       String uris = works.stream()
-        .map(LinkedWork::work)
-        .map(Work::descriptor)
+        .map(LinkedWork::workDescriptor)
         .map(WorkDescriptor::getDetails)
         .map(Details::getCover)
         .flatMap(Optional::stream)
@@ -49,8 +47,7 @@ public class CollectionService {
         .collect(Collectors.joining("|"));
 
       Optional<ImageURI> backgroundImage = works.stream()
-        .map(LinkedWork::work)
-        .map(Work::descriptor)
+        .map(LinkedWork::workDescriptor)
         .map(WorkDescriptor::getDetails)
         .map(Details::getBackdrop)
         .flatMap(Optional::stream)
@@ -68,7 +65,7 @@ public class CollectionService {
   }
 
   private static double score(LinkedWork linkedWork) {
-    if(linkedWork.work().descriptor() instanceof Production production) {
+    if(linkedWork.workDescriptor() instanceof Production production) {
       Reception reception = production.getReception();
       LocalDate date = production.getDetails().getDate().orElse(null);
 

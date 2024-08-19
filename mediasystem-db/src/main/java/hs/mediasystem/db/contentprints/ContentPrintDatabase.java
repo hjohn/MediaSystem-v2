@@ -9,10 +9,10 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.int4.db.core.Database;
-import org.int4.db.core.Transaction;
-import org.int4.db.core.fluent.Extractor;
-import org.int4.db.core.fluent.Reflector;
+import org.int4.db.core.api.Database;
+import org.int4.db.core.api.Transaction;
+import org.int4.db.core.reflect.Extractor;
+import org.int4.db.core.reflect.Reflector;
 
 @Singleton
 public class ContentPrintDatabase {
@@ -29,7 +29,7 @@ public class ContentPrintDatabase {
     }
   }
 
-  public ContentPrintRecord findOrAdd(Long size, long lastModificationTime, byte[] hash) {
+  public ContentPrintRecord findOrAdd(Long size, Instant lastModificationTime, byte[] hash) {
     try(Transaction tx = database.beginTransaction()) {
       ContentPrintRecord r = findStreamDataByHash(hash, size, lastModificationTime);
 
@@ -37,8 +37,8 @@ public class ContentPrintDatabase {
         return r;
       }
 
-      r = new ContentPrintRecord(null, hash, size, lastModificationTime, null, Instant.now().toEpochMilli());
-      r = tx."INSERT INTO content_prints (\{EXCEPT_ID}) VALUES (\{r})"
+      r = new ContentPrintRecord(null, hash, size, lastModificationTime.toEpochMilli(), null, Instant.now().toEpochMilli());
+      r = tx."INSERT INTO content_prints (\{EXCEPT_ID}) VALUES (\{EXCEPT_ID.values(r)})"
         .mapGeneratedKeys()
         .asInt()
         .map(r::withId)
@@ -49,7 +49,7 @@ public class ContentPrintDatabase {
     }
   }
 
-  public ContentPrintRecord update(ContentID contentId, Long size, long lastModificationTime, byte[] hash) {  // used to update directories with latest signature
+  public ContentPrintRecord update(ContentID contentId, Long size, Instant lastModificationTime, byte[] hash) {  // used to update directories with latest signature
     try(Transaction tx = database.beginTransaction()) {
       ContentPrintRecord r = tx."SELECT \{ALL} FROM content_prints WHERE id = \{contentId.asInt()}"
         .map(ALL)
@@ -63,15 +63,15 @@ public class ContentPrintDatabase {
     }
   }
 
-  private ContentPrintRecord findStreamDataByHash(byte[] hash, Long size, long lastModificationTime) {
+  private ContentPrintRecord findStreamDataByHash(byte[] hash, Long size, Instant lastModificationTime) {
     try(Transaction tx = database.beginReadOnlyTransaction()) {
       if(size == null) {
-        return tx."SELECT \{ALL} FROM content_prints WHERE hash = \{hash} AND size IS NULL AND modtime = \{lastModificationTime}"
+        return tx."SELECT \{ALL} FROM content_prints WHERE hash = \{hash} AND size IS NULL AND modtime = \{lastModificationTime.toEpochMilli()}"
           .map(ALL)
           .get();
       }
 
-      return tx."SELECT \{ALL} FROM content_prints WHERE hash = \{hash} AND size = \{size} AND modtime = \{lastModificationTime}"
+      return tx."SELECT \{ALL} FROM content_prints WHERE hash = \{hash} AND size = \{size} AND modtime = \{lastModificationTime.toEpochMilli()}"
         .map(ALL)
         .get();
     }

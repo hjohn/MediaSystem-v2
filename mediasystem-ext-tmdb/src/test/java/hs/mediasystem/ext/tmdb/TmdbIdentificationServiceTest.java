@@ -3,13 +3,11 @@ package hs.mediasystem.ext.tmdb;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.domain.Movie;
-import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
 import hs.mediasystem.api.discovery.Attribute;
-import hs.mediasystem.api.discovery.ContentPrint;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.db.InjectorExtension;
-import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.util.Attributes;
@@ -19,7 +17,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -41,7 +38,7 @@ public class TmdbIdentificationServiceTest {
 
   private ObjectMapper objectMapper = new ObjectMapper();
 
-  @Inject private TmdbIdentificationService service;
+  @Inject private TmdbIdentificationProvider service;
 
   private Movie movie = mock(Movie.class);
 
@@ -56,7 +53,7 @@ public class TmdbIdentificationServiceTest {
     when(TMDB.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Terminator, The 5 Genisys", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
     when(TMDB.query(eq("3/search/movie"), eq(null), eq(List.of("query", "The Terminator 5 Genisys", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[]}"));
 
-    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5")), null).get();
+    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5"))).get();
 
     assertEquals(0.77, identification.match().accuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.match().type());
@@ -66,7 +63,7 @@ public class TmdbIdentificationServiceTest {
   public void shouldIdentifyMovies2() throws JsonProcessingException, IOException {
     when(TMDB.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"original_title\":\"Michiel de Ruyter\",\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")), null).get();
+    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015"))).get();
 
     assertEquals(1.0, identification.match().accuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.match().type());
@@ -76,7 +73,7 @@ public class TmdbIdentificationServiceTest {
   public void shouldNotFailWhenNoOriginalTitlePresent() throws JsonProcessingException, IOException {
     when(TMDB.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Michiel de Ruyter", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015")), null).get();
+    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015"))).get();
 
     assertEquals(0.470, identification.match().accuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.match().type());
@@ -89,7 +86,7 @@ public class TmdbIdentificationServiceTest {
     when(TMDB.query(eq("3/search/movie"), eq(null), eq(List.of("query", "The Admiral", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
     when(TMDB.query(eq("3/search/movie"), eq(null), eq(List.of("query", "Admiral", "language", "en", "include_adult", "true")))).thenReturn(objectMapper.readTree("{\"results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.ALTERNATIVE_TITLE, "Admiral, The", Attribute.YEAR, "2015")), null).get();
+    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.ALTERNATIVE_TITLE, "Admiral, The", Attribute.YEAR, "2015"))).get();
 
     assertEquals(1.0, identification.match().accuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.match().type());
@@ -99,7 +96,7 @@ public class TmdbIdentificationServiceTest {
   public void shouldIdentifyByImdbId() throws JsonProcessingException, IOException {
     when(TMDB.query(eq("3/find/12345"), eq(null), eq(List.of("external_source", "imdb_id")))).thenReturn(objectMapper.readTree("{\"movie_results\":[{\"id\":80001,\"release_date\":\"2015-07-01\",\"title\":\"Admiral\"}]}"));
 
-    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015", Attribute.ID_PREFIX + "IMDB", "12345")), null).get();
+    Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Michiel de Ruyter", Attribute.YEAR, "2015", Attribute.ID_PREFIX + "IMDB", "12345"))).get();
 
     assertEquals(1.0, identification.match().accuracy(), 0.01f);
     assertEquals(Type.ID, identification.match().type());
@@ -115,6 +112,6 @@ public class TmdbIdentificationServiceTest {
   }
 
   private static Discovery discovery(Attributes attributes) {
-    return new Discovery(MediaType.MOVIE, URI.create(""), attributes, Optional.empty(), new ContentPrint(new ContentID(1), 12345L, 123456L, new byte[] {1, 2, 3}, Instant.now()));
+    return new Discovery(MediaType.MOVIE, URI.create(""), attributes, Instant.ofEpochMilli(123456), 20000L);
   }
 }

@@ -9,4 +9,8 @@ import hs.mediasystem.domain.work.WorkId;
 public interface WorkDescriptor {  // TODO rename this one to Work?
   WorkId getId();
   Details getDetails();
+
+  default WorkId id() {
+    return getId();
+  }
 }

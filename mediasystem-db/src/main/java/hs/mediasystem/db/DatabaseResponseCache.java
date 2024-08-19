@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import hs.mediasystem.db.base.ImageDatabase;
 import hs.mediasystem.db.base.ImageRecord;
 import hs.mediasystem.util.PriorityRateLimiter;
+import hs.mediasystem.util.exception.Throwables;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -121,7 +122,14 @@ public class DatabaseResponseCache extends ResponseCache {
     PriorityRateLimiter rateLimiter = determineRateLimiter(requestHeaders.get("!rate-limit"));
 
     if(rateLimiter != null) {
-      rateLimiter.acquire();
+      try {
+        rateLimiter.acquire();
+      }
+      catch(InterruptedException e) {
+        Thread.currentThread().interrupt();  // Restore flag
+
+        throw new IOException("IO was interrupted", e);  // Abort operation
+      }
     }
 
     URLConnection conn = uri.toURL().openConnection();
@@ -147,8 +155,14 @@ public class DatabaseResponseCache extends ResponseCache {
       byte[] buf = baos.toByteArray();
 
       if(!(conn instanceof HttpURLConnection huc) || huc.getResponseCode() == 200) {
-        // Store the result, if it was successful:
-        store.store(uri, key, buf);
+        try {
+          // Store the result, if it was successful:
+          store.store(uri, key, buf);
+        }
+        catch(Exception e) {
+          // Ignore, if it can't be stored, proceed still
+          LOGGER.warning("Storing response in cache failed for: " + safeURL + ": " + Throwables.formatAsOneLine(e));
+        }
       }
       else if(image != null) {
         // If unsuccessful, for whatever reason, and there is an (expired) cached response, return that:

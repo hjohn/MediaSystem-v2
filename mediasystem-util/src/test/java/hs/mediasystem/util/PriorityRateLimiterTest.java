@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PriorityRateLimiterTest {
 
   @Test
-  public void shouldLimitAtFixedRate() {
+  public void shouldLimitAtFixedRate() throws InterruptedException {
     List<Long> timestamps = new ArrayList<>();
 
     timestamps.add(System.nanoTime());
@@ -67,7 +67,12 @@ public class PriorityRateLimiterTest {
       long startTime = System.nanoTime();
 
       for(int i = 0; i < 10; i++) {
-        rateLimiter.acquire();
+        try {
+          rateLimiter.acquire();
+        }
+        catch(InterruptedException e) {
+          throw new IllegalStateException(e);
+        }
       }
 
       time1.set(System.nanoTime() - startTime);
@@ -81,7 +86,12 @@ public class PriorityRateLimiterTest {
       long startTime = System.nanoTime();
 
       for(int i = 0; i < 10; i++) {
-        rateLimiter.acquire();
+        try {
+          rateLimiter.acquire();
+        }
+        catch(InterruptedException e) {
+          throw new IllegalStateException(e);
+        }
       }
 
       time2.set(System.nanoTime() - startTime);
@@ -97,13 +107,18 @@ public class PriorityRateLimiterTest {
 
   @Test
   public void stressTest() throws InterruptedException {
-    PriorityRateLimiter rateLimiter = new PriorityRateLimiter(15, 0.015);  // 15 per 15 ms
+    PriorityRateLimiter rateLimiter = new PriorityRateLimiter(15, 0.0015);  // 15 per 15 ms
     List<Thread> threads = new ArrayList<>();
 
-    for(int t = 0; t < 100; t++) {
+    for(int t = 0; t < 200; t++) {
       Thread thread = createThread(Thread.NORM_PRIORITY - (t % 3), () -> {
         for(int i = 0; i < 50; i++) {
-          rateLimiter.acquire();
+          try {
+            rateLimiter.acquire();
+          }
+          catch(InterruptedException e) {
+            throw new IllegalStateException(e);
+          }
         }
       });
 

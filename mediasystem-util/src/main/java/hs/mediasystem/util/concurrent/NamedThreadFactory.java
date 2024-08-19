@@ -5,15 +5,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class NamedThreadFactory implements ThreadFactory {
   private final AtomicInteger threadNumber = new AtomicInteger(0);
-  private final ThreadGroup group;
 
+  private final String name;
   private final int priority;
   private final boolean daemon;
 
-  public NamedThreadFactory(String groupName, int priority, boolean daemon) {
-    ThreadGroup parentGroup = Thread.currentThread().getThreadGroup();
-
-    this.group = new ThreadGroup(parentGroup, groupName);
+  public NamedThreadFactory(String name, int priority, boolean daemon) {
+    this.name = name;
     this.daemon = daemon;
     this.priority = priority;
   }
@@ -32,7 +30,7 @@ public class NamedThreadFactory implements ThreadFactory {
 
   @Override
   public Thread newThread(Runnable r) {
-    Thread thread = new Thread(group, r, String.format("%s-%d", group.getName(), threadNumber.incrementAndGet()));
+    Thread thread = new Thread(r, String.format("%s-%d", name, threadNumber.incrementAndGet()));
 
     if(daemon != thread.isDaemon()) {
       thread.setDaemon(daemon);
@@ -43,9 +41,5 @@ public class NamedThreadFactory implements ThreadFactory {
     }
 
     return thread;
-  }
-
-  public ThreadGroup getThreadGroup() {
-    return group;
   }
 }

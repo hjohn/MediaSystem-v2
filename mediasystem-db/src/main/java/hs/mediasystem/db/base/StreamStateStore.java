@@ -15,9 +15,9 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.int4.db.core.Database;
-import org.int4.db.core.Transaction;
-import org.int4.db.core.fluent.Reflector;
+import org.int4.db.core.api.Database;
+import org.int4.db.core.api.Transaction;
+import org.int4.db.core.reflect.Reflector;
 
 @Singleton
 public class StreamStateStore {

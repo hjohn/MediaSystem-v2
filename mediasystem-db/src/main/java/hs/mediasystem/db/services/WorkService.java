@@ -12,7 +12,6 @@ import hs.mediasystem.api.datasource.services.RecommendationQueryService;
 import hs.mediasystem.api.datasource.services.RolesQueryService;
 import hs.mediasystem.api.datasource.services.VideoLinksQueryService;
 import hs.mediasystem.db.core.DescriptorService;
-import hs.mediasystem.db.core.IdentifierService;
 import hs.mediasystem.db.services.domain.LinkedWork;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.media.MediaStream;
@@ -40,13 +39,12 @@ import javax.inject.Singleton;
 @Singleton
 public class WorkService {
   @Inject private LinkedWorksService linkedWorksService;
-  @Inject private LinkedResourcesService linkedResourcesService;
+  @Inject private ResourceService resourceService;
   @Inject private DescriptorService descriptorService;
   @Inject private List<RolesQueryService> rolesQueryServices;
   @Inject private List<RecommendationQueryService> recommendationQueryServices;
   @Inject private List<VideoLinksQueryService> videoLinksQueryServices;
   @Inject private MediaStreamService mediaStreamService;
-  @Inject private IdentifierService identifierService;
 
   public Optional<Work> query(WorkId workId) throws IOException {
     Optional<Work> optionalWork = CheckedOptional.from(linkedWorksService.find(workId)).map(this::toWork).toOptional();
@@ -125,7 +123,7 @@ public class WorkService {
       .map(Work::getStreams)
       .flatMap(List::stream)
       .map(MediaStream::location)
-      .forEach(identifierService::reidentify);
+      .forEach(resourceService::reidentify);
   }
 
   Work toWork(WorkDescriptor descriptor) {
@@ -138,12 +136,12 @@ public class WorkService {
     Map<WorkId, Work> episodesWithStreams = new HashMap<>();
 
     for(LinkedWork child : children) {
-      episodesWithStreams.put(child.work().descriptor().getId(), toWork(child));
+      episodesWithStreams.put(child.workDescriptor().getId(), toWork(child));
     }
 
     return Stream.concat(
       CheckedStreams.forIOException(children).map(this::toWork).toList().stream(),
-      CheckedOptional.of(parent.work().descriptor())
+      CheckedOptional.of(parent.workDescriptor())
         .filter(Serie.class::isInstance)
         .map(Serie.class::cast)
         .stream()  // could be 0 or 1, empty list results if 0, which basically means stream had no children
@@ -163,9 +161,9 @@ public class WorkService {
 
   private Work toWork(LinkedWork linkedWork) {
     return new Work(
-      linkedWork.work().descriptor(),
+      linkedWork.workDescriptor(),
       findOrCreateContext(linkedWork).orElse(null),
-      linkedWork.matchedResources().stream().map(mediaStreamService::toMediaStream).toList()
+      linkedWork.resources().stream().map(mediaStreamService::toMediaStream).toList()
     );
   }
 
@@ -211,10 +209,10 @@ public class WorkService {
   }
 
   private Optional<Context> findOrCreateContext(LinkedWork linkedWork) {
-    Resource resource = linkedWork.matchedResources().get(0).resource();
+    Resource resource = linkedWork.resources().getFirst();
 
-    return linkedWork.work().descriptor() instanceof Release release
-      ? release.getContext().or(() -> resource.parentLocation().flatMap(this::createContext))
+    return linkedWork.workDescriptor() instanceof Release release
+      ? release.getContext().or(() -> resource.streamable().parentLocation().flatMap(this::createContext))
       : Optional.empty();
   }
 
@@ -233,8 +231,8 @@ public class WorkService {
   }
 
   private Optional<Context> createContext(URI parentUri) {
-    return linkedResourcesService.find(parentUri)
-      .map(lr -> createContext(lr.works().get(0).descriptor()));
+    return resourceService.find(parentUri)
+      .map(lr -> createContext(lr.releases().getFirst()));
   }
 
   private static Context createContext(WorkDescriptor descriptor) {

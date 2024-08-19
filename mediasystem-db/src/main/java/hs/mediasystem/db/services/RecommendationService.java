@@ -6,7 +6,7 @@ import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.api.datasource.domain.stream.Recommendation;
 import hs.mediasystem.db.base.StreamState;
 import hs.mediasystem.db.base.StreamStateProvider;
-import hs.mediasystem.db.services.domain.LinkedResource;
+import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.media.MediaStream;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.State;
@@ -26,7 +26,7 @@ import javax.inject.Singleton;
 @Singleton
 public class RecommendationService {
   @Inject private LocalWorkService localWorkService;
-  @Inject private LinkedResourcesService linkedResourcesService;
+  @Inject private ResourceService resourceService;
   @Inject private LinkedWorksService linkedWorksService;
   @Inject private StreamStateProvider streamStateProvider;
   @Inject private MediaStreamService mediaStreamService;
@@ -41,7 +41,7 @@ public class RecommendationService {
     // TODO this should really be backed by a db query; as it is, it will walk through all stream states
     return streamStateProvider.map(stream -> stream
       .map(StreamState::getContentID)
-      .flatMap(cid -> linkedResourcesService.findFirst(cid).map(mediaStreamService::toMediaStream).stream())
+      .flatMap(cid -> resourceService.findFirst(cid).map(mediaStreamService::toMediaStream).stream())
       .filter(ms -> ms.state().lastConsumptionTime().isPresent())  // this check could be done earlier as stream state should have this information already
       .sorted(Comparator.comparing((MediaStream ms) -> ms.state().lastConsumptionTime().orElseThrow()).reversed())
       .map(this::toPartiallyWatchedOrNextUnwatchedRecommendation)
@@ -60,12 +60,12 @@ public class RecommendationService {
    */
   public List<Recommendation> findNew(Predicate<MediaType> filter) {
     return linkedWorksService.findNewest(200, filter).stream()
-      .map(t -> new Recommendation(t.matchedResources().get(0).resource().discoveryTime(), localWorkService.toWork(t)))
+      .map(t -> new Recommendation(t.resources().getFirst().streamable().contentPrint().getSignatureCreationTime(), localWorkService.toWork(t)))
       .collect(Collectors.toList());
   }
 
   private Optional<Recommendation> toPartiallyWatchedOrNextUnwatchedRecommendation(MediaStream stream) {
-    LinkedResource parent = linkedResourcesService.findParent(stream.location()).orElse(null);
+    Resource parent = resourceService.findRoot(stream.location()).orElse(null);
 
     return parent == null ? toProductionRecommendation(stream) : toEpisodeRecommendation(stream, parent);
   }
@@ -85,14 +85,14 @@ public class RecommendationService {
     return Optional.empty();
   }
 
-  private Optional<Recommendation> toEpisodeRecommendation(MediaStream stream, LinkedResource parent) {
+  private Optional<Recommendation> toEpisodeRecommendation(MediaStream stream, Resource parent) {
     State state = stream.state();
 
     boolean watched = state.consumed();
     Duration position = state.resumePosition();
     Instant lastWatchedTime = state.lastConsumptionTime().orElseThrow();
 
-    if(parent.works().get(0).descriptor() instanceof Serie serie) {  // Parent could also be a folder
+    if(parent.releases().getFirst() instanceof Serie serie) {  // Parent could also be a folder
       WorkDescriptor descriptor = findBestDescriptor(stream.location()).orElse(null);
 
       if(descriptor instanceof Episode episode && watched) {
@@ -116,6 +116,6 @@ public class RecommendationService {
   }
 
   private Optional<WorkDescriptor> findBestDescriptor(URI location) {
-    return linkedWorksService.find(location).stream().map(lw -> lw.work().descriptor()).findFirst();
+    return linkedWorksService.find(location).stream().map(lw -> lw.workDescriptor()).findFirst();
   }
 }

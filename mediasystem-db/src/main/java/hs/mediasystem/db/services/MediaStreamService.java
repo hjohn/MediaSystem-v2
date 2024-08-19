@@ -1,17 +1,17 @@
 package hs.mediasystem.db.services;
 
 import hs.mediasystem.db.base.StreamStateService;
-import hs.mediasystem.db.services.domain.LinkedResource;
 import hs.mediasystem.db.services.domain.LinkedWork;
-import hs.mediasystem.db.services.domain.MatchedResource;
 import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.media.MediaStream;
+import hs.mediasystem.domain.media.MediaStructure;
+import hs.mediasystem.domain.media.StreamDescriptor;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.State;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -21,33 +21,25 @@ import javax.inject.Singleton;
 public class MediaStreamService {
   @Inject private StreamStateService stateService;
 
-  public MediaStream toMediaStream(LinkedResource linkedResource) {
-    return toMediaStream(linkedResource.match(), linkedResource.resource());
-  }
-
-  public MediaStream toMediaStream(MatchedResource matchedResource) {
-    return toMediaStream(matchedResource.match(), matchedResource.resource());
-  }
-
   public MediaStream toMediaStream(LinkedWork linkedWork) {
-    return linkedWork.matchedResources().stream().findFirst().map(this::toMediaStream).orElseThrow();
+    return linkedWork.resources().stream().findFirst().map(this::toMediaStream).orElseThrow();
   }
 
-  private MediaStream toMediaStream(Match match, Resource resource) {
+  public MediaStream toMediaStream(Resource resource) {
     State state = toState(resource.contentId());
     int totalDuration = stateService.getTotalDuration(resource.contentId());
 
     return new MediaStream(
       resource.location(),
       resource.contentId(),
-      resource.discoveryTime(),
-      resource.lastModificationTime(),
-      resource.size(),
+      resource.streamable().contentPrint().getSignatureCreationTime(),
+      resource.streamable().contentPrint().getLastModificationTime(),
+      Optional.ofNullable(resource.streamable().contentPrint().getSize()),
       state,
-      resource.duration().or(() -> Optional.ofNullable(totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null)),
-      resource.mediaStructure(),
-      resource.snapshots(),
-      match
+      resource.streamable().descriptor().flatMap(StreamDescriptor::duration).or(() -> Optional.ofNullable(totalDuration != -1 ? Duration.ofSeconds(totalDuration) : null)),
+      resource.streamable().descriptor().map(sd -> new MediaStructure(sd.videoTracks(), sd.audioTracks(), sd.subtitleTracks())),
+      resource.streamable().descriptor().map(StreamDescriptor::snapshots).orElse(List.of()),
+      resource.match()
     );
   }
 

@@ -1,26 +1,20 @@
 package hs.mediasystem.domain.media;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
-
-import hs.mediasystem.domain.stream.ContentID;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public record StreamMetaData(
-  ContentID contentId,
-  @JsonAlias("duration") Optional<Duration> length,
-  @JsonAlias("videoStreams") List<VideoTrack> videoTracks,
-  @JsonAlias("audioStreams") List<AudioTrack> audioTracks,
-  @JsonAlias("subtitleStreams") List<SubtitleTrack> subtitleTracks,
-  List<Snapshot> snapshots) {
-
-  // TODO remove aliases after a while -- think of a way to migrate; might be good to store JSON not as byte[]
-  public StreamMetaData {
-    if(contentId == null) {
-      throw new IllegalArgumentException("contentId cannot be null");
+public record StreamDescriptor(
+  Optional<Duration> duration,
+  List<VideoTrack> videoTracks,
+  List<AudioTrack> audioTracks,
+  List<SubtitleTrack> subtitleTracks,
+  List<Snapshot> snapshots
+) {
+  public StreamDescriptor {
+    if(duration == null) {
+      throw new IllegalArgumentException("duration cannot be null");
     }
     if(videoTracks == null) {
       throw new IllegalArgumentException("videoTracks cannot be null");

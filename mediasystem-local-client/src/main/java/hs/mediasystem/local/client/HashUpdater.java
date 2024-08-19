@@ -12,6 +12,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -51,7 +52,7 @@ public class HashUpdater {
             if(!Arrays.equals(oldHash, newHash)) {
               hashesChanged.incrementAndGet();
 
-              store.update(new ContentID(r.id()), r.size(), r.lastModificationTime(), newHash);
+              store.update(new ContentID(r.id()), r.size(), Instant.ofEpochMilli(r.lastModificationTime()), newHash);
               break;  // No further uri's need checking if we found a working one
             }
           }

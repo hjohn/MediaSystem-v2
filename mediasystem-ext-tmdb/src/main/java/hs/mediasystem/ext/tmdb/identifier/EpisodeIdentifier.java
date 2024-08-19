@@ -1,14 +1,13 @@
 package hs.mediasystem.ext.tmdb.identifier;
 
-import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Episode;
+import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.domain.Serie;
-import hs.mediasystem.api.datasource.services.IdentificationService.Identification;
 import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.Attribute.ChildType;
+import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.domain.work.Match.Type;
-import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.domain.Tuple;
 import hs.mediasystem.util.domain.Tuple.Tuple2;
@@ -24,8 +23,8 @@ import javax.inject.Singleton;
 @Singleton
 public class EpisodeIdentifier {
 
-  public Optional<Identification> identify(Attributes attributes, WorkDescriptor parent) {
-    return findChildDescriptors((Serie)parent, attributes);
+  public Optional<Identification> identify(Attributes attributes, Serie parent) {
+    return findChildDescriptors(parent, attributes);
   }
 
   private static Optional<Identification> findChildDescriptors(Serie serie, Attributes childAttributes) {

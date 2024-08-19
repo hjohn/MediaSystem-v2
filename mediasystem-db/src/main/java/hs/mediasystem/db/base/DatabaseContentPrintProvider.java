@@ -1,9 +1,8 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.api.discovery.ContentPrint;
-import hs.mediasystem.api.discovery.ContentPrintProvider;
 import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.contentprints.ContentPrintRecord;
+import hs.mediasystem.db.services.domain.ContentPrint;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.db.uris.UriRecord;
 import hs.mediasystem.domain.stream.ContentID;
@@ -26,14 +25,29 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+/**
+ * Provides {@link ContentPrint}s.<p>
+ *
+ * A {@link ContentPrint} is a unique signature of a file or directory.  For files,
+ * this signature includes its size, modification time and hash.  If a file is renamed
+ * but these values match, it is considered to be the same stream, and the same ContentPrint
+ * will be returned.<p>
+ *
+ * Any other change to a file will result in it being assigned a new {@link ContentID}.<p>
+ *
+ * For a directory, the same signatures are gathered, apart from the size which is <code>null</code>
+ * for directories.  When a directory is renamed, but a matching modification time and hash
+ * can be found, its {@link ContentID} remains unchanged.  Similarly, when a directory is
+ * modified (with new files for example) but its name remains unchanged, its ContentPrint is
+ * updated but the {@link ContentID} is kept the same.<p>
+ */
 @Singleton
-public class DatabaseContentPrintProvider implements ContentPrintProvider {
+public class DatabaseContentPrintProvider {
   private static final Logger LOGGER = Logger.getLogger(DatabaseContentPrintProvider.class.getName());
 
   @Inject private MediaHash mediaHash;
@@ -70,24 +84,30 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
 
   /**
    * Gets or creates a {@link ContentID} for the given resource.  If the content
-   * (data, size and mod time) was seen before, this will return the same {@link ContentID}.<p>
+   * (data, size and last modification time) was seen before, this will return the same {@link ContentID}.<p>
    *
    * For resources that were unknown or couldn't be matched, a new {@link ContentID}
    * is returned.<p>
    *
    * Note that it is possible for the same {@link ContentID} to be returned for different
    * uri's -- this simple means that the two uri's point to resources that are copies.
+   *
+   * @param location a location, cannot be {@code null}
+   * @param size a size, can be {@code null} but can't be negative
+   * @param lastModificationTime an {@link Instant}, cannot be  {@code null}
+   * @return a {@link ContentPrint}, never {@code null}
+   * @throws IOException when an IO error occurs
    */
-  @Override
-  public ContentPrint get(URI uri, Long size, long lastModificationTime) throws IOException {
+  public ContentPrint get(URI location, Long size, Instant lastModificationTime) throws IOException {
     try(Key key = lock.lock()) {
-      ContentID existingContentId = contentIds.get(uri.toString());
+      ContentID existingContentId = contentIds.get(location.toString());
       ContentPrint print = contentPrints.get(existingContentId);
+      Instant modTime = Instant.ofEpochMilli(lastModificationTime.toEpochMilli());  // reduce accuracy for comparison (stored as milliseconds in database)
 
       key.earlyUnlock();
 
       if(existingContentId != null) {
-        if(Objects.equals(print.getSize(), size) && print.getLastModificationTime() == lastModificationTime) {
+        if(Objects.equals(print.getSize(), size) && print.getLastModificationTime().equals(modTime)) {
           markSeen(existingContentId);
 
           return print;
@@ -108,40 +128,29 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
 
           markSeen(existingContentId);
 
-          return updateDirectory(uri, existingContentId, lastModificationTime);
+          return updateDirectory(location, existingContentId, modTime);
         }
       }
 
       /*
-       * There was either no existing content id for the given uri, or the size
+       * There was either no existing content id for the given location, or the size
        * and/or last modification time did not match with an existing content id
        * (and it was not a directory in the second case).
        *
        * In either case, a new or existing content id will be found, and linked
-       * to the uri.
+       * to the location.
        *
-       * No attempt will be made to find another uri by doing a reverse look-up
-       * using the hash, the uri is simply inserted and linked to a new (or
+       * No attempt will be made to find another location by doing a reverse look-up
+       * using the hash, the location is simply inserted and linked to a new (or
        * existing) content id.
        */
 
-      ContentPrint contentPrint = link(uri, size, lastModificationTime);
+      ContentPrint contentPrint = link(location, size, modTime);
 
       markSeen(contentPrint.getId());
 
       return contentPrint;
     }
-  }
-
-  @Override
-  public ContentPrint get(ContentID contentId) {
-    try(Key key = lock.lock()) {
-      return contentPrints.get(contentId);
-    }
-  }
-
-  public Stream<ContentID> recentlySeen() {
-    return seenIds.stream();
   }
 
   /**
@@ -213,8 +222,8 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     }
   }
 
-  private ContentPrint updateDirectory(URI uri, ContentID contentId, long lastModificationTime) throws IOException {
-    byte[] hash = createHash(uri);
+  private ContentPrint updateDirectory(URI location, ContentID contentId, Instant lastModificationTime) throws IOException {
+    byte[] hash = createHash(location);
 
     try(Key key = lock.lock()) {
       ContentPrintRecord record = contentPrintDatabase.update(contentId, null, lastModificationTime, hash);
@@ -228,16 +237,17 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
     }
   }
 
-  private ContentPrint link(URI uri, Long size, long lastModificationTime) throws IOException {
-    byte[] hash = createHash(uri);
+  private ContentPrint link(URI location, Long size, Instant lastModificationTime) throws IOException {
+    byte[] hash = createHash(location);
 
     try(Key key = lock.lock()) {
       ContentPrintRecord contentPrintRecord = contentPrintDatabase.findOrAdd(size, lastModificationTime, hash);
-      uriDatabase.store(uri.toString(), contentPrintRecord.id());
+
+      uriDatabase.store(location.toString(), contentPrintRecord.id());
 
       ContentPrint contentPrint = fromRecord(contentPrintRecord);
 
-      contentIds.put(uri.toString(), contentPrint.getId());
+      contentIds.put(location.toString(), contentPrint.getId());
       contentPrints.put(contentPrint.getId(), contentPrint);
 
       return contentPrint;
@@ -245,11 +255,17 @@ public class DatabaseContentPrintProvider implements ContentPrintProvider {
   }
 
   private static ContentPrint fromRecord(ContentPrintRecord contentPrintRecord) {
-    return new ContentPrint(new ContentID(contentPrintRecord.id()), contentPrintRecord.size(), contentPrintRecord.lastModificationTime(), contentPrintRecord.hash(), Instant.ofEpochMilli(contentPrintRecord.creationMillis()));
+    return new ContentPrint(
+      new ContentID(contentPrintRecord.id()),
+      contentPrintRecord.size(),
+      Instant.ofEpochMilli(contentPrintRecord.lastModificationTime()),
+      contentPrintRecord.hash(),
+      Instant.ofEpochMilli(contentPrintRecord.creationMillis())
+    );
   }
 
-  private byte[] createHash(URI uri) throws IOException {
-    Path path = Paths.get(uri);
+  private byte[] createHash(URI location) throws IOException {
+    Path path = Paths.get(location);
 
     if(Files.isRegularFile(path)) {
       return mediaHash.computeFileHash(path);

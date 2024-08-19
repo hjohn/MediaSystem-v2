@@ -5,7 +5,7 @@ import hs.mediasystem.domain.stream.ContentID;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import org.int4.db.core.fluent.Row;
+import org.int4.db.core.reflect.Row;
 import org.int4.db.test.MockDatabase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,8 +1,8 @@
 package hs.mediasystem.db.base;
 
-import hs.mediasystem.api.discovery.ContentPrint;
 import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.contentprints.ContentPrintRecord;
+import hs.mediasystem.db.services.domain.ContentPrint;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.util.MediaHash;
@@ -54,7 +54,7 @@ class DatabaseContentPrintProviderTest {
   byte[] hash1 = new byte[] {1, 2, 3, 4};
   byte[] hash2 = new byte[] {2, 2, 3, 4};
   byte[] existingFileHash = new byte[] {5, 6, 7, 8};
-  ContentPrint existingFileContentPrint = new ContentPrint(new ContentID(101), 15L, 1201, existingFileHash, Instant.ofEpochMilli(15001));
+  ContentPrint existingFileContentPrint = new ContentPrint(new ContentID(101), 15L, Instant.ofEpochMilli(1201), existingFileHash, Instant.ofEpochMilli(15001));
 
   @BeforeEach
   void beforeEach() throws IOException {
@@ -92,7 +92,7 @@ class DatabaseContentPrintProviderTest {
 
   @Test
   void shouldCreateNewPrint() throws IOException {
-    long lastModificationTime = Files.getLastModifiedTime(newFile).toMillis();
+    Instant lastModificationTime = Files.getLastModifiedTime(newFile).toInstant();
     long size = Files.size(newFile);
 
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash1);
@@ -107,7 +107,7 @@ class DatabaseContentPrintProviderTest {
 
   @Test
   void shouldFindExistingPrint() throws IOException {
-    ContentPrint contentPrint = provider.get(existingFile.toUri(), 15L, 1201);
+    ContentPrint contentPrint = provider.get(existingFile.toUri(), 15L, Instant.ofEpochMilli(1201));
 
     assertEquals(existingFileContentPrint, contentPrint);
   }
@@ -115,9 +115,9 @@ class DatabaseContentPrintProviderTest {
   @Test
   void shouldNotFindExistingPrint() throws IOException {
     when(mediaHash.computeFileHash(newFile)).thenReturn(existingFileHash);
-    when(idStore.findOrAdd(Long.valueOf(15), 1201L, existingFileHash)).thenReturn(createRecord(102, 15L, 1201L, existingFileHash));
+    when(idStore.findOrAdd(Long.valueOf(15), Instant.ofEpochMilli(1201), existingFileHash)).thenReturn(createRecord(102, 15L, Instant.ofEpochMilli(1201), existingFileHash));
 
-    ContentPrint contentPrint = provider.get(newFile.toUri(), 15L, 1201);
+    ContentPrint contentPrint = provider.get(newFile.toUri(), 15L, Instant.ofEpochMilli(1201));
 
     // Part of the new print should match, but not all (new id)
     assertEquals(existingFileContentPrint.getSize(), contentPrint.getSize());
@@ -127,11 +127,11 @@ class DatabaseContentPrintProviderTest {
 
   @Test
   void modifiedFileWithSameNameShouldGetNewID() throws IOException {
-    long lastModificationTime = Files.getLastModifiedTime(newFile).toMillis();
+    Instant lastModificationTime = Files.getLastModifiedTime(newFile).toInstant();
     long size = Files.size(newFile);
 
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash1);
-    when(idStore.findOrAdd(size, lastModificationTime, hash1)).thenReturn(createRecord(102, size, lastModificationTime, hash1));
+    when(idStore.findOrAdd(size, Instant.ofEpochMilli(lastModificationTime.toEpochMilli()), hash1)).thenReturn(createRecord(102, size, lastModificationTime, hash1));
 
     ContentPrint contentPrint = provider.get(newFile.toUri(), size, lastModificationTime);
 
@@ -140,11 +140,11 @@ class DatabaseContentPrintProviderTest {
     // Now modify file:
     Files.write(newFile, List.of("Hello World! And thank you!"));
 
-    lastModificationTime = Files.getLastModifiedTime(newFile).toMillis();
+    lastModificationTime = Files.getLastModifiedTime(newFile).toInstant();
     size = Files.size(newFile);
 
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash2);
-    when(idStore.findOrAdd(size, lastModificationTime, hash2)).thenReturn(createRecord(103, size, lastModificationTime, hash2));
+    when(idStore.findOrAdd(size, Instant.ofEpochMilli(lastModificationTime.toEpochMilli()), hash2)).thenReturn(createRecord(103, size, lastModificationTime, hash2));
 
     ContentPrint contentPrintModified = provider.get(newFile.toUri(), size, lastModificationTime);
 
@@ -158,11 +158,11 @@ class DatabaseContentPrintProviderTest {
 
   @Test
   void modifiedFileWithSameNameAndContentShouldGetNewID() throws IOException {
-    long lastModificationTime = Files.getLastModifiedTime(newFile).toMillis();
+    Instant lastModificationTime = Files.getLastModifiedTime(newFile).toInstant();
     long size = Files.size(newFile);
 
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash1);
-    when(idStore.findOrAdd(size, lastModificationTime, hash1)).thenReturn(createRecord(102, size, lastModificationTime, hash1));
+    when(idStore.findOrAdd(size, Instant.ofEpochMilli(lastModificationTime.toEpochMilli()), hash1)).thenReturn(createRecord(102, size, lastModificationTime, hash1));
 
     ContentPrint contentPrint = provider.get(newFile.toUri(), size, lastModificationTime);
 
@@ -171,11 +171,11 @@ class DatabaseContentPrintProviderTest {
     // Now modify file:
     Files.write(newFile, List.of("Hello World!"));  // content same, size same, but date will have changed
 
-    lastModificationTime = Files.getLastModifiedTime(newFile).toMillis();
+    lastModificationTime = Files.getLastModifiedTime(newFile).toInstant();
     size = Files.size(newFile);
 
     when(mediaHash.computeFileHash(newFile)).thenReturn(hash1);
-    when(idStore.findOrAdd(size, lastModificationTime, hash1)).thenReturn(createRecord(103, size, lastModificationTime, hash1));
+    when(idStore.findOrAdd(size, Instant.ofEpochMilli(lastModificationTime.toEpochMilli()), hash1)).thenReturn(createRecord(103, size, lastModificationTime, hash1));
 
     ContentPrint contentPrintModified = provider.get(newFile.toUri(), size, lastModificationTime);
 
@@ -187,14 +187,14 @@ class DatabaseContentPrintProviderTest {
     assertNotEquals(contentPrintModified.getId(), contentPrint.getId());
   }
 
-  private static ContentPrintRecord createRecord(int id, Long size, long lastModificationTime, byte[] hash) {
+  private static ContentPrintRecord createRecord(int id, Long size, Instant lastModificationTime, byte[] hash) {
     return new ContentPrintRecord(
       id,
       hash,
       size,
-      lastModificationTime,
+      lastModificationTime.toEpochMilli(),
       null,
-      lastModificationTime
+      lastModificationTime.toEpochMilli()
     );
   }
 }

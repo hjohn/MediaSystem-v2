@@ -1,11 +1,11 @@
 package hs.mediasystem.ext.local;
 
-import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Classification;
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Folder;
+import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.domain.Production;
-import hs.mediasystem.api.datasource.services.IdentificationService;
+import hs.mediasystem.api.datasource.services.IdentificationProvider;
 import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.stream.MediaType;
@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class LocalIdentificationService implements IdentificationService {
+public class LocalIdentificationProvider implements IdentificationProvider {
   private static final DataSource LOCAL = DataSource.instance("LOCAL");
 
   @Inject private DescriptionService descriptionService;
@@ -36,7 +36,7 @@ public class LocalIdentificationService implements IdentificationService {
   }
 
   @Override
-  public Optional<Identification> identify(Discovery discovery, WorkDescriptor parent) {
+  public Optional<Identification> identify(Discovery discovery) {
     MediaType mediaType = discovery.mediaType();
 
     if(mediaType == MediaType.FOLDER) {

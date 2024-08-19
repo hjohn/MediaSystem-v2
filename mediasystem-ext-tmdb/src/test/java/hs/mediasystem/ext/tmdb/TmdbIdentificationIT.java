@@ -6,28 +6,29 @@ import com.github.tomakehurst.wiremock.common.ClasspathFileSource;
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 
+import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.discovery.Attribute;
-import hs.mediasystem.api.discovery.ContentPrint;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.db.DatabaseResponseCache;
 import hs.mediasystem.db.InjectorExtension;
+import hs.mediasystem.db.base.DatabaseContentPrintProvider;
 import hs.mediasystem.db.core.DiscoverEvent;
-import hs.mediasystem.db.core.IdentificationEvent;
-import hs.mediasystem.db.core.IdentifierService;
 import hs.mediasystem.db.core.StreamTags;
-import hs.mediasystem.db.core.StreamableEvent;
 import hs.mediasystem.db.core.StreamableService;
-import hs.mediasystem.domain.stream.ContentID;
+import hs.mediasystem.db.extract.StreamDescriptorService;
+import hs.mediasystem.db.services.IdentificationStore;
+import hs.mediasystem.db.services.ResourceService;
+import hs.mediasystem.db.services.domain.ContentPrint;
+import hs.mediasystem.db.services.domain.Resource;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.SynchronousEventStream;
-import hs.mediasystem.util.events.store.EventStore;
 import hs.mediasystem.util.events.streams.EventStream;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -35,9 +36,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -47,7 +45,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(InjectorExtension.class)  // TODO this probably should not live in db project
 public class TmdbIdentificationIT {
@@ -387,89 +388,92 @@ public class TmdbIdentificationIT {
     WIRE_MOCK_SERVER.stubFor(WireMock.get("/3/find/").willReturn(WireMock.ok().withBody("{}")));
   }
 
-  private static ContentPrint contentPrint(int id) {
-    return new ContentPrint(new ContentID(id), null, 1000L, new byte[] {1, 2, 3}, Instant.ofEpochSecond(1000));
-  }
-
   @Produces private static final DatabaseResponseCache RESPONSE_CACHE = mock(DatabaseResponseCache.class);
   @Produces @Named("ext.tmdb.host") private static final String TMDB_HOST = "http://localhost:" + WIRE_MOCK_SERVER.port() + "/";
-  @Produces private static final EventStore<StreamableEvent> EVENT_STORE = new InMemoryEventStore<>(StreamableEvent.class);
-  @Produces private static final EventStore<IdentificationEvent> IDENTIFICATION_EVENT_STORE = new InMemoryEventStore<>(IdentificationEvent.class);
-
+  @Produces private static final IdentificationStore IDENTIFICATION_STORE = mock(IdentificationStore.class);
+  @Produces private static final StreamDescriptorService STREAM_DESCRIPTOR_SERVICE = mock(StreamDescriptorService.class);
+  @Produces private static final DatabaseContentPrintProvider CONTENT_PRINT_PROVIDER = mock(DatabaseContentPrintProvider.class);
   @Produces private static final EventStream<DiscoverEvent> DISCOVER_EVENTS = new SynchronousEventStream<>();
 
   private static final URI ROOT = Path.of("/").toUri();
 
-  @Inject private IdentifierService identifierService;
-
   @Inject StreamableService streamableService;
-  @Inject TmdbIdentificationService tmdbIdentificationService;
+  @Inject ResourceService resourceService;
+  @Inject TmdbIdentificationProvider tmdbIdentificationProvider;
 
   @Test
-  void test() throws InterruptedException {
-    BlockingQueue<IdentificationEvent> events = new LinkedBlockingQueue<>();
+  void test() throws IOException {
+    when(CONTENT_PRINT_PROVIDER.get(any(), any(), any())).thenReturn(mock(ContentPrint.class));
 
-    identifierService.identificationEvents().plain().subscribe(events::add);
+    Discovery serieDiscovery = new Discovery(MediaType.SERIE, ROOT.resolve("/Series/Charmed"), Attributes.of("title", "Charmed"), Instant.now(), null);
 
-    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Series/"), Optional.of("TMDB"), new StreamTags(Set.of("cartoon")), List.of(
-      new Discovery(MediaType.SERIE, ROOT.resolve("/Series/Charmed"), Attributes.of("title", "Charmed"), Optional.empty(), contentPrint(1))
+    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Series/"), Optional.of(tmdbIdentificationProvider), new StreamTags(Set.of("cartoon")), Optional.empty(), List.of(serieDiscovery)));
+
+    await().untilAsserted(() -> {
+      Resource resource = resourceService.find(ROOT.resolve("/Series/Charmed")).orElseThrow(() -> new AssertionError());
+
+      assertThat(resource.match().type()).isEqualTo(Type.NAME);
+      assertThat(resource.match().accuracy()).isEqualTo(1.0f);
+
+      Release firstRelease = resource.releases().getFirst();
+
+      assertThat(firstRelease.getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.SERIE, "1981"));
+      assertThat(firstRelease.getDetails().getTitle()).isEqualTo("Charmed");
+      assertThat(firstRelease.getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
+    });
+
+    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Series/Charmed/"), Optional.of(tmdbIdentificationProvider), new StreamTags(Set.of("cartoon")), Optional.of(serieDiscovery.location()), List.of(
+      new Discovery(MediaType.EPISODE, ROOT.resolve("/Series/Charmed/Ep1x01.mkv"), Attributes.of("title", "Charmed", "sequence", "1,01", "childType", "EPISODE"), Instant.now(), 12345L),
+      new Discovery(MediaType.EPISODE, ROOT.resolve("/Series/Charmed/Ep1x02-03.mkv"), Attributes.of("title", "Charmed", "sequence", "1,02-03", "childType", "EPISODE"), Instant.now(), 12346L)
     )));
 
-    {
-      IdentificationEvent event = events.poll(10, TimeUnit.SECONDS);
+    await().untilAsserted(() -> {
+      Resource resource = resourceService.find(ROOT.resolve("/Series/Charmed/Ep1x01.mkv")).orElseThrow(() -> new AssertionError());
 
-      assertThat(event.match().type()).isEqualTo(Type.NAME);
-      assertThat(event.match().accuracy()).isEqualTo(1.0f);
+      assertThat(resource.match().type()).isEqualTo(Type.DERIVED);
+      assertThat(resource.match().accuracy()).isEqualTo(1.0f);
 
-      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.SERIE, "1981"));
-      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("Charmed");
-      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
-    }
+      Release firstRelease = resource.releases().getFirst();
 
-    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Series/Charmed/"), Optional.of("TMDB"), new StreamTags(Set.of("cartoon")), List.of(
-      new Discovery(MediaType.EPISODE, ROOT.resolve("/Series/Charmed/Ep1x01.mkv"), Attributes.of("title", "Charmed", "sequence", "1,01", "childType", "EPISODE"), Optional.of(ROOT.resolve("/Series/Charmed")), contentPrint(2)),
-      new Discovery(MediaType.EPISODE, ROOT.resolve("/Series/Charmed/Ep1x02-03.mkv"), Attributes.of("title", "Charmed", "sequence", "1,02-03", "childType", "EPISODE"), Optional.of(ROOT.resolve("/Series/Charmed")), contentPrint(2))
+      assertThat(firstRelease.getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/1"));
+      assertThat(firstRelease.getDetails().getTitle()).isEqualTo("Something Wicca This Way Comes");
+      assertThat(firstRelease.getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
+    });
+
+    await().untilAsserted(() -> {
+      Resource resource = resourceService.find(ROOT.resolve("/Series/Charmed/Ep1x02-03.mkv")).orElseThrow(() -> new AssertionError());
+
+      assertThat(resource.match().type()).isEqualTo(Type.DERIVED);
+      assertThat(resource.match().accuracy()).isEqualTo(1.0f);
+
+      Release firstRelease = resource.releases().getFirst();
+
+      assertThat(firstRelease.getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/2"));
+      assertThat(firstRelease.getDetails().getTitle()).isEqualTo("I've Got You Under My Skin");
+      assertThat(firstRelease.getDetails().getDate()).contains(LocalDate.of(1998, 10, 14));
+
+      Release secondRelease = resource.releases().get(1);
+
+      assertThat(secondRelease.getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/3"));
+      assertThat(secondRelease.getDetails().getTitle()).isEqualTo("Thank You for Not Morphing");
+      assertThat(secondRelease.getDetails().getDate()).contains(LocalDate.of(1998, 10, 21));
+    });
+
+    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Movies/"), Optional.of(tmdbIdentificationProvider), new StreamTags(Set.of("movies")), Optional.empty(), List.of(
+      new Discovery(MediaType.MOVIE, ROOT.resolve("/Movies/Terminator.avi"), Attributes.of(Attribute.TITLE, "Terminator", Attribute.YEAR, "1984"), Instant.now(), 30000L)
     )));
 
-    {
-      IdentificationEvent event = events.poll(10, TimeUnit.SECONDS);
+    await().untilAsserted(() -> {
+      Resource resource = resourceService.find(ROOT.resolve("/Movies/Terminator.avi")).orElseThrow(() -> new AssertionError());
 
-      assertThat(event.match().type()).isEqualTo(Type.DERIVED);
-      assertThat(event.match().accuracy()).isEqualTo(1.0f);
+      assertThat(resource.match().type()).isEqualTo(Type.NAME_AND_RELEASE_DATE);
+      assertThat(resource.match().accuracy()).isEqualTo(0.79420984f);
 
-      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/1"));
-      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("Something Wicca This Way Comes");
-      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
-    }
+      Release firstRelease = resource.releases().getFirst();
 
-    {
-      IdentificationEvent event = events.poll(10, TimeUnit.SECONDS);
-
-      assertThat(event.match().type()).isEqualTo(Type.DERIVED);
-      assertThat(event.match().accuracy()).isEqualTo(1.0f);
-
-      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/2"));
-      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("I've Got You Under My Skin");
-      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1998, 10, 14));
-
-      assertThat(event.releases().get(1).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.EPISODE, "1981/1/3"));
-      assertThat(event.releases().get(1).getDetails().getTitle()).isEqualTo("Thank You for Not Morphing");
-      assertThat(event.releases().get(1).getDetails().getDate()).contains(LocalDate.of(1998, 10, 21));
-    }
-
-    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Movies/"), Optional.of("TMDB"), new StreamTags(Set.of("movies")), List.of(
-      new Discovery(MediaType.MOVIE, ROOT.resolve("/Movies/Terminator.avi"), Attributes.of(Attribute.TITLE, "Terminator", Attribute.YEAR, "1984"), Optional.empty(), contentPrint(3))
-    )));
-
-    {
-      IdentificationEvent event = events.poll(10, TimeUnit.SECONDS);
-
-      assertThat(event.match().type()).isEqualTo(Type.NAME_AND_RELEASE_DATE);
-      assertThat(event.match().accuracy()).isEqualTo(0.79420984f);
-
-      assertThat(event.releases().get(0).getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.MOVIE, "218"));
-      assertThat(event.releases().get(0).getDetails().getTitle()).isEqualTo("The Terminator");
-      assertThat(event.releases().get(0).getDetails().getDate()).contains(LocalDate.of(1984, 10, 26));
-    }
+      assertThat(firstRelease.getId()).isEqualTo(new WorkId(DataSource.instance("TMDB"), MediaType.MOVIE, "218"));
+      assertThat(firstRelease.getDetails().getTitle()).isEqualTo("The Terminator");
+      assertThat(firstRelease.getDetails().getDate()).contains(LocalDate.of(1984, 10, 26));
+    });
   }
 }
