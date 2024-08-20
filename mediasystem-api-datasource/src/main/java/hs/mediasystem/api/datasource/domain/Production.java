@@ -46,9 +46,4 @@ public class Production extends Release {
   public double getPopularity() {
     return popularity;
   }
-
-  @Override
-  public String toString() {
-    return "Production[" + super.toString() + "]";
-  }
 }

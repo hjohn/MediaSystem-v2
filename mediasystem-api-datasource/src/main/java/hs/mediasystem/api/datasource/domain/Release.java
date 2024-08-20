@@ -95,6 +95,6 @@ public class Release implements WorkDescriptor {
 
   @Override
   public String toString() {
-    return "Release[" + id + ": " + details + "]";
+    return getClass().getSimpleName() + "[" + id + ": " + details.toDescriptionString() + "]";
   }
 }
