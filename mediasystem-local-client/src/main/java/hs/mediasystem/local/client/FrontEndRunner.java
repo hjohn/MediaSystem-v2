@@ -17,16 +17,17 @@ import hs.mediasystem.ui.api.player.PlayerFactory.IntegrationMethod;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -139,39 +140,50 @@ public class FrontEndRunner extends Application {
     if(Files.exists(root)) {
       LOGGER.fine("Loading UI plugins from: " + root);
 
-      Files.find(root, 1, (p, a) -> !p.equals(root)).forEach(p -> {
-        try {
-          List<URL> urls = Files.find(p, 1, (cp, a) -> !cp.equals(p)).map(Path::toUri).map(uri -> {
-            try {
-              LOGGER.fine("Found UI plugin: " + uri);
+      try(Stream<Path> roots = Files.find(root, 1, (p, a) -> !p.equals(root))) {
+        roots.forEach(p -> {
+          try(Stream<Path> stream = Files.find(p, 1, (cp, a) -> !cp.equals(p))) {
+            List<URL> urls = stream.map(Path::toUri).map(uri -> {
+              try {
+                LOGGER.fine("Found UI plugin: " + uri);
 
-              return uri.toURL();
-            }
-            catch(MalformedURLException e) {
-              throw new IllegalStateException(e);
-            }
-          }).collect(Collectors.toList());
+                return uri.toURL();
+              }
+              catch(MalformedURLException e) {
+                throw new IllegalStateException(e);
+              }
+            }).collect(Collectors.toList());
 
-          if(!urls.isEmpty()) {
-            plugins.add(pluginManager.loadPluginAndScan(urls.toArray(new URL[] {})));
+            if(!urls.isEmpty()) {
+              plugins.add(pluginManager.loadPluginAndScan(urls.toArray(new URL[] {})));
+            }
           }
-        }
-        catch(IOException e) {
-          throw new IllegalStateException(e);
-        }
-      });
+          catch(IOException e) {
+            throw new IllegalStateException(e);
+          }
+        });
+      }
     }
     else {
-      plugins.add(pluginManager.loadPluginAndScan(
-        URI.create("file:/P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/classes/").toURL(),
-        new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-vlc/target/dependencies-only.jar")
-      ));
-      plugins.add(pluginManager.loadPluginAndScan(
-        URI.create("file:/P:/Dev/git/MediaSystem-v2/mediasystem-ext-mpv/target/classes/").toURL(),
-        new URL("file:P:/Dev/git/MediaSystem-v2/mediasystem-ext-mpv/target/dependencies-only.jar")
-      ));
+      loadDevPlugin(pluginManager, "vlc").ifPresent(plugins::add);
+      loadDevPlugin(pluginManager, "mpv").ifPresent(plugins::add);
     }
 
     LOGGER.info(plugins.size() + " UI plugins loaded from: " + root);
+  }
+
+  private static Optional<Plugin> loadDevPlugin(PluginManager pluginManager, String name) throws MalformedURLException {
+    Path base = Path.of("../mediasystem-ext-" + name + "/target/");
+
+    if(Files.isDirectory(base)) {
+      LOGGER.info("Found " + name + " plugin in development environment");
+
+      return Optional.of(pluginManager.loadPluginAndScan(
+        base.resolve("classes/").toUri().toURL(),
+        base.resolve("dependencies-only.jar").toUri().toURL()
+      ));
+    }
+
+    return Optional.empty();
   }
 }
