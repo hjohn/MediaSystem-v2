@@ -84,7 +84,14 @@ public class AbstractEventStream<T> {
           blocked.register();
         }
 
-        consumer.accept(event);
+        try {
+          consumer.accept(event);
+        }
+        catch(Exception e) {
+          LOGGER.log(Level.SEVERE, "Caught exception while handling event [" + event + "] for subscription: " + consumer, e);
+          break;
+        }
+
         pointer.set(event.index() + 1);
       }
       catch(InterruptedException e) {
@@ -98,14 +105,10 @@ public class AbstractEventStream<T> {
 
         break;  // choose to always stop the thread, irrespective of stop flag
       }
-      catch(Exception e) {
-        LOGGER.log(Level.SEVERE, "Subscription was stopped for: " + consumer + " due to an exception: ", e);
-        break;
-      }
     }
 
     if(!stop.get()) {
-      throw new IllegalStateException("Subscription was force stopped: " + consumer);
+      LOGGER.log(Level.SEVERE, "Force stopped subscription: " + consumer);
     }
   }
 
