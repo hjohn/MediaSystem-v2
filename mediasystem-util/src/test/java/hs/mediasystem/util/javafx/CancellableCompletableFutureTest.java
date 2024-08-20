@@ -1,8 +1,8 @@
 package hs.mediasystem.util.javafx;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,11 +14,12 @@ class CancellableCompletableFutureTest {
 
   @Test
   void shouldCancelParentTaskWhenAllChildrenCancelled() {
-    ScheduledExecutorService EXECUTOR = Executors.newScheduledThreadPool(1);
+    @SuppressWarnings("resource")
+    Executor executor = Executors.newScheduledThreadPool(1);
 
     // Keep threads of executor busy, so it cannot start the task associated with the root future:
     for(int i = 0; i < 5; i++) {
-      EXECUTOR.execute(() -> {
+      executor.execute(() -> {
         try {
           Thread.sleep(1000);
         }
@@ -28,7 +29,7 @@ class CancellableCompletableFutureTest {
       });
     }
 
-    CancellableCompletableFuture<Object> root = new CancellableCompletableFuture<>(cf -> { fail("Shouldn't get here"); }, EXECUTOR);
+    CancellableCompletableFuture<Object> root = new CancellableCompletableFuture<>(cf -> { fail("Shouldn't get here"); }, executor);
     CompletableFuture<Void> child1 = root.thenApply(x -> "" + x).thenAcceptAsync(x -> {});
     CompletableFuture<Void> child2 = root.thenAcceptAsync(x -> {}).exceptionally(e -> { return null; });
 

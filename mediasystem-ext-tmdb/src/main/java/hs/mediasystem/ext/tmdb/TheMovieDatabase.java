@@ -11,6 +11,8 @@ import hs.mediasystem.util.image.ImageURI;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.time.LocalDate;
@@ -63,9 +65,9 @@ public class TheMovieDatabase {
         sb.append(URLEncoder.encode(parameters.get(i + 1), "UTF-8"));
       }
 
-      return getURL(new URL(host + query + "?api_key=" + apiKey + sb.toString()), key);
+      return getURL(new URI(host + query + "?api_key=" + apiKey + sb.toString()).toURL(), key);
     }
-    catch(IOException e) {
+    catch(IOException | URISyntaxException e) {
       throw new IOException("While executing query: " + query + "; key=" + key + "; parameters=" + parameters, e);
     }
   }

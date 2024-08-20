@@ -15,7 +15,7 @@ import hs.mediasystem.util.image.ImageURI;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
-import java.net.URL;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +41,7 @@ public class DescriptionService {
 
     try {
       // TODO this mapping takes up to 4 seconds to "Connect" to the URL, whether the file exists or not...
-      DescriptionInternal d = OBJECT_MAPPER.readValue(new URL(urlText), DescriptionInternal.class);
+      DescriptionInternal d = OBJECT_MAPPER.readValue(new URI(urlText).toURL(), DescriptionInternal.class);
 
       return Optional.of(new Description(d.title, d.subtitle, d.description, d.tagLine, d.genres, d.date));
     }
@@ -49,7 +49,7 @@ public class DescriptionService {
       // ignore, file just doesn't exist
       return Optional.empty();
     }
-    catch(IOException e) {
+    catch(IOException | URISyntaxException e) {
       LOGGER.warning("Exception while parsing " + urlText + ": " + Throwables.formatAsOneLine(e));
       return Optional.empty();
     }

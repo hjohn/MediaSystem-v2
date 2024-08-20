@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.stream.Stream;
 
 import javax.inject.Singleton;
 
@@ -114,10 +115,10 @@ public class MediaHash {
       throw new IllegalArgumentException("path must be a directory: " + path);
     }
 
-    try {
+    try(Stream<Path> list = Files.list(path)) {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-      Files.list(path).forEach(p -> digest.update(path.toUri().toString().getBytes(StandardCharsets.UTF_8)));
+      list.forEach(p -> digest.update(path.toUri().toString().getBytes(StandardCharsets.UTF_8)));
 
       return digest.digest();
     }
