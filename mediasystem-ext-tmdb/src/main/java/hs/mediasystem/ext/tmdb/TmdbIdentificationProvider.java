@@ -1,6 +1,5 @@
 package hs.mediasystem.ext.tmdb;
 
-import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.api.datasource.services.IdentificationProvider;
@@ -44,12 +43,12 @@ public class TmdbIdentificationProvider implements IdentificationProvider {
   }
 
   @Override
-  public Identification identifyChild(Discovery discovery, WorkDescriptor parent) {
+  public Identification identifyChild(Discovery discovery, Identification parent) {
     MediaType mediaType = discovery.mediaType();
     Attributes attributes = discovery.attributes();
 
     if(mediaType == MediaType.EPISODE) {
-      return episodeIdentifier.identify(attributes, (Serie)parent)
+      return episodeIdentifier.identify(attributes, (Serie)parent.releases().getFirst())
         .orElse(IdentificationProvider.MINIMAL_PROVIDER.identifyChild(discovery, parent));
     }
 

@@ -214,6 +214,7 @@ public class WorksServiceIT {
     private final Serie serie = Series.create(id, "Stargate SG1", List.of(episode1, episode2, episode3));
     private final ContentPrint episode12CP = new ContentPrint(new ContentID(2011), 12345L, DISCOVERY_TIME, new byte[16], DISCOVERY_TIME);
     private final ContentPrint episode3CP = new ContentPrint(new ContentID(2012), 12345L, DISCOVERY_TIME, new byte[16], DISCOVERY_TIME);
+    private final Identification identification = new Identification(List.of(serie), new Match(Type.NAME, 1.0f, matchTime));
 
     @BeforeEach
     void beforeEach() throws SQLException {
@@ -226,18 +227,15 @@ public class WorksServiceIT {
 
       when(IDENTIFICATION_PROVIDER.identifyChild(
         discovery(MediaType.EPISODE, URI.create("file://Server/Series/Stargate/Stargate.-.S01E01-02.avi")),
-        serie
+        identification
       )).thenReturn(new Identification(List.of(episode1, episode2), new Match(Type.DERIVED, 1.0f, matchTime)));
 
       when(IDENTIFICATION_PROVIDER.identifyChild(
         discovery(MediaType.EPISODE, URI.create("file://Server/Series/Stargate/Stargate.-.S01E03.avi")),
-        serie
+        identification
       )).thenReturn(new Identification(List.of(episode3), new Match(Type.DERIVED, 1.0f, matchTime)));
 
-      when(IDENTIFICATION_STORE.find(URI.create("file://Server/Series/Stargate"))).thenReturn(Optional.of(new Identification(
-        List.of(serie),
-        new Match(Type.NAME, 1.0f, matchTime)
-      )));
+      when(IDENTIFICATION_STORE.find(URI.create("file://Server/Series/Stargate"))).thenReturn(Optional.of(identification));
 
       STREAMABLE_EVENTS.push(streamableUpdated(
         MediaType.SERIE,
@@ -295,12 +293,12 @@ public class WorksServiceIT {
       void beforeEach() {
         when(IDENTIFICATION_PROVIDER.identifyChild(
           discovery(MediaType.EPISODE, URI.create("file://Server/Series/Stargate/Stargate.-.S01E01.avi")),
-          serie
+          identification
         )).thenReturn(new Identification(List.of(episode1), new Match(Type.DERIVED, 1.0f, matchTime)));
 
         when(IDENTIFICATION_PROVIDER.identifyChild(
           discovery(MediaType.EPISODE, URI.create("file://Server/Series/Stargate/Stargate.-.S01E02.avi")),
-          serie
+          identification
         )).thenReturn(new Identification(List.of(episode2), new Match(Type.DERIVED, 1.0f, matchTime)));
 
         STREAMABLE_EVENTS.push(streamableUpdated(

@@ -1,7 +1,6 @@
 package hs.mediasystem.db.services;
 
 import hs.mediasystem.api.datasource.domain.Identification;
-import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.datasource.services.IdentificationProvider;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.db.core.Streamable;
@@ -184,7 +183,7 @@ public class ResourceService {
             Identification identification = identifications.get(rootLocation);
 
             if(identification != null) {
-              identifications.put(location, provider.identifyChild(u.discovery(), identification.releases().getFirst()));
+              identifications.put(location, provider.identifyChild(u.discovery(), identification));
             }
           }
         }
@@ -255,10 +254,8 @@ public class ResourceService {
           updateResource(rootLocation);
 
           // Also identify all dependents:
-          Release firstRelease = identification.releases().getFirst();
-
           for(URI dependent : dependents.getOrDefault(rootLocation, Set.of())) {
-            identifications.put(dependent, result.provider().identifyChild(discoveries.get(dependent), firstRelease));
+            identifications.put(dependent, result.provider().identifyChild(discoveries.get(dependent), identification));
             updateResource(dependent);
           }
         }
@@ -290,7 +287,7 @@ public class ResourceService {
       return identification;
     }
 
-    return IdentificationProvider.MINIMAL_PROVIDER.identifyChild(discoveries.get(location), null);
+    return IdentificationProvider.MINIMAL_PROVIDER.identify(discoveries.get(location)).orElseThrow(() -> new AssertionError("Minimal Provider should always have a result"));
   }
 
   private <T> Consumer<T> locked(Consumer<T> consumer) {

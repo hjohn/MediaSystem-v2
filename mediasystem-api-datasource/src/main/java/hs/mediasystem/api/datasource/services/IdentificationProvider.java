@@ -1,6 +1,5 @@
 package hs.mediasystem.api.datasource.services;
 
-import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.discovery.Discovery;
@@ -26,13 +25,16 @@ public interface IdentificationProvider {
 
     @Override
     public Optional<Identification> identify(Discovery discovery) {
-      return Optional.of(identifyChild(discovery, null));
+      Release descriptor = MinimalWorkSupport.createMinimalDescriptor(discovery);
+      Match match = new Match(Type.NONE, 1.0f, discovery.lastModificationTime());
+
+      return Optional.of(new Identification(List.of(descriptor), match));
     }
 
     @Override
-    public Identification identifyChild(Discovery discovery, WorkDescriptor parent) {
+    public Identification identifyChild(Discovery discovery, Identification parent) {
       Release descriptor = MinimalWorkSupport.createMinimalDescriptor(discovery);
-      Match match = new Match(Type.NONE, 1.0f, discovery.lastModificationTime());
+      Match match = new Match(Type.DERIVED, 1.0f, parent.match().creationTime());
 
       return new Identification(List.of(descriptor), match);
     }
@@ -67,10 +69,10 @@ public interface IdentificationProvider {
    * A result must always be provided even if it is just a minimal identification.
    *
    * @param discovery a {@link Discovery} to identify, cannot be {@code null}
-   * @param parent a parent descriptor, cannot be {@code null}
+   * @param parent a parent {@link Identification}, cannot be {@code null}
    * @return an {@link Identification}, never {@code null}
    */
-  default Identification identifyChild(Discovery discovery, WorkDescriptor parent) {
+  default Identification identifyChild(Discovery discovery, Identification parent) {
     throw new UnsupportedOperationException();
   }
 
