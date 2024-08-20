@@ -1,7 +1,5 @@
 package hs.mediasystem.ext.tmdb.movie;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import hs.mediasystem.api.datasource.domain.PersonRole;
 import hs.mediasystem.api.datasource.services.RolesQueryService;
 import hs.mediasystem.domain.stream.MediaType;
@@ -25,9 +23,9 @@ public class TmdbRolesQueryService implements RolesQueryService {
 
   @Override
   public List<PersonRole> query(WorkId id) throws IOException {
-    JsonNode info = tmdb.query(idToLocation(id), "text:json:" + id);
-
-    return personRoles.toPersonRoles(info);
+    return tmdb.query(idToLocation(id), "text:json:" + id)
+      .map(personRoles::toPersonRoles)
+      .orElse(List.of());
   }
 
   private static String idToLocation(WorkId id) {

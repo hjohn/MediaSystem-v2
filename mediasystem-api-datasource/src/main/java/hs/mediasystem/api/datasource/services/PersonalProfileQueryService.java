@@ -4,7 +4,8 @@ import hs.mediasystem.api.datasource.domain.PersonalProfile;
 import hs.mediasystem.domain.work.PersonId;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public interface PersonalProfileQueryService {
-  PersonalProfile query(PersonId id) throws IOException;
+  Optional<PersonalProfile> query(PersonId id) throws IOException;
 }

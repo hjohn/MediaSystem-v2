@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
@@ -35,8 +36,12 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
   @Inject private TheMovieDatabase tmdb;
 
   @Override
-  public PersonalProfile query(PersonId id) throws IOException {
-    JsonNode node = tmdb.query("3/person/" + id.getKey(), "text:json:" + id, List.of("append_to_response", "combined_credits"));
+  public Optional<PersonalProfile> query(PersonId id) throws IOException {
+    return tmdb.query("3/person/" + id.getKey(), "text:json:" + id, List.of("append_to_response", "combined_credits"))
+      .map(node -> toPersonalProfile(id, node));
+  }
+
+  private PersonalProfile toPersonalProfile(PersonId id, JsonNode node) {
     String birthDay = node.path("birthday").textValue();
     String deathDay = node.path("deathday").textValue();
     int gender = node.path("gender").intValue();
@@ -75,7 +80,7 @@ public class TmdbPersonalProfileQueryService implements PersonalProfileQueryServ
     );
   }
 
-  private ProductionRole createProductionRole(JsonNode node, boolean isCast) throws IOException {
+  private ProductionRole createProductionRole(JsonNode node, boolean isCast) {
     boolean isMovie = node.get("media_type").textValue().equals("movie");
     WorkId id = new WorkId(DataSources.TMDB, isMovie ? MediaType.MOVIE : MediaType.SERIE, node.get("id").asText());
     ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id);

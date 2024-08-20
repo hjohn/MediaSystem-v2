@@ -11,7 +11,7 @@ import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.tmdb.DataSources;
 import hs.mediasystem.ext.tmdb.TextMatcher;
 import hs.mediasystem.ext.tmdb.TheMovieDatabase;
-import hs.mediasystem.ext.tmdb.movie.TmdbQueryService;
+import hs.mediasystem.ext.tmdb.provider.MovieProvider;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.checked.CheckedOptional;
 import hs.mediasystem.util.checked.CheckedStreams;
@@ -36,7 +36,7 @@ public class MovieIdentifier {
   private static final Pattern SEQUENCES = Pattern.compile("0*([1-9][0-9]*)");
 
   @Inject private TheMovieDatabase tmdb;
-  @Inject private TmdbQueryService queryService;
+  @Inject private MovieProvider movieProvider;
 
   private static record Result(WorkId id, Match match) {}
 
@@ -44,12 +44,17 @@ public class MovieIdentifier {
     return CheckedOptional.ofNullable((String)attributes.get(Attribute.ID_PREFIX + "IMDB"))
       .flatMap(this::identifyByIMDB)
       .or(() -> identifyByStream(attributes))
-      .map(r -> new Identification(List.of(queryService.query(r.id)), r.match))
+      .flatMapOpt(this::toIdentification)
       .toOptional();
   }
 
+  private Optional<Identification> toIdentification(Result result) throws IOException {
+    return movieProvider.provide(result.id.getKey())
+      .map(movie -> new Identification(List.of(movie), result.match));
+  }
+
   private CheckedOptional<Result> identifyByIMDB(String imdb) throws IOException {
-    JsonNode node = tmdb.query("3/find/" + imdb, null, List.of("external_source", "imdb_id"));
+    JsonNode node = tmdb.get("3/find/" + imdb, null, List.of("external_source", "imdb_id"));
 
     return CheckedOptional.from(StreamSupport.stream(node.path("movie_results").spliterator(), false)
       .findFirst()
@@ -78,7 +83,13 @@ public class MovieIdentifier {
     return CheckedStreams.forIOException(Stream.concat(titleVariations.stream(), alternativeTitleVariations.stream()))
       .map(tv -> tv + postFix)
       .peek(q -> LOGGER.fine("Matching '" + q + "' [" + year + "] ..."))
-      .flatMapStream(q -> StreamSupport.stream(tmdb.query("3/search/movie", null, List.of("query", q, "language", "en", "include_adult", "true")).path("results").spliterator(), false)
+      .flatMapStream(
+        q -> StreamSupport.stream(
+          tmdb.get("3/search/movie", null, List.of("query", q, "language", "en", "include_adult", "true"))
+            .path("results")
+            .spliterator(),
+          false
+        )
         .flatMap(jsonNode -> Stream.of(jsonNode.path("title").asText(), jsonNode.path("original_title").asText())
           .filter(t -> !t.isEmpty())
           .distinct()

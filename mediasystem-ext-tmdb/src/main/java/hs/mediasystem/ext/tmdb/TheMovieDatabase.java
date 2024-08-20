@@ -18,6 +18,7 @@ import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
@@ -41,16 +42,18 @@ public class TheMovieDatabase {
   private JsonNode configuration;
 
   /**
-   * Queries the movie database.
+   * Queries the movie database and returns an optional {@link JsonNode}. If the query
+   * resulted in a not found response, an empty optional is returned. In all other cases
+   * an exception is thrown.
    *
-   * @param query a query
-   * @param key a logical key which identifies the result for use in http caching
-   * @param parameters parameters to append to the url
-   * @return a {@link JsonNode}
-   * @throws HttpException when there was a status code that was not in the 200 range
+   * @param query a query, cannot be {@code null}
+   * @param key a logical key which identifies the result for use in HTTP caching, cannot be {@code null}
+   * @param parameters parameters to append to the URL, cannot be {@code null}
+   * @return an optional {@link JsonNode}, never {@code null}
+   * @throws HttpException when there was a status code that was not in the 200 range and not 404
    * @throws IOException when there was a general I/O error
    */
-  public JsonNode query(String query, String key, List<String> parameters) throws IOException {
+  public Optional<JsonNode> query(String query, String key, List<String> parameters) throws IOException {
     if(parameters.size() % 2 != 0) {
       throw new IllegalArgumentException("Uneven number of vararg 'parameters': must provide pairs of name/value");
     }
@@ -72,7 +75,12 @@ public class TheMovieDatabase {
     }
   }
 
-  public JsonNode query(String query, String key) throws IOException {
+  // variant of query that shouldn't fail with 404
+  public JsonNode get(String query, String key, List<String> parameters) throws IOException {
+    return query(query, key, parameters).orElseThrow(() -> new IOException("TMDB unexpectedly returned 404 not found while executing query: " + query));
+  }
+
+  public Optional<JsonNode> query(String query, String key) throws IOException {
     return query(query, key, List.of());
   }
 
@@ -86,7 +94,16 @@ public class TheMovieDatabase {
     }
   }
 
-  public ImageURI createImageURI(String path, String size, String key) throws IOException {
+  /**
+   * Create image URI's for a TMDB resource. If the TMDB configuration could not be loaded,
+   * or the path or size parameters are {@code null}, then {@code null} is returned.
+   *
+   * @param path a TMDB image path, can be {@code null}
+   * @param size a preferred image size, can be {@code null}
+   * @param key a cache key, can be {@code null}
+   * @return an {@link ImageURI}, or {@code null} if there was a problem creating it
+   */
+  public ImageURI createImageURI(String path, String size, String key) {
     if(path == null || size == null) {
       return null;
     }
@@ -94,8 +111,9 @@ public class TheMovieDatabase {
     try {
       return new ImageURI(getConfiguration().get("images").get("base_url").textValue() + size + path, key);
     }
-    catch(IllegalArgumentException e) {
-      LOGGER.warning("Bad TMDB URL: \"" + getConfiguration().get("images").get("base_url").textValue() + size + path + "\"; exception: " + Throwables.formatAsOneLine(e));
+    catch(Exception e) {
+      LOGGER.warning("Unable to create TMDB Image URL for: " + path + " (" + size + "); exception: " + Throwables.formatAsOneLine(e));
+
       return null;
     }
   }
@@ -105,7 +123,7 @@ public class TheMovieDatabase {
 
     try {
       if(configuration == null) {
-        configuration = query("3/configuration", null);
+        configuration = query("3/configuration", null).orElseThrow(() -> new IOException("Could not load TMDB configuration (404)"));
       }
 
       return configuration;
@@ -115,7 +133,7 @@ public class TheMovieDatabase {
     }
   }
 
-  private JsonNode getURL(URL url, String key) throws IOException {
+  private Optional<JsonNode> getURL(URL url, String key) throws IOException {
     try {
       HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
@@ -126,12 +144,16 @@ public class TheMovieDatabase {
 
       int responseCode = connection.getResponseCode();
 
+      if(responseCode == 404) {
+        return Optional.empty();
+      }
+
       if(responseCode < 200 || responseCode >= 300) {
         throw new HttpException(url, responseCode, connection.getResponseMessage());
       }
 
       try(InputStream is = connection.getInputStream()) {
-        return objectMapper.readTree(is);
+        return Optional.of(objectMapper.readTree(is));
       }
     }
     catch(HttpException e) {

@@ -23,10 +23,7 @@ public class PersonService {
   @Inject private List<PersonalProfileQueryService> personalProfileQueryServices;
 
   public Optional<Person> findPerson(PersonId id) throws IOException {
-    PersonalProfile personalProfile = personalProfileQueryServices.get(0).query(id);
-
-    return Optional.ofNullable(personalProfile)
-      .map(this::toPerson);
+    return personalProfileQueryServices.get(0).query(id).map(this::toPerson);
   }
 
   private Person toPerson(PersonalProfile pp) {

@@ -47,22 +47,9 @@ public class WorkService {
   @Inject private MediaStreamService mediaStreamService;
 
   public Optional<Work> query(WorkId workId) throws IOException {
-    Optional<Work> optionalWork = CheckedOptional.from(linkedWorksService.find(workId)).map(this::toWork).toOptional();
-
-    if(optionalWork.isPresent()) {
-      return optionalWork;
-    }
-
-    if(workId.getType().equals(MediaType.COLLECTION)) {
-      return queryProductionCollection(workId)
-        .map(this::toWork)
-        .toOptional();
-    }
-
-    return queryEpisode(workId)
-      .or(() -> CheckedOptional.from(descriptorService.find(workId))
-        .map(this::toWork)
-      )
+    return CheckedOptional.from(linkedWorksService.find(workId))
+      .map(this::toWork)
+      .or(() -> CheckedOptional.from(descriptorService.find(workId).map(this::toWork)))
       .toOptional();
   }
 
@@ -84,7 +71,7 @@ public class WorkService {
     }
 
     if(type.equals(MediaType.COLLECTION)) {
-      return CheckedStreams.forIOException(queryProductionCollection(workId).map(ProductionCollection::getItems).orElse(List.of()))
+      return CheckedStreams.forIOException(descriptorService.find(workId).map(ProductionCollection.class::cast).map(ProductionCollection::getItems).orElse(List.of()))
         .map(this::toWork)
         .collect(Collectors.toList());
     }
@@ -181,25 +168,6 @@ public class WorkService {
       .orElse(List.of());
   }
 
-  private CheckedOptional<Work> queryEpisode(WorkId id) throws IOException {
-    WorkId parentId = id.getParent().orElse(null);
-
-    if(parentId == null) {
-      return CheckedOptional.empty();
-    }
-
-    return CheckedOptional.from(descriptorService.find(parentId))
-      .map(Serie.class::cast)
-      .flatMap(serie -> CheckedStreams.forIOException(serie.getSeasons())
-        .map(Serie.Season::episodes)
-        .flatMapStream(List::stream)
-        .filter(ep -> ep.id().equals(id))
-        .findFirst()
-        .map(e -> toEpisode(serie, e))
-        .map(e -> toRemoteWork(e, serie))
-      );
-  }
-
   private static Work toRemoteWork(WorkDescriptor descriptor, WorkDescriptor parentDescriptor) {
     return new Work(
       descriptor,
@@ -222,12 +190,6 @@ public class WorkService {
     }
 
     return Optional.empty();
-  }
-
-  private CheckedOptional<ProductionCollection> queryProductionCollection(WorkId id) throws IOException {
-    return CheckedOptional.from(descriptorService.find(id))
-      .filter(ProductionCollection.class::isInstance)
-      .map(ProductionCollection.class::cast);
   }
 
   private Optional<Context> createContext(URI parentUri) {

@@ -10,7 +10,6 @@ import hs.mediasystem.domain.work.RoleId;
 import hs.mediasystem.util.exception.Throwables;
 import hs.mediasystem.util.image.ImageURI;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -27,7 +26,7 @@ public class PersonRoles {
   @Inject private TheMovieDatabase tmdb;
 
   // TODO use "order", maybe "gender"
-  public List<PersonRole> toPersonRoles(JsonNode node) throws IOException {
+  public List<PersonRole> toPersonRoles(JsonNode node) {
     List<PersonRole> roles = new ArrayList<>();
 
     for(JsonNode cast : node.path("cast")) {

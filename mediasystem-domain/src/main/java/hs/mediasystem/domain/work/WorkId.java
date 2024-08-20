@@ -3,7 +3,6 @@ package hs.mediasystem.domain.work;
 import hs.mediasystem.domain.stream.MediaType;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public class WorkId {
   private final DataSource dataSource;
@@ -24,14 +23,6 @@ public class WorkId {
     this.dataSource = dataSource;
     this.type = type;
     this.key = key;
-  }
-
-  public Optional<WorkId> getParent() {
-    return type.parent().map(type -> {
-      int index = key.lastIndexOf('/');
-
-      return index == -1 ? null : new WorkId(dataSource, type, key.substring(0, index));
-    });
   }
 
   public final DataSource getDataSource() {

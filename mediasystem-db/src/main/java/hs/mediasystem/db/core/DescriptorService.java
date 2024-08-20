@@ -7,7 +7,6 @@ import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.services.QueryService;
 import hs.mediasystem.db.DatabaseResponseCache;
 import hs.mediasystem.db.DatabaseResponseCache.CacheMode;
-import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.WorkId;
 
@@ -29,7 +28,7 @@ public class DescriptorService {
   @Inject private List<QueryService> queryServices;
   @Inject private DatabaseResponseCache responseCache;
 
-  private final Map<TypedDataSource, QueryService> queryServicesByDataSource = new HashMap<>();
+  private final Map<DataSource, QueryService> queryServicesByDataSource = new HashMap<>();
   private final Cache<WorkId, WorkDescriptor> cache = Caffeine.newBuilder()
     .maximumSize(10000)
     .build();
@@ -37,13 +36,13 @@ public class DescriptorService {
   @PostConstruct
   private void postConstruct() {
     for(QueryService service : queryServices) {
-      if(queryServicesByDataSource.put(new TypedDataSource(service.getDataSource(), service.getMediaType()), service) != null) {
+      if(queryServicesByDataSource.put(service.getDataSource(), service) != null) {
         LOGGER.warning("Multiple query services available for datasource: " + service.getDataSource());
       }
     }
   }
 
-  public Optional<WorkDescriptor> find(WorkId id) throws IOException {
+  public Optional<? extends WorkDescriptor> find(WorkId id) throws IOException {
     WorkDescriptor descriptor = cache.getIfPresent(id);
 
     if(descriptor != null) {
@@ -62,20 +61,17 @@ public class DescriptorService {
     }
   }
 
-  private Optional<WorkDescriptor> queryWork(WorkId id) throws IOException {
-    TypedDataSource dataSource = new TypedDataSource(id.getDataSource(), id.getType());
-    QueryService queryService = queryServicesByDataSource.get(dataSource);
+  private Optional<? extends WorkDescriptor> queryWork(WorkId id) throws IOException {
+    QueryService queryService = queryServicesByDataSource.get(id.getDataSource());
 
     if(queryService == null) {
       return Optional.empty();
     }
 
-    WorkDescriptor descriptor = queryService.query(id);
+    return queryService.query(id).map(d -> {
+      cache.put(id, d);  // Bit ugly...
 
-    cache.put(id, descriptor);
-
-    return Optional.of(descriptor);
+      return d;
+    });
   }
-
-  private static record TypedDataSource(DataSource dataSource, MediaType mediaType) {}
 }

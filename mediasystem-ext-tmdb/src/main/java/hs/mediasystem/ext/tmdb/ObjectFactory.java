@@ -9,14 +9,13 @@ import hs.mediasystem.api.datasource.domain.Movie;
 import hs.mediasystem.api.datasource.domain.Production;
 import hs.mediasystem.api.datasource.domain.Serie;
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.KeywordId;
-import hs.mediasystem.domain.work.Context;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.image.ImageURI;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -33,7 +32,7 @@ import javax.inject.Singleton;
 public class ObjectFactory {
   @Inject private TheMovieDatabase tmdb;
 
-  public Production toProduction(JsonNode node, DataSource dataSource, MediaType mediaType) throws IOException {
+  public Production toProduction(JsonNode node, DataSource dataSource, MediaType mediaType) {
     WorkId id = new WorkId(dataSource, mediaType, node.path("id").asText());
 
     return new Production(
@@ -53,7 +52,7 @@ public class ObjectFactory {
     );
   }
 
-  public Movie toMovie(JsonNode node) throws IOException {
+  public Movie toMovie(JsonNode node) {
     Number runtime = node.path("runtime").numberValue();
 
     JsonNode collectionPath = node.path("belongs_to_collection");
@@ -91,7 +90,7 @@ public class ObjectFactory {
     );
   }
 
-  public Serie toSerie(JsonNode node, List<Serie.Season> seasons) throws IOException {
+  public Serie toSerie(JsonNode node, List<Serie.Season> seasons) {
     WorkId id = new WorkId(DataSources.TMDB, MediaType.SERIE, node.path("id").asText());
 
     return new Serie(
@@ -113,7 +112,7 @@ public class ObjectFactory {
     );
   }
 
-  private Details createDetails(JsonNode node, WorkId id) throws IOException {
+  private Details createDetails(JsonNode node, WorkId id) {
     String releaseDate = node.get("release_date") == null ? node.path("first_air_date").textValue() : node.get("release_date").textValue();
     ImageURI backdropURI = tmdb.createImageURI(node.path("backdrop_path").textValue(), "original", "image:backdrop:" + id.toString());
     ImageURI posterURI = tmdb.createImageURI(node.path("poster_path").textValue(), "original", "image:cover:" + id.toString());
@@ -130,7 +129,7 @@ public class ObjectFactory {
   }
 
   private static Reception createReception(JsonNode node) {
-    return node.get("vote_count").isNumber() && node.get("vote_average").isNumber() ?
+    return node.at("/vote_count").isNumber() && node.at("/vote_average").isNumber() ?
       new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt()) : null;
   }
 

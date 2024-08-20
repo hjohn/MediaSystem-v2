@@ -1,7 +1,5 @@
 package hs.mediasystem.ext.tmdb.movie;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import hs.mediasystem.api.datasource.services.VideoLinksQueryService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.VideoLink;
@@ -20,9 +18,9 @@ public class TmdbVideoLinksQueryService implements VideoLinksQueryService {
 
   @Override
   public List<VideoLink> query(WorkId id) throws IOException {
-    JsonNode info = tmdb.query(idToLocation(id), "text:json:" + id);
-
-    return videoLinks.toVideoLinks(info);
+    return tmdb.query(idToLocation(id), "text:json:" + id)
+      .map(videoLinks::toVideoLinks)
+      .orElse(List.of());
   }
 
   private static String idToLocation(WorkId id) {

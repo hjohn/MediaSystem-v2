@@ -1,10 +1,9 @@
-package hs.mediasystem.ext.tmdb.serie;
+package hs.mediasystem.ext.tmdb.provider;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Serie;
-import hs.mediasystem.api.datasource.services.AbstractQueryService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Reception;
 import hs.mediasystem.domain.work.WorkId;
@@ -26,30 +25,32 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class TmdbQueryService extends AbstractQueryService {
-  private static final Logger LOGGER = Logger.getLogger(TmdbQueryService.class.getName());
+public class SerieProvider implements MediaProvider<Serie> {
+  private static final Logger LOGGER = Logger.getLogger(SerieProvider.class.getName());
   private static final int MAX_SEASONS_PER_QUERY = 10;
 
   @Inject private TheMovieDatabase tmdb;
   @Inject private PersonRoles personRoles;
   @Inject private ObjectFactory objectFactory;
 
-  public TmdbQueryService() {
-    super(DataSources.TMDB, MediaType.SERIE);
-  }
-
   @Override
-  public Serie query(WorkId id) throws IOException {
-    JsonNode node = tmdb.query("3/tv/" + id.getKey(), "text:json:" + id, List.of("append_to_response", "keywords,content_ratings"));  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
-    List<JsonNode> seasons = batchQuerySeasons(id, node);
+  public Optional<Serie> provide(String key) throws IOException {
+    JsonNode node = tmdb.query("3/tv/" + key, "text:json:tmdb:serie:" + key, List.of("append_to_response", "keywords,content_ratings"))  // credits,videos,keywords,alternative_titles,recommendations,similar,reviews
+      .orElse(null);
+
+    if(node == null) {
+      return Optional.empty();
+    }
+
+    List<JsonNode> seasons = batchQuerySeasons(key, node);
 
     // Popularity... Status... last air date ... inproduction field
     //['Returning Series', 'Planned', 'In Production', 'Ended', 'Canceled', 'Pilot']
 
-    return objectFactory.toSerie(node, CheckedStreams.forIOException(seasons.stream()).map(s -> toSeason(s, id.getKey())).collect(Collectors.toList()));
+    return Optional.of(objectFactory.toSerie(node, CheckedStreams.forIOException(seasons.stream()).map(s -> toSeason(s, key)).collect(Collectors.toList())));
   }
 
-  private List<JsonNode> batchQuerySeasons(WorkId id, JsonNode node) throws IOException {
+  private List<JsonNode> batchQuerySeasons(String key, JsonNode node) throws IOException {
     List<JsonNode> seasons = new ArrayList<>();
     JsonNode seasonsPath = node.path("seasons");
     String firstSeasonNumber = "";
@@ -69,19 +70,23 @@ public class TmdbQueryService extends AbstractQueryService {
       appendToResponse += "season/" + seasonNumber;
 
       if(i % MAX_SEASONS_PER_QUERY == 0 || i == seasonsPath.size()) {
-        JsonNode seasonData = tmdb.query(
-          "3/tv/" + id.getKey(),
-          "text:json:" + new WorkId(DataSources.TMDB, MediaType.SEASON, id.getKey() + "/" + firstSeasonNumber + "-" + seasonNumber),
-          List.of("append_to_response", appendToResponse)
-        );
+        String finalResponse = appendToResponse;
 
-        for(String path : appendToResponse.split(",")) {
-          JsonNode seasonPath = seasonData.path(path);
+        tmdb
+          .query(
+            "3/tv/" + key,
+            "text:json:tmdb:season:" + key + "/" + firstSeasonNumber + "-" + seasonNumber,
+            List.of("append_to_response", finalResponse)
+          )
+          .ifPresent(seasonData -> {
+            for(String path : finalResponse.split(",")) {
+              JsonNode seasonPath = seasonData.path(path);
 
-          if(seasonPath.isContainerNode()) {
-            seasons.add(seasonPath);
-          }
-        }
+              if(seasonPath.isContainerNode()) {
+                seasons.add(seasonPath);
+              }
+            }
+          });
 
         appendToResponse = "";
       }
@@ -90,7 +95,7 @@ public class TmdbQueryService extends AbstractQueryService {
     return seasons;
   }
 
-  private Serie.Season toSeason(JsonNode node, String parentId) throws IOException {
+  private Serie.Season toSeason(JsonNode node, String parentId) {
     List<Serie.Episode> episodes = new ArrayList<>();
 
     for(JsonNode episode : node.at("/episodes")) {
@@ -123,10 +128,11 @@ public class TmdbQueryService extends AbstractQueryService {
     );
   }
 
-  private Serie.Episode toEpisode(JsonNode node, String parentKey) throws IOException {
+  private Serie.Episode toEpisode(JsonNode node, String parentKey) {
     String releaseDate = node.path("air_date").textValue();
-    Reception reception = node.get("vote_count").isNumber() && node.get("vote_average").isNumber() ?
-      new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt()) : null;
+    Reception reception = node.get("vote_count").isNumber() && node.get("vote_average").isNumber()
+      ? new Reception(node.get("vote_average").asDouble(), node.get("vote_count").asInt())
+      : null;
     int seasonNumber = node.get("season_number").asInt();
     int episodeNumber = node.get("episode_number").asInt();
     WorkId id = new WorkId(DataSources.TMDB, MediaType.EPISODE, parentKey + "/" + seasonNumber + "/" + episodeNumber);

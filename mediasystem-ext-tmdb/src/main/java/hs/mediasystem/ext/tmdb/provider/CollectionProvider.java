@@ -1,4 +1,4 @@
-package hs.mediasystem.ext.tmdb.movie;
+package hs.mediasystem.ext.tmdb.provider;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -6,7 +6,6 @@ import hs.mediasystem.api.datasource.domain.CollectionDetails;
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Production;
 import hs.mediasystem.api.datasource.domain.ProductionCollection;
-import hs.mediasystem.api.datasource.services.AbstractQueryService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.ext.tmdb.DataSources;
@@ -16,20 +15,21 @@ import hs.mediasystem.ext.tmdb.TheMovieDatabase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
-public class TmdbProductionCollectionQueryService extends AbstractQueryService {
+public class CollectionProvider implements MediaProvider<ProductionCollection> {
   @Inject private TheMovieDatabase tmdb;
   @Inject private ObjectFactory objectFactory;
 
-  public TmdbProductionCollectionQueryService() {
-    super(DataSources.TMDB, MediaType.COLLECTION);
+  @Override
+  public Optional<ProductionCollection> provide(String key) throws IOException {
+    return tmdb.query("3/collection/" + key, "text:json:tmdb:collection:" + key)
+      .map(node -> toProductionCollection(node));
   }
 
-  @Override
-  public ProductionCollection query(WorkId id) throws IOException {
-    JsonNode node = tmdb.query("3/collection/" + id.getKey(), "text:json:" + id);
+  private ProductionCollection toProductionCollection(JsonNode node) {
     List<Production> productions = new ArrayList<>();
 
     for(JsonNode p : node.path("parts")) {
