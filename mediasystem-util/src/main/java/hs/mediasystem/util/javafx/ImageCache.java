@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -182,7 +183,7 @@ public class ImageCache {
         return new Dimension(w, h);
       }
 
-      throw new IOException("No reader for given image data");
+      throw new IOException("No reader for given image data (" + data.length + " bytes, starting with 0x" + HexFormat.of().formatHex(data, 0, Math.max(32, data.length)) + ")");
     }
   }
 
