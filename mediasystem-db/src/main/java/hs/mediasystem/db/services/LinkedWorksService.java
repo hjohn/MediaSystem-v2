@@ -144,6 +144,7 @@ class LinkedWorksService {
         .flatMap(List::stream)
         .map(Resource::location)
         .map(children::get)
+        .filter(Objects::nonNull)  // children are not added immediately, and can be unavailable momentarily
         .flatMap(Set::stream)
         .map(workIdsByLocation::get)
         .flatMap(Set::stream)
