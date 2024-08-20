@@ -124,13 +124,16 @@ public class AsyncImageProperty extends SimpleObjectProperty<Image> {
 
         if(asyncImageProperty.loader == Loader.this) {
           asyncImageProperty.future = ImageCache.loadImageAsync(imageHandle, (int)maxSize.getWidth(), (int)maxSize.getHeight(), EXECUTOR)
-            .thenAcceptAsync(image -> {
-              AsyncImageProperty property = ref.get();
+            .thenAcceptAsync(
+              image -> {
+                AsyncImageProperty property = ref.get();
 
-              if(property != null && Objects.equals(property.imageHandle.get(), imageHandle)) {
-                property.set(image);
-              }
-            }, Platform::runLater)
+                if(property != null && Objects.equals(property.imageHandle.get(), imageHandle)) {
+                  property.set(image);
+                }
+              },
+              Platform::runLater
+            )
             .exceptionally(e -> {
               LOGGER.warning("Unable to load image: " + imageHandle + ": " + Throwables.formatAsOneLine(e.getCause()));
               return null;

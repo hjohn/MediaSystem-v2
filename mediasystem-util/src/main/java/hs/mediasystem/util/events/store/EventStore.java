@@ -57,7 +57,7 @@ public interface EventStore<T> {
   }
 
   /**
-   * Appends the given event and calls the given {code onSuccess} consumer
+   * Appends the given event and calls the given {@code onSuccess} consumer
    * when it successfully completes.
    *
    * @param event an event to append, cannot be {@code null}
