@@ -1,18 +1,13 @@
 package hs.mediasystem.util.javafx;
 
-import hs.mediasystem.util.concurrent.NamedThreadFactory;
 import hs.mediasystem.util.javafx.base.FocusEvent;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Logger;
 
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
-import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -23,8 +18,8 @@ import javafx.scene.input.KeyEvent;
 
 public class SceneUtil {
   private static final Logger LOGGER = Logger.getLogger(SceneUtil.class.getName());
-  private static final ScheduledExecutorService EVENT_TIMEOUT_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("SceneUtil"));
   private static final NestedTimeTracker TIME_TRACKER = new NestedTimeTracker();
+  private static final long SLOW_EVENT_THRESHOLD_NANOS = 10 * 1000 * 1000;  // 10 milliseconds
 
   public static Scene createScene(Parent root) {
     Scene scene = new Scene(root);
@@ -87,67 +82,57 @@ public class SceneUtil {
   }
 
   /**
-   * Adds a slow event warning whenever an event takes more than 10 ms to process.  Note
+   * Adds a slow event warning whenever an event takes too much time to process. Note
    * that time spent in nested event loops cannot be properly taken into account as time
    * spent in nested event loops will be part of the event that triggered it giving false
-   * positives.  In order for this time to be accurately reflected, the methods to enter
+   * positives. In order for this time to be accurately reflected, the methods to enter
    * a nested event loop in this class should be used instead of the ones in {@link Platform}.
    *
-   * @param scene a Scene to which to add the slow event warning detection, cannot be null
+   * @param scene a {@link Scene} to add the slow event warning detection to, cannot be {@code null}
    */
   public static void addSlowEventWarning(Scene scene) {
-    final EventDispatcher eventDispatcher = scene.getEventDispatcher();
+    EventDispatcher eventDispatcher = scene.getEventDispatcher();
 
-    scene.setEventDispatcher(new EventDispatcher() {
-      private ScheduledFuture<StackTraceElement[]> future;
+    scene.setEventDispatcher((event, tail) -> {
+      long startTime = System.nanoTime();
 
-      @Override
-      public Event dispatchEvent(Event event, EventDispatchChain tail) {
-        Thread fxThread = Thread.currentThread();
+      TIME_TRACKER.enterNested(startTime);  // nesting can happen in two ways, an event triggering another event, or when a nested event loop is entered
 
-        if(future != null) {
-          future.cancel(false);
-        }
+      Event returnedEvent = eventDispatcher.dispatchEvent(event, tail);
 
-//        future = EVENT_TIMEOUT_EXECUTOR.schedule(new Callable<StackTraceElement[]>() {
-//          @Override
-//          public StackTraceElement[] call() {
-//            return fxThread.getStackTrace();
-//          }
-//        }, 500, TimeUnit.MILLISECONDS);
+      long endTime = System.nanoTime();
+      long timeSpentAtThisLevel = TIME_TRACKER.exitNested(endTime);
+      long dispatchTime = endTime - startTime;
 
-        long startTime = System.currentTimeMillis();
+      /*
+       * There are two duration measurements that are of importance:
+       *
+       * - The dispatch duration of the event (duration of the dispatchEvent call)
+       * - The time spent at the current nesting level, minus the time spent at any deeper levels
+       *
+       * If the dispatch time is below the threshold (regardless of nesting levels
+       * entered or exited) then the event is considered to be fast.
+       *
+       * However, if the dispatch time exceeds the threshold then the time spent
+       * at only the current nesting level needs to be used instead. Note that for
+       * events exiting a level, this can be a high value, which is why the dispatch
+       * time must be checked first to avoid false positives.
+       *
+       * For example, an event E1 comes in at T1 which opens a dialog that uses a nested
+       * event loop. The dialog stays open for 5 seconds. Another event, E2, comes in
+       * to close the dialog exiting the nested event loop.
+       *
+       * E1 took a long time to dispatch before it returned (5s). When subtracting
+       * the nested time, E1 only took a few ms.
+       *
+       * E2 took almost no time to dispatch. The time spent in the nested loop is disregarded.
+       */
 
-        TIME_TRACKER.enterNested(startTime);  // nesting can happen in two ways, an event triggering another event, or when a nested event loop is entered
-
-        Event returnedEvent = eventDispatcher.dispatchEvent(event, tail);
-
-        long endTime = System.currentTimeMillis();
-        long timeSpentInNested = TIME_TRACKER.exitNested(endTime);
-
-        if(timeSpentInNested > 10) {
-          long total = endTime - startTime;
-
-          LOGGER.warning("Slow Event (self/total: " + timeSpentInNested + "/" + total + " ms @ level " + TIME_TRACKER.getCurrentLevel() + "): " + event);
-        }
-
-//        future.cancel(false);
-//
-//        if(!future.isCancelled()) {  // separate check, as future may have been cancelled already multiple times, so cannot use result from Future#cancel
-//          try {
-//            LOGGER.warning("Slow Event Handling (" + duration + " ms) of " + event + ":");
-//
-//            for(StackTraceElement element : future.get()) {
-//              LOGGER.warning("  -- " + element);
-//            }
-//          }
-//          catch(InterruptedException | ExecutionException e) {
-//            LOGGER.log(Level.SEVERE, "Unexpected exception", e);
-//          }
-//        }
-
-        return returnedEvent;
+      if(dispatchTime > SLOW_EVENT_THRESHOLD_NANOS && timeSpentAtThisLevel > SLOW_EVENT_THRESHOLD_NANOS) {
+        LOGGER.warning("Slow Event (self/total: " + (timeSpentAtThisLevel / 1000 / 1000) + "/" + (dispatchTime / 1000 / 1000) + " ms @ level " + TIME_TRACKER.getCurrentLevel() + "): " + event.toString().replaceAll("[\t\r\n]", ""));
       }
+
+      return returnedEvent;
     });
   }
 }
