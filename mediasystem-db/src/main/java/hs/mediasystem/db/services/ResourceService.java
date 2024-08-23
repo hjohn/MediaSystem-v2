@@ -61,7 +61,7 @@ public class ResourceService {
   private final Map<URI, URI> roots = new HashMap<>();  // Dependent to Root (not a parent child mapping, does not contain an entry for every resource!)
   private final Map<ContentID, Set<URI>> contentIds = new HashMap<>();
 
-  // TODO figure out how large this store becomes, it could get quite large if a root with dependents is identified before all dependents were present I think...
+  // TODO figure out how large this store becomes (about 18000), it could get quite large if a root with dependents is identified before all dependents were present I think...
   private final EventStream<ResourceEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>(ResourceEvent.class));
   private final IdentificationTaskManager identificationTaskManager;
   private final BlockingQueue<IdentifiedLocation> queue = new SynchronousQueue<>();
@@ -105,7 +105,6 @@ public class ResourceService {
   }
 
   public void reidentify(URI location) {
-    System.out.println(">>> reidentifying " + location);
     lock.lock();
 
     try {
@@ -116,7 +115,6 @@ public class ResourceService {
     finally {
       lock.unlock();
     }
-    System.out.println(">>> done reidentifying " + location);
   }
 
   @Produces
