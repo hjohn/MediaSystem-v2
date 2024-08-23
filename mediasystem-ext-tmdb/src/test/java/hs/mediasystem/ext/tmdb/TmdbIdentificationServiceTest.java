@@ -7,7 +7,7 @@ import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.domain.Movie;
 import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.Discovery;
-import hs.mediasystem.db.InjectorExtension;
+import hs.mediasystem.db.util.InjectorExtension;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.ext.tmdb.provider.MovieProvider;

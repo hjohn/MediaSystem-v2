@@ -1,12 +1,11 @@
-package hs.mediasystem.db.services;
+package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.services.IdentificationProvider;
 import hs.mediasystem.api.discovery.Discovery;
-import hs.mediasystem.db.core.Streamable;
-import hs.mediasystem.db.core.StreamableEvent;
-import hs.mediasystem.db.services.IdentificationTaskManager.IdentifiedLocation;
-import hs.mediasystem.db.services.domain.Resource;
+import hs.mediasystem.db.core.IdentificationTaskManager.IdentifiedLocation;
+import hs.mediasystem.db.core.domain.Resource;
+import hs.mediasystem.db.core.domain.Streamable;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.util.events.InMemoryEventStore;
 import hs.mediasystem.util.events.SimpleEventStream;

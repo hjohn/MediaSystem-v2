@@ -1,11 +1,11 @@
-package hs.mediasystem.db.services;
+package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.datasource.services.IdentificationProvider;
 import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.Discovery;
-import hs.mediasystem.db.services.IdentificationTaskManager.IdentifiedLocation;
+import hs.mediasystem.db.core.IdentificationTaskManager.IdentifiedLocation;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.Match;
 import hs.mediasystem.util.Attributes;

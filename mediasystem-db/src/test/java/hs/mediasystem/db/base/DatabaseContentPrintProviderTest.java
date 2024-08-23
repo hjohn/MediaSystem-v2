@@ -2,7 +2,7 @@ package hs.mediasystem.db.base;
 
 import hs.mediasystem.db.contentprints.ContentPrintDatabase;
 import hs.mediasystem.db.contentprints.ContentPrintRecord;
-import hs.mediasystem.db.services.domain.ContentPrint;
+import hs.mediasystem.db.core.domain.ContentPrint;
 import hs.mediasystem.db.uris.UriDatabase;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.util.MediaHash;

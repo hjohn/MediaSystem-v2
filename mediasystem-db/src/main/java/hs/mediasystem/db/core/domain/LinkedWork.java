@@ -1,4 +1,4 @@
-package hs.mediasystem.db.services.domain;
+package hs.mediasystem.db.core.domain;
 
 import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.domain.work.WorkId;

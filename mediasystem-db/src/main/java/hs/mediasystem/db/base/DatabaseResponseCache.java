@@ -1,9 +1,7 @@
-package hs.mediasystem.db;
+package hs.mediasystem.db.base;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import hs.mediasystem.db.base.ImageDatabase;
-import hs.mediasystem.db.base.ImageRecord;
 import hs.mediasystem.util.PriorityRateLimiter;
 import hs.mediasystem.util.exception.Throwables;
 

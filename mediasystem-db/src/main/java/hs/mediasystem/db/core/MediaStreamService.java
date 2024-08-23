@@ -1,8 +1,8 @@
-package hs.mediasystem.db.services;
+package hs.mediasystem.db.core;
 
 import hs.mediasystem.db.base.StreamStateService;
-import hs.mediasystem.db.services.domain.LinkedWork;
-import hs.mediasystem.db.services.domain.Resource;
+import hs.mediasystem.db.core.domain.LinkedWork;
+import hs.mediasystem.db.core.domain.Resource;
 import hs.mediasystem.domain.media.MediaStream;
 import hs.mediasystem.domain.media.MediaStructure;
 import hs.mediasystem.domain.media.StreamDescriptor;

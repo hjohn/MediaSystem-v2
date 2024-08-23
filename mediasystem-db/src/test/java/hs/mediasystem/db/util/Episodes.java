@@ -1,4 +1,4 @@
-package hs.mediasystem.db;
+package hs.mediasystem.db.util;
 
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Episode;

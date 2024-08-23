@@ -1,6 +1,6 @@
-package hs.mediasystem.db.services;
+package hs.mediasystem.db.core;
 
-import hs.mediasystem.db.services.domain.Resource;
+import hs.mediasystem.db.core.domain.Resource;
 
 import java.net.URI;
 

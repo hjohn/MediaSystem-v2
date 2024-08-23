@@ -1,7 +1,6 @@
-package hs.mediasystem.db.services.domain;
+package hs.mediasystem.db.core.domain;
 
 import hs.mediasystem.api.datasource.domain.Release;
-import hs.mediasystem.db.core.Streamable;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.work.Match;
 

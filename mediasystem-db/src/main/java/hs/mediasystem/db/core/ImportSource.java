@@ -1,6 +1,7 @@
 package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.discovery.Discoverer;
+import hs.mediasystem.db.core.domain.StreamTags;
 
 import java.net.URI;
 import java.util.Objects;

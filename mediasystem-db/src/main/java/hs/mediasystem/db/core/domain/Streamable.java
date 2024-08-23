@@ -1,6 +1,5 @@
-package hs.mediasystem.db.core;
+package hs.mediasystem.db.core.domain;
 
-import hs.mediasystem.db.services.domain.ContentPrint;
 import hs.mediasystem.domain.media.StreamDescriptor;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;

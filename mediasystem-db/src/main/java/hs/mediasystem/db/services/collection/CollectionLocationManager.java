@@ -11,7 +11,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 import hs.mediasystem.api.discovery.Discoverer;
 import hs.mediasystem.db.core.ImportSource;
-import hs.mediasystem.db.core.StreamTags;
+import hs.mediasystem.db.core.domain.StreamTags;
 import hs.mediasystem.domain.work.CollectionDefinition;
 
 import java.io.File;

@@ -1,8 +1,8 @@
-package hs.mediasystem.db.services;
+package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.datasource.domain.Release;
-import hs.mediasystem.db.services.domain.LinkedWork;
-import hs.mediasystem.db.services.domain.Resource;
+import hs.mediasystem.db.core.domain.LinkedWork;
+import hs.mediasystem.db.core.domain.Resource;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
@@ -29,7 +29,7 @@ import javax.inject.Singleton;
  * Service providing {@link LinkedWork}s.
  */
 @Singleton
-class LinkedWorksService {
+public class LinkedWorksService {
   private static final DataSource RESOURCE_DATA_SOURCE = DataSource.instance("@INTERNAL");
   private static final Comparator<LinkedWork> REVERSED_CREATION_ORDER = Comparator
     .comparing((LinkedWork lw) -> lw.resources().getFirst().streamable().contentPrint().getSignatureCreationTime())

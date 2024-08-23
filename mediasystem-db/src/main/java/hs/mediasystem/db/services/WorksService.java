@@ -2,6 +2,7 @@ package hs.mediasystem.db.services;
 
 import hs.mediasystem.api.datasource.domain.stream.Work;
 import hs.mediasystem.api.datasource.services.Top100QueryService;
+import hs.mediasystem.db.core.LinkedWorksService;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.util.checked.CheckedStreams;
 

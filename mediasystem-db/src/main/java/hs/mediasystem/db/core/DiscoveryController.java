@@ -24,7 +24,7 @@ import org.int4.dirk.annotations.Opt;
 import org.int4.dirk.annotations.Produces;
 
 @Singleton
-public class DiscoveryController {
+class DiscoveryController {
   private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("DiscoveryController"));
   private static final Logger LOGGER = Logger.getLogger(DiscoveryController.class.getName());
 
@@ -34,6 +34,9 @@ public class DiscoveryController {
   @Inject private List<IdentificationProvider> identificationProviders;
   @Inject @Opt @Named("server.discovery.initial-delay") private Long initialDelay = 15L;  // After 15 seconds start scans
   @Inject @Opt @Named("server.discovery.delay") private Long delay = 5 * 60L;  // Time in between scans: 5 minutes
+
+  @Inject
+  DiscoveryController() {}
 
   @PostConstruct
   private void postConstruct() {

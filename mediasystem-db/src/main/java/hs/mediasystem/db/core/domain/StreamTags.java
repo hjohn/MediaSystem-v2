@@ -1,4 +1,4 @@
-package hs.mediasystem.db.core;
+package hs.mediasystem.db.core.domain;
 
 import java.util.Collections;
 import java.util.HashSet;

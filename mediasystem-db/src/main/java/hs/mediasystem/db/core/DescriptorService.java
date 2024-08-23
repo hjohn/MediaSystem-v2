@@ -5,8 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 
 import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.services.QueryService;
-import hs.mediasystem.db.DatabaseResponseCache;
-import hs.mediasystem.db.DatabaseResponseCache.CacheMode;
+import hs.mediasystem.db.base.DatabaseResponseCache;
+import hs.mediasystem.db.base.DatabaseResponseCache.CacheMode;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.WorkId;
 

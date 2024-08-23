@@ -2,6 +2,7 @@ package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.datasource.services.IdentificationProvider;
 import hs.mediasystem.api.discovery.Discovery;
+import hs.mediasystem.db.core.domain.StreamTags;
 import hs.mediasystem.util.domain.URIs;
 
 import java.net.URI;

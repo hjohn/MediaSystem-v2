@@ -1,4 +1,4 @@
-package hs.mediasystem.db;
+package hs.mediasystem.db.util;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;

@@ -1,5 +1,7 @@
 package hs.mediasystem.db;
 
+import hs.mediasystem.db.base.DatabaseResponseCache;
+
 import java.net.ResponseCache;
 
 import javax.annotation.PostConstruct;

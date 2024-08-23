@@ -1,4 +1,4 @@
-package hs.mediasystem.db.services;
+package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.datasource.domain.Identification;
 import hs.mediasystem.db.jackson.RecordSerializer;

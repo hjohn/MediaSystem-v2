@@ -4,8 +4,10 @@ import hs.mediasystem.api.datasource.WorkDescriptor;
 import hs.mediasystem.api.datasource.domain.Details;
 import hs.mediasystem.api.datasource.domain.Release;
 import hs.mediasystem.api.datasource.domain.stream.Work;
-import hs.mediasystem.db.services.domain.LinkedWork;
-import hs.mediasystem.db.services.domain.Resource;
+import hs.mediasystem.db.core.LinkedWorksService;
+import hs.mediasystem.db.core.MediaStreamService;
+import hs.mediasystem.db.core.domain.LinkedWork;
+import hs.mediasystem.db.core.domain.Resource;
 import hs.mediasystem.domain.work.Context;
 
 import java.net.URI;
@@ -20,9 +22,12 @@ import javax.inject.Singleton;
  * works.
  */
 @Singleton
-public class LocalWorkService {
+class LocalWorkService {
   @Inject private LinkedWorksService linkedWorksService;
   @Inject private MediaStreamService mediaStreamService;
+
+  @Inject
+  LocalWorkService() {}
 
   Optional<Work> findFirst(URI location) {
     return linkedWorksService.find(location).stream().map(this::toWork).findFirst();
