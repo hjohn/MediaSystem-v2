@@ -212,7 +212,7 @@ class IdentificationTaskManager {
       URI location = rootDiscovery.location();
 
       try {
-        updateStatus("querying provider " + externalIdentificationProvider.getName());
+        updateStatus("query " + externalIdentificationProvider.getName());
 
         Identification newIdentification = doIdentification();
 
