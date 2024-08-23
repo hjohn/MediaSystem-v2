@@ -11,10 +11,10 @@ import hs.mediasystem.api.discovery.Attribute;
 import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.db.base.DatabaseContentPrintProvider;
 import hs.mediasystem.db.base.DatabaseResponseCache;
-import hs.mediasystem.db.core.DiscoverEvent;
+import hs.mediasystem.db.core.DiscoveryController;
 import hs.mediasystem.db.core.IdentificationStore;
+import hs.mediasystem.db.core.ImportSource;
 import hs.mediasystem.db.core.ResourceService;
-import hs.mediasystem.db.core.StreamableService;
 import hs.mediasystem.db.core.domain.ContentPrint;
 import hs.mediasystem.db.core.domain.Resource;
 import hs.mediasystem.db.core.domain.StreamTags;
@@ -25,14 +25,12 @@ import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.Match.Type;
 import hs.mediasystem.domain.work.WorkId;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.events.SynchronousEventStream;
-import hs.mediasystem.util.events.streams.EventStream;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -388,29 +386,41 @@ public class TmdbIdentificationIT {
     WIRE_MOCK_SERVER.stubFor(WireMock.get("/3/find/").willReturn(WireMock.ok().withBody("{}")));
   }
 
+  private static final ImportSource TMDB_IMPORT_SOURCE = new ImportSource(
+    (root, registry) -> {},
+    URI.create("/"),
+    Optional.of("TMDB"),
+    new StreamTags(Set.of())
+  );
+
   @Produces private static final DatabaseResponseCache RESPONSE_CACHE = mock(DatabaseResponseCache.class);
   @Produces @Named("ext.tmdb.host") private static final String TMDB_HOST = "http://localhost:" + WIRE_MOCK_SERVER.port() + "/";
   @Produces private static final IdentificationStore IDENTIFICATION_STORE = mock(IdentificationStore.class);
   @Produces private static final StreamDescriptorService STREAM_DESCRIPTOR_SERVICE = mock(StreamDescriptorService.class);
   @Produces private static final DatabaseContentPrintProvider CONTENT_PRINT_PROVIDER = mock(DatabaseContentPrintProvider.class);
-  @Produces private static final EventStream<DiscoverEvent> DISCOVER_EVENTS = new SynchronousEventStream<>();
+  @Produces private static final Collection<ImportSource> IMPORT_SOURCES = List.of(TMDB_IMPORT_SOURCE);
 
-  private static final URI ROOT = Path.of("/").toUri();
+  @Inject private ResourceService resourceService;
+  @Inject private DiscoveryController discoveryController;
 
-  @Inject StreamableService streamableService;
-  @Inject ResourceService resourceService;
-  @Inject TmdbIdentificationProvider tmdbIdentificationProvider;
+  @Inject TmdbIdentificationProvider tmdbIdentificationProvider;  // Loads it and injects it in DiscoveryController
 
   @Test
   void test() throws IOException {
     when(CONTENT_PRINT_PROVIDER.get(any(), any(), any())).thenReturn(mock(ContentPrint.class));
 
-    Discovery serieDiscovery = new Discovery(MediaType.SERIE, ROOT.resolve("/Series/Charmed"), Attributes.of("title", "Charmed"), Instant.now(), null);
+    Discovery serieDiscovery = new Discovery(MediaType.SERIE, URI.create("/Series/Charmed"), Attributes.of("title", "Charmed"), Instant.now(), null);
 
-    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Series/"), Optional.of(tmdbIdentificationProvider), new StreamTags(Set.of("cartoon")), Optional.empty(), List.of(serieDiscovery)));
+    discoveryController.registerDiscovery(
+      TMDB_IMPORT_SOURCE,
+      URI.create("/"),
+      List.of(
+        serieDiscovery
+      )
+    );
 
     await().untilAsserted(() -> {
-      Resource resource = resourceService.find(ROOT.resolve("/Series/Charmed")).orElseThrow(() -> new AssertionError());
+      Resource resource = resourceService.find(URI.create("/Series/Charmed")).orElseThrow(() -> new AssertionError());
 
       assertThat(resource.match().type()).isEqualTo(Type.NAME);
       assertThat(resource.match().accuracy()).isEqualTo(1.0f);
@@ -422,13 +432,17 @@ public class TmdbIdentificationIT {
       assertThat(firstRelease.getDetails().getDate()).contains(LocalDate.of(1998, 10, 7));
     });
 
-    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Series/Charmed/"), Optional.of(tmdbIdentificationProvider), new StreamTags(Set.of("cartoon")), Optional.of(serieDiscovery.location()), List.of(
-      new Discovery(MediaType.EPISODE, ROOT.resolve("/Series/Charmed/Ep1x01.mkv"), Attributes.of("title", "Charmed", "sequence", "1,01", "childType", "EPISODE"), Instant.now(), 12345L),
-      new Discovery(MediaType.EPISODE, ROOT.resolve("/Series/Charmed/Ep1x02-03.mkv"), Attributes.of("title", "Charmed", "sequence", "1,02-03", "childType", "EPISODE"), Instant.now(), 12346L)
-    )));
+    discoveryController.registerDiscovery(
+      TMDB_IMPORT_SOURCE,
+      URI.create("/Series/Charmed"),
+      List.of(
+        new Discovery(MediaType.EPISODE, URI.create("/Series/Charmed/Ep1x01.mkv"), Attributes.of("title", "Charmed", "sequence", "1,01", "childType", "EPISODE"), Instant.now(), 12345L),
+        new Discovery(MediaType.EPISODE, URI.create("/Series/Charmed/Ep1x02-03.mkv"), Attributes.of("title", "Charmed", "sequence", "1,02-03", "childType", "EPISODE"), Instant.now(), 12346L)
+      )
+    );
 
     await().untilAsserted(() -> {
-      Resource resource = resourceService.find(ROOT.resolve("/Series/Charmed/Ep1x01.mkv")).orElseThrow(() -> new AssertionError());
+      Resource resource = resourceService.find(URI.create("/Series/Charmed/Ep1x01.mkv")).orElseThrow(() -> new AssertionError());
 
       assertThat(resource.match().type()).isEqualTo(Type.DERIVED);
       assertThat(resource.match().accuracy()).isEqualTo(1.0f);
@@ -441,7 +455,7 @@ public class TmdbIdentificationIT {
     });
 
     await().untilAsserted(() -> {
-      Resource resource = resourceService.find(ROOT.resolve("/Series/Charmed/Ep1x02-03.mkv")).orElseThrow(() -> new AssertionError());
+      Resource resource = resourceService.find(URI.create("/Series/Charmed/Ep1x02-03.mkv")).orElseThrow(() -> new AssertionError());
 
       assertThat(resource.match().type()).isEqualTo(Type.DERIVED);
       assertThat(resource.match().accuracy()).isEqualTo(1.0f);
@@ -459,12 +473,16 @@ public class TmdbIdentificationIT {
       assertThat(secondRelease.getDetails().getDate()).contains(LocalDate.of(1998, 10, 21));
     });
 
-    DISCOVER_EVENTS.push(new DiscoverEvent(ROOT.resolve("/Movies/"), Optional.of(tmdbIdentificationProvider), new StreamTags(Set.of("movies")), Optional.empty(), List.of(
-      new Discovery(MediaType.MOVIE, ROOT.resolve("/Movies/Terminator.avi"), Attributes.of(Attribute.TITLE, "Terminator", Attribute.YEAR, "1984"), Instant.now(), 30000L)
-    )));
+    discoveryController.registerDiscovery(
+      TMDB_IMPORT_SOURCE,
+      URI.create("/"),
+      List.of(
+        new Discovery(MediaType.MOVIE, URI.create("/Movies/Terminator.avi"), Attributes.of(Attribute.TITLE, "Terminator", Attribute.YEAR, "1984"), Instant.now(), 30000L)
+      )
+    );
 
     await().untilAsserted(() -> {
-      Resource resource = resourceService.find(ROOT.resolve("/Movies/Terminator.avi")).orElseThrow(() -> new AssertionError());
+      Resource resource = resourceService.find(URI.create("/Movies/Terminator.avi")).orElseThrow(() -> new AssertionError());
 
       assertThat(resource.match().type()).isEqualTo(Type.NAME_AND_RELEASE_DATE);
       assertThat(resource.match().accuracy()).isEqualTo(0.8052575f);

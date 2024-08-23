@@ -10,9 +10,6 @@ import hs.mediasystem.db.extract.StreamDescriptorService;
 import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.util.Attributes;
-import hs.mediasystem.util.events.SynchronousEventStream;
-import hs.mediasystem.util.events.streams.EventStream;
-import hs.mediasystem.util.events.streams.Subscription;
 
 import java.io.IOException;
 import java.net.URI;
@@ -33,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -42,21 +40,25 @@ public class StreamableServiceTest {
   private static final Optional<IdentificationProvider> ID_SERVICE = Optional.of(mock(IdentificationProvider.class));
   private static final StreamTags TAGS = new StreamTags(Set.of("cartoon"));
 
-  private final EventStream<DiscoverEvent> discoverEvents = new SynchronousEventStream<>();
   private final Deque<StreamableEvent> queue = new ArrayDeque<>();
 
   @Mock private StreamDescriptorService streamDescriptorService;
   @Mock private DatabaseContentPrintProvider contentPrintProvider;
+  @Mock private ResourceService resourceService;
+
+  private StreamableService service;
 
   @BeforeEach
   void beforeEach() throws IOException {
     when(contentPrintProvider.get(any(), any(), any())).thenAnswer(x -> contentPrint(((Instant)x.getArgument(2)).toEpochMilli()));
+
+    service = new StreamableService(contentPrintProvider, streamDescriptorService, resourceService);
+
+    doAnswer(x -> queue.add(x.getArgument(0))).when(resourceService).handleEvent(any());
   }
 
   @Test
   public void shouldProduceExpectedDiffEvents() {
-    StreamableService differ = new StreamableService(discoverEvents, contentPrintProvider, streamDescriptorService);
-
     URI root = Path.of("/").toUri().resolve("");
 
     Discovery aParent = serieDiscovery(root.resolve("a"), 1000);
@@ -64,9 +66,7 @@ public class StreamableServiceTest {
     Discovery bParent = serieDiscovery(root.resolve("b"), 1002);
     Discovery cParent = serieDiscovery(root.resolve("c"), 1003);
 
-    Subscription subscription = differ.events().subscribe(queue::add);
-
-    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(root.resolve("b"), 1),
       serieDiscovery(root.resolve("d"), 1)
     )));
@@ -80,7 +80,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(bParent.location(), ID_SERVICE, TAGS, Optional.of(bParent.location()), List.of(
+    service.push(new DiscoverEvent(bParent.location(), ID_SERVICE, TAGS, Optional.of(bParent.location()), List.of(
       discovery(root.resolve("b/1"), 1),
       discovery(root.resolve("b/2"), 1),
       discovery(root.resolve("b/3"), 1)
@@ -97,40 +97,40 @@ public class StreamableServiceTest {
     queue.clear();
 
     // Re-discovery of b and d should do nothing:
-    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(root.resolve("b"), 1),
       serieDiscovery(root.resolve("d"), 1)
     )));
 
-    subscription.join();
+//    subscription.join();
 
     assertThat(queue).isEmpty();
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/1"), 1),
       discovery(root.resolve("a/2"), 1),
       discovery(root.resolve("a/3"), 1)
     )));
 
-    subscription.join();
+//    subscription.join();
 
     assertThat(queue).isEmpty();  // aParent wasn't registered yet, so these sub items are ignored
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(cParent.location(), ID_SERVICE, TAGS, Optional.of(cParent.location()), List.of(
+    service.push(new DiscoverEvent(cParent.location(), ID_SERVICE, TAGS, Optional.of(cParent.location()), List.of(
       discovery(root.resolve("c/1"), 1)
     )));
 
-    subscription.join();
+//    subscription.join();
 
     assertThat(queue).isEmpty();  // cParent wasn't registered yet, so these sub items are ignored
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(root.resolve("a"), 1),
       serieDiscovery(root.resolve("b"), 1)
     )));
@@ -144,7 +144,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/1"), 1),
       discovery(root.resolve("a/2"), 1),
       discovery(root.resolve("a/3"), 1)
@@ -160,7 +160,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(bParent.location(), ID_SERVICE, TAGS, Optional.of(bParent.location()), List.of(
+    service.push(new DiscoverEvent(bParent.location(), ID_SERVICE, TAGS, Optional.of(bParent.location()), List.of(
       discovery(root.resolve("b/1"), 1),
       discovery(root.resolve("b/2"), 2),
       discovery(root.resolve("b/3"), 1)
@@ -174,7 +174,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/4"), 1),
       discovery(root.resolve("a/1"), 1),
       discovery(root.resolve("a/3"), 1)
@@ -189,7 +189,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/1"), 1),
       discovery(root.resolve("a/2"), 1)
     )));
@@ -204,7 +204,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(a1Parent.location(), ID_SERVICE, TAGS, Optional.of(a1Parent.location()), List.of(
+    service.push(new DiscoverEvent(a1Parent.location(), ID_SERVICE, TAGS, Optional.of(a1Parent.location()), List.of(
       discovery(root.resolve("a/1/A"), 1),
       discovery(root.resolve("a/1/B"), 1),
       discovery(root.resolve("a/1/C"), 1)
@@ -220,7 +220,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/2"), 1)
     )));
 
@@ -236,7 +236,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of()));  // empty, everything gone
+    service.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of()));  // empty, everything gone
 
     await().untilAsserted(() ->
       assertThat(queue).containsExactlyInAnyOrder(
@@ -255,24 +255,19 @@ public class StreamableServiceTest {
     URI root = Path.of("/").toUri();
     Discovery aParent = serieDiscovery(root.resolve("a"), 1000);
 
-    StreamableService differ = new StreamableService(discoverEvents, contentPrintProvider, streamDescriptorService);
-
-    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(root.resolve("a"), 1)
     )));
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/1"), 1),
       discovery(root.resolve("a/2"), 1),
       discovery(root.resolve("a/3"), 1)
     )));
 
-    Subscription subscription = differ.events().subscribe(queue::add);
-
-    subscription.join();
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/1"), 2),
       discovery(root.resolve("a/3"), 1),
       discovery(root.resolve("a/4"), 1)
@@ -293,32 +288,26 @@ public class StreamableServiceTest {
     Discovery aParent = serieDiscovery(root.resolve("a"), 1000);
     Discovery aPostfixParent = serieDiscovery(root.resolve("a%20postfix"), 1001);
 
-    StreamableService differ = new StreamableService(discoverEvents, contentPrintProvider, streamDescriptorService);
-
-    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(root.resolve("a"), 1),
       serieDiscovery(root.resolve("a%20postfix"), 1)
     )));
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/1"), 1),
       discovery(root.resolve("a/2"), 1),
       discovery(root.resolve("a/3"), 1)
     )));
 
-    discoverEvents.push(new DiscoverEvent(aPostfixParent.location(), ID_SERVICE, TAGS, Optional.of(aPostfixParent.location()), List.of(
+    service.push(new DiscoverEvent(aPostfixParent.location(), ID_SERVICE, TAGS, Optional.of(aPostfixParent.location()), List.of(
       discovery(root.resolve("a%20postfix/4"), 1),
       discovery(root.resolve("a%20postfix/5"), 1),
       discovery(root.resolve("a%20postfix/6"), 1)
     )));
 
-
-    Subscription subscription = differ.events().subscribe(queue::add);
-
-    subscription.join();
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
+    service.push(new DiscoverEvent(aParent.location(), ID_SERVICE, TAGS, Optional.of(aParent.location()), List.of(
       discovery(root.resolve("a/1"), 2),
       discovery(root.resolve("a/3"), 1),
       discovery(root.resolve("a/4"), 1)
@@ -334,7 +323,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(aPostfixParent.location(), ID_SERVICE, TAGS, Optional.of(aPostfixParent.location()), List.of(
+    service.push(new DiscoverEvent(aPostfixParent.location(), ID_SERVICE, TAGS, Optional.of(aPostfixParent.location()), List.of(
       discovery(root.resolve("a%20postfix/4"), 1),
       discovery(root.resolve("a%20postfix/5"), 1),
       discovery(root.resolve("a%20postfix/6"), 1),
@@ -349,7 +338,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(root, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(root.resolve("a"), 1),
       serieDiscovery(root.resolve("a%20postfix"), 1),
       serieDiscovery(root.resolve("b"), 1)
@@ -364,14 +353,10 @@ public class StreamableServiceTest {
 
   @Test
   void shouldReactWhenHigherPathDoesNotMentionExistingPaths() {
-    StreamableService differ = new StreamableService(discoverEvents, contentPrintProvider, streamDescriptorService);
-
     URI realRoot = Path.of("/").toUri().resolve("/");
     URI subRoot = Path.of("/").toUri().resolve("/abc/def/");
 
-    Subscription subscription = differ.events().subscribe(queue::add);
-
-    discoverEvents.push(new DiscoverEvent(subRoot, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(subRoot, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(subRoot.resolve("b"), 1),
       serieDiscovery(subRoot.resolve("d"), 1)
     )));
@@ -385,7 +370,7 @@ public class StreamableServiceTest {
 
     queue.clear();
 
-    discoverEvents.push(new DiscoverEvent(realRoot, ID_SERVICE, TAGS, Optional.empty(), List.of(
+    service.push(new DiscoverEvent(realRoot, ID_SERVICE, TAGS, Optional.empty(), List.of(
       serieDiscovery(realRoot.resolve("xyz"), 1)
     )));
 
@@ -396,8 +381,6 @@ public class StreamableServiceTest {
         updatedSerie(realRoot.resolve("xyz"), 1)
       )
     );
-
-    subscription.unsubscribe();
   }
 
   private static ContentPrint contentPrint(long time) {

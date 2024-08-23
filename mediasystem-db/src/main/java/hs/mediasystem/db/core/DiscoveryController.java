@@ -2,12 +2,11 @@ package hs.mediasystem.db.core;
 
 import hs.mediasystem.api.datasource.services.IdentificationProvider;
 import hs.mediasystem.api.discovery.Discoverer;
+import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.util.concurrent.NamedThreadFactory;
-import hs.mediasystem.util.events.SynchronousEventStream;
-import hs.mediasystem.util.events.streams.EventStream;
-import hs.mediasystem.util.events.streams.Source;
 import hs.mediasystem.util.exception.Throwables;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -21,18 +20,16 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.int4.dirk.annotations.Opt;
-import org.int4.dirk.annotations.Produces;
 
 @Singleton
-class DiscoveryController {
+public class DiscoveryController {
   private static final ScheduledThreadPoolExecutor EXECUTOR = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("DiscoveryController"));
   private static final Logger LOGGER = Logger.getLogger(DiscoveryController.class.getName());
 
-  private final EventStream<DiscoverEvent> eventStream = new SynchronousEventStream<>();
-
   @Inject private Collection<ImportSource> importSources;
   @Inject private List<IdentificationProvider> identificationProviders;
-  @Inject @Opt @Named("server.discovery.initial-delay") private Long initialDelay = 15L;  // After 15 seconds start scans
+  @Inject private StreamableService streamableService;
+  @Inject @Opt @Named("server.discovery.initial-delay") private Long initialDelay = 5L;  // After 5 seconds start scans
   @Inject @Opt @Named("server.discovery.delay") private Long delay = 5 * 60L;  // Time in between scans: 5 minutes
 
   @Inject
@@ -43,9 +40,19 @@ class DiscoveryController {
     EXECUTOR.scheduleWithFixedDelay(this::discoverAll, initialDelay, delay, TimeUnit.SECONDS);
   }
 
-  @Produces
-  Source<DiscoverEvent> discoverEvents() {
-    return eventStream;
+  public void registerDiscovery(ImportSource source, URI parentLocation, List<Discovery> discoveries) {
+    IdentificationProvider provider = identificationProviders.stream()
+      .filter(ip -> ip.getName().equals(source.identificationService().orElse(null)))
+      .findFirst()
+      .orElse(null);
+
+    streamableService.push(new DiscoverEvent(
+      parentLocation == null ? source.root() : parentLocation,
+      Optional.ofNullable(provider),
+      source.tags(),
+      parentLocation == null || parentLocation.equals(source.root()) ? Optional.empty() : Optional.of(parentLocation),
+      discoveries
+    ));
   }
 
   /**
@@ -63,7 +70,7 @@ class DiscoveryController {
         .orElse(null);
 
       try {
-        Discoverer.Registry registry = (parentLocation, discoveries) -> eventStream.push(new DiscoverEvent(
+        Discoverer.Registry registry = (parentLocation, discoveries) -> streamableService.push(new DiscoverEvent(
           parentLocation == null ? source.root() : parentLocation,
           Optional.ofNullable(provider),
           source.tags(),

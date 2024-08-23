@@ -1,5 +1,6 @@
 package hs.mediasystem.db;
 
+import hs.mediasystem.db.core.DiscoveryController;
 import hs.mediasystem.db.services.collection.CollectionLocationManager;
 
 import java.io.IOException;
@@ -79,6 +80,7 @@ public class PluginInitializer {
     LOGGER.info(plugins.size() + " plugins loaded from: " + root);
 
     instanceResolver.getInstance(CollectionLocationManager.class);  // Triggers parsing of yaml's
+    instanceResolver.getInstance(DiscoveryController.class);  // Triggers background scan tasks
   }
 
   private static Optional<Plugin> loadDevPlugin(PluginManager pluginManager, String name) throws MalformedURLException {

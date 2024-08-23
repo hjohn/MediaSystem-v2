@@ -7,10 +7,6 @@ import hs.mediasystem.db.core.IdentificationTaskManager.IdentifiedLocation;
 import hs.mediasystem.db.core.domain.Resource;
 import hs.mediasystem.db.core.domain.Streamable;
 import hs.mediasystem.domain.stream.ContentID;
-import hs.mediasystem.util.events.InMemoryEventStore;
-import hs.mediasystem.util.events.SimpleEventStream;
-import hs.mediasystem.util.events.streams.EventStream;
-import hs.mediasystem.util.events.streams.Source;
 import hs.mediasystem.util.time.TimeSource;
 
 import java.lang.System.Logger;
@@ -26,13 +22,11 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.int4.db.core.util.ThrowingSupplier;
-import org.int4.dirk.annotations.Produces;
 
 @Singleton
 public class ResourceService {
@@ -60,16 +54,14 @@ public class ResourceService {
   private final Map<URI, URI> roots = new HashMap<>();  // Dependent to Root (not a parent child mapping, does not contain an entry for every resource!)
   private final Map<ContentID, Set<URI>> contentIds = new HashMap<>();
 
-  // TODO figure out how large this store becomes (about 18000), it could get quite large if a root with dependents is identified before all dependents were present I think...
-  private final EventStream<ResourceEvent> eventStream = new SimpleEventStream<>(new InMemoryEventStore<>(ResourceEvent.class));
   private final IdentificationTaskManager identificationTaskManager;
+  private final LinkedWorksService worksService;
   private final BlockingQueue<IdentifiedLocation> queue = new SynchronousQueue<>();
   private final ReentrantLock lock = new ReentrantLock();
 
   @Inject
-  public ResourceService(Source<StreamableEvent> streamableEvents, IdentificationStore identificationStore) {
-    streamableEvents.subscribe("ResourceService", locked(this::handleEvent));
-
+  public ResourceService(IdentificationStore identificationStore, LinkedWorksService worksService) {
+    this.worksService = worksService;
     this.identificationTaskManager = new IdentificationTaskManager(
       identificationStore,
       TimeSource.system(),
@@ -116,12 +108,18 @@ public class ResourceService {
     }
   }
 
-  @Produces
-  private Source<ResourceEvent> resourceEvents() {
-    return eventStream;
+  void handleEvent(StreamableEvent event) {
+    lock.lock();
+
+    try {
+      whileLockedHandleEvent(event);
+    }
+    finally {
+      lock.unlock();
+    }
   }
 
-  private void handleEvent(StreamableEvent event) {
+  private void whileLockedHandleEvent(StreamableEvent event) {
     URI location = event.location();
 
     /*
@@ -268,12 +266,12 @@ public class ResourceService {
     Resource resource = new Resource(streamables.get(location), identification.match(), identification.releases());
 
     resources.put(location, resource);
-    eventStream.push(new ResourceEvent.Updated(resource));
+    worksService.processEvent(new ResourceEvent.Updated(resource));
   }
 
   private void removeResource(URI location) {
     if(resources.remove(location) != null) {
-      eventStream.push(new ResourceEvent.Removed(location));
+      worksService.processEvent(new ResourceEvent.Removed(location));
     }
   }
 
@@ -285,19 +283,6 @@ public class ResourceService {
     }
 
     return IdentificationProvider.MINIMAL_PROVIDER.identify(discoveries.get(location)).orElseThrow(() -> new AssertionError("Minimal Provider should always have a result"));
-  }
-
-  private <T> Consumer<T> locked(Consumer<T> consumer) {
-    return t -> {
-      lock.lock();
-
-      try {
-        consumer.accept(t);
-      }
-      finally {
-        lock.unlock();
-      }
-    };
   }
 
   private <T, X extends Exception> T doLocked(ThrowingSupplier<T, X> supplier) throws X {

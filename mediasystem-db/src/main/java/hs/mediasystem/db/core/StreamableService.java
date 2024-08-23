@@ -7,9 +7,6 @@ import hs.mediasystem.db.core.StreamDescriptorFetchTaskManager.DescribedLocation
 import hs.mediasystem.db.core.domain.ContentPrint;
 import hs.mediasystem.db.core.domain.Streamable;
 import hs.mediasystem.db.extract.StreamDescriptorService;
-import hs.mediasystem.util.events.SynchronousEventStream;
-import hs.mediasystem.util.events.streams.EventStream;
-import hs.mediasystem.util.events.streams.Source;
 import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
@@ -31,8 +28,6 @@ import java.util.concurrent.SynchronousQueue;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.int4.dirk.annotations.Produces;
-
 @Singleton
 public class StreamableService {
   record Item(Streamable streamable, Discovery discovery, Optional<IdentificationProvider> identificationProvider) {}
@@ -50,17 +45,15 @@ public class StreamableService {
   private final NavigableMap<String, Streamable> cache = new TreeMap<>(PATH_COMPARATOR);
   private final BlockingQueue<DescribedLocation> queue = new SynchronousQueue<>();
   private final Map<URI, Item> items = new HashMap<>();
-  private final SynchronousEventStream<StreamableEvent> eventStream;  // TODO non-memory backed stream risks losing items before subscribers are present
   private final DatabaseContentPrintProvider contentPrintProvider;
+  private final ResourceService resourceService;
   private final StreamDescriptorFetchTaskManager taskManager;
 
   @Inject
-  public StreamableService(Source<DiscoverEvent> eventSource, DatabaseContentPrintProvider contentPrintProvider, StreamDescriptorService streamDescriptorService) {
-    this.eventStream = new SynchronousEventStream<>();
+  public StreamableService(DatabaseContentPrintProvider contentPrintProvider, StreamDescriptorService streamDescriptorService, ResourceService resourceService) {
     this.contentPrintProvider = contentPrintProvider;
+    this.resourceService = resourceService;
     this.taskManager = new StreamDescriptorFetchTaskManager(streamDescriptorService, queue);
-
-    eventSource.subscribe("StreamableService", this::process);
 
     Thread.ofPlatform()
       .daemon()
@@ -68,10 +61,8 @@ public class StreamableService {
       .start(this::processQueue);
   }
 
-  @Produces
-  @Singleton
-  EventStream<StreamableEvent> events() {
-    return eventStream;
+  void push(DiscoverEvent event) {
+    process(event);
   }
 
   private synchronized void process(DiscoverEvent event) {
@@ -148,14 +139,14 @@ public class StreamableService {
     items.put(updated.location(), new Item(updated.streamable(), updated.discovery(), updated.identificationProvider()));
     taskManager.create(updated.location());
     cache.put(updated.location().toString(), updated.streamable());
-    eventStream.push(updated);
+    resourceService.handleEvent(updated);
   }
 
   private synchronized void streamableRemoved(URI location) {
     items.remove(location);
     taskManager.stop(location);
     cache.remove(location.toString());
-    eventStream.push(new StreamableEvent.Removed(location));
+    resourceService.handleEvent(new StreamableEvent.Removed(location));
   }
 
   private void processQueue() {
@@ -173,7 +164,7 @@ public class StreamableService {
     Item item = items.get(result.location());
 
     if(item != null) {
-      eventStream.push(new StreamableEvent.Updated(
+      resourceService.handleEvent(new StreamableEvent.Updated(
         item.streamable.with(result.descriptor()),
         item.identificationProvider,
         item.discovery

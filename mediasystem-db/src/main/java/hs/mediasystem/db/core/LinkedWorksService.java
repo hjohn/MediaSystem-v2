@@ -7,7 +7,6 @@ import hs.mediasystem.domain.stream.ContentID;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.domain.work.DataSource;
 import hs.mediasystem.domain.work.WorkId;
-import hs.mediasystem.util.events.streams.Source;
 
 import java.net.URI;
 import java.util.Comparator;
@@ -42,11 +41,9 @@ public class LinkedWorksService {
   private final Map<URI, URI> parentLocations = new HashMap<>();  // TODO unused, remove
 
   @Inject
-  private LinkedWorksService(Source<ResourceEvent> resourceEvents) {
-    resourceEvents.subscribe(this::processEvent).join();
-  }
+  private LinkedWorksService() {}
 
-  private void processEvent(ResourceEvent event) {
+  void processEvent(ResourceEvent event) {
     synchronized(linkedWorks) {
       if(event instanceof ResourceEvent.Updated u) {
         Resource resource = u.resource();
