@@ -20,12 +20,12 @@ public class WeightedNgramDistanceTest {
         {MatchType.AVERAGE, "Star Wars", "Star Warz"},  // EXCELLENT with Levenshtein
         {MatchType.AVERAGE, "Star Wars", "Staar Wars"},  // EXCELLENT with Levenshtein
         {MatchType.AVERAGE, "Star Wars", "Satr Wars"},  // GOOD with Levenshtein
-        {MatchType.POOR, "Star Wars Episode IV: A new hope", "Star Wars - 04 - A new hope"},    // GOOD with Levenshtein
+        {MatchType.AVERAGE, "Star Wars Episode IV: A new hope", "Star Wars - 04 - A new hope"},    // GOOD with Levenshtein
         {MatchType.POOR, "Star Wars", "Stargate"},  // AVERAGE with Levenshtein
-        {MatchType.POOR, "Star Wars: Clone Wars", "Star Wars"},
-        {MatchType.POOR, "Star Wars: Clone Wars", "Star Wars 4"},
+        {MatchType.AVERAGE, "Star Wars: Clone Wars", "Star Wars"},
+        {MatchType.AVERAGE, "Star Wars: Clone Wars", "Star Wars 4"},
         {MatchType.POOR, "Star Wars: Clone Wars", "Star Wars 4 A New Hope"},
-        {MatchType.POOR, "Star Wars: Episode IV - A New Hope", "Star Wars 4 A New Hope"},
+        {MatchType.AVERAGE, "Star Wars: Episode IV - A New Hope", "Star Wars 4 A New Hope"},
         {MatchType.POOR, "Star Wars", "Star Wars - 04 - A new hope"},
         {MatchType.POOR, "Star Wars", "Fantasic Four"},
         {MatchType.POOR, "Star Wars: Episode IV - A New Hope", "Star Wars"},

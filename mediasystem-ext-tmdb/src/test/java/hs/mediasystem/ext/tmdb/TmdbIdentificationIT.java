@@ -467,7 +467,7 @@ public class TmdbIdentificationIT {
       Resource resource = resourceService.find(ROOT.resolve("/Movies/Terminator.avi")).orElseThrow(() -> new AssertionError());
 
       assertThat(resource.match().type()).isEqualTo(Type.NAME_AND_RELEASE_DATE);
-      assertThat(resource.match().accuracy()).isEqualTo(0.79420984f);
+      assertThat(resource.match().accuracy()).isEqualTo(0.8052575f);
 
       Release firstRelease = resource.releases().getFirst();
 

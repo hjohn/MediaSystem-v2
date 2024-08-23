@@ -2,6 +2,7 @@ package hs.mediasystem.util.natural;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -36,23 +37,35 @@ public class WeightedNgramDistance {
       else {
         Set<String> all = list1.get(i);
         Set<String> set2 = list2.get(i);
-        Set<String> common = new HashSet<>(all);
+        int disjointSize = calculateDisjointSize(all, set2);
+        int commonSize = all.size() - disjointSize;
+        int allSize = set2.size() + disjointSize;
 
-        common.retainAll(set2);
-        all.addAll(set2);
-
-        commonCount += common.size() * weight;
-        totalCount += all.size() * weight;
+        commonCount += commonSize * weight;
+        totalCount += allSize * weight;
       }
     }
 
     return commonCount / totalCount;
   }
 
+  private static int calculateDisjointSize(Set<?> c1, Set<?> c2) {
+    Iterator<?> it = c1.iterator();
+    int size = 0;
+
+    while(it.hasNext()) {
+      if(!c2.contains(it.next())) {
+        size++;
+      }
+    }
+
+    return size;
+  }
+
   private static List<Set<String>> ngramList(String s) {
     List<Set<String>> ngramList = new ArrayList<>();
 
-    for(int len = 1; len <= s.length(); len++) {
+    for(int len = 1; len <= Math.min(10, s.length()); len++) {  // Substrings created up to 10 characters
       Set<String> ngrams = new HashSet<>();
 
       // 'len' length sequences (without spaces)

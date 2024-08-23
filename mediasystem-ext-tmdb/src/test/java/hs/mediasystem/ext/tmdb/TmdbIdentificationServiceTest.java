@@ -60,7 +60,7 @@ public class TmdbIdentificationServiceTest {
 
     Identification identification = service.identify(discovery(Attributes.of(Attribute.TITLE, "Terminator, The", Attribute.YEAR, "2015", Attribute.SUBTITLE, "Genisys", Attribute.SEQUENCE, "5"))).get();
 
-    assertEquals(0.77, identification.match().accuracy(), 0.01f);
+    assertEquals(0.8190683126449585, identification.match().accuracy(), 0.01f);
     assertEquals(Type.NAME_AND_RELEASE_DATE, identification.match().type());
   }
 
