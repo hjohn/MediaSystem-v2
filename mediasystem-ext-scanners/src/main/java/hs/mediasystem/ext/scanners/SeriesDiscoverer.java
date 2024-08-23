@@ -71,7 +71,7 @@ public class SeriesDiscoverer implements Discoverer {
       registry.register(null, series);
 
       for(Discovery discovery : series) {
-        registry.register(discovery.location(), scanSerie(discovery.location()));
+        registry.register(discovery.location(), scanSerie(Path.of(discovery.location())));
 
         WORKLOAD.complete();
       }
@@ -81,10 +81,10 @@ public class SeriesDiscoverer implements Discoverer {
     }
   }
 
-  private static List<Discovery> scanSerie(URI root) throws IOException {
+  private static List<Discovery> scanSerie(Path rootPath) throws IOException {
     List<Discovery> results = new ArrayList<>();
-    Path rootPath = Path.of(root);
     List<PathAndAttributes> scanResults = new PathFinder(5).findWithAttributes(rootPath, Constants.VIDEOS);
+    URI rootUri = rootPath.toUri();  // conversion to URI here ensures a final slash is appended to path as it is a directory
 
     for(PathAndAttributes pathAndAttributes : scanResults) {
       Path path = pathAndAttributes.path();
@@ -104,7 +104,7 @@ public class SeriesDiscoverer implements Discoverer {
 
       String imdb = result.getCode();
       String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
-      URI uri = Paths.appendFilePath(root, relative);
+      URI uri = Paths.appendFilePath(rootUri, relative);
 
       if(type == null && sequence != null && sequence.contains(",")) {
         type = ChildType.EPISODE;  // sequences with a comma have an episode number in them (",2", "10,15"); ones without comma only had a season or special number in it, or nothing at all
