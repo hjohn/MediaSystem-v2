@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
-public record DiscoverEvent(URI base, Optional<IdentificationProvider> identificationProvider, StreamTags tags, Optional<URI> parentLocation, List<Discovery> discoveries) {
+record DiscoverEvent(URI base, Optional<IdentificationProvider> identificationProvider, StreamTags tags, Optional<URI> parentLocation, List<Discovery> discoveries) {
   public DiscoverEvent {
     if(base == null) {
       throw new IllegalArgumentException("base cannot be null");

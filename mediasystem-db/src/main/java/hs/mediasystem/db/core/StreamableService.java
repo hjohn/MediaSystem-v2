@@ -29,7 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
-public class StreamableService {
+class StreamableService {
   record Item(Streamable streamable, Discovery discovery, Optional<IdentificationProvider> identificationProvider) {}
 
   private static final Logger LOGGER = System.getLogger(StreamableService.class.getName());

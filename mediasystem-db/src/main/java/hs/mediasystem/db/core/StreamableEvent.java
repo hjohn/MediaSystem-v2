@@ -7,7 +7,7 @@ import hs.mediasystem.db.core.domain.Streamable;
 import java.net.URI;
 import java.util.Optional;
 
-public sealed interface StreamableEvent {
+sealed interface StreamableEvent {
 
   URI location();
 
