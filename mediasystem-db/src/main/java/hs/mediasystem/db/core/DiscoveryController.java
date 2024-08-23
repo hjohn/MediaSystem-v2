@@ -8,7 +8,6 @@ import hs.mediasystem.util.events.streams.EventStream;
 import hs.mediasystem.util.events.streams.Source;
 import hs.mediasystem.util.exception.Throwables;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -71,7 +70,7 @@ public class DiscoveryController {
 
         source.discoverer().discover(source.root(), registry);
       }
-      catch(IOException e) {
+      catch(Exception e) {
         LOGGER.warning("Failed scanning: " + source + "; exception: " + Throwables.formatAsOneLine(e));
       }
     }

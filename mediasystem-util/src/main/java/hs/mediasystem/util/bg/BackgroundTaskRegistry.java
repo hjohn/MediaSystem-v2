@@ -75,6 +75,13 @@ public class BackgroundTaskRegistry {
       }
     }
 
+    public synchronized void finish() {
+      checkReset();
+
+      completed = total;
+      endTime = System.currentTimeMillis();
+    }
+
     public synchronized void reset() {
       endTime = 0;
       completed = 0;

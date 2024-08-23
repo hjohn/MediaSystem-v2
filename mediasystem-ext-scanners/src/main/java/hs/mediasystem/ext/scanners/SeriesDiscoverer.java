@@ -7,10 +7,10 @@ import hs.mediasystem.api.discovery.Discovery;
 import hs.mediasystem.domain.stream.MediaType;
 import hs.mediasystem.ext.scanners.NameDecoder.DecodeResult;
 import hs.mediasystem.ext.scanners.NameDecoder.Mode;
+import hs.mediasystem.ext.scanners.PathFinder.PathAndAttributes;
 import hs.mediasystem.util.Attributes;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry;
 import hs.mediasystem.util.bg.BackgroundTaskRegistry.Workload;
-import hs.mediasystem.util.exception.Throwables;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,14 +25,12 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
 @Singleton
 public class SeriesDiscoverer implements Discoverer {
-  private static final Logger LOGGER = Logger.getLogger(SeriesDiscoverer.class.getName());
   private static final Pattern SPECIALS_PATTERN = Pattern.compile("(?i)(\\bspecials?\\b.*|.*\\bspecials?\\b)");
   private static final Pattern EXTRAS_PATTERN = Pattern.compile("(?i)(\\bextras?\\b.*|.*\\bextras?\\b)");
   private static final NameDecoder NAME_DECODER = new NameDecoder(Mode.SERIE);
@@ -49,8 +47,8 @@ public class SeriesDiscoverer implements Discoverer {
 
     WORKLOAD.start(scanResults.size());
 
-    for(Path path : scanResults) {
-      try {
+    try {
+      for(Path path : scanResults) {
         DecodeResult result = NAME_DECODER.decode(path.getFileName().toString());
 
         String title = result.getTitle();
@@ -69,71 +67,59 @@ public class SeriesDiscoverer implements Discoverer {
 
         series.add(new Discovery(MediaType.SERIE, path.toUri(), attributes, Files.getLastModifiedTime(path).toInstant(), null));
       }
-      catch(Exception e) {
-        LOGGER.warning("Exception while decoding item: " + path  + ", while getting items for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
-      }
-    }
 
-    registry.register(null, series);
+      registry.register(null, series);
 
-    for(Discovery discovery : series) {
-      try {
+      for(Discovery discovery : series) {
         registry.register(discovery.location(), scanSerie(discovery.location()));
-      }
-      catch(Exception e) {
-        LOGGER.warning("Exception while scanning serie: " + discovery  + ", for \"" + root + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility, use Exceptional?
-      }
-      finally {
+
         WORKLOAD.complete();
       }
     }
+    finally {
+      WORKLOAD.finish();
+    }
   }
 
-  private static List<Discovery> scanSerie(URI root) {
+  private static List<Discovery> scanSerie(URI root) throws IOException {
     List<Discovery> results = new ArrayList<>();
     Path rootPath = Path.of(root);
+    List<PathAndAttributes> scanResults = new PathFinder(5).findWithAttributes(rootPath, Constants.VIDEOS);
 
-    try {
-      List<Path> scanResults = new PathFinder(5).find(rootPath, Constants.VIDEOS);
+    for(PathAndAttributes pathAndAttributes : scanResults) {
+      Path path = pathAndAttributes.path();
+      Path relative = rootPath.relativize(path);
+      String name = path.getFileName().toString();
+      ChildType type = hasPathPart(relative, SPECIALS_PATTERN) ? ChildType.SPECIAL :
+                       hasPathPart(relative, EXTRAS_PATTERN)   ? ChildType.EXTRA : null;
 
-      for(Path path : scanResults) {
-        Path relative = rootPath.relativize(path);
-        String name = path.getFileName().toString();
-        ChildType type = hasPathPart(relative, SPECIALS_PATTERN) ? ChildType.SPECIAL :
-                         hasPathPart(relative, EXTRAS_PATTERN)   ? ChildType.EXTRA : null;
+      DecodeResult result = type == ChildType.SPECIAL ? SPECIAL_NAME_DECODER.decode(name) :
+                            type == ChildType.EXTRA   ? SIMPLE_NAME_DECODER.decode(name) :
+                                                        EPISODE_NAME_DECODER.decode(name);
 
-        DecodeResult result = type == ChildType.SPECIAL ? SPECIAL_NAME_DECODER.decode(name) :
-                              type == ChildType.EXTRA   ? SIMPLE_NAME_DECODER.decode(name) :
-                                                          EPISODE_NAME_DECODER.decode(name);
+      String title = result.getTitle();
+      String subtitle = result.getSubtitle();
+      String sequence = result.getSequence();
+      Integer year = result.getReleaseYear();
 
-        String title = result.getTitle();
-        String subtitle = result.getSubtitle();
-        String sequence = result.getSequence();
-        Integer year = result.getReleaseYear();
+      String imdb = result.getCode();
+      String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
+      URI uri = Paths.appendFilePath(root, relative);
 
-        String imdb = result.getCode();
-        String imdbNumber = imdb != null && !imdb.isEmpty() ? String.format("tt%07d", Integer.parseInt(imdb)) : null;
-
-        URI uri = path.toUri();
-
-        if(type == null && sequence != null && sequence.contains(",")) {
-          type = ChildType.EPISODE;  // sequences with a comma have an episode number in them (",2", "10,15"); ones without comma only had a season or special number in it, or nothing at all
-        }
-
-        Attributes attributes = Attributes.of(
-          Attribute.TITLE, title,
-          Attribute.SUBTITLE, subtitle,
-          Attribute.SEQUENCE, sequence,
-          Attribute.YEAR, year == null ? null : year.toString(),
-          Attribute.ID_PREFIX + "IMDB", imdbNumber,
-          Attribute.CHILD_TYPE, type == null ? null : type.toString()
-        );
-
-        results.add(new Discovery(MediaType.EPISODE, uri, attributes, Files.getLastModifiedTime(path).toInstant(), Files.size(path)));
+      if(type == null && sequence != null && sequence.contains(",")) {
+        type = ChildType.EPISODE;  // sequences with a comma have an episode number in them (",2", "10,15"); ones without comma only had a season or special number in it, or nothing at all
       }
-    }
-    catch(RuntimeException | IOException e) {
-      LOGGER.warning("Exception while getting items for \"" + rootPath + "\": " + Throwables.formatAsOneLine(e));   // TODO add to some high level user error reporting facility
+
+      Attributes attributes = Attributes.of(
+        Attribute.TITLE, title,
+        Attribute.SUBTITLE, subtitle,
+        Attribute.SEQUENCE, sequence,
+        Attribute.YEAR, year == null ? null : year.toString(),
+        Attribute.ID_PREFIX + "IMDB", imdbNumber,
+        Attribute.CHILD_TYPE, type == null ? null : type.toString()
+      );
+
+      results.add(new Discovery(MediaType.EPISODE, uri, attributes, pathAndAttributes.attrs().lastModifiedTime().toInstant(), pathAndAttributes.attrs().size()));
     }
 
     return results;
