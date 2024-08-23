@@ -82,7 +82,7 @@ public class ProductionOverviewPane extends HBox {
   {
     VBox.setVgrow(dynamicBoxContainer, Priority.ALWAYS);
 
-    model.dynamicPanel.values(panel -> {
+    model.dynamicPanel.subscribe(panel -> {
       if(panel == null) {
         dynamicBoxContainer.clear();
       }

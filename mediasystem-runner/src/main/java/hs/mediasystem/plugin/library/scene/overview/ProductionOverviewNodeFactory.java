@@ -1,7 +1,5 @@
 package hs.mediasystem.plugin.library.scene.overview;
 
-import com.sun.javafx.binding.Subscription;
-
 import hs.jfx.eventstream.core.Events;
 import hs.jfx.eventstream.core.Invalidations;
 import hs.mediasystem.plugin.cell.MediaGridViewCellFactory;
@@ -43,6 +41,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Subscription;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -111,7 +110,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
     presentation.root
       .when(Nodes.showing(pane))
-      .values(current -> {
+      .subscribe(current -> {
         CompletableFuture.supplyAsync(() -> workClient.findContributions(current.getId()))
           .thenAcceptAsync(contributors -> pane.model.contributors.set(contributors), Platform::runLater)
           .whenComplete((v, e) -> {
@@ -258,7 +257,7 @@ public class ProductionOverviewNodeFactory implements NodeFactory<ProductionPres
 
         childTransitionPanelSubscription = selectedChild
           .when(Nodes.showing(pane))
-          .values(work -> {
+          .subscribe(work -> {
             Details details = work.getDetails();
 
             double percentage = work.getState().consumed() ? 1.0 : work.getWatchedFraction().orElse(-1);

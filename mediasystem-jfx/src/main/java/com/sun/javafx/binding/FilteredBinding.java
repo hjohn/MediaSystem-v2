@@ -4,6 +4,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 import javafx.beans.value.ObservableValue;
+import javafx.util.Subscription;
 
 public class FilteredBinding<T> extends LazyObjectBinding<T> {
 
@@ -17,7 +18,7 @@ public class FilteredBinding<T> extends LazyObjectBinding<T> {
 
     @Override
     protected Subscription observeSources() {
-        return Subscription.subscribeInvalidations(source, this::invalidate); // start observing source
+        return source.subscribe(this::invalidate); // start observing source
     }
 
     @Override

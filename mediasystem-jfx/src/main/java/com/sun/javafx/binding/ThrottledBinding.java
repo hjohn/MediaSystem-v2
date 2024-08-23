@@ -5,6 +5,7 @@ import java.util.concurrent.Future;
 
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.Throttler;
+import javafx.util.Subscription;
 
 /**
  * A binding that can delay or skip values from a given source controlled
@@ -48,7 +49,7 @@ public class ThrottledBinding<T> extends LazyObjectBinding<T> {
             this.cachedValue = source.getValue();
             this.subscribed = true;
 
-            return Subscription.subscribe(source, this::sourceValueChanged)
+            return source.subscribe(this::sourceValueChanged)
                 .and(this::onUnsubscribe);
         }
     }

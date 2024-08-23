@@ -127,11 +127,11 @@ public class FolderSetup implements NodeFactory<FolderPresentation> {
 
     presentation.selectedItem
       .when(showing)
-      .values(item -> updateSelectedItem(listView, presentation, item));
+      .subscribe(item -> updateSelectedItem(listView, presentation, item));
 
     presentation.items
       .when(showing)
-      .invalidations(() -> updateSelectedItem(listView, presentation, presentation.selectedItem.get()));
+      .subscribe(() -> updateSelectedItem(listView, presentation, presentation.selectedItem.get()));
 
     return listView;
   }

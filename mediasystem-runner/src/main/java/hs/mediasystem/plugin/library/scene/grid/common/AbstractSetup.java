@@ -115,11 +115,11 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     presentation.selectedItem
       .when(showing)
-      .values(item -> updateSelectedItem(listView, presentation, item));
+      .subscribe(item -> updateSelectedItem(listView, presentation, item));
 
     presentation.items
       .when(showing)
-      .invalidations(() -> updateSelectedItem(listView, presentation, presentation.selectedItem.get()));
+      .subscribe(() -> updateSelectedItem(listView, presentation, presentation.selectedItem.get()));
 
     return listView;
   }
@@ -129,7 +129,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     // Create it if selection was stable for a time:
     listView.getSelectionModel().selectedItemProperty().throttle(FXThrottlers.throttle(java.time.Duration.ofMillis(250)))
-      .values(v -> {
+      .subscribe(v -> {
         if(v != null) {
           Node context = createPreviewPanel(v);
 
@@ -145,7 +145,7 @@ public abstract class AbstractSetup<T, U, P extends GridViewPresentation<T, U>> 
 
     presentation.contextItem
       .when(shown)
-      .values(v -> {
+      .subscribe(v -> {
         Node contextItem = createContextPanel(presentation);
 
         if(contextItem != null) {

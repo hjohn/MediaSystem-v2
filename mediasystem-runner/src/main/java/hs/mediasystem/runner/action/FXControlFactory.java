@@ -237,8 +237,8 @@ public class FXControlFactory {
     slider.maxProperty().bind(max);
 
     // Bidirectional mapping binding:
-    value.when(Nodes.showing(slider)).map(toNumber).values(slider.valueProperty()::setValue);
-    slider.valueProperty().map(fromNumber).values(value::setValue);
+    value.when(Nodes.showing(slider)).map(toNumber).subscribe(slider.valueProperty()::setValue);
+    slider.valueProperty().map(fromNumber).subscribe(value::setValue);
 
     slider.setBlockIncrement(step);
     slider.setShowTickMarks(true);

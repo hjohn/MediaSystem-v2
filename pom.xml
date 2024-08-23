@@ -12,7 +12,7 @@
     <revision>2.0.0-SNAPSHOT</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.jackson>2.13.4</version.jackson>
-    <version.javafx>19.0.2.1</version.javafx>
+    <version.javafx>22.0.2</version.javafx>
     <version.dirk>1.0.0-beta1</version.dirk>
     <version.eventstream>0.3.0</version.eventstream>
     <version.junit5>5.10.2</version.junit5>

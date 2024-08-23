@@ -153,7 +153,7 @@ public class SeasonBar extends HBox {
 
       StackPane stackPane = Containers.stack(label, graphicBackground, graphic);
 
-      entry.mediaStatus.values(ms -> setStyle(stackPane, ms));
+      entry.mediaStatus.subscribe(ms -> setStyle(stackPane, ms));
 
       StackPane.setAlignment(graphic, Pos.CENTER_RIGHT);
       StackPane.setAlignment(graphicBackground, Pos.CENTER_RIGHT);

@@ -137,7 +137,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     presentation.selectedItem
       .when(Nodes.showing(menuListView))
-      .values(t -> {
+      .subscribe(t -> {
         menuListView.getSelectionModel().select(t.a);
         activeListView.get().getSelectionModel().select(t.b);
       });
@@ -145,7 +145,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     activeListView
       .flatMap(lv -> lv.getSelectionModel().selectedIndexProperty())
       .map(i -> Tuple.of(menuListView.getSelectionModel().getSelectedItem(), (Integer)i))
-      .values(presentation.selectedItem::setValue);
+      .subscribe(presentation.selectedItem::setValue);
 
     Label menuBackgroundLabel = Labels.create("menu-background", ">");
     StackPane.setAlignment(menuBackgroundLabel, Pos.CENTER_LEFT);
