@@ -17,11 +17,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
 @Singleton
 public class EpisodeIdentifier {
+  private static final Pattern COMMA = Pattern.compile(",");
+  private static final Pattern DASH = Pattern.compile("-");
 
   public Optional<Identification> identify(Attributes attributes, Serie parent) {
     return findChildDescriptors(parent, attributes);
@@ -69,7 +72,7 @@ public class EpisodeIdentifier {
 
   private static List<Serie.Episode> attemptMatch(Serie serie, String sequence) {
     List<Serie.Episode> list = new ArrayList<>();
-    String[] parts = sequence.split(",");
+    String[] parts = COMMA.split(sequence);
 
     /*
      * Sequence can be in three forms:
@@ -81,10 +84,10 @@ public class EpisodeIdentifier {
 
     if(parts.length == 2) {
       int seasonNumber = parts[0].isEmpty() ? 1 : Integer.parseInt(parts[0]);  // Assume season is 1 if consists of two parts but season empty
-      String[] numbers = parts[1].split("-");
+      String[] numbers = DASH.split(parts[1]);
 
       serie.findSeason(seasonNumber).ifPresent(season -> {
-        for(int i = Integer.parseInt(numbers[0]); i <= Integer.parseInt(numbers[numbers.length - 1]); i++) {
+        for(int i = Integer.parseInt(numbers[0]), max = Integer.parseInt(numbers[numbers.length - 1]); i <= max; i++) {
           Serie.Episode episode = season.findEpisode(i);
 
           if(episode != null) {
