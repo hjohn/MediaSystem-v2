@@ -99,10 +99,10 @@ public class MultiImageURIHandler implements ImageURIHandler {
         }
 
         return List.of(
-          new Rectangle2D(0, 0, width / 2, height / 2),
-          new Rectangle2D(width / 2, 0, width / 2, height / 2),
-          new Rectangle2D(0, height / 2, width / 2, height / 2),
-          new Rectangle2D(width / 2, height / 2, width / 2, height / 2)
+          new Rectangle2D(0, 0, width / 2 - 1, height / 2 - 1),
+          new Rectangle2D(width / 2 + 1, 0, width / 2 - 1, height / 2 - 1),
+          new Rectangle2D(0, height / 2 + 1, width / 2 - 1, height / 2 - 1),
+          new Rectangle2D(width / 2 + 1, height / 2 + 1, width / 2 - 1, height / 2 - 1)
         );
       });
    }
