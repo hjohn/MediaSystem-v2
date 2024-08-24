@@ -8,6 +8,7 @@ import hs.mediasystem.plugin.library.scene.grid.common.GridViewPresentationFacto
 import hs.mediasystem.plugin.library.scene.grid.generic.GenericCollectionPresentationFactory;
 import hs.mediasystem.presentation.Presentation;
 import hs.mediasystem.runner.collection.CollectionType;
+import hs.mediasystem.runner.grouping.AlphabeticalGrouping;
 import hs.mediasystem.runner.grouping.CollectionGrouping;
 import hs.mediasystem.runner.grouping.GenreGrouping;
 import hs.mediasystem.runner.grouping.NoGrouping;
@@ -48,6 +49,7 @@ public class MoviesCollectionType implements CollectionType {
   @Inject private GenericCollectionPresentationFactory factory;
   @Inject private GenreGrouping genreGrouper;
   @Inject private CollectionGrouping collectionGrouper;
+  @Inject private AlphabeticalGrouping alphaGrouper;
   @Inject private WorksClient worksClient;
 
   @Override
@@ -64,7 +66,7 @@ public class MoviesCollectionType implements CollectionType {
         SORT_ORDERS,
         FILTERS,
         STATE_FILTERS,
-        List.of(collectionGrouper, genreGrouper, new NoGrouping<Work, Object>())
+        List.of(collectionGrouper, genreGrouper, alphaGrouper, new NoGrouping<Work, Object>())
       ),
       null,
       i -> i instanceof Work w ? w.getId() : i instanceof WorksGroup wg ? wg.getId() : null

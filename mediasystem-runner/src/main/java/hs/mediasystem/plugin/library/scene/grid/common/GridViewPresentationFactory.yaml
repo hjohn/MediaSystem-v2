@@ -19,6 +19,7 @@ grouping:
   NoGrouping: "-"
   CollectionGrouping: "By Collection"
   GenreGrouping: "By Genre"
+  AlphabeticalGrouping: "Alphabetical"
 header:
   order: ORDER
   filter: FILTER
