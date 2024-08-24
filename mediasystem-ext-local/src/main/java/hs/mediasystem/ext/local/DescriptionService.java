@@ -12,10 +12,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import hs.mediasystem.util.exception.Throwables;
 import hs.mediasystem.util.image.ImageURI;
 
-import java.io.IOException;
-import java.net.ConnectException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,20 +34,18 @@ public class DescriptionService {
     .registerModule(new ParameterNamesModule(Mode.PROPERTIES));
 
   public Optional<Description> loadDescription(URI uri) {
-    String urlText = uri.toString() + "/description.yaml";
-
     try {
-      // TODO this mapping takes up to 4 seconds to "Connect" to the URL, whether the file exists or not...
-      DescriptionInternal d = OBJECT_MAPPER.readValue(new URI(urlText).toURL(), DescriptionInternal.class);
+      if(uri.getScheme().equals("file")) {
+        DescriptionInternal d = OBJECT_MAPPER.readValue(Path.of(uri).resolve("description.yaml").toFile(), DescriptionInternal.class);
 
-      return Optional.of(new Description(d.title, d.subtitle, d.description, d.tagLine, d.genres, d.date));
-    }
-    catch(ConnectException e) {
-      // ignore, file just doesn't exist
+        return Optional.of(new Description(d.title, d.subtitle, d.description, d.tagLine, d.genres, d.date));
+      }
+
       return Optional.empty();
     }
-    catch(IOException | URISyntaxException e) {
-      LOGGER.warning("Exception while parsing " + urlText + ": " + Throwables.formatAsOneLine(e));
+    catch(Exception e) {
+      LOGGER.warning("Exception while loading description for " + uri + ": " + Throwables.formatAsOneLine(e));
+
       return Optional.empty();
     }
   }
