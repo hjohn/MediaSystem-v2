@@ -54,7 +54,7 @@ public class GenreGrouping implements Grouping<Work, Object> {
       });
 
       /*
-       * This pics 4 covers that best represent this genre.  It does this by first
+       * This picks 4 covers that best represent this genre.  It does this by first
        * picking works which have this genre as their major genre (their first genre)
        * and then by favoring the highest rated and most recent ones (weighted).
        */
