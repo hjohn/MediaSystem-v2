@@ -59,7 +59,7 @@ public class RootPresentationHandler implements EventRoot {
   private static void refresh(PresentationEvent event) {
     Task<List<Runnable>> refreshTask = new Task<>() {
       @Override
-      protected List<Runnable> call() throws Exception {
+      protected List<Runnable> call() {
         updateTitle("Refreshing...");
 
         return event.getPresentations().stream()

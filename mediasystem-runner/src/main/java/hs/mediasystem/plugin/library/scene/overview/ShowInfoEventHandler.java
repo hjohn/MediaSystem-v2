@@ -22,6 +22,7 @@ import hs.mediasystem.util.natural.SizeFormatter;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -42,7 +43,7 @@ import javax.inject.Singleton;
 
 @Singleton
 public class ShowInfoEventHandler {
-  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.UK).withZone(ZoneOffset.systemDefault());
+  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.UK).withZone(ZoneId.systemDefault());
   private static final String STYLES_URL = LessLoader.compile(ShowInfoEventHandler.class, "show-info-styles.less");
 
   @Inject private ImageHandleFactory imageHandleFactory;

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ReferenceAsserts {
 
+  @SuppressWarnings("all")
   public static void testIfStronglyReferenced(Object obj, Runnable clearRefs) {
     WeakReference<Object> ref = new WeakReference<>(obj);
 
@@ -18,6 +19,7 @@ public class ReferenceAsserts {
     assertNotNull(ref.get());
   }
 
+  @SuppressWarnings("all")
   public static void testIfNotStronglyReferenced(Object obj, Runnable clearRefs) {
     WeakReference<Object> ref = new WeakReference<>(obj);
 

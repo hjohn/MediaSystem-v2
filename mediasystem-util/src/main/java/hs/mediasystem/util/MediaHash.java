@@ -40,11 +40,13 @@ public class MediaHash {
       return false;
     }
 
-    while(input % power == 0) {
-      input /= power;
+    int v = input;
+
+    while(v % power == 0) {
+      v /= power;
     }
 
-    return input == 1;
+    return v == 1;
   }
 
   /**

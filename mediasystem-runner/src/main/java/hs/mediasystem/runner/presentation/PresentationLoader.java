@@ -14,7 +14,7 @@ public class PresentationLoader {
   public static <T extends Presentation> void navigate(Event event, Supplier<T> presentationSupplier) {
     navigate(event, new Task<T>() {
       @Override
-      protected T call() throws Exception {
+      protected T call() {
         updateTitle("Loading...");
 
         return presentationSupplier.get();

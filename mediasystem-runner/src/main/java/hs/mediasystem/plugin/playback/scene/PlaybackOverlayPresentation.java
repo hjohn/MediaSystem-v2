@@ -196,7 +196,7 @@ public class PlaybackOverlayPresentation implements Navigable, Presentation {
 
     Dialogs.showProgressDialog(e, false, new Task<>() {
       @Override
-      protected Void call() throws Exception {
+      protected Void call() {
         updateTitle("Stopping Video...");
 
         presentation.dispose();  // dispose can take a while with VLC, do it asynchronously so JavaFX does not freeze

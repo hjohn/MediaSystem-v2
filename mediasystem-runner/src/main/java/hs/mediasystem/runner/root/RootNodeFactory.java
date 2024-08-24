@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javafx.animation.Animation;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -103,7 +104,7 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
       new KeyFrame(Duration.seconds(0.1))
     );
 
-    timeline.setCycleCount(Timeline.INDEFINITE);
+    timeline.setCycleCount(Animation.INDEFINITE);
     timeline.play();
 
     vbox.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -450,7 +451,7 @@ public class RootNodeFactory implements NodeFactory<RootPresentation> {
       new KeyFrame(Duration.seconds(0.2))
     );
 
-    timeline.setCycleCount(Timeline.INDEFINITE);
+    timeline.setCycleCount(Animation.INDEFINITE);
     timeline.play();
 
     pane.visibleProperty().bind(presentation.clockVisible.and(busy));

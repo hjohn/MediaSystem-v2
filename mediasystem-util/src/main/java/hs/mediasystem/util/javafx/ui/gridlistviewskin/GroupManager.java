@@ -121,11 +121,13 @@ public class GroupManager {
   }
 
   public int toModelIndexSmart(int viewIndex) {
-    while(!isValidViewIndex(viewIndex)) {
-      viewIndex = viewIndexOfLastItemInViewRow(viewIndex / width);
+    int index = viewIndex;
+
+    while(!isValidViewIndex(index)) {
+      index = viewIndexOfLastItemInViewRow(index / width);
     }
 
-    return viewIndex + findToModelShift(viewIndex);
+    return index + findToModelShift(index);
   }
 
   public int modelIndexOfViewRow(int viewRow) {
