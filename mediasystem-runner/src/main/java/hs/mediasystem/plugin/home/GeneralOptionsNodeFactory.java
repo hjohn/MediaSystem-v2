@@ -26,8 +26,8 @@ import javafx.scene.layout.VBox;
 import javax.inject.Singleton;
 
 @Singleton
-public class OptionsNodeFactory {
-  private static final String STYLES_URL = LessLoader.compile(OptionsNodeFactory.class, "exit-styles.less");
+public class GeneralOptionsNodeFactory {
+  private static final String STYLES_URL = LessLoader.compile(GeneralOptionsNodeFactory.class, "exit-styles.less");
 
   public ActionListView<Option> create() {
     ActionListView<Option> mediaGridView = new HorizontalCarousel<>(

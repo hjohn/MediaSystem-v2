@@ -1,11 +1,13 @@
 package hs.mediasystem.plugin.home;
 
 import hs.mediasystem.domain.stream.MediaType;
+import hs.mediasystem.plugin.home.HomePresentation.OptionsPresentation;
 import hs.mediasystem.ui.api.RecommendationClient;
 import hs.mediasystem.ui.api.domain.Context;
 import hs.mediasystem.ui.api.domain.Recommendation;
 import hs.mediasystem.ui.api.domain.Sequence;
 import hs.mediasystem.ui.api.domain.Sequence.Type;
+import hs.mediasystem.util.image.ImageHandle;
 import hs.mediasystem.ui.api.domain.Work;
 
 import java.time.LocalDate;
@@ -20,11 +22,12 @@ import java.util.stream.Collectors;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-public class NewItemsPresentation {
+public final class NewItemsPresentation implements OptionsPresentation {
   public final ObjectProperty<Item> selectedItem = new SimpleObjectProperty<>();
 
   private final List<Item> newItems;
@@ -42,7 +45,17 @@ public class NewItemsPresentation {
 
   public NewItemsPresentation(List<Item> newItems) {
     this.newItems = newItems;
-    this.selectedItem.set(newItems.isEmpty() ? null : newItems.get(0));
+    this.selectedItem.set(newItems.isEmpty() ? null : newItems.getFirst());
+  }
+
+  @Override
+  public ObservableValue<ImageHandle> backdropProperty() {
+    return selectedItem.map(item -> item.recommendation.work().getContext()
+      .filter(c -> c.type().isSerie())
+      .flatMap(Context::backdrop)
+      .or(() -> item.recommendation.work().getDetails().getBackdrop())
+      .orElse(null)
+    );
   }
 
   public List<Item> getNewItems() {

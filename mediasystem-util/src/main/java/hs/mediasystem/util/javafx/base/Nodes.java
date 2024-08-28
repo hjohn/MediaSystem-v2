@@ -50,7 +50,7 @@ public class Nodes {
     ChangeListener<T> updatePresentation = (obs, old, current) -> modelProperty.setValue(current);
 
     ChangeListener<T> updateView = (obs, old, current) -> {
-      if(!selectionModel.getSelectedItem().equals(current)) {
+      if(!Objects.equals(selectionModel.getSelectedItem(), current)) {
         selectionModel.select(current);
       }
     };

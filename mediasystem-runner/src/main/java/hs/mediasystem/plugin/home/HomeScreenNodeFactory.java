@@ -1,19 +1,11 @@
 package hs.mediasystem.plugin.home;
 
-import hs.mediasystem.domain.work.Collection;
-import hs.mediasystem.plugin.cell.AnnotatedImageCellFactory;
-import hs.mediasystem.plugin.home.OptionsNodeFactory.Option;
+import hs.mediasystem.plugin.home.HomePresentation.OptionsPresentation;
 import hs.mediasystem.plugin.library.scene.base.BackgroundPane;
 import hs.mediasystem.presentation.NodeFactory;
-import hs.mediasystem.runner.presentation.PresentationLoader;
+import hs.mediasystem.runner.dialog.Dialogs;
+import hs.mediasystem.runner.dialog.Tasks;
 import hs.mediasystem.runner.util.LessLoader;
-import hs.mediasystem.ui.api.CollectionClient;
-import hs.mediasystem.ui.api.domain.Context;
-import hs.mediasystem.ui.api.domain.Recommendation;
-import hs.mediasystem.util.domain.Tuple;
-import hs.mediasystem.util.image.ImageHandle;
-import hs.mediasystem.util.image.ImageHandleFactory;
-import hs.mediasystem.util.image.ResourceImageHandle;
 import hs.mediasystem.util.javafx.base.Nodes;
 import hs.mediasystem.util.javafx.control.ActionListView;
 import hs.mediasystem.util.javafx.control.Containers;
@@ -31,13 +23,12 @@ import hs.mediasystem.util.javafx.ui.transition.effects.Slide.Direction;
 import hs.mediasystem.util.javafx.ui.transition.multi.Custom;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -55,21 +46,39 @@ import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
+  record RootItem<P extends OptionsPresentation>(
+    String name,
+    Class<P> presentationClass,
+    Supplier<P> presentationSupplier
+  ) {}
+
   private static final String STYLES_URL = LessLoader.compile(HomeScreenNodeFactory.class, "styles.less");
 
-  @Inject private ImageHandleFactory imageHandleFactory;
-  @Inject private CollectionPresentationProvider collectionPresentationProvider;
-  @Inject private CollectionClient collectionClient;
+  @Inject private CollectionsPresentation.Factory collectionsPresentationFactory;
+  @Inject private CollectionsNodeFactory collectionsNodeFactory;
   @Inject private NewItemsPresentation.Factory newItemsPresentationFactory;
   @Inject private NewItemsNodeFactory newItemsNodeFactory;
   @Inject private RecommendationsPresentation.Factory recommendationsPresentationFactory;
   @Inject private RecommendationsNodeFactory recommendationsNodeFactory;
-  @Inject private OptionsNodeFactory optionsNodeFactory;
+  @Inject private GeneralOptionsNodeFactory generalOptionsNodeFactory;
+
+  private List<RootItem<? extends OptionsPresentation>> rootItems;
+
+  @PostConstruct
+  private void postConstruct() {
+    this.rootItems = List.of(
+      new RootItem<>("Home", RecommendationsPresentation.class, recommendationsPresentationFactory::create),
+      new RootItem<>("Collections", CollectionsPresentation.class, collectionsPresentationFactory::create),
+      new RootItem<>("New", NewItemsPresentation.class, newItemsPresentationFactory::create),
+      new RootItem<>("Options", GeneralOptionsPresentation.class, GeneralOptionsPresentation::new)
+    );
+  }
 
   @Override
   public Node create(HomePresentation presentation) {
@@ -81,6 +90,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
 
     bgPane.getStyleClass().add("background-image");
     backdropContainer.getChildren().addAll(bgPane, clip);
+    bgPane.backdropProperty().bind(presentation.backdrop.when(Nodes.showing(bgPane)));
 
     TransitionPane optionContainer = new TransitionPane(new Custom(
       Duration.millis(500),
@@ -97,55 +107,43 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     grid.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
       if(e.getCode().isNavigationKey()) {
         int index = menuListView.getSelectionModel().getSelectedIndex();
+        int newIndex = index;
 
         if(KeyCode.UP == e.getCode() && index > 0) {
-          presentation.selectedItem.setValue(Tuple.of(menuListView.getItems().get(index - 1), 0));
-          e.consume();
+          newIndex--;
         }
         else if(KeyCode.DOWN == e.getCode() && index < menuListView.getItems().size() - 1) {
-          presentation.selectedItem.setValue(Tuple.of(menuListView.getItems().get(index + 1), 0));
+          newIndex++;
+        }
+
+        if(index != newIndex) {
+          int finalNewIndex = newIndex;
+
+          Dialogs.showProgressDialog(e, Tasks.of(() -> rootItems.get(finalNewIndex).presentationSupplier.get()))
+            .ifPresent(presentation.optionsPresentation::set);
+
           e.consume();
         }
       }
     });
 
-    ObjectProperty<ActionListView<?>> activeListView = new SimpleObjectProperty<>();
-
-    menuListView.getSelectionModel().selectedItemProperty().addListener((obs, old, current) -> {
-      ActionListView<?> listView;
-      boolean invert = menuListView.getItems().indexOf(old) > menuListView.getItems().indexOf(current);
-
-      if(current.equals("Collections")) {
-        listView = createCollectionView(bgPane.backdropProperty());
-      }
-      else if(current.equals("New")) {
-        listView = createNewView(bgPane.backdropProperty());
-      }
-      else if(current.equals("Options")) {
-        listView = createOptionsView(bgPane.backdropProperty());
-      }
-      else {
-        listView = createWatchRecommendationView(bgPane.backdropProperty());
-      }
+    presentation.optionsPresentation.subscribe(op -> {
+      ActionListView<?> listView = switch(op) {
+        case RecommendationsPresentation p -> recommendationsNodeFactory.create(p);
+        case CollectionsPresentation p -> collectionsNodeFactory.create(p);
+        case NewItemsPresentation p -> newItemsNodeFactory.create(p);
+        case GeneralOptionsPresentation p -> generalOptionsNodeFactory.create();
+      };
 
       VBox.setVgrow(listView, Priority.ALWAYS);
 
+      int menuIndex = indexOfPresentation(op);
+      boolean invert = menuListView.getItems().indexOf(menuListView.getSelectionModel().getSelectedItem()) > menuIndex;
+
       optionContainer.add(invert, Containers.vbox("menu-view", listView));
 
-      activeListView.setValue(listView);
+      menuListView.getSelectionModel().select(menuIndex);
     });
-
-    presentation.selectedItem
-      .when(Nodes.showing(menuListView))
-      .subscribe(t -> {
-        menuListView.getSelectionModel().select(t.a);
-        activeListView.get().getSelectionModel().select(t.b);
-      });
-
-    activeListView
-      .flatMap(lv -> lv.getSelectionModel().selectedIndexProperty())
-      .map(i -> Tuple.of(menuListView.getSelectionModel().getSelectedItem(), (Integer)i))
-      .subscribe(presentation.selectedItem::setValue);
 
     Label menuBackgroundLabel = Labels.create("menu-background", ">");
     StackPane.setAlignment(menuBackgroundLabel, Pos.CENTER_LEFT);
@@ -159,58 +157,14 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     return grid;
   }
 
-  private ActionListView<Recommendation> createWatchRecommendationView(ObjectProperty<ImageHandle> backdrop) {
-    RecommendationsPresentation presentation = recommendationsPresentationFactory.create();
-    ActionListView<Recommendation> mediaGridView = recommendationsNodeFactory.create(presentation);
+  private int indexOfPresentation(OptionsPresentation presentation) {
+    for(int i = 0; i < rootItems.size(); i++) {
+      if(rootItems.get(i).presentationClass.equals(presentation.getClass())) {
+        return i;
+      }
+    }
 
-    backdrop.bind(presentation.selectedItem.map(r ->
-      r.work().getContext()
-        .filter(c -> c.type().isSerie())
-        .flatMap(Context::backdrop)
-        .or(() -> r.work().getDetails().getBackdrop())
-        .orElse(null)
-    ));
-
-    return mediaGridView;
-  }
-
-  private ActionListView<Collection> createCollectionView(ObjectProperty<ImageHandle> backdrop) {
-    ActionListView<Collection> mediaGridView = new HorizontalCarousel<>(
-      collectionClient.findCollections(),
-      e -> PresentationLoader.navigate(e, () -> collectionPresentationProvider.createPresentation(e.getItem().definition().type(), e.getItem().definition().tag())),
-      new AnnotatedImageCellFactory<>(this::fillCollectionModel)
-    );
-
-    backdrop.bind(mediaGridView.getSelectionModel().selectedItemProperty()
-      .map(c -> c.backdrop().orElse(null))
-      .map(imageHandleFactory::fromURI)
-    );
-
-    return mediaGridView;
-  }
-
-  private ActionListView<NewItemsPresentation.Item> createNewView(ObjectProperty<ImageHandle> backdrop) {
-    NewItemsPresentation presentation = newItemsPresentationFactory.create();
-    ActionListView<NewItemsPresentation.Item> mediaGridView = newItemsNodeFactory.create(presentation);
-
-    backdrop.bind(presentation.selectedItem.map(item ->
-      item.recommendation.work().getContext()
-        .filter(c -> c.type().isSerie())
-        .flatMap(Context::backdrop)
-        .or(() -> item.recommendation.work().getDetails().getBackdrop())
-        .orElse(null)
-    ));
-
-    return mediaGridView;
-  }
-
-  private ActionListView<Option> createOptionsView(ObjectProperty<ImageHandle> backdrop) {
-    ActionListView<Option> mediaGridView = optionsNodeFactory.create();
-
-    backdrop.unbind();
-    backdrop.set(new ResourceImageHandle(HomeScreenNodeFactory.class, "options-backdrop.jpg"));
-
-    return mediaGridView;
+    throw new IndexOutOfBoundsException();
   }
 
   private final class MenuCellFactory implements Callback<ListView<String>, ListCell<String>> {
@@ -280,7 +234,7 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     linearLayout.reflectionEnabledProperty().set(false);
     linearLayout.cellAlignmentProperty().set(0.5);
 
-    ListView<String> listView = new ListView<>(FXCollections.observableArrayList("Home", "Collections", "New", "Options"));
+    ListView<String> listView = new ListView<>(FXCollections.observableArrayList(rootItems.stream().map(RootItem::name).toList()));
     CarouselSkin<String> skin = new CarouselSkin<>(listView);
 
     listView.setCellFactory(new MenuCellFactory());
@@ -289,16 +243,6 @@ public class HomeScreenNodeFactory implements NodeFactory<HomePresentation> {
     skin.layoutProperty().set(linearLayout);
 
     return listView;
-  }
-
-  private void fillCollectionModel(Collection collection, AnnotatedImageCellFactory.Model model) {
-    model.parentTitle.set(null);
-    model.title.set(collection.title());
-    model.subtitle.set(null);
-    model.sequence.set(null);
-    model.imageHandle.set(collection.cover().map(imageHandleFactory::fromURI).orElse(null));
-    model.watchedFraction.set(-1);
-    model.age.set(null);
   }
 }
 

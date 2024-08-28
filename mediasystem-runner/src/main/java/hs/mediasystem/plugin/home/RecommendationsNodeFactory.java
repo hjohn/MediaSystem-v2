@@ -20,7 +20,7 @@ public class RecommendationsNodeFactory extends AbstractCarouselNodeFactory impl
     ActionListView<Recommendation> mediaGridView = new HorizontalCarousel<>(
       presentation.getRecommendations(),
       e -> PresentationLoader.navigate(e, () -> getRecommendedProductionPresentation(e.getItem())),
-      new AnnotatedImageCellFactory<Recommendation>(this::fillRecommendationModel)
+      new AnnotatedImageCellFactory<>(this::fillRecommendationModel)
     );
 
     Nodes.safeBindBidirectionalSelectedItemToModel(mediaGridView, presentation.selectedItem);
