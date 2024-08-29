@@ -8,7 +8,7 @@ public class DataSource {
 
   private final String name;
 
-  public static DataSource instance(String name) {
+  public static synchronized DataSource instance(String name) {  // synchronized as this can be called by multiple threads
     return knownDataSources.computeIfAbsent(name, k -> new DataSource(name));
   }
 
