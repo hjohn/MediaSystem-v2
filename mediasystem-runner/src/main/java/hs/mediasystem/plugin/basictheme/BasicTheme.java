@@ -27,8 +27,6 @@ import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactor
 import hs.mediasystem.plugin.library.scene.overview.ProductionPresentationFactory.State;
 import hs.mediasystem.plugin.playback.scene.PlaybackLayout;
 import hs.mediasystem.plugin.playback.scene.PlaybackOverlayPresentation;
-import hs.mediasystem.plugin.rootmenu.MenuPresentation;
-import hs.mediasystem.plugin.rootmenu.RootMenuScenePlugin;
 import hs.mediasystem.presentation.NodeFactory;
 import hs.mediasystem.presentation.ParentPresentation;
 import hs.mediasystem.presentation.Placer;
@@ -261,9 +259,6 @@ public class BasicTheme implements Theme {
     if(cls == LibraryPresentation.class) {
       return RootPresentation.class;
     }
-    if(cls == MenuPresentation.class) {
-      return RootPresentation.class;
-    }
     if(cls == HomePresentation.class) {
       return RootPresentation.class;
     }
@@ -281,9 +276,6 @@ public class BasicTheme implements Theme {
     }
     if(cls == LibraryPresentation.class) {
       return (Class<T>)LibraryNodeFactory.class;
-    }
-    if(cls == MenuPresentation.class) {
-      return (Class<T>)RootMenuScenePlugin.class;
     }
     if(cls == HomePresentation.class) {
       return (Class<T>)HomeScreenNodeFactory.class;
