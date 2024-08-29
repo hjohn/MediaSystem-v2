@@ -12,6 +12,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import hs.mediasystem.util.exception.Throwables;
 import hs.mediasystem.util.image.ImageURI;
 
+import java.io.FileNotFoundException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +42,10 @@ public class DescriptionService {
         return Optional.of(new Description(d.title, d.subtitle, d.description, d.tagLine, d.genres, d.date));
       }
 
+      return Optional.empty();
+    }
+    catch(FileNotFoundException e) {
+      // this is expected, there is no description
       return Optional.empty();
     }
     catch(Exception e) {
