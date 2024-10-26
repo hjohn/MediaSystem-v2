@@ -16,6 +16,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.StrokeLineJoin;
 
 public class StatusIndicator extends StackPane {
   public final DoubleProperty value = new SimpleDoubleProperty();
@@ -36,11 +37,14 @@ public class StatusIndicator extends StackPane {
     getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
 
     circle.getStyleClass().add("circle-shape");
+    circle.setStrokeLineJoin(StrokeLineJoin.BEVEL);
 
     arc.setType(ArcType.OPEN);
+    arc.setStrokeLineJoin(StrokeLineJoin.BEVEL);  // MITER joins have a nasty bug to shows up consistently for certain combinations of length/stroke-width/etc, reported as JDK-8339321
     arc.getStyleClass().add("arc-shape");
 
     missingArc.setType(ArcType.OPEN);
+    missingArc.setStrokeLineJoin(StrokeLineJoin.BEVEL);
     missingArc.getStyleClass().add("arc-shape-missing");
 
     Rectangle rectangle = new Rectangle(-25, -25, 50, 50);
