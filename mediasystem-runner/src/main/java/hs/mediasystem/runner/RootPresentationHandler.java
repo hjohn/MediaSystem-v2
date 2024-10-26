@@ -94,6 +94,15 @@ public class RootPresentationHandler implements EventRoot {
 
     Trigger<Object> trigger = actionTarget.createTrigger(action.getDescriptor(), presentation);
 
+    if(trigger == null) {
+      // TODO perhaps show a TOAST when an action target is found, but the action is unavailable
+      // Be careful however as there might be more presentations that have the same key mapped that will still be called after this
+      // Or perhaps the key should always be consumed here (ie. return true)
+      // Good test example is switching subtitles, but there are no subtitles available
+      // Showing a TOAST should count as consuming the action probably
+      return false;
+    }
+
     trigger.run(event, task -> Dialogs.showProgressDialog(event, task));
 
     if(!event.isConsumed()) {
