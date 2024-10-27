@@ -31,11 +31,14 @@ public class LessLoader {
 
     try {
       String packageName = cls.getPackageName();
+      String resource = cls.getResource("").toExternalForm().replaceAll("/$", "");
 
-      // create a parent directory level for each part of the package name.  Two levels would be "../..".
-      packageName = packageName.replaceAll("\\.", "/").replaceAll("[^/]+", "..");
+      // Take the location of the base resource, and strip the package name from its last portions:
+      for(int i = 0; i < packageName.split("\\.").length; i++) {
+        resource = resource.substring(0, resource.lastIndexOf('/', resource.length() - 1));
+      }
 
-      this.baseUrl = cls.getResource("").toURI().resolve(packageName).toURL();
+      this.baseUrl = URI.create(resource + "/").toURL();
       this.root = baseUrl.toExternalForm().replaceAll("/$", "");
     }
     catch(Exception e) {
