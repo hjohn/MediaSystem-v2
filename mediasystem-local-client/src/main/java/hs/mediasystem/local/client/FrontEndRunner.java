@@ -1,5 +1,9 @@
 package hs.mediasystem.local.client;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+
 import hs.mediasystem.db.ServiceRunner;
 import hs.mediasystem.plugin.playback.scene.PlayerSetting;
 import hs.mediasystem.presentation.Theme;
@@ -16,21 +20,31 @@ import hs.mediasystem.ui.api.player.PlayerFactory;
 import hs.mediasystem.ui.api.player.PlayerFactory.IntegrationMethod;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -115,6 +129,7 @@ public class FrontEndRunner extends Application {
     sceneManager.getRootPane().getChildren().setAll(ViewPort.fixed(injector.getInstance(Theme.class), rootPresentation, null));
 
     logDisplayStats(sceneManager);
+    setupCommandWebServer(sceneManager.getScene());
   }
 
   private static void logDisplayStats(SceneManager sceneManager) {
@@ -185,5 +200,99 @@ public class FrontEndRunner extends Application {
     }
 
     return Optional.empty();
+  }
+
+  private static void setupCommandWebServer(Scene scene) throws IOException {
+    HttpServer server = HttpServer.create(new InetSocketAddress(8040), 0);
+
+    server.createContext("/executeCommand", new CommandHandler(scene));
+    server.setExecutor(null); // creates a default executor
+    server.start();
+
+    LOGGER.info("Command Server started on port 8040");
+  }
+
+  static class CommandHandler implements HttpHandler {
+    private final Scene scene;
+
+    public CommandHandler(Scene scene) {
+      this.scene = scene;
+    }
+
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
+      if("POST".equals(exchange.getRequestMethod())) {
+        try(InputStream input = exchange.getRequestBody()) {
+          String command = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+
+          LOGGER.info("Received command: " + command);
+
+          try {
+            KeyCombination keyCombination = KeyCombination.valueOf(command);
+
+            if(keyCombination instanceof KeyCodeCombination kcc) {
+              executeOnFXThread(() -> simulateKeyCombination(kcc));
+              exchange.sendResponseHeaders(200, -1);
+            }
+            else {
+              exchange.sendResponseHeaders(400, -1);
+            }
+          }
+          catch(Exception e) {
+            exchange.sendResponseHeaders(400, -1);
+          }
+        }
+      }
+      else {
+        exchange.sendResponseHeaders(405, -1); // Method Not Allowed
+      }
+    }
+
+    private static void executeOnFXThread(Runnable command) {
+      CountDownLatch latch = new CountDownLatch(1);
+
+      Platform.runLater(() -> {
+        command.run();
+        latch.countDown(); // Signal that the command is done
+      });
+
+      try {
+        latch.await(); // Wait for the command to complete
+      }
+      catch(InterruptedException e) {
+        Thread.currentThread().interrupt(); // Restore the interrupted status
+      }
+    }
+
+    private void simulateKeyCombination(KeyCodeCombination key) {
+      KeyEvent keyEventPressed = new KeyEvent(
+        KeyEvent.KEY_PRESSED,
+        "",
+        "",
+        key.getCode(),
+        key.getShift() == KeyCombination.ModifierValue.DOWN,
+        key.getControl() == KeyCombination.ModifierValue.DOWN,
+        key.getAlt() == KeyCombination.ModifierValue.DOWN,
+        key.getMeta() == KeyCombination.ModifierValue.DOWN
+      );
+
+      KeyEvent keyEventReleased = new KeyEvent(
+        KeyEvent.KEY_RELEASED,
+        "",
+        "",
+        key.getCode(),
+        key.getShift() == KeyCombination.ModifierValue.DOWN,
+        key.getControl() == KeyCombination.ModifierValue.DOWN,
+        key.getAlt() == KeyCombination.ModifierValue.DOWN,
+        key.getMeta() == KeyCombination.ModifierValue.DOWN
+      );
+
+      Node focusOwner = scene.getFocusOwner();
+
+      if(focusOwner != null) {
+        focusOwner.fireEvent(keyEventPressed);
+        focusOwner.fireEvent(keyEventReleased);
+      }
+    }
   }
 }
