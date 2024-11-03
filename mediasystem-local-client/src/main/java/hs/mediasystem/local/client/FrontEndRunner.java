@@ -213,7 +213,21 @@ public class FrontEndRunner extends Application {
   }
 
   static class CommandHandler implements HttpHandler {
+    private static final int MAX_NESTING = 2;  // maximum nested event loop levels in this application
+
     private final Scene scene;
+
+    /**
+     * Tracks number of events that are unfinished (due to entering a nested event loop, or just being slow).
+     * To avoid many events stacking up (due to slowness) a maximum of 1 event is allowed to be unfinished. When
+     * any event finishes (be it the original, or one received later) this counter is reset to signal that
+     * events are still being processed.<p>
+     *
+     * The idea here is that upto two events are allowed to be in flight at the same time, and the first
+     * event is always acknowledged almost immediately, while a 2nd event that comes in must complete before
+     * it is acknowledged if unfinished events isn't zero.
+     */
+    private int unfinishedEvents;
 
     public CommandHandler(Scene scene) {
       this.scene = scene;
@@ -248,12 +262,20 @@ public class FrontEndRunner extends Application {
       }
     }
 
-    private static void executeOnFXThread(Runnable command) {
+    private void executeOnFXThread(Runnable command) {
       CountDownLatch latch = new CountDownLatch(1);
 
       Platform.runLater(() -> {
-        command.run();
+        if(unfinishedEvents < MAX_NESTING) {
+          latch.countDown(); // Signal that the command is done early in case this event will start a nested loop
+        }
+
+        unfinishedEvents++;
+
+        command.run();  // This may enter a nested event loop if the KeyEvent fired triggers one
         latch.countDown(); // Signal that the command is done
+
+        unfinishedEvents--;
       });
 
       try {
