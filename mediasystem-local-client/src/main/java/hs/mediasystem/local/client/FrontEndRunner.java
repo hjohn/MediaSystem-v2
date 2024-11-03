@@ -129,7 +129,7 @@ public class FrontEndRunner extends Application {
     sceneManager.getRootPane().getChildren().setAll(ViewPort.fixed(injector.getInstance(Theme.class), rootPresentation, null));
 
     logDisplayStats(sceneManager);
-    setupCommandWebServer(sceneManager.getScene());
+    setupCommandWebServer();
   }
 
   private static void logDisplayStats(SceneManager sceneManager) {
@@ -202,10 +202,10 @@ public class FrontEndRunner extends Application {
     return Optional.empty();
   }
 
-  private static void setupCommandWebServer(Scene scene) throws IOException {
+  private static void setupCommandWebServer() throws IOException {
     HttpServer server = HttpServer.create(new InetSocketAddress(8040), 0);
 
-    server.createContext("/executeCommand", new CommandHandler(scene));
+    server.createContext("/executeCommand", new CommandHandler());
     server.setExecutor(null); // creates a default executor
     server.start();
 
@@ -214,8 +214,6 @@ public class FrontEndRunner extends Application {
 
   static class CommandHandler implements HttpHandler {
     private static final int MAX_NESTING = 2;  // maximum nested event loop levels in this application
-
-    private final Scene scene;
 
     /**
      * Tracks number of events that are unfinished (due to entering a nested event loop, or just being slow).
@@ -228,10 +226,6 @@ public class FrontEndRunner extends Application {
      * it is acknowledged if unfinished events isn't zero.
      */
     private int unfinishedEvents;
-
-    public CommandHandler(Scene scene) {
-      this.scene = scene;
-    }
 
     @Override
     public void handle(HttpExchange exchange) throws IOException {
@@ -286,7 +280,7 @@ public class FrontEndRunner extends Application {
       }
     }
 
-    private void simulateKeyCombination(KeyCodeCombination key) {
+    private static void simulateKeyCombination(KeyCodeCombination key) {
       KeyEvent keyEventPressed = new KeyEvent(
         KeyEvent.KEY_PRESSED,
         "",
@@ -309,11 +303,22 @@ public class FrontEndRunner extends Application {
         key.getMeta() == KeyCombination.ModifierValue.DOWN
       );
 
-      Node focusOwner = scene.getFocusOwner();
+      /*
+       * Fire key event to the currently focus owner of the scene of the currently
+       * focused window (if any):
+       */
 
-      if(focusOwner != null) {
-        focusOwner.fireEvent(keyEventPressed);
-        focusOwner.fireEvent(keyEventReleased);
+      for(Window window : Window.getWindows()) {
+        if(window.isFocused()) {
+          Scene scene = window.getScene();
+
+          if(scene != null) {
+            Node focusOwner = scene.getFocusOwner() == null ? scene.getRoot() : scene.getFocusOwner();
+
+            focusOwner.fireEvent(keyEventPressed);
+            focusOwner.fireEvent(keyEventReleased);
+          }
+        }
       }
     }
   }
