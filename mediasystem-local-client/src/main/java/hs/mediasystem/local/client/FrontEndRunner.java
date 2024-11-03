@@ -42,9 +42,11 @@ import javafx.application.Platform;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.robot.Robot;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -215,6 +217,8 @@ public class FrontEndRunner extends Application {
   static class CommandHandler implements HttpHandler {
     private static final int MAX_NESTING = 2;  // maximum nested event loop levels in this application
 
+    private final Robot robot = new Robot();
+
     /**
      * Tracks number of events that are unfinished (due to entering a nested event loop, or just being slow).
      * To avoid many events stacking up (due to slowness) a maximum of 1 event is allowed to be unfinished. When
@@ -227,8 +231,24 @@ public class FrontEndRunner extends Application {
      */
     private int unfinishedEvents;
 
+    private long lastAntiSleepTime = System.nanoTime();
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
+      if(System.nanoTime() - lastAntiSleepTime > 5L * 60 * 1000 * 1000 * 1000) {
+        lastAntiSleepTime = System.nanoTime();
+
+        /*
+         * This hopefully convinces the OS that there is some activity and avoids
+         * it going to sleep.
+         */
+
+        Platform.runLater(() -> {
+          robot.keyPress(KeyCode.PAUSE);
+          robot.keyRelease(KeyCode.PAUSE);
+        });
+      }
+
       if("POST".equals(exchange.getRequestMethod())) {
         try(InputStream input = exchange.getRequestBody()) {
           String command = new String(input.readAllBytes(), StandardCharsets.UTF_8);
